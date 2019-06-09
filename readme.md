@@ -1,19 +1,9 @@
 
-### Public variables (read only)
+### Read only variables:
 
 `mode` *number*
 
- Current visualization mode. Valid values are:
-
- | Value | Mode |
- |-------|------|
- | 0 | Discrete frequencies |
- | 1 | 1/24th-octave bands |
- | 2 | 1/12th-octave bands |
- | 4 | 1/6th-octave bands |
- | 8 | 1/3rd-octave bands |
- | 12 | half-octave bands |
- | 24 | full-octave bands |
+Current visualization mode. See [setMode()](#set-mode) for valid values.
 
 `gradient` *string*
 
@@ -21,11 +11,11 @@ Key to currently selected gradient
 
 `showBgColor` *boolean*
 
-Use background color defined by current gradient (*true*) or black (*false*)
+*true* means background color is defined by current gradient; *false* means black background.
 
 `showLeds` *boolean*
 
-Vintage LED effect active?
+Use LED display effect?
 
 `showScale` *boolean*
 
@@ -37,9 +27,11 @@ High sensitivity mode active?
 
 `showPeaks` *boolean*
 
-Show and hold amplitude peaks for each frequency?
+Show amplitude peaks for each frequency?
 
 `loRes` *boolean*
+
+Use low resolution canvas?
 
 `fMin` *number*
 
@@ -50,11 +42,46 @@ Lowest frequency represented in the X axis
 Highest frequency represented in the X axis
 
 
-### Public functions
+### Functions:
 
-`setMode( [ mode ] )`
+`create( container, [ options ] )`
 
-Set visualization mode. See valid values for *mode* above. Defaults to **0** (Discrete frequencies).
+Constructor function. Initializes the analyzer and inserts the canvas in the *container* element.
+
+```
+options = {
+	audioElement: <HTMLAudioElement>
+	fftSize: <number> (8192)
+	freqMin: <number> (20)
+	freqMax: <number> (22000)
+	gradient: <string> ('classic')
+	highSens: <boolean> (false)
+	loRes: <boolean> (false)
+	mode: <number> (0)
+	showBgColor: <boolean> (true)
+	showLeds: <boolean> (false)
+	showPeaks: <boolean> (true)
+	showScale: <boolean> (true)
+	smoothing: <number> (0.5)
+	start: <boolean> (true)
+}
+```
+
+<a name="set-mode"></a>`setMode( [ mode ] )`
+
+Set visualization mode. Valid values are:
+
+| Value | Mode |
+|-------|------|
+| 0 | Discrete frequencies |
+| 1 | 1/24th-octave bands |
+| 2 | 1/12th-octave bands |
+| 4 | 1/6th-octave bands |
+| 8 | 1/3rd-octave bands |
+| 12 | half-octave bands |
+| 24 | full-octave bands |
+
+Defaults to **0** (discrete frequencies).
 
 `setFFTsize( [ samples ] )`
 
@@ -92,44 +119,23 @@ Set frequency scale labels on/off. Defaults to **true**.
 `setSensitivity( [ min ], [ max ] )`
 
 Adjust the analyzer's sensitivity. If *min* is a boolean, set high sensitivity mode on (*true*) or off (*false*).
-Custom values can be specified in decibels. For reference see [AnalyserNode.minDecibels @MDN](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels)
-*min* defaults to **-85** and *max* defaults to **-25**.
+Custom values can be specified in decibels. For reference see [AnalyserNode.minDecibels @MDN](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels).
+
+*min* defaults to **-85** and *max* defaults to **-25**. These are the same values set by calling `setSensitivity( false )` which is the normal sensitivity mode.
 
 `toggleFullscreen()`
 
-Display the analyzer in full-screen mode
+Toggles full-screen mode.
 
 `connectAudio( element )`
 
-Connect an [HTML audio element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio) to the analyzer.
-Returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) which can be use for later disconnection.
+Connect an [HTML audio element](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAudioElement) to the analyzer.
+Returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) which can be used for later disconnection.
 
 `start()`
 
-Starts canvas animation at 60fps.
+Starts canvas animation. Animation is started by default on `create()`, unless you specify `start: false` in the options.
 
 `stop()`
 
 Stops canvas animation.
-
-`create( container, [ options ] )`
-
-Constructor function. Initializes the analyzer and inserts the canvas in the *container* element.
-
-options = {
-	audioElement: [*HTMLAudioElement*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAudioElement)
-	fftSize: *number* (8192)
-	freqMin: *number* (20)
-	freqMax: *number* (22000)
-	gradient: *string* ('classic')
-	highSens: *boolean* (false)
-	loRes: *boolean* (false)
-	mode: *number* (0)
-	showBgColor: *boolean* (true)
-	showLeds: *boolean* (false)
-	showPeaks: *boolean* (true)
-	showScale: *boolean* (true)
-	smoothing: *number* (0.5)
-	start: *boolean* (true)
-}
-
