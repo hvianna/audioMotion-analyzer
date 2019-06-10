@@ -1,8 +1,8 @@
 /**
- * audioMotion.js
- * A real-time graphic spectrum analyzer and audio player using Web Audio and Canvas APIs
+ * audioMotion-analyzer.js
+ * High-resolution real-time graphic audio spectrum analyzer
  *
- * https://github.com/hvianna/audioMotion.js
+ * https://github.com/hvianna/audioMotion-analyzer.js
  *
  * Copyright (C) 2018-2019 Henrique Vianna <hvianna@gmail.com>
  *
@@ -139,31 +139,47 @@ export function setGradient( value = defaults.gradient ) {
 }
 
 /**
- * Set show peaks preference
+ * Toggle peaks on/off
  */
-export function setPeaks( value = defaults.showPeaks ) {
-	showPeaks = value;
+export function togglePeaks( value ) {
+	if ( value === undefined )
+		showPeaks = ! showPeaks;
+	else
+		showPeaks = value;
+	return showPeaks;
 }
 
 /**
- * Set background color preference
+ * Toggle background color on/off
  */
-export function setBgColor( value = defaults.showBgColor ) {
-	showBgColor = value;
+export function toggleBgColor( value ) {
+	if ( value === undefined )
+		showBgColor = ! showBgColor;
+	else
+		showBgColor = value;
+	return showBgColor;
 }
 
 /**
- * Set LED effect
+ * Toggle LED effect on/off
  */
-export function setLeds( value = defaults.showLeds ) {
-	showLeds = value;
+export function toggleLeds( value ) {
+	if ( value === undefined )
+		showLeds = ! showLeds;
+	else
+		showLeds = value;
+	return showLeds;
 }
 
 /**
- * Set scale on/off
+ * Toggle scale on/off
  */
-export function setScale ( value = defaults.showScale ) {
-	showScale = value;
+export function toggleScale ( value ) {
+	if ( value === undefined )
+		showScale = ! showScale;
+	else
+		showScale = value;
+	return showScale;
 }
 
 /**

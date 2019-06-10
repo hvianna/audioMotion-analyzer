@@ -4,21 +4,31 @@
 	<meta charset="utf-8">
 <style>
 	#container canvas {
-		width: 50%;
+		height: 50vh;
+		width: 100%;
 	}
 </style>
 </head>
 
 <body>
 	<div id="container"></div>
-	<audio id="audio" src="Rolemusic_-_01_-_Spell.mp3" controls></audio>
+	<audio id="audio" src="https://ia600504.us.archive.org/5/items/ChuckBerry-SchoolDays/ChuckBerry-SchoolDays.mp3" controls crossorigin="anonymous"></audio>
 	<script src="main.js" type="module"></script>
 
-	<p>
-		<button id="btn_start">Start Analyzer</button>
-		<button id="btn_stop">Stop Analyzer</button>
-		<button id="btn_fullscr">Fullscreen</button>
-	</p>
+	<button id="btn_fullscr">Fullscreen</button> &mdash;
+
+	<button id="btn_bgcolor">Background</button>
+	<button id="btn_peaks">Peaks</button>
+	<button id="btn_leds">LEDs</button>
+	<button id="btn_scale">Scale</button> &mdash;
+
+	<button id="btn_discrete">Discrete</button>
+	<button id="btn_octaves">Octaves</button>
+	<button id="btn_half">1/2</button>
+	<button id="btn_3rd">1/3</button>
+	<button id="btn_6th">1/6</button>
+	<button id="btn_12th">1/12</button>
+	<button id="btn_24th">1/24</button>
 
 	<p>
 		<button id="btn_classic">Classic gradient</button>
