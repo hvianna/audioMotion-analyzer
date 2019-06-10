@@ -325,9 +325,10 @@ function preCalcPosX() {
 
 	if ( mode > 1 )	// adds a rightmost black vertical line in the mask canvas, except for 1/24th-octave bands
 		ledsCtx.fillRect( canvas.width - ledOptions.spaceH / 2, 0, ledOptions.spaceH, canvas.height );
-	// adds horizontal black lines in the mask canvas, to separate the LED rows
-	for ( i = ledOptions.ledHeight; i < canvas.height; i += ledOptions.ledHeight + ledOptions.spaceV )
-		ledsCtx.fillRect( 0, i, canvas.width, ledOptions.spaceV );
+
+	if ( mode > 0 ) // adds horizontal black lines in the mask canvas, to separate the LED rows
+		for ( i = ledOptions.ledHeight; i < canvas.height; i += ledOptions.ledHeight + ledOptions.spaceV )
+			ledsCtx.fillRect( 0, i, canvas.width, ledOptions.spaceV );
 
 	drawScale();
 }
