@@ -32,7 +32,7 @@ var bufferLength, dataArray;
 
 // canvas related variables
 export var canvas, canvasCtx, pixelRatio;
-var animationReq, drawCallback;
+var animationReq, drawCallback, ledsMask, ledsCtx;
 
 // gradient definitions
 var	gradients = {
@@ -277,6 +277,8 @@ function preCalcPosX() {
 		barWidth = Math.floor( canvas.width / temperedScale.length ) - 1;
 		var barSpace = Math.round( canvas.width - barWidth * temperedScale.length ) / ( temperedScale.length - 1 );
 
+		ledsMask.width |= 0; // clear LEDs mask canvas
+
 		temperedScale.forEach( function( freq, index ) {
 			// which FFT bin represents this frequency?
 			var bin = Math.round( freq * analyzer.fftSize / audioCtx.sampleRate );
@@ -314,8 +316,18 @@ function preCalcPosX() {
 				hold: 0,
 				accel: 0
 			} );
+
+			// adds a black vertical line to the left of this bar in the mask canvas, to separate the LED columns
+			ledsCtx.fillRect( analyzerBars[ analyzerBars.length - 1 ].posX - ledOptions.spaceH / 2, 0, ledOptions.spaceH, canvas.height );
+
 		} );
 	}
+
+	if ( mode > 1 )	// adds a rightmost black vertical line in the mask canvas, except for 1/24th-octave bands
+		ledsCtx.fillRect( canvas.width - ledOptions.spaceH / 2, 0, ledOptions.spaceH, canvas.height );
+	// adds horizontal black lines in the mask canvas, to separate the LED rows
+	for ( i = ledOptions.ledHeight; i < canvas.height; i += ledOptions.ledHeight + ledOptions.spaceV )
+		ledsCtx.fillRect( 0, i, canvas.width, ledOptions.spaceV );
 
 	drawScale();
 }
@@ -422,22 +434,10 @@ function draw() {
 				bar.peak -= bar.accel;
 			}
 		}
-
-		if ( isLedDisplay ) {
-			canvasCtx.fillStyle = '#000';	// clears a vertical line to the left of this bar, to separate the LED columns
-			canvasCtx.fillRect( bar.posX - ledOptions.spaceH / 2, 0, ledOptions.spaceH, canvas.height );
-		}
-
 	}
 
-	if ( isLedDisplay ) {
-		canvasCtx.fillStyle = '#000';
-		if ( mode > 1 )	// clears rightmost vertical line
-			canvasCtx.fillRect( canvas.width - ledOptions.spaceH / 2, 0, ledOptions.spaceH, canvas.height );
-		// add horizontal black lines to separate the LEDs
-		for ( j = ledOptions.ledHeight; j < canvas.height; j += ledOptions.ledHeight + ledOptions.spaceV )
-			canvasCtx.fillRect( 0, j, canvas.width, ledOptions.spaceV );
-	}
+	if ( isLedDisplay ) // applies LEDs mask over the canvas
+		canvasCtx.drawImage( ledsMask, 0, 0 );
 
 	if ( showScale )
 		drawScale();
@@ -501,6 +501,11 @@ function setCanvas() {
 
 		gradients[ key ].gradient = grad; // save the generated gradient back into the gradients array
 	});
+
+	// create an auxiliary canvas for the LED effect mask
+	ledsMask = canvas.cloneNode();
+	ledsCtx = ledsMask.getContext('2d');
+	ledsCtx.fillStyle = '#000';
 
 	preCalcPosX();
 }
