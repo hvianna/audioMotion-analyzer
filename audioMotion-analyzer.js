@@ -176,6 +176,19 @@ export function toggleScale ( value ) {
 }
 
 /**
+ * Toggle low-resolution mode on/off
+ */
+export function toggleLoRes ( value ) {
+	if ( value === undefined )
+		loRes = ! loRes;
+	else
+		loRes = value;
+
+	setCanvas();
+	return loRes;
+}
+
+/**
  * Adjust the analyzer's sensitivity
  *
  * @param {(boolean|number)} [min=-85] - min decibels or true for high sensitivity, false for low sensitivity
