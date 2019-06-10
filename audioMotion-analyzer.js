@@ -259,6 +259,31 @@ export function setOptions( options ) {
 }
 
 /**
+ * Registers a custom gradient
+ */
+export function registerGradient( name, options ) {
+	if ( typeof options !== 'object' )
+		throw 'Custom gradient options must be an object';
+
+	if ( options.colorStops === undefined || options.colorStops.length < 2 )
+		throw 'Custom gradient must define at least two colors!';
+
+	gradients[ name ] = {};
+
+	if ( options.bgColor !== undefined )
+		gradients[ name ].bgColor = options.bgColor;
+	else
+		gradients[ name ].bgColor = '#111';
+
+	if ( options.dir !== undefined )
+		gradients[ name ].dir = options.dir;
+
+	gradients[ name ].colorStops = options.colorStops;
+
+	generateGradients();
+}
+
+/**
  * Pre-calculate the actual X-coordinate on screen for each analyzer bar
  */
 function preCalcPosX() {
@@ -512,6 +537,31 @@ function draw() {
 	animationReq = requestAnimationFrame( draw );
 }
 
+/**
+ * (Re)generate gradients
+ */
+function generateGradients() {
+	var grad, i;
+
+	Object.keys( gradients ).forEach( function( key ) {
+		if ( gradients[ key ].dir && gradients[ key ].dir == 'h' )
+			grad = canvasCtx.createLinearGradient( 0, 0, canvas.width, 0 );
+		else
+			grad = canvasCtx.createLinearGradient( 0, 0, 0, canvas.height );
+
+		if ( gradients[ key ].colorStops ) {
+			gradients[ key ].colorStops.forEach( ( colorInfo, index ) => {
+				if ( typeof colorInfo == 'object' )
+					grad.addColorStop( colorInfo.pos, colorInfo.color );
+				else
+					grad.addColorStop( index / ( gradients[ key ].colorStops.length - 1 ), colorInfo );
+			});
+		}
+
+		gradients[ key ].gradient = grad; // save the generated gradient back into the gradients array
+	});
+}
+
 
 /**
  * Set canvas dimensions
@@ -543,27 +593,8 @@ function setCanvas() {
 	canvasCtx.fillStyle = '#000';
 	canvasCtx.fillRect( 0, 0, canvas.width, canvas.height );
 
-	// Generate gradients
-
-	var grad, i;
-
-	Object.keys( gradients ).forEach( function( key ) {
-		if ( gradients[ key ].dir && gradients[ key ].dir == 'h' )
-			grad = canvasCtx.createLinearGradient( 0, 0, canvas.width, 0 );
-		else
-			grad = canvasCtx.createLinearGradient( 0, 0, 0, canvas.height );
-
-		if ( gradients[ key ].colorStops ) {
-			gradients[ key ].colorStops.forEach( ( colorInfo, index ) => {
-				if ( typeof colorInfo == 'object' )
-					grad.addColorStop( colorInfo.pos, colorInfo.color );
-				else
-					grad.addColorStop( index / ( gradients[ key ].colorStops.length - 1 ), colorInfo );
-			});
-		}
-
-		gradients[ key ].gradient = grad; // save the generated gradient back into the gradients array
-	});
+	// (re)generate gradients
+	generateGradients();
 
 	// create an auxiliary canvas for the LED effect mask
 	ledsMask = canvas.cloneNode();
