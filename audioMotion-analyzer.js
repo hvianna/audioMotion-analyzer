@@ -20,77 +20,70 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+// current visualization settings
+export var mode, gradient, showBgColor, showLeds, showScale, showPeaks, highSens, loRes;
 
-export var mode,
-	gradient,
-	showBgColor,
-	showLeds,
-	showScale,
-	highSens,
-	showPeaks,
-	loRes,
-	fMin,
-	fMax;
+// data for drawing the analyzer bars and scale related variables
+var analyzerBars, fMin, fMax, deltaX, bandWidth, barWidth, ledOptions;
 
- 	// data for drawing the analyzer bars and scale related variables
-var analyzerBars, deltaX, bandWidth, barWidth, ledOptions,
-	// Web Audio API related variables
-	audioCtx, analyzer, bufferLength, dataArray,
-	// canvas related variables
-	canvas, canvasCtx, pixelRatio, animationReq, drawCallback,
-	// octaves center frequencies (for X-axis scale labels)
-	bands = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ],
-	// gradient definitions
-	gradients = {
-		classic: {
-			bgColor: '#111',
-			colorStops: [
-				{ pos:  0, color: 'hsl( 0, 100%, 50% )' },  // each color stop can specify the position (0 to 1) and color
-				{ pos: .6, color: 'hsl( 60, 100%, 50% )' }, // colors may be specified in any HTML valid format
-				{ pos:  1, color: 'hsl( 120, 100%, 50% )' }
-			] },
-		prism:   {
-			bgColor: '#111',
-			colorStops: [
-				'hsl( 0, 100%, 50% )',    // if colorStops is an array of strings,
-				'hsl( 60, 100%, 50% )',   // colors will be evenly distributed automatically
-				'hsl( 120, 100%, 50% )',
-				'hsl( 180, 100%, 50% )',
-				'hsl( 240, 100%, 50% )',
-			] },
-		rainbow: {
-			bgColor: '#111',
-			dir: 'h', // this creates a horizontal gradient
-			colorStops: [
-				'hsl( 0, 100%, 50% )',
-				'hsl( 60, 100%, 50% )',
-				'hsl( 120, 100%, 50% )',
-				'hsl( 180, 100%, 50% )',
-				'hsl( 240, 100%, 50% )',
-				'hsl( 300, 100%, 50% )',
-				'hsl( 360, 100%, 50% )'
-			]
-		},
+// Web Audio API related variables
+export var audioCtx, analyzer;
+var bufferLength, dataArray;
 
-	};
+// canvas related variables
+export var canvas, canvasCtx, pixelRatio;
+var animationReq, drawCallback;
+
+// gradient definitions
+var	gradients = {
+	classic: {
+		bgColor: '#111',
+		colorStops: [
+			{ pos:  0, color: 'hsl( 0, 100%, 50% )' },  // each color stop can specify the position (0 to 1) and color
+			{ pos: .6, color: 'hsl( 60, 100%, 50% )' }, // colors may be defined in any HTML valid format
+			{ pos:  1, color: 'hsl( 120, 100%, 50% )' }
+		] },
+	prism:   {
+		bgColor: '#111',
+		colorStops: [
+			'hsl( 0, 100%, 50% )',    // if colorStops is an array of strings,
+			'hsl( 60, 100%, 50% )',   // colors will be evenly distributed automatically
+			'hsl( 120, 100%, 50% )',
+			'hsl( 180, 100%, 50% )',
+			'hsl( 240, 100%, 50% )',
+		] },
+	rainbow: {
+		bgColor: '#111',
+		dir: 'h', // this creates a horizontal gradient
+		colorStops: [
+			'hsl( 0, 100%, 50% )',
+			'hsl( 60, 100%, 50% )',
+			'hsl( 120, 100%, 50% )',
+			'hsl( 180, 100%, 50% )',
+			'hsl( 240, 100%, 50% )',
+			'hsl( 300, 100%, 50% )',
+			'hsl( 360, 100%, 50% )'
+		]
+	},
+};
 
 /**
- * Defaults
+ * Settings defaults
  */
 var defaults = {
-			mode        : 0,	    // discrete frequencies mode
-			fftSize     : 8192,		// FFT size
-			freqMin     : 20,		// lowest frequency
-			freqMax     : 22000,	// highest frequency
-			smoothing   : 0.5,		// 0 to 0.9 - smoothing time constant
-			gradient    : 'classic',
-			showBgColor : true,
-			showLeds    : false,
-			showScale   : true,
-			highSens    : false,
-			showPeaks   : true,
-			loRes       : false
-		};
+	mode        : 0,
+	fftSize     : 8192,
+	freqMin     : 20,
+	freqMax     : 22000,
+	smoothing   : 0.5,
+	gradient    : 'classic',
+	showBgColor : true,
+	showLeds    : false,
+	showScale   : true,
+	highSens    : false,
+	showPeaks   : true,
+	loRes       : false
+};
 
 
 /**
@@ -331,6 +324,9 @@ function preCalcPosX() {
  * Draws the x-axis scale
  */
 function drawScale() {
+
+	// octaves center frequencies
+	var bands = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
 
 	canvasCtx.fillStyle = '#000';
 	canvasCtx.fillRect( 0, canvas.height - 20 * pixelRatio, canvas.width, 20 * pixelRatio );
@@ -585,8 +581,8 @@ export function create( container, options = {} ) {
 	analyzer = audioCtx.createAnalyser();
 
 	var audioSource;
-	if ( options.audioElement )
-		audioSource = connectAudio( options.audioElement );
+	if ( options.source )
+		audioSource = connectAudio( options.source );
 
 	analyzer.connect( audioCtx.destination );
 
@@ -618,7 +614,7 @@ export function create( container, options = {} ) {
 	setCanvas();
 
 	// Start canvas animation
-	if ( options.start !== false )
+	if ( options.start === undefined || options.start !== false )
 		start();
 
 	// returns connected audio source

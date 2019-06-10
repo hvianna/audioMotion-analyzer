@@ -1,5 +1,26 @@
+### Interface objects:
+
+`audioCtx` *AudioContext object*
+
+The [AudioContext](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) object used by audioMotion. You can use this to create additional audio sources, like oscillator nodes and media streams, to be connected to the analyzer.
+
+`analyzer` *AnalyserNode object*
+
+The [AnalyserNode](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode) object user by audioMotion. This is where you should connect any additional audio sources to be displayed in the graphic analyzer.
+
+`canvas` *HTMLCanvasElement object*
+
+Canvas element created by audioMotion.
+
+`canvasCtx` *CanvasRenderingContext2D object*
+
+2D rendering context for drawing in audioMotion's canvas.
 
 ### Read only variables:
+
+`pixelRatio` *number*
+
+Current [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio). You can refer to this value to adjust any additional drawings in do in the canvas. When running in low-resolution mode (`loRes` option set to *true*) *pixelRatio* is halved, i.e. **0.5** for standard displays and **1** for retina/Hi-DPI.
 
 `mode` *number*
 
@@ -21,25 +42,17 @@ Use LED display effect?
 
 Frequency labels being displayed in the X axis?
 
-`highSens` *boolean*
-
-High sensitivity mode active?
-
 `showPeaks` *boolean*
 
 Show amplitude peaks for each frequency?
 
+`highSens` *boolean*
+
+High sensitivity mode active?
+
 `loRes` *boolean*
 
 Use low resolution canvas?
-
-`fMin` *number*
-
-Lowest frequency represented in the X axis
-
-`fMax` *number*
-
-Highest frequency represented in the X axis
 
 
 ### Functions:
@@ -50,7 +63,6 @@ Constructor function. Initializes the analyzer and inserts the canvas in the *co
 
 ```
 options = {
-	audioElement: <HTMLAudioElement>
 	fftSize: <number> (8192)
 	freqMin: <number> (20)
 	freqMax: <number> (22000)
@@ -63,6 +75,7 @@ options = {
 	showPeaks: <boolean> (true)
 	showScale: <boolean> (true)
 	smoothing: <number> (0.5)
+	source: <HTMLMediaElement>
 	start: <boolean> (true)
 }
 ```
@@ -85,36 +98,36 @@ Defaults to **0** (discrete frequencies).
 
 `setFFTsize( [ samples ] )`
 
-Set the number of samples for the FFT performed by the analyzer node.
+Sets the number of samples used for the FFT performed by the analyzer node.
 Valid values for *samples* are 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, and 32768. Defaults to **8192**.
 
 `setFreqRange( [ min ], [ max ] )`
 
-Set desired frequency range. *min* defaults to **20**, and *max* defaults to **22000** (Hz).
+Sets the desired frequency range. *min* defaults to **20**, and *max* defaults to **22000** (Hz).
 
 `setSmoothing( [ value ] )`
 
-Set the analyzer's smoothing time constant. *value* must be a float between 0 and 1. Defaults to **0.5**.
+Sets the analyzer's [smoothingTimeConstant](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/smoothingTimeConstant). *value* must be a float between 0 and 1. Defaults to **0.5**.
 
 `setGradient( [ gradient ] )`
 
-Select gradient for visualization. *gradient* must be the key (string) of a registered gradient. Defaults to **classic**.
+Selects gradient for visualization. *gradient* must be the key (string) of a registered gradient. Defaults to **'classic'**.
 
-`setPeaks( [ boolean ] )`
+`boolean togglePeaks( [ boolean ] )`
 
-Set show peaks preference. Defaults to **true**.
+Toggles the display of amplitude peaks for each frequency. If no argument provided, inverts the current status. Returns the status after the change.
 
-`setBgColor( [ boolean ] )`
+`boolean toggleBgColor( [ boolean ] )`
 
-Set background color preference. If *true* (default), uses the background color defined by the active gradient; otherwise uses black.
+Toggles the display of background color. If *true*, uses the background color defined by the active gradient; if *false* sets background to black. If no argument provided, inverts the current status. Returns the status after the change.
 
-`setLeds( [ boolean ] )`
+`boolean setLeds( [ boolean ] )`
 
-Set LED effect. Defaults to **false**.
+Toggles LED display effect. If no argument provided, inverts the current status. Returns the status after the change.
 
-`setScale ( [ boolean ] )`
+`boolean setScale ( [ boolean ] )`
 
-Set frequency scale labels on/off. Defaults to **true**.
+Toggles display of frequency scale in the X axis. If no argument provided, inverts the current status. Returns the status after the change.
 
 `setSensitivity( [ min ], [ max ] )`
 
