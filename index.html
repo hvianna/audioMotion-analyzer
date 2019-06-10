@@ -4,7 +4,11 @@
 	<meta charset="utf-8">
 <style>
 	#container canvas {
+		display: block;
 		height: 50vh;
+		width: 100%;
+	}
+	#audio {
 		width: 100%;
 	}
 </style>
@@ -13,32 +17,45 @@
 <body>
 	<div id="container"></div>
 	<audio id="audio" src="https://ia600504.us.archive.org/5/items/ChuckBerry-SchoolDays/ChuckBerry-SchoolDays.mp3" controls crossorigin="anonymous"></audio>
-	<script src="main.js" type="module"></script>
-
-	<button id="btn_fullscr">Fullscreen</button> &mdash;
-
-	<button id="btn_bgcolor">Background</button>
-	<button id="btn_peaks">Peaks</button>
-	<button id="btn_leds">LEDs</button>
-	<button id="btn_scale">Scale</button> &mdash;
-
-	<button id="btn_discrete">Discrete</button>
-	<button id="btn_octaves">Octaves</button>
-	<button id="btn_half">1/2</button>
-	<button id="btn_3rd">1/3</button>
-	<button id="btn_6th">1/6</button>
-	<button id="btn_12th">1/12</button>
-	<button id="btn_24th">1/24</button>
 
 	<p>
+		<button id="btn_fullscr">Fullscreen</button> &mdash;
+
+		<button id="btn_bgcolor">Background</button>
+		<button id="btn_peaks">Peaks</button>
+		<button id="btn_leds">LEDs</button>
+		<button id="btn_scale">Scale</button> &mdash;
+
+		<button id="btn_discrete">Discrete</button>
+		<button id="btn_octaves">Octaves</button>
+		<button id="btn_half">1/2</button>
+		<button id="btn_3rd">1/3</button>
+		<button id="btn_6th">1/6</button>
+		<button id="btn_12th">1/12</button>
+		<button id="btn_24th">1/24</button> &mdash;
+
 		<button id="btn_classic">Classic gradient</button>
 		<button id="btn_prism">Prism gradient</button>
-		<button id="btn_rainbow">Rainbow gradient</button>
+		<button id="btn_rainbow">Rainbow gradient</button> &mdash;
+
+		<button id="btn_freq1">20Hz - 22KHz</button>
+		<button id="btn_freq2">30Hz - 16KHz</button> &mdash;
+
+		<button id="btn_start">ON</button>
+		<button id="btn_stop">OFF</button>
 	</p>
 
 	<p>
-		<button id="btn_freq1">20Hz - 22KHz</button>
-		<button id="btn_freq2">30Hz - 16KHz</button>
+		Oscillator tones: <strong>(WARNING! LOUD VOLUME!)</strong>
+		<button id="btn_silence">Silence oscillator</button> &mdash;
+		<button id="btn_B2">123.47 Hz (B2) square wave</button>
+		<button id="btn_C4">261.63 Hz (C4) sawtooth wave</button>
+		<button id="btn_A4">440 Hz (A4) sine wave</button>
+		<button id="btn_G6">1567.98 Hz (G6) triangle wave</button>
+		<button id="btn_A7">3520 Hz (A7) sine wave</button>
 	</p>
+
+	<script src="main.js" type="module"></script>
+
 </body>
 </html>
