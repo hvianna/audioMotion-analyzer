@@ -96,7 +96,7 @@ Set visualization mode. Valid values are:
 
 Defaults to **0** (discrete frequencies).
 
-`setFFTsize( [ samples ] )`
+`setFFTSize( [ samples ] )`
 
 Sets the number of samples used for the FFT performed by the analyzer node.
 Valid values for *samples* are 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, and 32768. Defaults to **8192**.
@@ -112,6 +112,10 @@ Sets the analyzer's [smoothingTimeConstant](https://developer.mozilla.org/en-US/
 `setGradient( [ gradient ] )`
 
 Selects gradient for visualization. *gradient* must be the key (string) of a registered gradient. Defaults to **'classic'**.
+
+`setOptions( options )`
+
+Shorthand function for setting several options at once. *options* is an object with the same structure as in the `create()` function.
 
 `boolean togglePeaks( [ boolean ] )`
 

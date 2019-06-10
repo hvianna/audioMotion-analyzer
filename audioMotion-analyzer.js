@@ -97,7 +97,7 @@ export function setMode( value = defaults.mode ) {
 /**
  * Set the size of the FFT performed by the analyzer node
  */
-export function setFFTsize( value = defaults.fftSize ) {
+export function setFFTSize( value = defaults.fftSize ) {
 
 	analyzer.fftSize = value;
 
@@ -194,6 +194,55 @@ export function setSensitivity( min = -85, max = -25 ) {
 		analyzer.minDecibels = Math.min( min, max );
 		analyzer.maxDecibels = Math.max( min, max );
 	}
+}
+
+/**
+ * Shorthand to setting several options at once
+ */
+export function setOptions( options ) {
+
+	if ( options.mode !== undefined )
+		mode = options.mode;
+
+	if ( options.freqMin !== undefined )
+		fMin = options.freqMin;
+
+	if ( options.freqMax !== undefined )
+		fMax = options.freqMax;
+
+	if ( options.gradient !== undefined )
+		gradient = options.gradient;
+
+	if ( options.showBgColor !== undefined )
+		showBgColor = options.showBgColor;
+
+	if ( options.showLeds !== undefined )
+		showLeds = options.showLeds;
+
+	if ( options.showScale !== undefined )
+		showScale = options.showScale;
+
+	if ( options.highSens !== undefined )
+		highSens = options.highSens;
+
+	if ( options.showPeaks !== undefined )
+		showPeaks = options.showPeaks;
+
+	if ( options.loRes !== undefined )
+		loRes = options.loRes;
+
+	if ( options.fftSize !== undefined )
+		analyzer.fftSize = options.fftSize;
+
+	if ( options.smoothing !== undefined )
+		analyzer.smoothingTimeConstant = options.smoothing;
+
+	setSensitivity( highSens );
+
+	bufferLength = analyzer.frequencyBinCount;
+	dataArray = new Uint8Array( bufferLength );
+
+	setCanvas();
 }
 
 /**
