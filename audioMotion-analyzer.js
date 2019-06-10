@@ -215,7 +215,7 @@ function preCalcPosX() {
 
 	analyzerBars = [];
 
-	if ( mode == '0' ) {
+	if ( mode == 0 ) {
 	// discrete frequencies
  		var pos, lastPos = -1;
 		let iMin = Math.floor( fMin * analyzer.fftSize / audioCtx.sampleRate ),
@@ -239,23 +239,23 @@ function preCalcPosX() {
 	// octave bands
 
 		switch ( mode ) {
-			case '24':
+			case 24:
 				ledOptions = { nLeds: 24, spaceV: 16, spaceH: 24 };
 				break;
 
-			case '12':
+			case 12:
 				ledOptions = { nLeds: 48, spaceV: 8, spaceH: 16 };
 				break;
 
-			case  '8':
+			case  8:
 				ledOptions = { nLeds: 64, spaceV: 6, spaceH: 10 };
 				break;
 
-			case  '4':
+			case  4:
 				ledOptions = { nLeds: 80, spaceV: 6, spaceH: 8 };
 				break;
 
-			case  '2':
+			case  2:
 				ledOptions = { nLeds: 128, spaceV: 4, spaceH: 4 };
 				break;
 
