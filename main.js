@@ -13,8 +13,6 @@ audioMotion.create(
 		source: document.getElementById('audio'),
 		freqMin: 30,
 		freqMax: 16000,
-		width: 600,
-		height: 270,
 		drawCallback: displayCanvasMsg
 	}
 );

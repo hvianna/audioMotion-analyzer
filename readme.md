@@ -68,7 +68,7 @@ options = {
 	freqMin: <number> (20)
 	freqMax: <number> (22000)
 	gradient: <string> ('classic')
-	height: <number> (screen.height)
+	height: <number> (container.clientHeight || 270px)
 	highSens: <boolean> (false)
 	loRes: <boolean> (false)
 	mode: <number> (0)
@@ -80,7 +80,7 @@ options = {
 	smoothing: <number> (0.5)
 	source: <HTMLMediaElement>
 	start: <boolean> (true)
-	width: <number> (screen.width)
+	width: <number> (container.clientWidth || 640px)
 }
 ```
 
@@ -102,7 +102,7 @@ options = {
 
 `setCanvasSize( [ width ], [ height ] )`
 
-Sets canvas dimensions.
+Sets canvas dimensions in pixels. *width* defaults to the container's width, or **640** if container's width is 0. *height* defaults to the container's height, or **270**.
 
 `setDrawCallback( func )`
 
