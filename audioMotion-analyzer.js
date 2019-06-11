@@ -2,7 +2,7 @@
  * audioMotion-analyzer.js
  * High-resolution real-time graphic audio spectrum analyzer
  *
- * https://github.com/hvianna/audioMotion-analyzer.js
+ * https://github.com/hvianna/audioMotion-analyzer
  *
  * Copyright (C) 2018-2019 Henrique Vianna <hvianna@gmail.com>
  *
@@ -86,8 +86,8 @@ var defaults = {
 	showPeaks   : true,
 	loRes       : false,
 	scaleSize   : 1,
-	width       : window.screen.width,
-	height      : window.screen.height
+	width       : 640,
+	height      : 270
 };
 
 
@@ -356,7 +356,6 @@ function preCalcPosX() {
 			case 12:
 				spaceV = Math.min( 8, canvas.height / ( 67 * pixelRatio ) | 0 );
 				ledOptions = {
-//					nLeds: Math.min( 48, canvas.height / ( 22 * pixelRatio ) | 0 ),
 					nLeds: Math.min( 48, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
 					spaceV: spaceV,
 					spaceH: Math.min( 16, canvas.width / ( 60 * pixelRatio ) | 0 )
@@ -366,7 +365,6 @@ function preCalcPosX() {
 			case  8:
 				spaceV = Math.min( 6, canvas.height / ( 90 * pixelRatio ) | 0 );
 				ledOptions = {
-//					nLeds: Math.min( 64, canvas.height / ( 16 * pixelRatio ) | 0 ),
 					nLeds: Math.min( 64, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
 					spaceV: spaceV,
 					spaceH: Math.min( 10, canvas.width / ( 96 * pixelRatio ) | 0 )
@@ -376,7 +374,6 @@ function preCalcPosX() {
 			case  4:
 				spaceV = Math.min( 6, canvas.height / ( 90 * pixelRatio ) | 0 );
 				ledOptions = {
-//					nLeds: Math.min( 80, canvas.height / ( 12 * pixelRatio ) | 0 ),
 					nLeds: Math.min( 80, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
 					spaceV: spaceV,
 					spaceH: Math.min( 8, canvas.width / ( 120 * pixelRatio ) | 0 )
@@ -386,7 +383,6 @@ function preCalcPosX() {
 			case  2:
 				spaceV = Math.min( 4, canvas.height / ( 135 * pixelRatio ) | 0 );
 				ledOptions = {
-//					nLeds: Math.min( 128, canvas.height / ( 8 * pixelRatio ) | 0 ),
 					nLeds: Math.min( 128, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
 					spaceV: spaceV,
 					spaceH: Math.min( 4, canvas.width / ( 240 * pixelRatio ) | 0 )
@@ -396,18 +392,15 @@ function preCalcPosX() {
 			default:
 				spaceV = Math.min( 3, Math.max( 2, canvas.height / ( 180 * pixelRatio ) | 0 ) );
 				ledOptions = {
-//					nLeds: Math.min( 128, canvas.height / ( 5 * pixelRatio ) | 0 ),
 					nLeds: Math.min( 128, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
 					spaceV: spaceV,
-					spaceH: Math.min( 4, canvas.width / ( 240 * pixelRatio ) | 0 )
+					spaceH: Math.min( 4, canvas.width / ( 320 * pixelRatio ) | 0 )
 				};
 		}
 
 		ledOptions.spaceH *= pixelRatio;
 		ledOptions.spaceV *= pixelRatio;
 		ledOptions.ledHeight = canvas.height / ledOptions.nLeds - ledOptions.spaceV;
-
-		console.log( ledOptions );
 
 		// generate a table of frequencies based on the equal tempered scale
 		var root24 = 2 ** ( 1 / 24 ); // for 1/24th-octave bands
@@ -648,9 +641,6 @@ function setCanvas( w = width, h = height ) {
 	if ( pixelRatio == 2 && canvas.height <= 1080 ) // adjustment for wrong dPR reported on Shield TV
 		pixelRatio = 1;
 
-//	canvasCtx.lineWidth = 4 * pixelRatio;
-//	canvasCtx.lineJoin = 'round';
-
 	// clear the canvas
 	canvasCtx.fillStyle = '#000';
 	canvasCtx.fillRect( 0, 0, canvas.width, canvas.height );
@@ -748,6 +738,9 @@ export function create( container, options = {} ) {
 	analyzer.connect( audioCtx.destination );
 
 	// Adjust settings
+
+	defaults.width  = container.clientWidth  || defaults.width;
+	defaults.height = container.clientHeight || defaults.height;
 
 	mode        = options.mode        === undefined ? defaults.mode        : options.mode;
 	fMin        = options.freqMin     === undefined ? defaults.freqMin     : options.freqMin;
