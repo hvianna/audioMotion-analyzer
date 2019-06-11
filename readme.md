@@ -57,19 +57,22 @@ Use low resolution canvas?
 
 ### Functions:
 
-`create( container, [ options ] )`
+<a name="create"></a>`create( container, [ options ] )`
 
 Constructor function. Initializes the analyzer and inserts the canvas in the *container* element.
 
 ```
 options = {
+	drawCallback: <function>
 	fftSize: <number> (8192)
 	freqMin: <number> (20)
 	freqMax: <number> (22000)
 	gradient: <string> ('classic')
+	height: <number> (screen.height)
 	highSens: <boolean> (false)
 	loRes: <boolean> (false)
 	mode: <number> (0)
+	scaleSize: <number> (1)
 	showBgColor: <boolean> (true)
 	showLeds: <boolean> (false)
 	showPeaks: <boolean> (true)
@@ -77,8 +80,33 @@ options = {
 	smoothing: <number> (0.5)
 	source: <HTMLMediaElement>
 	start: <boolean> (true)
+	width: <number> (screen.width)
 }
 ```
+
+<a name="register-gradient"></a>`registerGradient( name, options )`
+
+Registers a custom gradient. *name* is a string to be used with `setGradient()`.
+
+```
+options = {
+	bgColor: '#111', // background color (required)
+	dir: 'h',        // add this for a horizontal gradient (optional)
+	colorStops: [
+		'#f00',                     // list your gradient colors here (at least 2 colors are required)
+		{ pos: .6, color: '#ff0' }, // use an object to specify the position (0 to 1) of a color
+		'hsl( 120, 100%, 50% )'     // colors may be defined in any HTML valid format
+	]
+}
+```
+
+`setCanvasSize( [ width ], [ height ] )`
+
+Sets canvas dimensions.
+
+`setDrawCallback( func )`
+
+Sets a function to be called after audioMotion finishes rendering the canvas. The callback function will receive the canvas element and the 2D rendering context as parameters. If *func* is undefined or not a function, clears any function previously set.
 
 <a name="set-mode"></a>`setMode( [ mode ] )`
 
@@ -105,33 +133,21 @@ Valid values for *samples* are 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16
 
 Sets the desired frequency range. *min* defaults to **20**, and *max* defaults to **22000** (Hz).
 
+`setScaleSize( [ value ] )`
+
+Adjusts the size of the frequency scale shown in the X axis (when `showScale` is *true*). *value* may be a float. Defaults to **1**.
+
 `setSmoothing( [ value ] )`
 
 Sets the analyzer's [smoothingTimeConstant](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/smoothingTimeConstant). *value* must be a float between 0 and 1. Defaults to **0.5**.
 
 `setGradient( [ gradient ] )`
 
-Selects gradient for visualization. *gradient* must be the key (string) of a registered gradient. Defaults to **'classic'**.
+Selects gradient for visualization. *gradient* must be the name of a built-in or [registered](#register-gradient) gradient. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*. Defaults to **'classic'**.
 
 `setOptions( options )`
 
-Shorthand function for setting several options at once. *options* is an object with the same structure as in the `create()` function.
-
-`boolean togglePeaks( [ boolean ] )`
-
-Toggles the display of amplitude peaks for each frequency. If no argument provided, inverts the current status. Returns the status after the change.
-
-`boolean toggleBgColor( [ boolean ] )`
-
-Toggles the display of background color. If *true*, uses the background color defined by the active gradient; if *false* sets background to black. If no argument provided, inverts the current status. Returns the status after the change.
-
-`boolean setLeds( [ boolean ] )`
-
-Toggles LED display effect. If no argument provided, inverts the current status. Returns the status after the change.
-
-`boolean setScale ( [ boolean ] )`
-
-Toggles display of frequency scale in the X axis. If no argument provided, inverts the current status. Returns the status after the change.
+Shorthand function for setting several options at once. *options* is an object with the same structure as in the [`create()`](#create) function.
 
 `setSensitivity( [ min ], [ max ] )`
 
@@ -140,9 +156,25 @@ Custom values can be specified in decibels. For reference see [AnalyserNode.minD
 
 *min* defaults to **-85** and *max* defaults to **-25**. These are the same values set by calling `setSensitivity( false )` which is the normal sensitivity mode.
 
+`boolean toggleBgColor( [ boolean ] )`
+
+Toggles the display of background color. If *true*, uses the background color defined by the active gradient; if *false* sets background to black. If no argument provided, inverts the current status. Returns the status after the change.
+
 `toggleFullscreen()`
 
 Toggles full-screen mode.
+
+`boolean toggleLeds( [ boolean ] )`
+
+Toggles LED display effect. If no argument provided, inverts the current status. Returns the status after the change.
+
+`boolean togglePeaks( [ boolean ] )`
+
+Toggles the display of amplitude peaks for each frequency. If no argument provided, inverts the current status. Returns the status after the change.
+
+`boolean toggleScale ( [ boolean ] )`
+
+Toggles display of frequency scale in the X axis. If no argument provided, inverts the current status. Returns the status after the change.
 
 `connectAudio( element )`
 
