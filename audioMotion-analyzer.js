@@ -136,55 +136,35 @@ export function setGradient( value = defaults.gradient ) {
  * Toggle peaks on/off
  */
 export function togglePeaks( value ) {
-	if ( value === undefined )
-		showPeaks = ! showPeaks;
-	else
-		showPeaks = value;
-	return showPeaks;
+	return showPeaks = value === undefined ? ! showPeaks : value;
 }
 
 /**
  * Toggle background color on/off
  */
 export function toggleBgColor( value ) {
-	if ( value === undefined )
-		showBgColor = ! showBgColor;
-	else
-		showBgColor = value;
-	return showBgColor;
+	return showBgColor = value === undefined ? ! showBgColor : value;
 }
 
 /**
  * Toggle LED effect on/off
  */
 export function toggleLeds( value ) {
-	if ( value === undefined )
-		showLeds = ! showLeds;
-	else
-		showLeds = value;
-	return showLeds;
+	return showLeds = value === undefined ? ! showLeds : value;
 }
 
 /**
  * Toggle scale on/off
  */
 export function toggleScale ( value ) {
-	if ( value === undefined )
-		showScale = ! showScale;
-	else
-		showScale = value;
-	return showScale;
+	return showScale = value === undefined ? ! showScale : value;
 }
 
 /**
  * Toggle low-resolution mode on/off
  */
 export function toggleLoRes ( value ) {
-	if ( value === undefined )
-		loRes = ! loRes;
-	else
-		loRes = value;
-
+	loRes = value === undefined ? ! loRes : value;
 	setCanvas();
 	return loRes;
 }
