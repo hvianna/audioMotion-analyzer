@@ -5,11 +5,10 @@
 <style>
 	#container canvas {
 		display: block;
-		height: 50vh;
-		width: 100%;
+/*		width: 100%; */
 	}
 	#audio {
-		width: 100%;
+		width: 600px;
 	}
 </style>
 </head>
@@ -41,13 +40,16 @@
 		<button id="btn_freq1">20Hz - 22KHz</button>
 		<button id="btn_freq2">30Hz - 16KHz</button> &mdash;
 
+		<button id="btn_lores">Lo-Res</button>
+		<button id="btn_hires">Hi-Res</button> &mdash;
+
 		<button id="btn_start">ON</button>
 		<button id="btn_stop">OFF</button>
 	</p>
 
 	<p>
 		Oscillator tones: <strong>(WARNING! LOUD VOLUME!)</strong>
-		<button id="btn_silence">Silence oscillator</button> &mdash;
+		<button id="btn_silence">Oscillator OFF</button> &mdash;
 		<button id="btn_B2">123.47 Hz (B2) square wave</button>
 		<button id="btn_C4">261.63 Hz (C4) sawtooth wave</button>
 		<button id="btn_A4">440 Hz (A4) sine wave</button>

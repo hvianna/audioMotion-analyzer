@@ -1,14 +1,25 @@
 import * as audioMotion from './audioMotion-analyzer.js';
 
+function displayCanvasMsg( canvas, canvasCtx ) {
+	canvasCtx.font = '20px sans-serif';
+	canvasCtx.fillStyle = '#fff8';
+	canvasCtx.textAlign = 'right';
+	canvasCtx.fillText( 'audioMotion', canvas.width - 20, 40 );
+}
+
 audioMotion.create(
 	document.getElementById('container'),
 	{
 		source: document.getElementById('audio'),
-		mode: 4,
 		freqMin: 30,
-		freqMax: 16000
+		freqMax: 16000,
+		width: 600,
+		height: 270,
+		drawCallback: displayCanvasMsg
 	}
 );
+
+console.log( `canvas: ${audioMotion.canvas.width} x ${audioMotion.canvas.height}` );
 
 var audioCtx = audioMotion.audioCtx,
 	oscillator = audioCtx.createOscillator();
@@ -30,6 +41,9 @@ document.getElementById('btn_rainbow').addEventListener( 'click', () => audioMot
 
 document.getElementById('btn_freq1').addEventListener( 'click', () => audioMotion.setFreqRange( 20, 22000 ) );
 document.getElementById('btn_freq2').addEventListener( 'click', () => audioMotion.setFreqRange( 30, 16000 ) );
+
+document.getElementById('btn_lores').addEventListener( 'click', () => audioMotion.toggleLoRes( true ) );
+document.getElementById('btn_hires').addEventListener( 'click', () => audioMotion.toggleLoRes( false ) );
 
 document.getElementById('btn_start').addEventListener( 'click', () => audioMotion.start() );
 document.getElementById('btn_stop').addEventListener( 'click', () => audioMotion.stop() );
@@ -70,3 +84,4 @@ document.getElementById('btn_A7').addEventListener( 'click', () => {
 document.getElementById('btn_silence').addEventListener( 'click', () => {
 	oscillator.frequency.setValueAtTime( 0, audioCtx.currentTime );
 });
+
