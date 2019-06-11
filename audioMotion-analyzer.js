@@ -90,6 +90,16 @@ var defaults = {
 
 
 /**
+ * Set callback function
+ */
+export function setDrawCallback( func ) {
+	if ( typeof func == 'function' )
+		drawCallback = func;
+	else
+		drawCallback = undefined;
+}
+
+/**
  * Set visualization mode
  */
 export function setMode( value = defaults.mode ) {
@@ -242,6 +252,9 @@ export function setOptions( options ) {
 
 	if ( options.smoothing !== undefined )
 		analyzer.smoothingTimeConstant = options.smoothing;
+
+	if ( typeof options.drawCallback == 'function' )
+		drawCallback = options.drawCallback;
 
 	setSensitivity( highSens );
 
@@ -448,8 +461,6 @@ function draw() {
 
 	var i, j, l, bar, barHeight,
 		isLedDisplay = ( showLeds && mode != '0' );
-
-//	document.body.className = isPlaying() ? 'playing' : '';
 
 	if ( ! showBgColor )	// use black background
 		canvasCtx.fillStyle = '#000';
@@ -696,6 +707,9 @@ export function create( container, options = {} ) {
 
 	analyzer.fftSize               = options.fftSize   === undefined ? defaults.fftSize   : options.fftSize;
 	analyzer.smoothingTimeConstant = options.smoothing === undefined ? defaults.smoothing : options.smoothing;
+
+	if ( typeof options.drawCallback == 'function' )
+		drawCallback = options.drawCallback;
 
 	setSensitivity( highSens );
 
