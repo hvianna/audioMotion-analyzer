@@ -31,7 +31,7 @@ export var audioCtx, analyzer;
 var bufferLength, dataArray;
 
 // canvas related variables
-export var canvas, canvasCtx, pixelRatio;
+export var canvas, canvasCtx, pixelRatio, width, height;
 var animationReq, drawCallback, ledsMask, ledsCtx;
 
 // gradient definitions
@@ -85,9 +85,20 @@ var defaults = {
 	highSens    : false,
 	showPeaks   : true,
 	loRes       : false,
-	scaleSize   : 1
+	scaleSize   : 1,
+	width       : window.screen.width,
+	height      : window.screen.height
 };
 
+
+/**
+ * Set dimensions of analyzer's canvas
+ */
+export function setCanvasSize( w = defaults.width, h = defaults.height ) {
+	width = w;
+	height = h;
+	setCanvas();
+}
 
 /**
  * Set callback function
@@ -256,6 +267,12 @@ export function setOptions( options ) {
 	if ( typeof options.drawCallback == 'function' )
 		drawCallback = options.drawCallback;
 
+	if ( options.width !== undefined )
+		width = options.width;
+
+	if ( options.height !== undefined )
+		height = options.height;
+
 	setSensitivity( highSens );
 
 	bufferLength = analyzer.frequencyBinCount;
@@ -304,7 +321,7 @@ function preCalcPosX() {
 	if ( mode == 0 ) {
 	// discrete frequencies
  		var pos, lastPos = -1;
-		let iMin = Math.floor( fMin * analyzer.fftSize / audioCtx.sampleRate ),
+		var iMin = Math.floor( fMin * analyzer.fftSize / audioCtx.sampleRate ),
 		    iMax = Math.round( fMax * analyzer.fftSize / audioCtx.sampleRate );
 		barWidth = 1;
 
@@ -324,34 +341,73 @@ function preCalcPosX() {
 	else {
 	// octave bands
 
+		var spaceV;
+
 		switch ( mode ) {
 			case 24:
-				ledOptions = { nLeds: 24, spaceV: 16, spaceH: 24 };
+				spaceV = Math.min( 16, canvas.height / ( 33 * pixelRatio ) | 0 );
+				ledOptions = {
+					nLeds: Math.min( 24, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
+					spaceV: spaceV,
+					spaceH: Math.min( 24, canvas.width / ( 40 * pixelRatio ) | 0 )
+				};
 				break;
 
 			case 12:
-				ledOptions = { nLeds: 48, spaceV: 8, spaceH: 16 };
+				spaceV = Math.min( 8, canvas.height / ( 67 * pixelRatio ) | 0 );
+				ledOptions = {
+//					nLeds: Math.min( 48, canvas.height / ( 22 * pixelRatio ) | 0 ),
+					nLeds: Math.min( 48, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
+					spaceV: spaceV,
+					spaceH: Math.min( 16, canvas.width / ( 60 * pixelRatio ) | 0 )
+				};
 				break;
 
 			case  8:
-				ledOptions = { nLeds: 64, spaceV: 6, spaceH: 10 };
+				spaceV = Math.min( 6, canvas.height / ( 90 * pixelRatio ) | 0 );
+				ledOptions = {
+//					nLeds: Math.min( 64, canvas.height / ( 16 * pixelRatio ) | 0 ),
+					nLeds: Math.min( 64, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
+					spaceV: spaceV,
+					spaceH: Math.min( 10, canvas.width / ( 96 * pixelRatio ) | 0 )
+				};
 				break;
 
 			case  4:
-				ledOptions = { nLeds: 80, spaceV: 6, spaceH: 8 };
+				spaceV = Math.min( 6, canvas.height / ( 90 * pixelRatio ) | 0 );
+				ledOptions = {
+//					nLeds: Math.min( 80, canvas.height / ( 12 * pixelRatio ) | 0 ),
+					nLeds: Math.min( 80, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
+					spaceV: spaceV,
+					spaceH: Math.min( 8, canvas.width / ( 120 * pixelRatio ) | 0 )
+				};
 				break;
 
 			case  2:
-				ledOptions = { nLeds: 128, spaceV: 4, spaceH: 4 };
+				spaceV = Math.min( 4, canvas.height / ( 135 * pixelRatio ) | 0 );
+				ledOptions = {
+//					nLeds: Math.min( 128, canvas.height / ( 8 * pixelRatio ) | 0 ),
+					nLeds: Math.min( 128, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
+					spaceV: spaceV,
+					spaceH: Math.min( 4, canvas.width / ( 240 * pixelRatio ) | 0 )
+				};
 				break;
 
 			default:
-				ledOptions = { nLeds: 128, spaceV: 3, spaceH: 4 };
+				spaceV = Math.min( 3, Math.max( 2, canvas.height / ( 180 * pixelRatio ) | 0 ) );
+				ledOptions = {
+//					nLeds: Math.min( 128, canvas.height / ( 5 * pixelRatio ) | 0 ),
+					nLeds: Math.min( 128, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
+					spaceV: spaceV,
+					spaceH: Math.min( 4, canvas.width / ( 240 * pixelRatio ) | 0 )
+				};
 		}
 
 		ledOptions.spaceH *= pixelRatio;
 		ledOptions.spaceV *= pixelRatio;
 		ledOptions.ledHeight = canvas.height / ledOptions.nLeds - ledOptions.spaceV;
+
+		console.log( ledOptions );
 
 		// generate a table of frequencies based on the equal tempered scale
 		var root24 = 2 ** ( 1 / 24 ); // for 1/24th-octave bands
@@ -544,7 +600,7 @@ function draw() {
 }
 
 /**
- * (Re)generate gradients
+ * Generate gradients
  */
 function generateGradients() {
 	var grad, i;
@@ -570,17 +626,17 @@ function generateGradients() {
 
 
 /**
- * Set canvas dimensions
+ * Internal function to change canvas dimensions on the fly
  */
-function setCanvas() {
+function setCanvas( w = width, h = height ) {
 	pixelRatio = window.devicePixelRatio; // for Retina / HiDPI devices
 
 	if ( loRes )
 		pixelRatio /= 2;
 
 	// Adjust canvas width and height to match the display's resolution
-	canvas.width = window.screen.width * pixelRatio;
-	canvas.height = window.screen.height * pixelRatio;
+	canvas.width = w * pixelRatio;
+	canvas.height = h * pixelRatio;
 
 	// always consider landscape orientation
 	if ( canvas.height > canvas.width ) {
@@ -592,8 +648,8 @@ function setCanvas() {
 	if ( pixelRatio == 2 && canvas.height <= 1080 ) // adjustment for wrong dPR reported on Shield TV
 		pixelRatio = 1;
 
-	canvasCtx.lineWidth = 4 * pixelRatio;
-	canvasCtx.lineJoin = 'round';
+//	canvasCtx.lineWidth = 4 * pixelRatio;
+//	canvasCtx.lineJoin = 'round';
 
 	// clear the canvas
 	canvasCtx.fillStyle = '#000';
@@ -704,6 +760,8 @@ export function create( container, options = {} ) {
 	showPeaks   = options.showPeaks   === undefined ? defaults.showPeaks   : options.showPeaks;
 	loRes       = options.loRes       === undefined ? defaults.loRes       : options.loRes;
 	scaleSize   = options.scaleSize   === undefined ? defaults.scaleSize   : options.scaleSize;
+	width       = options.width       === undefined ? defaults.width       : options.width;
+	height      = options.height      === undefined ? defaults.height      : options.height;
 
 	analyzer.fftSize               = options.fftSize   === undefined ? defaults.fftSize   : options.fftSize;
 	analyzer.smoothingTimeConstant = options.smoothing === undefined ? defaults.smoothing : options.smoothing;
@@ -721,6 +779,13 @@ export function create( container, options = {} ) {
 	container.appendChild( canvas );
 	canvasCtx = canvas.getContext('2d');
 	setCanvas();
+
+	canvas.addEventListener( 'fullscreenchange', () => {
+		if ( ! document.fullscreenElement )
+			setCanvas();
+		else
+			setCanvas( window.screen.width, window.screen.height );
+	});
 
 	// Start canvas animation
 	if ( options.start === undefined || options.start !== false )
