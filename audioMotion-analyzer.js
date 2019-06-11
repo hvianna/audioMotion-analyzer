@@ -114,7 +114,7 @@ export function setDrawCallback( func ) {
  * Set visualization mode
  */
 export function setMode( value = defaults.mode ) {
-	mode = value;
+	mode = Number( value );
 	preCalcPosX();
 }
 
@@ -226,7 +226,7 @@ export function setSensitivity( min = -85, max = -25 ) {
 export function setOptions( options ) {
 
 	if ( options.mode !== undefined )
-		mode = options.mode;
+		mode = Number( options.mode );
 
 	if ( options.freqMin !== undefined )
 		fMin = options.freqMin;
@@ -509,7 +509,7 @@ function drawScale() {
 function draw() {
 
 	var i, j, l, bar, barHeight,
-		isLedDisplay = ( showLeds && mode != '0' );
+		isLedDisplay = ( showLeds && mode > 0 );
 
 	if ( ! showBgColor )	// use black background
 		canvasCtx.fillStyle = '#000';
@@ -742,7 +742,7 @@ export function create( container, options = {} ) {
 	defaults.width  = container.clientWidth  || defaults.width;
 	defaults.height = container.clientHeight || defaults.height;
 
-	mode        = options.mode        === undefined ? defaults.mode        : options.mode;
+	mode        = options.mode        === undefined ? defaults.mode        : Number( options.mode );
 	fMin        = options.freqMin     === undefined ? defaults.freqMin     : options.freqMin;
 	fMax        = options.freqMax     === undefined ? defaults.freqMax     : options.freqMax;
 	gradient    = options.gradient    === undefined ? defaults.gradient    : options.gradient;
