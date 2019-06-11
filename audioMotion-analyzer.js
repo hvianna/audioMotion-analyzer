@@ -24,7 +24,7 @@
 export var mode, gradient, showBgColor, showLeds, showScale, showPeaks, highSens, loRes;
 
 // data for drawing the analyzer bars and scale related variables
-var analyzerBars, fMin, fMax, deltaX, bandWidth, barWidth, ledOptions;
+var analyzerBars, fMin, fMax, deltaX, bandWidth, barWidth, ledOptions, scaleSize;
 
 // Web Audio API related variables
 export var audioCtx, analyzer;
@@ -82,7 +82,8 @@ var defaults = {
 	showScale   : true,
 	highSens    : false,
 	showPeaks   : true,
-	loRes       : false
+	loRes       : false,
+	scaleSize   : 1
 };
 
 
@@ -243,6 +244,9 @@ export function setOptions( options ) {
 
 	if ( options.loRes !== undefined )
 		loRes = options.loRes;
+
+	if ( options.scaleSize !== undefined )
+		scaleSize = options.scaleSize;
 
 	if ( options.fftSize !== undefined )
 		analyzer.fftSize = options.fftSize;
@@ -428,19 +432,21 @@ function drawScale() {
 	// octaves center frequencies
 	var bands = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
 
-	canvasCtx.fillStyle = '#000';
-	canvasCtx.fillRect( 0, canvas.height - 20 * pixelRatio, canvas.width, 20 * pixelRatio );
+	var size = 5 * pixelRatio * scaleSize;
+
+	canvasCtx.fillStyle = '#000c';
+	canvasCtx.fillRect( 0, canvas.height - size * 4, canvas.width, size * 4 );
 
 	if ( ! showScale )
 		return;
 
 	canvasCtx.fillStyle = '#fff';
-	canvasCtx.font = ( 10 * pixelRatio ) + 'px sans-serif';
+	canvasCtx.font = ( size * 2 ) + 'px sans-serif';
 	canvasCtx.textAlign = 'center';
 
 	bands.forEach( function( freq ) {
 		var posX = bandWidth * ( Math.log10( freq ) - deltaX );
-		canvasCtx.fillText( freq >= 1000 ? ( freq / 1000 ) + 'k' : freq, posX, canvas.height - 5 * pixelRatio );
+		canvasCtx.fillText( freq >= 1000 ? ( freq / 1000 ) + 'k' : freq, posX, canvas.height - size );
 	});
 
 }
@@ -687,19 +693,20 @@ export function create( container, options = {} ) {
 
 	// Adjust settings
 
-	mode        = options.mode        || defaults.mode;
-	fMin        = options.freqMin     || defaults.freqMin;
-	fMax        = options.freqMax     || defaults.freqMax;
-	gradient    = options.gradient    || defaults.gradient;
-	showBgColor = options.showBgColor || defaults.showBgColor;
-	showLeds    = options.showLeds    || defaults.showLeds;
-	showScale   = options.showScale   || defaults.showScale;
-	highSens    = options.highSens    || defaults.highSens;
-	showPeaks   = options.showPeaks   || defaults.showPeaks;
-	loRes       = options.loRes       || defaults.loRes;
+	mode        = options.mode        === undefined ? defaults.mode        : options.mode;
+	fMin        = options.freqMin     === undefined ? defaults.freqMin     : options.freqMin;
+	fMax        = options.freqMax     === undefined ? defaults.freqMax     : options.freqMax;
+	gradient    = options.gradient    === undefined ? defaults.gradient    : options.gradient;
+	showBgColor = options.showBgColor === undefined ? defaults.showBgColor : options.showBgColor;
+	showLeds    = options.showLeds    === undefined ? defaults.showLeds    : options.showLeds;
+	showScale   = options.showScale   === undefined ? defaults.showScale   : options.showScale;
+	highSens    = options.highSens    === undefined ? defaults.highSens    : options.highSens;
+	showPeaks   = options.showPeaks   === undefined ? defaults.showPeaks   : options.showPeaks;
+	loRes       = options.loRes       === undefined ? defaults.loRes       : options.loRes;
+	scaleSize   = options.scaleSize   === undefined ? defaults.scaleSize   : options.scaleSize;
 
-	analyzer.fftSize               = options.fftSize   || defaults.fftSize;
-	analyzer.smoothingTimeConstant = options.smoothing || defaults.smoothing;
+	analyzer.fftSize               = options.fftSize   === undefined ? defaults.fftSize   : options.fftSize;
+	analyzer.smoothingTimeConstant = options.smoothing === undefined ? defaults.smoothing : options.smoothing;
 
 	setSensitivity( highSens );
 
