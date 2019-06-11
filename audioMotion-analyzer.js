@@ -21,10 +21,10 @@
  */
 
 // current visualization settings
-export var mode, gradient, showBgColor, showLeds, showScale, showPeaks, highSens, loRes;
+export var mode, gradient, showBgColor, showLeds, showScale, showPeaks, highSens, loRes, scaleSize;
 
 // data for drawing the analyzer bars and scale related variables
-var analyzerBars, fMin, fMax, deltaX, bandWidth, barWidth, ledOptions, scaleSize;
+var analyzerBars, fMin, fMax, deltaX, bandWidth, barWidth, ledOptions;
 
 // Web Audio API related variables
 export var audioCtx, analyzer;
@@ -39,22 +39,24 @@ var	gradients = {
 	classic: {
 		bgColor: '#111',
 		colorStops: [
-			{ pos:  0, color: 'hsl( 0, 100%, 50% )' },  // each color stop can specify the position (0 to 1) and color
-			{ pos: .6, color: 'hsl( 60, 100%, 50% )' }, // colors may be defined in any HTML valid format
-			{ pos:  1, color: 'hsl( 120, 100%, 50% )' }
-		] },
+			'hsl( 0, 100%, 50% )',
+			{ pos: .6, color: 'hsl( 60, 100%, 50% )' },
+			'hsl( 120, 100%, 50% )'
+		]
+	},
 	prism:   {
 		bgColor: '#111',
 		colorStops: [
-			'hsl( 0, 100%, 50% )',    // if colorStops is an array of strings,
-			'hsl( 60, 100%, 50% )',   // colors will be evenly distributed automatically
+			'hsl( 0, 100%, 50% )',
+			'hsl( 60, 100%, 50% )',
 			'hsl( 120, 100%, 50% )',
 			'hsl( 180, 100%, 50% )',
 			'hsl( 240, 100%, 50% )',
-		] },
+		]
+	},
 	rainbow: {
 		bgColor: '#111',
-		dir: 'h', // this creates a horizontal gradient
+		dir: 'h',
 		colorStops: [
 			'hsl( 0, 100%, 50% )',
 			'hsl( 60, 100%, 50% )',
@@ -116,6 +118,13 @@ export function setFreqRange( min = defaults.freqMin, max = defaults.freqMax ) {
 	fMin = Math.min( min, max );
 	fMax = Math.max( min, max );
 	preCalcPosX();
+}
+
+/**
+ * Set scale size
+ */
+export function setScaleSize( value = defaults.scaleSize ) {
+	scaleSize = value;
 }
 
 /**
