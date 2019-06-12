@@ -691,11 +691,28 @@ export function connectAudio( element ) {
 }
 
 /**
- * Start canvas animation
+ * Start / stop canvas animation
  */
-export function start() {
-	if ( ! animationReq )
+export function toggleAnalyzer( value ) {
+	var started = isOn();
+	if ( value === undefined )
+		value = ! started;
+
+	if ( started && ! value ) {
+		cancelAnimationFrame( animationReq );
+		animationReq = undefined;
+	}
+	else if ( ! started && value )
 		animationReq = requestAnimationFrame( draw );
+
+	return isOn();
+}
+
+/**
+ * Return current status of analyzer
+ */
+export function isOn() {
+	return animationReq !== undefined;
 }
 
 /**
@@ -784,7 +801,7 @@ export function create( container, options = {} ) {
 
 	// Start canvas animation
 	if ( options.start === undefined || options.start !== false )
-		start();
+		toggleAnalyzer( true );
 
 	// returns connected audio source
 	return audioSource;
