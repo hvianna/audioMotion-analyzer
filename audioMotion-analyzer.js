@@ -459,18 +459,20 @@ function preCalcPosX() {
 				accel: 0
 			} );
 
-			// adds a black vertical line to the left of this bar in the mask canvas, to separate the LED columns
+			// adds a vertical black line to the left of this bar in the mask canvas, to separate the LED columns
 			ledsCtx.fillRect( analyzerBars[ analyzerBars.length - 1 ].posX - ledOptions.spaceH / 2, 0, ledOptions.spaceH, canvas.height );
 
 		} );
 	}
 
-	if ( mode > 1 )	// adds a rightmost black vertical line in the mask canvas, except for 1/24th-octave bands
-		ledsCtx.fillRect( canvas.width - ledOptions.spaceH / 2, 0, ledOptions.spaceH, canvas.height );
+	if ( mode > 0 ) {
+		// adds a vertical black line in the mask canvas after the last led column
+		ledsCtx.fillRect( analyzerBars[ analyzerBars.length - 1 ].posX + barWidth - ledOptions.spaceH / 2 + ( mode < 8 ? 2 : 1 ), 0, ledOptions.spaceH, canvas.height );
 
-	if ( mode > 0 ) // adds horizontal black lines in the mask canvas, to separate the LED rows
+		// adds horizontal black lines in the mask canvas, to separate the LED rows
 		for ( i = ledOptions.ledHeight; i < canvas.height; i += ledOptions.ledHeight + ledOptions.spaceV )
 			ledsCtx.fillRect( 0, i, canvas.width, ledOptions.spaceV );
+	}
 
 	drawScale();
 }
@@ -508,7 +510,7 @@ function drawScale() {
  */
 function draw() {
 
-	var i, j, l, bar, barHeight,
+	var l, bar, barHeight,
 		isLedDisplay = ( showLeds && mode > 0 );
 
 	if ( ! showBgColor )	// use black background
@@ -526,7 +528,7 @@ function draw() {
 	analyzer.getByteFrequencyData( dataArray );
 
 	l = analyzerBars.length;
-	for ( i = 0; i < l; i++ ) {
+	for ( let i = 0; i < l; i++ ) {
 
 		bar = analyzerBars[ i ];
 
@@ -536,13 +538,13 @@ function draw() {
 			barHeight = 0;
 			if ( bar.average ) {
 				// use the average value of the range
-				for ( j = bar.dataIdx; j <= bar.endIdx; j++ )
+				for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
 					barHeight += dataArray[ j ];
 				barHeight = barHeight / ( bar.endIdx - bar.dataIdx + 1 ) / 255 * canvas.height;
 			}
 			else {
 				// use the highest value in the range
-				for ( j = bar.dataIdx; j <= bar.endIdx; j++ )
+				for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
 					barHeight = Math.max( barHeight, dataArray[ j ] );
 				barHeight = barHeight / 255 * canvas.height;
 			}
