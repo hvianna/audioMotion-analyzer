@@ -1,12 +1,12 @@
 ### Interface objects:
 
-`audioCtx` *AudioContext object*
+`audioCtx` *[AudioContext](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) object*
 
-The [AudioContext](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) object used by audioMotion. You can use this to create additional audio sources, like oscillator nodes and media streams, to be connected to the analyzer.
+You can use this object to create additional audio sources to be connected to the analyzer, like oscillator nodes and media streams.
 
-`analyzer` *AnalyserNode object*
+`analyzer` *[AnalyserNode](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode) object*
 
-The [AnalyserNode](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode) object user by audioMotion. This is where you should connect any additional audio sources to be displayed in the graphic analyzer.
+Connect any additional audio sources to this object, for them to be displayed in the graphic analyzer.
 
 `canvas` *HTMLCanvasElement object*
 
@@ -17,6 +17,10 @@ Canvas element created by audioMotion.
 2D rendering context for drawing in audioMotion's canvas.
 
 ### Read only variables:
+
+`dataArray` *array*
+
+Data array returned by [`getByteFrequencyData`](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteFrequencyData).
 
 `pixelRatio` *number*
 
@@ -54,6 +58,10 @@ High sensitivity mode active?
 
 Use low resolution canvas?
 
+`width`, `height` *number*
+
+Nominal dimensions of the analyzer. Please note that the actual canvas dimensions may differ from these, depending on the device pixel ratio and during fullscreen mode.
+
 
 ### Functions:
 
@@ -84,6 +92,15 @@ options = {
 }
 ```
 
+`connectAudio( element )`
+
+Connect an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) (`<audio>` or `<video>` HTML element) to the analyzer.
+Returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) which can be used for later disconnection.
+
+`boolean isOn()`
+
+Returns *true* if the analyzer is running, or *false* if it's stopped.
+
 <a name="register-gradient"></a>`registerGradient( name, options )`
 
 Registers a custom gradient. *name* is a string to be used with `setGradient()`.
@@ -106,7 +123,9 @@ Sets canvas dimensions in pixels. *width* defaults to the container's width, or 
 
 `setDrawCallback( func )`
 
-Sets a function to be called after audioMotion finishes rendering the canvas. The callback function will receive the canvas element and the 2D rendering context as parameters. If *func* is undefined or not a function, clears any function previously set.
+Sets a function to be called after audioMotion finishes rendering the canvas. If *func* is undefined or not a function, clears any function previously set.
+
+For convenience, `canvas`, `canvasCtx` and `pixelRatio` are passed as arguments to the callback function.
 
 <a name="set-mode"></a>`setMode( [ mode ] )`
 
@@ -166,25 +185,17 @@ Toggles full-screen mode.
 
 `boolean toggleLeds( [ boolean ] )`
 
-Toggles LED display effect. If no argument provided, inverts the current status. Returns the status after the change.
+Toggles LED display effect. If no argument provided, inverts its current status. Returns the resulting status.
 
 `boolean togglePeaks( [ boolean ] )`
 
-Toggles the display of amplitude peaks for each frequency. If no argument provided, inverts the current status. Returns the status after the change.
+Toggles the display of amplitude peaks for each frequency. If no argument provided, inverts its current status. Returns the resulting status.
 
 `boolean toggleScale ( [ boolean ] )`
 
-Toggles display of frequency scale in the X axis. If no argument provided, inverts the current status. Returns the status after the change.
+Toggles display of frequency scale in the X axis. If no argument provided, inverts its current status. Returns the resulting status.
 
-`connectAudio( element )`
+`boolean toggleAnalyzer( [ boolean ] )`
 
-Connect an [HTML audio element](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAudioElement) to the analyzer.
-Returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) which can be used for later disconnection.
+Starts or stops the analyzer and returns the resulting status. The analyzer is started by default on `create()`, unless you specify `start: false` in the options.
 
-`start()`
-
-Starts canvas animation. Animation is started by default on `create()`, unless you specify `start: false` in the options.
-
-`stop()`
-
-Stops canvas animation.

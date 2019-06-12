@@ -2,59 +2,75 @@
 <html>
 <head>
 	<meta charset="utf-8">
-<style>
-	#audio,
-	#container {
-		width: 640px;
-	}
-	#container canvas {
-		display: block;
-	}
-</style>
+	<title>audioMotion-analyzer.js Demo</title>
+	<link href="https://fonts.googleapis.com/css?family=Orbitron:700" rel="stylesheet">
+	<style>
+		button, select {
+			margin: 6px;
+			padding: 6px;
+		}
+		#audio,	#container {
+			width: 640px;
+		}
+		#container canvas {
+			display: block;
+			width: 100%;
+		}
+	</style>
 </head>
 
 <body>
+	<h1>audioMotion-analyzer.js Demo</h1>
+
 	<div id="container"></div>
 	<audio id="audio" src="https://ia600504.us.archive.org/5/items/ChuckBerry-SchoolDays/ChuckBerry-SchoolDays.mp3" controls crossorigin="anonymous"></audio>
 
 	<p>
-		<button id="btn_fullscr">Fullscreen</button> &mdash;
+		<select id="mode">
+			<option value="" disabled>Visualization Mode:</option>
+			<option value="0">Discrete frequencies</option>
+			<option value="24">Full-octave bands</option>
+			<option value="12">Half-octave bands</option>
+			<option value="8">1/3rd-octave bands</option>
+			<option value="4" selected>1/6th-octave bands</option>
+			<option value="2">1/12th-octave bands</option>
+			<option value="1">1/24th-octave bands</option>
+		</select>
 
-		<button id="btn_bgcolor">Background</button>
-		<button id="btn_peaks">Peaks</button>
-		<button id="btn_leds">LEDs</button>
-		<button id="btn_scale">Scale</button> &mdash;
+		<select id="gradient">
+			<option value="" disabled>Gradient:</option>
+			<option value="classic" selected>Classic</option>
+			<option value="prism">Prism</option>
+			<option value="rainbow">Rainbow</option>
+		</select>
 
-		<button id="btn_discrete">Discrete</button>
-		<button id="btn_octaves">Octaves</button>
-		<button id="btn_half">1/2</button>
-		<button id="btn_3rd">1/3</button>
-		<button id="btn_6th">1/6</button>
-		<button id="btn_12th">1/12</button>
-		<button id="btn_24th">1/24</button> &mdash;
+		<select id="range">
+			<option value="" disabled>Frequency Range:</option>
+			<option data-min="20" data-max="22000">20Hz - 22KHz</option>
+			<option data-min="30" data-max="16000" selected>30Hz - 16KHz</option>
+			<option data-min="100" data-max="10000">100Hz - 10KHz</option>
+		</select>
 
-		<button id="btn_classic">Classic gradient</button>
-		<button id="btn_prism">Prism gradient</button>
-		<button id="btn_rainbow">Rainbow gradient</button> &mdash;
-
-		<button id="btn_freq1">20Hz - 22KHz</button>
-		<button id="btn_freq2">30Hz - 16KHz</button> &mdash;
-
-		<button id="btn_lores">Lo-Res</button>
-		<button id="btn_hires">Hi-Res</button> &mdash;
-
-		<button id="btn_start">ON</button>
-		<button id="btn_stop">OFF</button>
+		<button id="btn_fullscr">Fullscreen</button>
+		<button id="btn_freeze">Freeze</button>
 	</p>
 
 	<p>
-		Oscillator tones: <strong>(WARNING! Loud volume!)</strong>
-		<button id="btn_silence">Oscillator OFF</button> &mdash;
-		<button id="btn_B2">123.47 Hz (B2) square wave</button>
-		<button id="btn_C4">261.63 Hz (C4) sawtooth wave</button>
-		<button id="btn_A4">440 Hz (A4) sine wave</button>
-		<button id="btn_G6">1567.98 Hz (G6) triangle wave</button>
-		<button id="btn_A7">3520 Hz (A7) sine wave</button>
+		<button id="btn_bgcolor">Background</button>
+		<button id="btn_peaks">Peaks</button>
+		<button id="btn_leds">LEDs</button>
+		<button id="btn_scale">Scale</button>
+		<button id="btn_lores">Lo-Res</button>
+	</p>
+
+	<p>
+		Test tones:<br>
+		<button id="btn_soundoff">SOUND OFF</button>
+		<button class="tones" data-freq="123.47" data-wave="square">123.47 Hz (B2) square wave</button><br>
+		<button class="tones" data-freq="261.63" data-wave="sawtooth">261.63 Hz (C4) sawtooth wave</button>
+		<button class="tones" data-freq="440" data-wave="sine">440 Hz (A4) sine wave</button><br>
+		<button class="tones" data-freq="1567.98" data-wave="triangle">1567.98 Hz (G6) triangle wave</button>
+		<button class="tones" data-freq="3520" data-wave="sine">3520 Hz (A7) sine wave</button><br>
 	</p>
 
 	<script src="main.js" type="module"></script>
