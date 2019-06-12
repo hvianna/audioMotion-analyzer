@@ -23,14 +23,13 @@
 // current visualization settings
 export var mode, gradient, showBgColor, showLeds, showScale, showPeaks, highSens, loRes, scaleSize;
 
-// data for drawing the analyzer bars and scale related variables
+// data for drawing the analyzer bars and scale-related variables
 var analyzerBars, fMin, fMax, deltaX, bandWidth, barWidth, ledOptions;
 
 // Web Audio API related variables
-export var audioCtx, analyzer;
-var bufferLength, dataArray;
+export var audioCtx, analyzer, dataArray;
 
-// canvas related variables
+// canvas-related variables
 export var canvas, canvasCtx, pixelRatio, width, height;
 var animationReq, drawCallback, ledsMask, ledsCtx;
 
@@ -122,13 +121,8 @@ export function setMode( value = defaults.mode ) {
  * Set the size of the FFT performed by the analyzer node
  */
 export function setFFTSize( value = defaults.fftSize ) {
-
 	analyzer.fftSize = value;
-
-	// update all variables that depend on the FFT size
-	bufferLength = analyzer.frequencyBinCount;
-	dataArray = new Uint8Array( bufferLength );
-
+	dataArray = new Uint8Array( analyzer.frequencyBinCount );
 	preCalcPosX();
 }
 
@@ -275,8 +269,7 @@ export function setOptions( options ) {
 
 	setSensitivity( highSens );
 
-	bufferLength = analyzer.frequencyBinCount;
-	dataArray = new Uint8Array( bufferLength );
+	dataArray = new Uint8Array( analyzer.frequencyBinCount );
 
 	setCanvas();
 }
@@ -588,7 +581,7 @@ function draw() {
 		drawScale();
 
 	if ( drawCallback )
-		drawCallback( canvas, canvasCtx );
+		drawCallback( canvas, canvasCtx, pixelRatio );
 
 	// schedule next canvas update
 	animationReq = requestAnimationFrame( draw );
@@ -777,14 +770,12 @@ export function create( container, options = {} ) {
 
 	analyzer.fftSize               = options.fftSize   === undefined ? defaults.fftSize   : options.fftSize;
 	analyzer.smoothingTimeConstant = options.smoothing === undefined ? defaults.smoothing : options.smoothing;
+	dataArray = new Uint8Array( analyzer.frequencyBinCount );
 
 	if ( typeof options.drawCallback == 'function' )
 		drawCallback = options.drawCallback;
 
 	setSensitivity( highSens );
-
-	bufferLength = analyzer.frequencyBinCount;
-	dataArray = new Uint8Array( bufferLength );
 
 	// Canvas
 	canvas = document.createElement('canvas');
