@@ -80,7 +80,6 @@ options = {
 	highSens: <boolean> (false)
 	loRes: <boolean> (false)
 	mode: <number> (0)
-	scaleSize: <number> (1)
 	showBgColor: <boolean> (true)
 	showLeds: <boolean> (false)
 	showPeaks: <boolean> (true)
@@ -155,10 +154,6 @@ Valid values for *samples* are 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16
 `setFreqRange( [ min ], [ max ] )`
 
 Sets the desired frequency range. *min* defaults to **20**, and *max* defaults to **22000** (Hz).
-
-`setScaleSize( [ value ] )`
-
-Adjusts the size of the frequency scale shown in the X axis (when `showScale` is *true*). *value* may be a float. Defaults to **1**.
 
 `setSmoothing( [ value ] )`
 

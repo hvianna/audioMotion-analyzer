@@ -21,7 +21,7 @@
  */
 
 // current visualization settings
-export var mode, gradient, showBgColor, showLeds, showScale, showPeaks, highSens, loRes, scaleSize;
+export var mode, gradient, showBgColor, showLeds, showScale, showPeaks, highSens, loRes;
 
 // data for drawing the analyzer bars and scale-related variables
 var analyzerBars, fMin, fMax, deltaX, bandWidth, barWidth, ledOptions;
@@ -84,7 +84,6 @@ var defaults = {
 	highSens    : false,
 	showPeaks   : true,
 	loRes       : false,
-	scaleSize   : 1,
 	width       : 640,
 	height      : 270
 };
@@ -146,13 +145,6 @@ export function setFreqRange( min = defaults.freqMin, max = defaults.freqMax ) {
 	fMin = Math.min( min, max );
 	fMax = Math.max( min, max );
 	preCalcPosX();
-}
-
-/**
- * Set scale size
- */
-export function setScaleSize( value = defaults.scaleSize ) {
-	scaleSize = value;
 }
 
 /**
@@ -261,9 +253,6 @@ export function setOptions( options ) {
 
 	if ( options.loRes !== undefined )
 		loRes = options.loRes;
-
-	if ( options.scaleSize !== undefined )
-		scaleSize = options.scaleSize;
 
 	if ( options.fftSize !== undefined )
 		analyzer.fftSize = options.fftSize;
@@ -491,7 +480,10 @@ function drawScale() {
 	// octaves center frequencies
 	var bands = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
 
-	var size = 5 * pixelRatio * scaleSize;
+	var size = 5 * pixelRatio;
+
+	if ( isFullscreen() )
+		size *= 2;
 
 	canvasCtx.fillStyle = '#000c';
 	canvasCtx.fillRect( 0, canvas.height - size * 4, canvas.width, size * 4 );
@@ -770,7 +762,6 @@ export function create( container, options = {} ) {
 	highSens    = options.highSens    === undefined ? defaults.highSens    : options.highSens;
 	showPeaks   = options.showPeaks   === undefined ? defaults.showPeaks   : options.showPeaks;
 	loRes       = options.loRes       === undefined ? defaults.loRes       : options.loRes;
-	scaleSize   = options.scaleSize   === undefined ? defaults.scaleSize   : options.scaleSize;
 	width       = options.width       === undefined ? defaults.width       : options.width;
 	height      = options.height      === undefined ? defaults.height      : options.height;
 
