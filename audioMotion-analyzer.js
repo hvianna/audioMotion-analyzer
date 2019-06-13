@@ -91,6 +91,19 @@ var defaults = {
 
 
 /**
+ * Checks if the analyzer is being displayed in fullscreen mode
+ */
+export function isFullscreen() {
+	return document.fullscreenElement === canvas;
+}
+/**
+ * Checks if the analyzer canvas animation is running or not
+ */
+export function isOn() {
+	return animationReq !== undefined;
+}
+
+/**
  * Set dimensions of analyzer's canvas
  */
 export function setCanvasSize( w = defaults.width, h = defaults.height ) {
@@ -656,7 +669,7 @@ function setCanvas( w = width, h = height ) {
  */
 export function toggleFullscreen() {
 
-	if ( document.fullscreenElement ) {
+	if ( isFullscreen() ) {
 		document.exitFullscreen();
 	}
 	else {
@@ -699,13 +712,6 @@ export function toggleAnalyzer( value ) {
 		animationReq = requestAnimationFrame( draw );
 
 	return isOn();
-}
-
-/**
- * Return current status of analyzer
- */
-export function isOn() {
-	return animationReq !== undefined;
 }
 
 /**
@@ -785,10 +791,10 @@ export function create( container, options = {} ) {
 	setCanvas();
 
 	canvas.addEventListener( 'fullscreenchange', () => {
-		if ( ! document.fullscreenElement )
-			setCanvas();
-		else
+		if ( isFullscreen() )
 			setCanvas( window.screen.width, window.screen.height );
+		else
+			setCanvas();
 	});
 
 	// Start canvas animation

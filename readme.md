@@ -97,6 +97,10 @@ options = {
 Connect an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) (`<audio>` or `<video>` HTML element) to the analyzer.
 Returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) which can be used for later disconnection.
 
+`boolean isFullscreen()`
+
+Returns *true* if the analyzer is being displayed in fullscreen, or *false* otherwise.
+
 `boolean isOn()`
 
 Returns *true* if the analyzer is running, or *false* if it's stopped.
