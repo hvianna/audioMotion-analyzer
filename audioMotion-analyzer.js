@@ -1,8 +1,8 @@
 /**
  * audioMotion-analyzer.js
- * High-resolution real-time graphic audio spectrum analyzer
+ * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * https://github.com/hvianna/audioMotion-analyzer
+ * https://github.com/hvianna/audioMotion.js
  *
  * Copyright (C) 2018-2019 Henrique Vianna <hvianna@gmail.com>
  *
@@ -779,6 +779,7 @@ export function create( container, options = {} ) {
 
 	// Canvas
 	canvas = document.createElement('canvas');
+	canvas.style = 'max-width: 100%;';
 	container.appendChild( canvas );
 	canvasCtx = canvas.getContext('2d');
 	setCanvas();
