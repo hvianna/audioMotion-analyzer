@@ -2,6 +2,8 @@ import * as audioMotion from './audioMotion-analyzer.js';
 
 function displayCanvasMsg( canvas, canvasCtx, pixelRatio ) {
 	var size = 20 * pixelRatio;
+	if ( audioMotion.isFullscreen() )
+		size *= 2;
 	canvasCtx.font = `${size}px Orbitron,sans-serif`;
 	var w = canvasCtx.measureText('audioMotion').width / 2;
 
