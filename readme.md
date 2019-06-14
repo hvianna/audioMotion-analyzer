@@ -58,16 +58,20 @@ High sensitivity mode active?
 
 Use low resolution canvas?
 
-`width`, `height` *number*
+`width` *number*, `height` *number*
 
-Nominal dimensions of the analyzer. Please note that the actual canvas dimensions may differ from these, depending on the device pixel ratio and during fullscreen mode.
+Nominal dimensions of the analyzer container. Please note that the actual canvas dimensions may differ from these, depending on the current pixel ratio and fullscreen status. For the current canvas dimensions use `audioMotion.canvas.width` and `audioMotion.canvas.height`.
+
+`fsWidth` *number*, `fsHeight` *number*
+
+Canvas dimensions used during fullscreen mode. These take the current pixel ratio into account and will change accordingly when low-resolution mode is set.
 
 
 ### Functions:
 
-<a name="create"></a>`create( container, [ options ] )`
+<a name="create"></a>`create( [container], [options] )`
 
-Constructor function. Initializes the analyzer and inserts the canvas in the *container* element.
+Constructor function. Initializes the analyzer and inserts the canvas into the *container* element. If *container* is undefined, the canvas is added to the document's body.
 
 ```
 options = {
@@ -120,9 +124,9 @@ options = {
 }
 ```
 
-`setCanvasSize( [ width ], [ height ] )`
+`setCanvasSize( [width], [height] )`
 
-Sets canvas dimensions in pixels. *width* defaults to the container's width, or **640** if container's width is 0. *height* defaults to the container's height, or **270**.
+Sets canvas dimensions in pixels. *width* defaults to the container's width, or **640** if container's width is 0. *height* defaults to the container's height, or **270**. These will be multiplied by the current pixel ratio, so in HiDPI / retina displays the dimensions will be doubled, unless low-resolution mode is on.
 
 `setDrawCallback( func )`
 
@@ -130,9 +134,9 @@ Sets a function to be called after audioMotion finishes rendering the canvas. If
 
 For convenience, `canvas`, `canvasCtx` and `pixelRatio` are passed as arguments to the callback function.
 
-<a name="set-mode"></a>`setMode( [ mode ] )`
+<a name="set-mode"></a>`setMode( [mode] )`
 
-Set visualization mode. Valid values are:
+Set visualization mode. Valid values for *mode* are:
 
 | Value | Mode |
 |-------|------|
@@ -146,20 +150,20 @@ Set visualization mode. Valid values are:
 
 Defaults to **0** (discrete frequencies).
 
-`setFFTSize( [ samples ] )`
+`setFFTSize( [samples] )`
 
 Sets the number of samples used for the FFT performed by the analyzer node.
 Valid values for *samples* are 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, and 32768. Defaults to **8192**.
 
-`setFreqRange( [ min ], [ max ] )`
+`setFreqRange( [min], [max] )`
 
-Sets the desired frequency range. *min* defaults to **20**, and *max* defaults to **22000** (Hz).
+Sets the desired frequency range. Values are expressed in Hz (Hertz). *min* defaults to **20**, and *max* defaults to **22000**.
 
-`setSmoothing( [ value ] )`
+`setSmoothing( [value] )`
 
 Sets the analyzer's [smoothingTimeConstant](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/smoothingTimeConstant). *value* must be a float between 0 and 1. Defaults to **0.5**.
 
-`setGradient( [ gradient ] )`
+`setGradient( [gradient] )`
 
 Selects gradient for visualization. *gradient* must be the name of a built-in or [registered](#register-gradient) gradient. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*. Defaults to **'classic'**.
 
@@ -167,14 +171,14 @@ Selects gradient for visualization. *gradient* must be the name of a built-in or
 
 Shorthand function for setting several options at once. *options* is an object with the same structure as in the [`create()`](#create) function.
 
-`setSensitivity( [ min ], [ max ] )`
+`setSensitivity( [min], [max] )`
 
 Adjust the analyzer's sensitivity. If *min* is a boolean, set high sensitivity mode on (*true*) or off (*false*).
-Custom values can be specified in decibels. For reference see [AnalyserNode.minDecibels @MDN](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels).
+Custom values can be specified in dB (decibels). For reference see [AnalyserNode.minDecibels @MDN](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels).
 
 *min* defaults to **-85** and *max* defaults to **-25**. These are the same values set by calling `setSensitivity( false )` which is the normal sensitivity mode.
 
-`boolean toggleBgColor( [ boolean ] )`
+`boolean toggleBgColor( [boolean] )`
 
 Toggles the display of background color. If *true*, uses the background color defined by the active gradient; if *false* sets background to black. If no argument provided, inverts the current status. Returns the status after the change.
 
@@ -182,19 +186,19 @@ Toggles the display of background color. If *true*, uses the background color de
 
 Toggles full-screen mode.
 
-`boolean toggleLeds( [ boolean ] )`
+`boolean toggleLeds( [boolean] )`
 
 Toggles LED display effect. If no argument provided, inverts its current status. Returns the resulting status.
 
-`boolean togglePeaks( [ boolean ] )`
+`boolean togglePeaks( [boolean] )`
 
 Toggles the display of amplitude peaks for each frequency. If no argument provided, inverts its current status. Returns the resulting status.
 
-`boolean toggleScale ( [ boolean ] )`
+`boolean toggleScale ( [boolean] )`
 
 Toggles display of frequency scale in the X axis. If no argument provided, inverts its current status. Returns the resulting status.
 
-`boolean toggleAnalyzer( [ boolean ] )`
+`boolean toggleAnalyzer( [boolean] )`
 
 Starts or stops the analyzer and returns the resulting status. The analyzer is started by default on `create()`, unless you specify `start: false` in the options.
 

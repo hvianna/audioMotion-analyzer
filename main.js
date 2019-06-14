@@ -1,4 +1,4 @@
-import * as audioMotion from './audioMotion-analyzer.js';
+import * as audioMotion from './src/audioMotion-analyzer.js';
 
 function displayCanvasMsg( canvas, canvasCtx, pixelRatio ) {
 	var size = 20 * pixelRatio;
@@ -13,16 +13,21 @@ function displayCanvasMsg( canvas, canvasCtx, pixelRatio ) {
 	canvasCtx.fillText( 'audioMotion', canvas.width - size - w, size * 2 );
 }
 
-audioMotion.create(
-	document.getElementById('container'),
-	{
-		mode: 4,
-		source: document.getElementById('audio'),
-		freqMin: 30,
-		freqMax: 16000,
-		drawCallback: displayCanvasMsg
-	}
-);
+try {
+	audioMotion.create(
+		document.getElementById('container'),
+		{
+			mode: 4,
+			source: document.getElementById('audio'),
+			freqMin: 30,
+			freqMax: 16000,
+			drawCallback: displayCanvasMsg
+		}
+	);
+}
+catch( err ) {
+	document.getElementById('container').innerHTML = `<p>audioMotion failed with error: <em>${err}</em></p>`;
+}
 
 var audioCtx = audioMotion.audioCtx,
 	oscillator = audioCtx.createOscillator(),
