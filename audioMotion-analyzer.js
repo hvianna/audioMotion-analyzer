@@ -30,7 +30,7 @@ var analyzerBars, fMin, fMax, deltaX, bandWidth, barWidth, ledOptions;
 export var audioCtx, analyzer, dataArray;
 
 // canvas-related variables
-export var canvas, canvasCtx, pixelRatio, width, height;
+export var canvas, canvasCtx, pixelRatio, width, height, fsWidth, fsHeight;
 var animationReq, drawCallback, ledsMask, ledsCtx;
 
 // gradient definitions
@@ -621,24 +621,26 @@ function generateGradients() {
 /**
  * Internal function to change canvas dimensions on the fly
  */
-function setCanvas( w = width, h = height ) {
+function setCanvas() {
 	pixelRatio = window.devicePixelRatio; // for Retina / HiDPI devices
 
 	if ( loRes )
 		pixelRatio /= 2;
 
-	// Adjust canvas width and height to match the display's resolution
-	canvas.width = w * pixelRatio;
-	canvas.height = h * pixelRatio;
+	fsWidth = Math.max( window.screen.width, window.screen.height ) * pixelRatio;
+	fsHeight = Math.min( window.screen.height, window.screen.width ) * pixelRatio;
 
-	// always consider landscape orientation
-	if ( canvas.height > canvas.width ) {
-		var tmp = canvas.width;
-		canvas.width = canvas.height;
-		canvas.height = tmp;
+	if ( isFullscreen() ) {
+		canvas.width = fsWidth;
+		canvas.height = fsHeight;
+	}
+	else {
+		canvas.width = width * pixelRatio;
+		canvas.height = height * pixelRatio;
 	}
 
-	if ( pixelRatio == 2 && canvas.height <= 1080 ) // adjustment for wrong dPR reported on Shield TV
+	// workaround for wrong dPR reported on Android TV
+	if ( pixelRatio == 2 && window.screen.height <= 540 )
 		pixelRatio = 1;
 
 	// clear the canvas
@@ -774,26 +776,28 @@ export function create( container, options = {} ) {
 
 	setSensitivity( highSens );
 
-	// Canvas
+	// Create canvas
+
 	canvas = document.createElement('canvas');
 	canvas.style = 'max-width: 100%;';
 	container.appendChild( canvas );
 	canvasCtx = canvas.getContext('2d');
 	setCanvas();
 
-	canvas.addEventListener( 'fullscreenchange', () => {
-		if ( isFullscreen() )
-			setCanvas( window.screen.width, window.screen.height );
-		else
-			setCanvas();
+	// adjust canvas size on entering / leaving fullscreen
+	canvas.addEventListener( 'fullscreenchange', setCanvas );
+
+	// adjust canvas size on window resize
+	window.addEventListener( 'resize', () => {
+		width = options.width || container.clientWidth || defaults.width;
+		height = options.height || container.clientHeight || defaults.height;
+		setCanvas();
 	});
 
-	// Start canvas animation
+	// Start analyzer
 	if ( options.start === undefined || options.start !== false )
 		toggleAnalyzer( true );
 
-	// returns connected audio source
+	// Return connected audio source
 	return audioSource;
 }
-
-
