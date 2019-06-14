@@ -723,9 +723,8 @@ export function stop() {
  */
 export function create( container, options = {} ) {
 
-	if ( ! container ) {
-		throw 'Container not specified';
-	}
+	if ( ! container )
+		container = document.body;
 
 	// Create audio context
 
@@ -735,8 +734,7 @@ export function create( container, options = {} ) {
 		audioCtx = new AudioContext();
 	}
 	catch( err ) {
-		console.log( 'Could not create audio context. Web Audio API not supported?' );
-		return false;
+		throw 'Could not create audio context. Web Audio API not supported?';
 	}
 
 	// Create analyzer node and connect to destination
