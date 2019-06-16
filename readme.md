@@ -30,6 +30,10 @@ Current [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Wind
 
 Current visualization mode. See [setMode()](#set-mode) for valid values.
 
+`fps` *number*
+
+Current frame rate.
+
 `gradient` *string*
 
 Key to currently selected gradient
@@ -85,6 +89,7 @@ options = {
 	loRes: <boolean> (false)
 	mode: <number> (0)
 	showBgColor: <boolean> (true)
+	showFPS: <boolean> (false)
 	showLeds: <boolean> (false)
 	showPeaks: <boolean> (true)
 	showScale: <boolean> (true)
@@ -181,6 +186,10 @@ Custom values can be specified in dB (decibels). For reference see [AnalyserNode
 `boolean toggleBgColor( [boolean] )`
 
 Toggles the display of background color. If *true*, uses the background color defined by the active gradient; if *false* sets background to black. If no argument provided, inverts the current status. Returns the status after the change.
+
+`toggleFPS()`
+
+Toggles display of current frame rate.
 
 `toggleFullscreen()`
 

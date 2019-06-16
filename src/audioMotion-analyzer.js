@@ -21,7 +21,7 @@
  */
 
 // current visualization settings
-export var mode, gradient, showBgColor, showLeds, showScale, showPeaks, highSens, loRes;
+export var mode, gradient, showBgColor, showLeds, showScale, showPeaks, highSens, loRes, showFPS;
 
 // data for drawing the analyzer bars and scale-related variables
 var analyzerBars, fMin, fMax, deltaX, bandWidth, barWidth, ledOptions;
@@ -30,8 +30,9 @@ var analyzerBars, fMin, fMax, deltaX, bandWidth, barWidth, ledOptions;
 export var audioCtx, analyzer, dataArray;
 
 // canvas-related variables
-export var canvas, canvasCtx, pixelRatio, width, height, fsWidth, fsHeight;
-var animationReq, drawCallback, ledsMask, ledsCtx;
+export var canvas, canvasCtx, pixelRatio, width, height, fsWidth, fsHeight, fps;
+
+var animationReq, drawCallback, ledsMask, ledsCtx, time, frame;
 
 // gradient definitions
 var	gradients = {
@@ -83,6 +84,7 @@ var defaults = {
 	showScale   : true,
 	highSens    : false,
 	showPeaks   : true,
+	showFPS     : false,
 	loRes       : false,
 	width       : 640,
 	height      : 270
@@ -176,6 +178,13 @@ export function toggleBgColor( value ) {
 }
 
 /**
+ * Toggle FPS display
+ */
+export function toggleFPS( value ) {
+	return showFPS = value === undefined ? ! showFPS : value;
+}
+
+/**
  * Toggle LED effect on/off
  */
 export function toggleLeds( value ) {
@@ -250,6 +259,9 @@ export function setOptions( options ) {
 
 	if ( options.showPeaks !== undefined )
 		showPeaks = options.showPeaks;
+
+	if ( options.showFPS !== undefined )
+		showFPS = options.showFPS;
 
 	if ( options.loRes !== undefined )
 		loRes = options.loRes;
@@ -585,6 +597,22 @@ function draw() {
 	if ( showScale )
 		drawScale();
 
+	frame++;
+	let now = performance.now();
+	let elapsed = now - time;
+	if ( elapsed >= 1000 ) {
+		fps = frame / ( elapsed / 1000 );
+		frame = 0;
+		time = now;
+	}
+	if ( showFPS ) {
+		let size = 20 * pixelRatio;
+		canvasCtx.font = `bold ${size}px sans-serif`;
+		canvasCtx.fillStyle = '#0f0';
+		canvasCtx.textAlign = 'right';
+		canvasCtx.fillText( fps.toFixed(), canvas.width - size, size * 2 );
+	}
+
 	if ( drawCallback )
 		drawCallback( canvas, canvasCtx, pixelRatio );
 
@@ -702,8 +730,11 @@ export function toggleAnalyzer( value ) {
 		cancelAnimationFrame( animationReq );
 		animationReq = undefined;
 	}
-	else if ( ! started && value )
+	else if ( ! started && value ) {
+		frame = fps = 0;
+		time = performance.now();
 		animationReq = requestAnimationFrame( draw );
+	}
 
 	return isOn();
 }
@@ -761,6 +792,7 @@ export function create( container, options = {} ) {
 	showScale   = options.showScale   === undefined ? defaults.showScale   : options.showScale;
 	highSens    = options.highSens    === undefined ? defaults.highSens    : options.highSens;
 	showPeaks   = options.showPeaks   === undefined ? defaults.showPeaks   : options.showPeaks;
+	showFPS     = options.showFPS     === undefined ? defaults.showFPS     : options.showFPS;
 	loRes       = options.loRes       === undefined ? defaults.loRes       : options.loRes;
 	width       = options.width       === undefined ? defaults.width       : options.width;
 	height      = options.height      === undefined ? defaults.height      : options.height;

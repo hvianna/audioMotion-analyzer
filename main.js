@@ -10,7 +10,7 @@ function displayCanvasMsg( canvas, canvasCtx, pixelRatio ) {
 	canvasCtx.font = `${size + audioMotion.dataArray[ 1 ] / 16 * pixelRatio}px Orbitron,sans-serif`;
 	canvasCtx.fillStyle = '#fff8';
 	canvasCtx.textAlign = 'center';
-	canvasCtx.fillText( 'audioMotion', canvas.width - size - w, size * 2 );
+	canvasCtx.fillText( 'audioMotion', size + w, size * 2 );
 }
 
 try {
@@ -21,6 +21,7 @@ try {
 			source: document.getElementById('audio'),
 			freqMin: 30,
 			freqMax: 16000,
+			showFPS: true,
 			drawCallback: displayCanvasMsg
 		}
 	);
@@ -44,6 +45,7 @@ document.getElementById('btn_peaks').addEventListener( 'click', () => audioMotio
 document.getElementById('btn_leds').addEventListener( 'click', () => audioMotion.toggleLeds() );
 document.getElementById('btn_scale').addEventListener( 'click', () => audioMotion.toggleScale() );
 document.getElementById('btn_lores').addEventListener( 'click', () => audioMotion.toggleLoRes() );
+document.getElementById('btn_fps').addEventListener( 'click', () => audioMotion.toggleFPS() );
 document.getElementById('btn_freeze').addEventListener( 'click', () => audioMotion.toggleAnalyzer() );
 
 document.getElementById('mode').addEventListener( 'change', ( e ) => audioMotion.setMode( e.target.value ) );
