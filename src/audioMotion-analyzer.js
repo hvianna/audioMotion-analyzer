@@ -543,27 +543,28 @@ function draw() {
 		bar = analyzerBars[ i ];
 
 		if ( bar.endIdx == 0 ) 	// single FFT bin
-			barHeight = dataArray[ bar.dataIdx ] / 255 * canvas.height;
+			barHeight = dataArray[ bar.dataIdx ];
 		else { 					// range of bins
 			barHeight = 0;
 			if ( bar.average ) {
 				// use the average value of the range
 				for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
 					barHeight += dataArray[ j ];
-				barHeight = barHeight / ( bar.endIdx - bar.dataIdx + 1 ) / 255 * canvas.height;
+				barHeight = barHeight / ( bar.endIdx - bar.dataIdx + 1 );
 			}
 			else {
 				// use the highest value in the range
 				for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
 					barHeight = Math.max( barHeight, dataArray[ j ] );
-				barHeight = barHeight / 255 * canvas.height;
 			}
 		}
 
 		if ( isLedDisplay ) // normalize barHeight to match one of the "led" elements
-			barHeight = Math.floor( barHeight / canvas.height * ledOptions.nLeds ) * ( ledOptions.ledHeight + ledOptions.spaceV );
+			barHeight = ( barHeight / 255 * ledOptions.nLeds | 0 ) * ( ledOptions.ledHeight + ledOptions.spaceV );
+		else
+			barHeight = barHeight / 255 * canvas.height | 0;
 
-		if ( barHeight > bar.peak ) {
+		if ( barHeight >= bar.peak ) {
 			bar.peak = barHeight;
 			bar.hold = 30; // set peak hold time to 30 frames (0.5s)
 			bar.accel = 0;
@@ -578,7 +579,7 @@ function draw() {
 		if ( bar.peak > 0 ) {
 			if ( showPeaks )
 				if ( isLedDisplay )
-					canvasCtx.fillRect( bar.posX + ledOptions.spaceH / 2, ( ledOptions.nLeds - Math.floor( bar.peak / canvas.height * ledOptions.nLeds ) ) * ( ledOptions.ledHeight + ledOptions.spaceV ), barWidth, ledOptions.ledHeight );
+					canvasCtx.fillRect( bar.posX + ledOptions.spaceH / 2, ( ledOptions.nLeds - ( bar.peak / canvas.height * ledOptions.nLeds | 0 ) ) * ( ledOptions.ledHeight + ledOptions.spaceV ), barWidth, ledOptions.ledHeight );
 				else
 					canvasCtx.fillRect( bar.posX, canvas.height - bar.peak, barWidth, 2 );
 
