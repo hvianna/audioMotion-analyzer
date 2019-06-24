@@ -812,7 +812,7 @@ export function create( container, options = {} ) {
 	canvas = document.createElement('canvas');
 	canvas.style = 'max-width: 100%;';
 	container.appendChild( canvas );
-	canvasCtx = canvas.getContext('2d');
+	canvasCtx = canvas.getContext( '2d', { alpha: false } );
 	setCanvas();
 
 	// adjust canvas size on entering / leaving fullscreen
