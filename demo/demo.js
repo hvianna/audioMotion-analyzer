@@ -1,4 +1,4 @@
-import * as audioMotion from './src/audioMotion-analyzer.js';
+import * as audioMotion from '../index.js';
 
 function displayCanvasMsg( canvas, canvasCtx, pixelRatio ) {
 	var size = 20 * pixelRatio;
