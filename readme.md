@@ -1,4 +1,41 @@
-### Interface objects:
+audioMotion-analyzer
+====================
+
+High-resolution real-time graphic audio spectrum analyzer JavaScript module with no dependencies.
+
+This is the just the spectrum analyzer module written for my [audioMotion](https://github.com/hvianna/audioMotion.js) project, a full-featured audio player and graphic spectrum analyzer.
+
+## Usage
+
+Using npm:
+
+```
+npm install audioMotion-analyzer
+```
+
+In node.js:
+
+```
+const audioMotion = require('audioMotion-analyzer')
+```
+
+You can also download the source code from the [project's page](https://github.com/hvianna/audioMotion-analyzer) and use it as a [native ES module](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import):
+
+```
+import * as audioMotion from './src/audioMotion-analyzer.js';
+```
+
+Minimal constructor:
+
+```
+audioMotion.create(	document.getElementById('container'), { source: document.getElementById('audio') } );
+```
+
+This will insert the analyzer canvas inside the *#container* element and start the visualization of audio coming from the *#audio* element. You can connect additional audio sources via the `connectAudio()` function or directly to the `audioCtx` object exposed by audioMotion.
+
+See the [demo folder](demo/) for more comprehensive examples. See [functions](#functions) for additional configuration options and other ways to interact with the analyzer.
+
+## Interface objects
 
 `audioCtx` *[AudioContext](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) object*
 
@@ -16,15 +53,15 @@ Canvas element created by audioMotion.
 
 2D rendering context for drawing in audioMotion's canvas.
 
-### Read only variables:
+## Read only variables
 
 `dataArray` *array*
 
-Data array returned by [`getByteFrequencyData`](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteFrequencyData).
+Data array returned by the analyzer's [`getByteFrequencyData()`](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteFrequencyData). This is updated on every animation frame (ideally 60 times per second).
 
 `pixelRatio` *number*
 
-Current [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio). You can refer to this value to adjust any additional drawings in do in the canvas. When running in low-resolution mode (`loRes` option set to *true*) *pixelRatio* is halved, i.e. **0.5** for standard displays and **1** for retina/Hi-DPI.
+Current [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio). You can refer to this value to adjust any additional drawings done in the canvas. When low-resolution mode is active (`loRes` option set to *true*) *pixelRatio* is halved, i.e. **0.5** for standard displays and **1** for retina/Hi-DPI.
 
 `mode` *number*
 
@@ -36,46 +73,48 @@ Current frame rate.
 
 `gradient` *string*
 
-Key to currently selected gradient
+Key to currently selected gradient.
 
 `showBgColor` *boolean*
 
-*true* means background color is defined by current gradient; *false* means black background.
+*true* when using background color defined by current gradient; *false* for black background.
 
 `showLeds` *boolean*
 
-Use LED display effect?
+*true* when LED display effect is active.
 
 `showScale` *boolean*
 
-Frequency labels being displayed in the X axis?
+*true* when frequency labels are being displayed in the X axis.
 
 `showPeaks` *boolean*
 
-Show amplitude peaks for each frequency?
+*true* when amplitude peaks for each frequency are being displayed.
 
 `highSens` *boolean*
 
-High sensitivity mode active?
+*true* when high sensitivity mode is active.
 
 `loRes` *boolean*
 
-Use low resolution canvas?
+*true* when canvas is set to low resolution (half the original width and height).
 
 `width` *number*, `height` *number*
 
-Nominal dimensions of the analyzer container. Please note that the actual canvas dimensions may differ from these, depending on the current pixel ratio and fullscreen status. For the current canvas dimensions use `audioMotion.canvas.width` and `audioMotion.canvas.height`.
+Nominal dimensions of the analyzer container. Actual canvas dimensions may differ from these, depending on the current pixel ratio and fullscreen status. For the current canvas dimensions use `audioMotion.canvas.width` and `audioMotion.canvas.height`.
 
 `fsWidth` *number*, `fsHeight` *number*
 
 Canvas dimensions used during fullscreen mode. These take the current pixel ratio into account and will change accordingly when low-resolution mode is set.
 
 
-### Functions:
+## Functions
 
-<a name="create"></a>`create( [container], [options] )`
+<a name="create"></a>`create( [container], [{options}] )`
 
 Constructor function. Initializes the analyzer and inserts the canvas into the *container* element. If *container* is undefined, the canvas is added to the document's body.
+
+If `source` is specified in the *options*, returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) object to the connected audio element.
 
 ```
 options = {
@@ -105,13 +144,13 @@ options = {
 Connect an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) (`<audio>` or `<video>` HTML element) to the analyzer.
 Returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) which can be used for later disconnection.
 
-`boolean isFullscreen()`
+`isFullscreen()`
 
 Returns *true* if the analyzer is being displayed in fullscreen, or *false* otherwise.
 
-`boolean isOn()`
+`isOn()`
 
-Returns *true* if the analyzer is running, or *false* if it's stopped.
+Returns *true* if the analyzer canvas animation is running, or *false* if it's stopped.
 
 <a name="register-gradient"></a>`registerGradient( name, options )`
 
@@ -135,7 +174,7 @@ Sets canvas dimensions in pixels. *width* defaults to the container's width, or 
 
 `setDrawCallback( func )`
 
-Sets a function to be called after audioMotion finishes rendering the canvas. If *func* is undefined or not a function, clears any function previously set.
+Sets a function to be called after audioMotion finishes rendering each frame of the canvas. If *func* is undefined or not a function, clears any function previously set.
 
 For convenience, `canvas`, `canvasCtx` and `pixelRatio` are passed as arguments to the callback function.
 
@@ -172,18 +211,18 @@ Sets the analyzer's [smoothingTimeConstant](https://developer.mozilla.org/en-US/
 
 Selects gradient for visualization. *gradient* must be the name of a built-in or [registered](#register-gradient) gradient. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*. Defaults to **'classic'**.
 
-`setOptions( options )`
+`setOptions( {options} )`
 
 Shorthand function for setting several options at once. *options* is an object with the same structure as in the [`create()`](#create) function.
 
 `setSensitivity( [min], [max] )`
 
-Adjust the analyzer's sensitivity. If *min* is a boolean, set high sensitivity mode on (*true*) or off (*false*).
-Custom values can be specified in dB (decibels). For reference see [AnalyserNode.minDecibels @MDN](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels).
+Adjust the analyzer's sensitivity. If *min* is a boolean, sets high sensitivity mode on (*true*) or off (*false*).
+Custom values can be specified in dB (decibels). For reference values, see [AnalyserNode.minDecibels](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels).
 
 *min* defaults to **-85** and *max* defaults to **-25**. These are the same values set by calling `setSensitivity( false )` which is the normal sensitivity mode.
 
-`boolean toggleBgColor( [boolean] )`
+`toggleBgColor( [boolean] )`
 
 Toggles the display of background color. If *true*, uses the background color defined by the active gradient; if *false* sets background to black. If no argument provided, inverts the current status. Returns the status after the change.
 
@@ -195,19 +234,23 @@ Toggles display of current frame rate.
 
 Toggles full-screen mode.
 
-`boolean toggleLeds( [boolean] )`
+`toggleLeds( [boolean] )`
 
 Toggles LED display effect. If no argument provided, inverts its current status. Returns the resulting status.
 
-`boolean togglePeaks( [boolean] )`
+`togglePeaks( [boolean] )`
 
 Toggles the display of amplitude peaks for each frequency. If no argument provided, inverts its current status. Returns the resulting status.
 
-`boolean toggleScale ( [boolean] )`
+`toggleScale ( [boolean] )`
 
 Toggles display of frequency scale in the X axis. If no argument provided, inverts its current status. Returns the resulting status.
 
-`boolean toggleAnalyzer( [boolean] )`
+`toggleAnalyzer( [boolean] )`
 
 Starts or stops the analyzer and returns the resulting status. The analyzer is started by default on `create()`, unless you specify `start: false` in the options.
 
+## License
+
+audioMotion-analyzer copyright (c) 2018-2019 Henrique Avila Vianna<br>
+Licensed under the [GNU Affero General Public License, version 3 or later](https://www.gnu.org/licenses/agpl.html).
