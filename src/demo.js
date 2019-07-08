@@ -1,6 +1,7 @@
 import * as audioMotion from '../dist/audioMotion-analyzer.js';
 
-var audioEl = document.getElementById('audio');
+var audioEl = document.getElementById('audio'),
+	showLogo = true;
 
 // Create audioMotion analyzer
 
@@ -41,6 +42,7 @@ document.getElementById('btn_leds').addEventListener( 'click', () => audioMotion
 document.getElementById('btn_scale').addEventListener( 'click', () => audioMotion.toggleScale() );
 document.getElementById('btn_lores').addEventListener( 'click', () => audioMotion.toggleLoRes() );
 document.getElementById('btn_fps').addEventListener( 'click', () => audioMotion.toggleFPS() );
+document.getElementById('btn_logo').addEventListener( 'click', () => showLogo = ! showLogo );
 document.getElementById('btn_freeze').addEventListener( 'click', () => audioMotion.toggleAnalyzer() );
 
 document.getElementById('mode').addEventListener( 'change', e => audioMotion.setMode( e.target.value ) );
@@ -65,6 +67,8 @@ document.getElementById('uploadFile').addEventListener( 'change', e => loadSong(
 // Callback function to add custom content to the canvas
 
 function displayCanvasMsg( canvas, canvasCtx, pixelRatio ) {
+	if ( ! showLogo )
+		return;
 	var size = 20 * pixelRatio;
 	if ( audioMotion.isFullscreen() )
 		size *= 2;
@@ -74,7 +78,7 @@ function displayCanvasMsg( canvas, canvasCtx, pixelRatio ) {
 	canvasCtx.font = `${size + audioMotion.dataArray[ 1 ] / 16 * pixelRatio}px Orbitron,sans-serif`;
 	canvasCtx.fillStyle = '#fff8';
 	canvasCtx.textAlign = 'center';
-	canvasCtx.fillText( 'audioMotion', size + w, size * 2 );
+	canvasCtx.fillText( 'audioMotion', canvas.width - w - size * 4, size * 2 );
 }
 
 // Load song from user's computer
