@@ -1,4 +1,68 @@
-import * as audioMotion from './audioMotion-analyzer.js';
+import * as audioMotion from '../dist/audioMotion-analyzer.js';
+
+var audioEl = document.getElementById('audio');
+
+// Create audioMotion analyzer
+
+try {
+	audioMotion.create(
+		document.getElementById('container'),
+		{
+			mode: 4, // 1/6th-octave bands
+			source: audioEl, // main source is the HTML audio element
+			freqMin: 30,
+			freqMax: 16000,
+			showFPS: true,
+			drawCallback: displayCanvasMsg // custom callback function (see below)
+		}
+	);
+}
+catch( err ) {
+	document.getElementById('container').innerHTML = `<p>audioMotion failed with error: <em>${err}</em></p>`;
+}
+
+// Create oscillator and gain nodes, and connect them to the analyzer
+
+var audioCtx = audioMotion.audioCtx,
+	oscillator = audioCtx.createOscillator(),
+	gainNode = audioCtx.createGain();
+
+oscillator.frequency.setValueAtTime( 0, audioCtx.currentTime );
+oscillator.connect( gainNode );
+oscillator.start();
+gainNode.connect( audioMotion.analyzer );
+
+// Event listeners for UI buttons
+
+document.getElementById('btn_fullscr').addEventListener( 'click', () => audioMotion.toggleFullscreen() );
+document.getElementById('btn_bgcolor').addEventListener( 'click', () => audioMotion.toggleBgColor() );
+document.getElementById('btn_peaks').addEventListener( 'click', () => audioMotion.togglePeaks() );
+document.getElementById('btn_leds').addEventListener( 'click', () => audioMotion.toggleLeds() );
+document.getElementById('btn_scale').addEventListener( 'click', () => audioMotion.toggleScale() );
+document.getElementById('btn_lores').addEventListener( 'click', () => audioMotion.toggleLoRes() );
+document.getElementById('btn_fps').addEventListener( 'click', () => audioMotion.toggleFPS() );
+document.getElementById('btn_freeze').addEventListener( 'click', () => audioMotion.toggleAnalyzer() );
+
+document.getElementById('mode').addEventListener( 'change', e => audioMotion.setMode( e.target.value ) );
+document.getElementById('gradient').addEventListener( 'change', e => audioMotion.setGradient( e.target.value ) );
+document.getElementById('range').addEventListener( 'change', e => {
+	let selected = e.target[ e.target.selectedIndex ];
+	audioMotion.setFreqRange( selected.dataset.min, selected.dataset.max );
+});
+
+document.querySelectorAll('.tones').forEach( el =>
+	el.addEventListener( 'click', e => {
+		oscillator.type = e.target.dataset.wave;
+		oscillator.frequency.setValueAtTime( e.target.dataset.freq, audioCtx.currentTime );
+		gainNode.gain.setValueAtTime( .2, audioCtx.currentTime );
+	})
+);
+
+document.getElementById('btn_soundoff').addEventListener( 'click', () => gainNode.gain.setValueAtTime( 0, audioCtx.currentTime ) );
+
+document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
+
+// Callback function to add custom content to the canvas
 
 function displayCanvasMsg( canvas, canvasCtx, pixelRatio ) {
 	var size = 20 * pixelRatio;
@@ -13,54 +77,14 @@ function displayCanvasMsg( canvas, canvasCtx, pixelRatio ) {
 	canvasCtx.fillText( 'audioMotion', size + w, size * 2 );
 }
 
-try {
-	audioMotion.create(
-		document.getElementById('container'),
-		{
-			mode: 4,
-			source: document.getElementById('audio'),
-			freqMin: 30,
-			freqMax: 16000,
-			showFPS: true,
-			drawCallback: displayCanvasMsg
-		}
-	);
+// Load song from user's computer
+
+function loadSong( el ) {
+	var reader = new FileReader();
+
+	reader.readAsDataURL( el.files[0] );
+	reader.onload = () => {
+		audioEl.src = reader.result;
+		audioEl.play();
+	};
 }
-catch( err ) {
-	document.getElementById('container').innerHTML = `<p>audioMotion failed with error: <em>${err}</em></p>`;
-}
-
-var audioCtx = audioMotion.audioCtx,
-	oscillator = audioCtx.createOscillator(),
-	gainNode = audioCtx.createGain();
-
-oscillator.frequency.setValueAtTime( 0, audioCtx.currentTime );
-oscillator.connect( gainNode );
-oscillator.start();
-gainNode.connect( audioMotion.analyzer );
-
-document.getElementById('btn_fullscr').addEventListener( 'click', () => audioMotion.toggleFullscreen() );
-document.getElementById('btn_bgcolor').addEventListener( 'click', () => audioMotion.toggleBgColor() );
-document.getElementById('btn_peaks').addEventListener( 'click', () => audioMotion.togglePeaks() );
-document.getElementById('btn_leds').addEventListener( 'click', () => audioMotion.toggleLeds() );
-document.getElementById('btn_scale').addEventListener( 'click', () => audioMotion.toggleScale() );
-document.getElementById('btn_lores').addEventListener( 'click', () => audioMotion.toggleLoRes() );
-document.getElementById('btn_fps').addEventListener( 'click', () => audioMotion.toggleFPS() );
-document.getElementById('btn_freeze').addEventListener( 'click', () => audioMotion.toggleAnalyzer() );
-
-document.getElementById('mode').addEventListener( 'change', ( e ) => audioMotion.setMode( e.target.value ) );
-document.getElementById('gradient').addEventListener( 'change', ( e ) => audioMotion.setGradient( e.target.value ) );
-document.getElementById('range').addEventListener( 'change', ( e ) => {
-	let selected = e.target[ e.target.selectedIndex ];
-	audioMotion.setFreqRange( selected.dataset.min, selected.dataset.max );
-});
-
-document.querySelectorAll('.tones').forEach( el =>
-	el.addEventListener( 'click', ( e ) => {
-		oscillator.type = e.target.dataset.wave;
-		oscillator.frequency.setValueAtTime( e.target.dataset.freq, audioCtx.currentTime );
-		gainNode.gain.setValueAtTime( .2, audioCtx.currentTime );
-	})
-);
-
-document.getElementById('btn_soundoff').addEventListener( 'click', () => gainNode.gain.setValueAtTime( 0, audioCtx.currentTime ) );
