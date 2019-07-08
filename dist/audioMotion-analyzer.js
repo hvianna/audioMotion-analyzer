@@ -93,12 +93,16 @@ var defaults = {
 
 /**
  * Checks if the analyzer is being displayed in fullscreen mode
+ *
+ * @returns {boolean}
  */
 export function isFullscreen() {
 	return document.fullscreenElement === canvas;
 }
 /**
  * Checks if the analyzer canvas animation is running or not
+ *
+ * @returns {boolean}
  */
 export function isOn() {
 	return animationReq !== undefined;
@@ -106,6 +110,9 @@ export function isOn() {
 
 /**
  * Set dimensions of analyzer's canvas
+ *
+ * @param {number} [w] width in pixels
+ * @param {number} [h] height in pixels
  */
 export function setCanvasSize( w = defaults.width, h = defaults.height ) {
 	width = w;
@@ -115,6 +122,8 @@ export function setCanvasSize( w = defaults.width, h = defaults.height ) {
 
 /**
  * Set callback function
+ *
+ * @param {function} [func] if undefined or not a function, clears any previously set function
  */
 export function setDrawCallback( func ) {
 	if ( typeof func == 'function' )
@@ -125,6 +134,8 @@ export function setDrawCallback( func ) {
 
 /**
  * Set visualization mode
+ *
+ * @param {number} [value]
  */
 export function setMode( value = defaults.mode ) {
 	mode = Number( value );
@@ -133,6 +144,8 @@ export function setMode( value = defaults.mode ) {
 
 /**
  * Set the size of the FFT performed by the analyzer node
+ *
+ * @param {number} [value]
  */
 export function setFFTSize( value = defaults.fftSize ) {
 	analyzer.fftSize = value;
@@ -142,6 +155,9 @@ export function setFFTSize( value = defaults.fftSize ) {
 
 /**
  * Set desired frequency range
+ *
+ * @param {number} [min] lowest frequency represented in the x-axis
+ * @param {number} [max] highest frequency represented in the x-axis
  */
 export function setFreqRange( min = defaults.freqMin, max = defaults.freqMax ) {
 	fMin = Math.min( min, max );
@@ -151,6 +167,8 @@ export function setFreqRange( min = defaults.freqMin, max = defaults.freqMax ) {
 
 /**
  * Set the analyzer's smoothing time constant
+ *
+ * @param {number} [value] float value from 0 to 1
  */
 export function setSmoothing( value = defaults.smoothing ) {
 	analyzer.smoothingTimeConstant = value;
@@ -158,13 +176,18 @@ export function setSmoothing( value = defaults.smoothing ) {
 
 /**
  * Select gradient
+ *
+ * @param {string} [name] name of a built-in or previously registered gradient
  */
-export function setGradient( value = defaults.gradient ) {
-	gradient = value;
+export function setGradient( name = defaults.gradient ) {
+	gradient = name;
 }
 
 /**
  * Toggle peaks on/off
+ *
+ * @param {boolean} [value] if undefined, inverts the current status
+ * @returns {boolean} resulting status after the change
  */
 export function togglePeaks( value ) {
 	return showPeaks = value === undefined ? ! showPeaks : value;
@@ -172,6 +195,9 @@ export function togglePeaks( value ) {
 
 /**
  * Toggle background color on/off
+ *
+ * @param {boolean} [value] if undefined, inverts the current status
+ * @returns {boolean} resulting status after the change
  */
 export function toggleBgColor( value ) {
 	return showBgColor = value === undefined ? ! showBgColor : value;
@@ -179,6 +205,9 @@ export function toggleBgColor( value ) {
 
 /**
  * Toggle FPS display
+ *
+ * @param {boolean} [value] if undefined, inverts the current status
+ * @returns {boolean} resulting status after the change
  */
 export function toggleFPS( value ) {
 	return showFPS = value === undefined ? ! showFPS : value;
@@ -186,6 +215,9 @@ export function toggleFPS( value ) {
 
 /**
  * Toggle LED effect on/off
+ *
+ * @param {boolean} [value] if undefined, inverts the current status
+ * @returns {boolean} resulting status after the change
  */
 export function toggleLeds( value ) {
 	return showLeds = value === undefined ? ! showLeds : value;
@@ -193,6 +225,9 @@ export function toggleLeds( value ) {
 
 /**
  * Toggle scale on/off
+ *
+ * @param {boolean} [value] if undefined, inverts the current status
+ * @returns {boolean} resulting status after the change
  */
 export function toggleScale ( value ) {
 	return showScale = value === undefined ? ! showScale : value;
@@ -200,6 +235,9 @@ export function toggleScale ( value ) {
 
 /**
  * Toggle low-resolution mode on/off
+ *
+ * @param {boolean} [value] if undefined, inverts the current status
+ * @returns {boolean} resulting status after the change
  */
 export function toggleLoRes ( value ) {
 	loRes = value === undefined ? ! loRes : value;
@@ -210,8 +248,8 @@ export function toggleLoRes ( value ) {
 /**
  * Adjust the analyzer's sensitivity
  *
- * @param {(boolean|number)} [min=-85] - min decibels or true for high sensitivity, false for low sensitivity
- * @param {number}           [max=-25] - max decibels
+ * @param {(boolean|number)} [min=-85] min decibels or true for high sensitivity, false for low sensitivity
+ * @param {number}           [max=-25] max decibels
  */
 export function setSensitivity( min = -85, max = -25 ) {
 	if ( min === true ) {
@@ -230,6 +268,8 @@ export function setSensitivity( min = -85, max = -25 ) {
 
 /**
  * Shorthand to setting several options at once
+ *
+ * @param {object} options
  */
 export function setOptions( options ) {
 
@@ -290,6 +330,9 @@ export function setOptions( options ) {
 
 /**
  * Registers a custom gradient
+ *
+ * @param {string} name
+ * @param {object} options
  */
 export function registerGradient( name, options ) {
 	if ( typeof options !== 'object' )
@@ -315,6 +358,21 @@ export function registerGradient( name, options ) {
 
 /**
  * Pre-calculate the actual X-coordinate on screen for each analyzer bar
+ *
+ * Since the frequency scale is logarithmic, each position in the X-axis actually represents a power of 10.
+ * To improve performace, the position of each frequency is calculated in advance and stored in an array.
+ * Canvas space usage is optimized to accommodate exactly the frequency range the user needs.
+ * Positions need to be recalculated whenever the frequency range, FFT size or canvas size change.
+ *
+ *                              +-------------------------- canvas --------------------------+
+ *                              |                                                            |
+ *    |-------------------|-----|-------------|-------------------!-------------------|------|------------|
+ *    1                  10     |            100                  1K                 10K     |           100K (Hz)
+ * (10^0)              (10^1)   |          (10^2)               (10^3)              (10^4)   |          (10^5)
+ *                              |-------------|<--- bandWidth --->|--------------------------|
+ *                             20                   (pixels)                                22K
+ *                          (10^1.3)                                                     (10^4.34)
+ *                           deltaX
  */
 function preCalcPosX() {
 
@@ -325,12 +383,12 @@ function preCalcPosX() {
 
 	analyzerBars = [];
 
-	if ( mode == 0 ) {
-	// discrete frequencies
+	if ( mode == 0 ) { // discrete frequencies mode
+		barWidth = 1;
+
  		var pos, lastPos = -1;
 		var iMin = Math.floor( fMin * analyzer.fftSize / audioCtx.sampleRate ),
 		    iMax = Math.round( fMax * analyzer.fftSize / audioCtx.sampleRate );
-		barWidth = 1;
 
 		for ( i = iMin; i <= iMax; i++ ) {
 			freq = i * audioCtx.sampleRate / analyzer.fftSize; // frequency represented in this bin
@@ -345,9 +403,7 @@ function preCalcPosX() {
 				analyzerBars[ analyzerBars.length - 1 ].endIdx = i;
 		}
 	}
-	else {
-	// octave bands
-
+	else { // octave bands modes
 		var spaceV;
 
 		switch ( mode ) {
@@ -688,7 +744,7 @@ function setCanvas() {
 }
 
 /**
- * Display the canvas in full-screen mode
+ * Toggles canvas full-screen mode
  */
 export function toggleFullscreen() {
 
@@ -710,8 +766,8 @@ export function toggleFullscreen() {
 /**
  * Connect HTML audio element to analyzer
  *
- * @param {Object} element - DOM audio element
- * @returns {Object} a MediaElementAudioSourceNode object
+ * @param {object} element HTML audio element
+ * @returns {object} a MediaElementAudioSourceNode object
  */
 export function connectAudio( element ) {
 	var audioSource = audioCtx.createMediaElementSource( element );
@@ -721,6 +777,9 @@ export function connectAudio( element ) {
 
 /**
  * Start / stop canvas animation
+ *
+ * @param {boolean} [value] if undefined, inverts the current status
+ * @returns {boolean} resulting status after the change
  */
 export function toggleAnalyzer( value ) {
 	var started = isOn();
@@ -741,17 +800,11 @@ export function toggleAnalyzer( value ) {
 }
 
 /**
- * Stop canvas animation
- */
-export function stop() {
-	if ( animationReq ) {
-		cancelAnimationFrame( animationReq );
-		animationReq = null;
-	}
-}
-
-/**
- * Initialization
+ * Constructor
+ *
+ * @param {object} [container] DOM element where to insert the analyzer; if undefined, uses the document body
+ * @param {object} [options]
+ * @returns {object} MediaElementAudioSourceNode object to connected audio source
  */
 export function create( container, options = {} ) {
 
