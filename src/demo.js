@@ -11,8 +11,8 @@ try {
 		{
 			mode: 4, // 1/6th-octave bands
 			source: audioEl, // main source is the HTML audio element
-			freqMin: 30,
-			freqMax: 16000,
+			minFreq: 30,
+			maxFreq: 16000,
 			showFPS: true,
 			drawCallback: displayCanvasMsg // custom callback function (see below)
 		}
