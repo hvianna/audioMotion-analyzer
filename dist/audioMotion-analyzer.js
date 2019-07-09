@@ -24,7 +24,7 @@
 export var mode, minFreq, maxFreq, gradient, showBgColor, showLeds, showScale, showPeaks, highSens, loRes, showFPS;
 
 // data for drawing the analyzer bars and scale-related variables
-var analyzerBars, minLog, bandWidth, barWidth, ledOptions;
+var analyzerBars, barWidth, ledOptions, freqLabels;
 
 // Web Audio API related variables
 export var audioCtx, analyzer, dataArray;
@@ -376,18 +376,18 @@ export function registerGradient( name, options ) {
  */
 function preCalcPosX() {
 
-	var i, freq;
-
-	minLog = Math.log10( minFreq );
-	bandWidth = canvas.width / ( Math.log10( maxFreq ) - minLog );
+	var i, freq,
+		minLog = Math.log10( minFreq ),
+		bandWidth = canvas.width / ( Math.log10( maxFreq ) - minLog );
 
 	analyzerBars = [];
 
 	if ( mode == 0 ) { // discrete frequencies mode
 		barWidth = 1;
 
- 		var pos, lastPos = -1;
-		var minIndex = Math.floor( minFreq * analyzer.fftSize / audioCtx.sampleRate ),
+ 		var pos,
+ 			lastPos = -1,
+			minIndex = Math.floor( minFreq * analyzer.fftSize / audioCtx.sampleRate ),
 		    maxIndex = Math.min( Math.round( maxFreq * analyzer.fftSize / audioCtx.sampleRate ), analyzer.frequencyBinCount - 1 );
 
 		for ( i = minIndex; i <= maxIndex; i++ ) {
@@ -536,37 +536,26 @@ function preCalcPosX() {
 			ledsCtx.fillRect( 0, i, canvas.width, ledOptions.spaceV );
 	}
 
-	drawScale();
-}
+	// calculate the position of the labels (octaves center frequencies) for the X-axis scale
+	freqLabels = [
+		{ freq: 16 },
+		{ freq: 31 },
+		{ freq: 63 },
+		{ freq: 125 },
+		{ freq: 250 },
+		{ freq: 500 },
+		{ freq: 1000 },
+		{ freq: 2000 },
+		{ freq: 4000 },
+		{ freq: 8000 },
+		{ freq: 16000 }
+	];
 
-/**
- * Draws the x-axis scale
- */
-function drawScale() {
-
-	// octaves center frequencies
-	var bands = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
-
-	var size = 5 * pixelRatio;
-
-	if ( isFullscreen() )
-		size *= 2;
-
-	canvasCtx.fillStyle = '#000c';
-	canvasCtx.fillRect( 0, canvas.height - size * 4, canvas.width, size * 4 );
-
-	if ( ! showScale )
-		return;
-
-	canvasCtx.fillStyle = '#fff';
-	canvasCtx.font = ( size * 2 ) + 'px sans-serif';
-	canvasCtx.textAlign = 'center';
-
-	bands.forEach( function( freq ) {
-		var posX = bandWidth * ( Math.log10( freq ) - minLog );
-		canvasCtx.fillText( freq >= 1000 ? ( freq / 1000 ) + 'k' : freq, posX, canvas.height - size );
+	freqLabels.forEach( label => {
+		label.posX = bandWidth * ( Math.log10( label.freq ) - minLog );
+		if ( label.freq >= 1000 )
+			label.freq = ( label.freq / 1000 ) + 'k';
 	});
-
 }
 
 /**
@@ -575,7 +564,7 @@ function drawScale() {
  */
 function draw() {
 
-	var l, bar, barHeight,
+	var i, j, l, bar, barHeight, size,
 		isLedDisplay = ( showLeds && mode > 0 );
 
 	if ( ! showBgColor )	// use black background
@@ -593,7 +582,7 @@ function draw() {
 	analyzer.getByteFrequencyData( dataArray );
 
 	l = analyzerBars.length;
-	for ( let i = 0; i < l; i++ ) {
+	for ( i = 0; i < l; i++ ) {
 
 		bar = analyzerBars[ i ];
 
@@ -603,13 +592,13 @@ function draw() {
 			barHeight = 0;
 			if ( bar.average ) {
 				// use the average value of the range
-				for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
+				for ( j = bar.dataIdx; j <= bar.endIdx; j++ )
 					barHeight += dataArray[ j ];
 				barHeight = barHeight / ( bar.endIdx - bar.dataIdx + 1 );
 			}
 			else {
 				// use the highest value in the range
-				for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
+				for ( j = bar.dataIdx; j <= bar.endIdx; j++ )
 					barHeight = Math.max( barHeight, dataArray[ j ] );
 			}
 		}
@@ -650,19 +639,32 @@ function draw() {
 	if ( isLedDisplay ) // applies LEDs mask over the canvas
 		canvasCtx.drawImage( ledsMask, 0, 0 );
 
-	if ( showScale )
-		drawScale();
+	if ( showScale ) {
+		size = 5 * pixelRatio;
+
+		if ( isFullscreen() )
+			size *= 2;
+
+		canvasCtx.fillStyle = '#000c';
+		canvasCtx.fillRect( 0, canvas.height - size * 4, canvas.width, size * 4 );
+
+		canvasCtx.fillStyle = '#fff';
+		canvasCtx.font = ( size * 2 ) + 'px sans-serif';
+		canvasCtx.textAlign = 'center';
+
+		freqLabels.forEach( label => canvasCtx.fillText( label.freq, label.posX, canvas.height - size ) );
+	}
 
 	frame++;
-	let now = performance.now();
-	let elapsed = now - time;
+	var now = performance.now();
+	var elapsed = now - time;
 	if ( elapsed >= 1000 ) {
 		fps = frame / ( elapsed / 1000 );
 		frame = 0;
 		time = now;
 	}
 	if ( showFPS ) {
-		let size = 20 * pixelRatio;
+		size = 20 * pixelRatio;
 		canvasCtx.font = `bold ${size}px sans-serif`;
 		canvasCtx.fillStyle = '#0f0';
 		canvasCtx.textAlign = 'right';
