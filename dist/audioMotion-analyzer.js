@@ -21,10 +21,10 @@
  */
 
 // current visualization settings
-export var mode, gradient, showBgColor, showLeds, showScale, showPeaks, highSens, loRes, showFPS;
+export var mode, minFreq, maxFreq, gradient, showBgColor, showLeds, showScale, showPeaks, highSens, loRes, showFPS;
 
 // data for drawing the analyzer bars and scale-related variables
-var analyzerBars, fMin, fMax, deltaX, bandWidth, barWidth, ledOptions;
+var analyzerBars, deltaX, bandWidth, barWidth, ledOptions;
 
 // Web Audio API related variables
 export var audioCtx, analyzer, dataArray;
@@ -75,8 +75,8 @@ var	gradients = {
 var defaults = {
 	mode        : 0,
 	fftSize     : 8192,
-	freqMin     : 20,
-	freqMax     : 22000,
+	minFreq     : 20,
+	maxFreq     : 22000,
 	smoothing   : 0.5,
 	gradient    : 'classic',
 	showBgColor : true,
@@ -159,9 +159,9 @@ export function setFFTSize( value = defaults.fftSize ) {
  * @param {number} [min] lowest frequency represented in the x-axis
  * @param {number} [max] highest frequency represented in the x-axis
  */
-export function setFreqRange( min = defaults.freqMin, max = defaults.freqMax ) {
-	fMin = Math.min( min, max );
-	fMax = Math.max( min, max );
+export function setFreqRange( min = defaults.minFreq, max = defaults.maxFreq ) {
+	minFreq = Math.min( min, max );
+	maxFreq = Math.max( min, max );
 	preCalcPosX();
 }
 
@@ -276,11 +276,11 @@ export function setOptions( options ) {
 	if ( options.mode !== undefined )
 		mode = Number( options.mode );
 
-	if ( options.freqMin !== undefined )
-		fMin = options.freqMin;
+	if ( options.minFreq !== undefined )
+		minFreq = options.minFreq;
 
-	if ( options.freqMax !== undefined )
-		fMax = options.freqMax;
+	if ( options.maxFreq !== undefined )
+		maxFreq = options.maxFreq;
 
 	if ( options.gradient !== undefined )
 		gradient = options.gradient;
@@ -370,7 +370,7 @@ export function registerGradient( name, options ) {
  *    1                  10     |            100                  1K                 10K     |           100K (Hz)
  * (10^0)              (10^1)   |          (10^2)               (10^3)              (10^4)   |          (10^5)
  *                              |-------------|<--- bandWidth --->|--------------------------|
- *                             20                   (pixels)                                22K
+ *                  minFreq--> 20                   (pixels)                                22K <--maxFreq
  *                          (10^1.3)                                                     (10^4.34)
  *                           deltaX
  */
@@ -378,8 +378,8 @@ function preCalcPosX() {
 
 	var i, freq;
 
-	deltaX = Math.log10( fMin );
-	bandWidth = canvas.width / ( Math.log10( fMax ) - deltaX );
+	deltaX = Math.log10( minFreq );
+	bandWidth = canvas.width / ( Math.log10( maxFreq ) - deltaX );
 
 	analyzerBars = [];
 
@@ -387,8 +387,8 @@ function preCalcPosX() {
 		barWidth = 1;
 
  		var pos, lastPos = -1;
-		var iMin = Math.floor( fMin * analyzer.fftSize / audioCtx.sampleRate ),
-		    iMax = Math.round( fMax * analyzer.fftSize / audioCtx.sampleRate );
+		var iMin = Math.floor( minFreq * analyzer.fftSize / audioCtx.sampleRate ),
+		    iMax = Math.round( maxFreq * analyzer.fftSize / audioCtx.sampleRate );
 
 		for ( i = iMin; i <= iMax; i++ ) {
 			freq = i * audioCtx.sampleRate / analyzer.fftSize; // frequency represented in this bin
@@ -472,8 +472,8 @@ function preCalcPosX() {
 		var prevBin = 0;
 
 		i = 0;
-		while ( ( freq = c0 * root24 ** i ) <= fMax ) {
-			if ( freq >= fMin && i % mode == 0 )
+		while ( ( freq = c0 * root24 ** i ) <= maxFreq ) {
+			if ( freq >= minFreq && i % mode == 0 )
 				temperedScale.push( freq );
 			i++;
 		}
@@ -838,8 +838,8 @@ export function create( container, options = {} ) {
 	defaults.height = container.clientHeight || defaults.height;
 
 	mode        = options.mode        === undefined ? defaults.mode        : Number( options.mode );
-	fMin        = options.freqMin     === undefined ? defaults.freqMin     : options.freqMin;
-	fMax        = options.freqMax     === undefined ? defaults.freqMax     : options.freqMax;
+	minFreq     = options.minFreq     === undefined ? defaults.minFreq     : options.minFreq;
+	maxFreq     = options.maxFreq     === undefined ? defaults.maxFreq     : options.maxFreq;
 	gradient    = options.gradient    === undefined ? defaults.gradient    : options.gradient;
 	showBgColor = options.showBgColor === undefined ? defaults.showBgColor : options.showBgColor;
 	showLeds    = options.showLeds    === undefined ? defaults.showLeds    : options.showLeds;
