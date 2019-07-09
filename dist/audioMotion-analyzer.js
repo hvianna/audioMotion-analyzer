@@ -24,7 +24,7 @@
 export var mode, minFreq, maxFreq, gradient, showBgColor, showLeds, showScale, showPeaks, highSens, loRes, showFPS;
 
 // data for drawing the analyzer bars and scale-related variables
-var analyzerBars, deltaX, bandWidth, barWidth, ledOptions;
+var analyzerBars, minLog, bandWidth, barWidth, ledOptions;
 
 // Web Audio API related variables
 export var audioCtx, analyzer, dataArray;
@@ -372,14 +372,14 @@ export function registerGradient( name, options ) {
  *                              |-------------|<--- bandWidth --->|--------------------------|
  *                  minFreq--> 20                   (pixels)                                22K <--maxFreq
  *                          (10^1.3)                                                     (10^4.34)
- *                           deltaX
+ *                           minLog
  */
 function preCalcPosX() {
 
 	var i, freq;
 
-	deltaX = Math.log10( minFreq );
-	bandWidth = canvas.width / ( Math.log10( maxFreq ) - deltaX );
+	minLog = Math.log10( minFreq );
+	bandWidth = canvas.width / ( Math.log10( maxFreq ) - minLog );
 
 	analyzerBars = [];
 
@@ -387,12 +387,12 @@ function preCalcPosX() {
 		barWidth = 1;
 
  		var pos, lastPos = -1;
-		var iMin = Math.floor( minFreq * analyzer.fftSize / audioCtx.sampleRate ),
-		    iMax = Math.round( maxFreq * analyzer.fftSize / audioCtx.sampleRate );
+		var minIndex = Math.floor( minFreq * analyzer.fftSize / audioCtx.sampleRate ),
+		    maxIndex = Math.min( Math.round( maxFreq * analyzer.fftSize / audioCtx.sampleRate ), analyzer.frequencyBinCount - 1 );
 
-		for ( i = iMin; i <= iMax; i++ ) {
+		for ( i = minIndex; i <= maxIndex; i++ ) {
 			freq = i * audioCtx.sampleRate / analyzer.fftSize; // frequency represented in this bin
-			pos = Math.round( bandWidth * ( Math.log10( freq ) - deltaX ) ); // avoid fractionary pixel values
+			pos = Math.round( bandWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
 
 			// if it's on a different X-coordinate, create a new bar for this frequency
 			if ( pos > lastPos ) {
@@ -404,14 +404,15 @@ function preCalcPosX() {
 		}
 	}
 	else { // octave bands modes
+
+		// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
 		var spaceV;
 
 		switch ( mode ) {
 			case 24:
 				spaceV = Math.min( 16, canvas.height / ( 33 * pixelRatio ) | 0 );
 				ledOptions = {
-					nLeds: Math.min( 24, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
-					spaceV: spaceV,
+					nLeds: 24,
 					spaceH: Math.min( 24, canvas.width / ( 40 * pixelRatio ) | 0 )
 				};
 				break;
@@ -419,8 +420,7 @@ function preCalcPosX() {
 			case 12:
 				spaceV = Math.min( 8, canvas.height / ( 67 * pixelRatio ) | 0 );
 				ledOptions = {
-					nLeds: Math.min( 48, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
-					spaceV: spaceV,
+					nLeds: 48,
 					spaceH: Math.min( 16, canvas.width / ( 60 * pixelRatio ) | 0 )
 				};
 				break;
@@ -428,8 +428,7 @@ function preCalcPosX() {
 			case  8:
 				spaceV = Math.min( 6, canvas.height / ( 90 * pixelRatio ) | 0 );
 				ledOptions = {
-					nLeds: Math.min( 64, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
-					spaceV: spaceV,
+					nLeds: 64,
 					spaceH: Math.min( 10, canvas.width / ( 96 * pixelRatio ) | 0 )
 				};
 				break;
@@ -437,8 +436,7 @@ function preCalcPosX() {
 			case  4:
 				spaceV = Math.min( 6, canvas.height / ( 90 * pixelRatio ) | 0 );
 				ledOptions = {
-					nLeds: Math.min( 80, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
-					spaceV: spaceV,
+					nLeds: 80,
 					spaceH: Math.min( 8, canvas.width / ( 120 * pixelRatio ) | 0 )
 				};
 				break;
@@ -446,8 +444,7 @@ function preCalcPosX() {
 			case  2:
 				spaceV = Math.min( 4, canvas.height / ( 135 * pixelRatio ) | 0 );
 				ledOptions = {
-					nLeds: Math.min( 128, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
-					spaceV: spaceV,
+					nLeds: 128,
 					spaceH: Math.min( 4, canvas.width / ( 240 * pixelRatio ) | 0 )
 				};
 				break;
@@ -455,14 +452,14 @@ function preCalcPosX() {
 			default:
 				spaceV = Math.min( 3, Math.max( 2, canvas.height / ( 180 * pixelRatio ) | 0 ) );
 				ledOptions = {
-					nLeds: Math.min( 128, canvas.height / ( spaceV * 2 * pixelRatio ) | 0 ),
-					spaceV: spaceV,
+					nLeds: 128,
 					spaceH: Math.min( 4, canvas.width / ( 320 * pixelRatio ) | 0 )
 				};
 		}
 
 		ledOptions.spaceH *= pixelRatio;
-		ledOptions.spaceV *= pixelRatio;
+		ledOptions.spaceV = spaceV * pixelRatio;
+		ledOptions.nLeds = Math.min( ledOptions.nLeds, canvas.height / ( ledOptions.spaceV * 2 ) | 0 );
 		ledOptions.ledHeight = canvas.height / ledOptions.nLeds - ledOptions.spaceV;
 
 		// generate a table of frequencies based on the equal tempered scale
@@ -478,9 +475,11 @@ function preCalcPosX() {
 			i++;
 		}
 
-		// canvas space will be divided by the number of frequencies we have to display
+		// divide canvas space by the number of frequencies to display, allowing at least one pixel between bars
 		barWidth = Math.floor( canvas.width / temperedScale.length ) - 1;
-		var barSpace = Math.round( canvas.width - barWidth * temperedScale.length ) / ( temperedScale.length - 1 );
+
+		// the space remaining from the integer division is split equally among the bars as separator
+		var barSpace = ( canvas.width - barWidth * temperedScale.length ) / ( temperedScale.length - 1 );
 
 		ledsMask.width |= 0; // clear LEDs mask canvas
 
@@ -564,7 +563,7 @@ function drawScale() {
 	canvasCtx.textAlign = 'center';
 
 	bands.forEach( function( freq ) {
-		var posX = bandWidth * ( Math.log10( freq ) - deltaX );
+		var posX = bandWidth * ( Math.log10( freq ) - minLog );
 		canvasCtx.fillText( freq >= 1000 ? ( freq / 1000 ) + 'k' : freq, posX, canvas.height - size );
 	});
 
