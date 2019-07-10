@@ -97,7 +97,10 @@ var defaults = {
  * @returns {boolean}
  */
 export function isFullscreen() {
-	return document.fullscreenElement === canvas;
+	if ( document.fullscreenElement )
+		return document.fullscreenElement === canvas;
+	else if ( document.webkitFullscreenElement )
+		return document.webkitFullscreenElement === canvas;
 }
 /**
  * Checks if the analyzer canvas animation is running or not
@@ -748,19 +751,17 @@ function setCanvas() {
  * Toggles canvas full-screen mode
  */
 export function toggleFullscreen() {
-
 	if ( isFullscreen() ) {
-		document.exitFullscreen();
+		if ( document.exitFullscreen )
+			document.exitFullscreen();
+		else if ( document.webkitExitFullscreen )
+			document.webkitExitFullscreen();
 	}
 	else {
 		if ( canvas.requestFullscreen )
 			canvas.requestFullscreen();
 		else if ( canvas.webkitRequestFullscreen )
 			canvas.webkitRequestFullscreen();
-		else if ( canvas.mozRequestFullScreen )
-			canvas.mozRequestFullScreen();
-		else if ( canvas.msRequestFullscreen )
-			canvas.msRequestFullscreen();
 	}
 }
 
@@ -871,6 +872,7 @@ export function create( container, options = {} ) {
 
 	// adjust canvas size on entering / leaving fullscreen
 	canvas.addEventListener( 'fullscreenchange', setCanvas );
+	canvas.addEventListener( 'webkitfullscreenchange', setCanvas ); // for Safari
 
 	// adjust canvas size on window resize
 	window.addEventListener( 'resize', () => {
