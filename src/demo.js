@@ -64,6 +64,13 @@ document.getElementById('btn_soundoff').addEventListener( 'click', () => gainNod
 
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
 
+// Resume audio context if in suspended state (autoplay policy)
+
+window.addEventListener( 'click', () => {
+	if ( audioMotion.audioCtx.state == 'suspended' )
+		audioMotion.audioCtx.resume();
+});
+
 // Callback function to add custom content to the canvas
 
 function displayCanvasMsg( canvas, canvasCtx, pixelRatio ) {
