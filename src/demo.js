@@ -14,7 +14,7 @@ try {
 			minFreq: 30,
 			maxFreq: 16000,
 			showFPS: true,
-			drawCallback: displayCanvasMsg // custom callback function (see below)
+			onCanvasDraw: displayCanvasMsg // custom callback function (see below)
 		}
 	);
 }

@@ -4,7 +4,9 @@
  *
  * https://github.com/hvianna/audioMotion.js
  *
- * Copyright (C) 2018-2019 Henrique Vianna <hvianna@gmail.com>
+ * @author    Henrique Vianna <hvianna@gmail.com>
+ * @copyright (c) 2018-2019 Henrique Avila Vianna
+ * @license   AGPL-3.0-or-later
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -32,7 +34,7 @@ export var audioCtx, analyzer, dataArray;
 // canvas-related variables
 export var canvas, canvasCtx, pixelRatio, width, height, fsWidth, fsHeight, fps;
 
-var animationReq, drawCallback, ledsMask, ledsCtx, time, frame;
+var animationReq, drawCallback, ledsMask, ledsCtx, time, frame, canvasResizeCallback;
 
 // gradient definitions
 var	gradients = {
@@ -120,19 +122,31 @@ export function isOn() {
 export function setCanvasSize( w = defaults.width, h = defaults.height ) {
 	width = w;
 	height = h;
-	setCanvas();
+	setCanvas('user');
 }
 
 /**
- * Set callback function
+ * Set callback function for canvas draw
  *
  * @param {function} [func] if undefined or not a function, clears any previously set function
  */
-export function setDrawCallback( func ) {
+export function setCanvasDrawCallback( func ) {
 	if ( typeof func == 'function' )
 		drawCallback = func;
 	else
 		drawCallback = undefined;
+}
+
+/**
+ * Set callback function for canvas resize
+ *
+ * @param {function} [func] if undefined or not a function, clears any previously set function
+ */
+export function setCanvasResizeCallback( func ) {
+	if ( typeof func == 'function' )
+		canvasResizeCallback = func;
+	else
+		canvasResizeCallback = undefined;
 }
 
 /**
@@ -244,7 +258,7 @@ export function toggleScale ( value ) {
  */
 export function toggleLoRes ( value ) {
 	loRes = value === undefined ? ! loRes : value;
-	setCanvas();
+	setCanvas('lores');
 	return loRes;
 }
 
@@ -315,8 +329,11 @@ export function setOptions( options ) {
 	if ( options.smoothing !== undefined )
 		analyzer.smoothingTimeConstant = options.smoothing;
 
-	if ( typeof options.drawCallback == 'function' )
-		drawCallback = options.drawCallback;
+	if ( typeof options.onCanvasDraw == 'function' )
+		drawCallback = options.onCanvasDraw;
+
+	if ( typeof options.onCanvasResize == 'function' )
+		canvasResizeCallback = options.onCanvasDraw;
 
 	if ( options.width !== undefined )
 		width = options.width;
@@ -328,7 +345,7 @@ export function setOptions( options ) {
 
 	dataArray = new Uint8Array( analyzer.frequencyBinCount );
 
-	setCanvas();
+	setCanvas('user');
 }
 
 /**
@@ -710,7 +727,7 @@ function generateGradients() {
 /**
  * Internal function to change canvas dimensions on the fly
  */
-function setCanvas() {
+function setCanvas( reason ) {
 	pixelRatio = window.devicePixelRatio; // for Retina / HiDPI devices
 
 	if ( loRes )
@@ -745,6 +762,9 @@ function setCanvas() {
 	ledsCtx.fillStyle = '#000';
 
 	preCalcPosX();
+
+	if ( canvasResizeCallback )
+		canvasResizeCallback( reason, canvas.width, canvas.height, isFullscreen(), loRes, pixelRatio );
 }
 
 /**
@@ -857,8 +877,11 @@ export function create( container, options = {} ) {
 	analyzer.smoothingTimeConstant = options.smoothing === undefined ? defaults.smoothing : options.smoothing;
 	dataArray = new Uint8Array( analyzer.frequencyBinCount );
 
-	if ( typeof options.drawCallback == 'function' )
-		drawCallback = options.drawCallback;
+	if ( typeof options.onCanvasDraw == 'function' )
+		drawCallback = options.onCanvasDraw;
+
+	if ( typeof options.onCanvasResize == 'function' )
+		canvasResizeCallback = options.onCanvasResize;
 
 	setSensitivity( highSens );
 
@@ -868,17 +891,13 @@ export function create( container, options = {} ) {
 	canvas.style = 'max-width: 100%;';
 	container.appendChild( canvas );
 	canvasCtx = canvas.getContext( '2d', { alpha: false } );
-	setCanvas();
+	setCanvas('create');
 
-	// adjust canvas size on entering / leaving fullscreen
-	canvas.addEventListener( 'fullscreenchange', setCanvas );
-	canvas.addEventListener( 'webkitfullscreenchange', setCanvas ); // for Safari
-
-	// adjust canvas size on window resize
+	// adjust canvas on window resize / fullscreen change
 	window.addEventListener( 'resize', () => {
 		width = options.width || container.clientWidth || defaults.width;
 		height = options.height || container.clientHeight || defaults.height;
-		setCanvas();
+		setCanvas('resize');
 	});
 
 	// Start analyzer
