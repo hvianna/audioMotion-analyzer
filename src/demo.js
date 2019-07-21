@@ -45,6 +45,26 @@ document.getElementById('btn_fps').addEventListener( 'click', () => audioMotion.
 document.getElementById('btn_logo').addEventListener( 'click', () => showLogo = ! showLogo );
 document.getElementById('btn_freeze').addEventListener( 'click', () => audioMotion.toggleAnalyzer() );
 
+document.getElementById('sensitivity').addEventListener( 'change', e => {
+	switch ( e.target.value ) {
+		case '0':
+			audioMotion.setSensitivity( -70, -10 );
+			break;
+		case '1':
+			audioMotion.setSensitivity( -80, -20 );
+			break;
+		case '2':
+			audioMotion.setSensitivity( -85, -25 );
+			break;
+		case '3':
+			audioMotion.setSensitivity( -90, -30 );
+			break;
+		case '4':
+			audioMotion.setSensitivity( -100, -40 );
+			break;
+	}
+});
+
 document.getElementById('mode').addEventListener( 'change', e => audioMotion.setMode( e.target.value ) );
 document.getElementById('gradient').addEventListener( 'change', e => audioMotion.setGradient( e.target.value ) );
 document.getElementById('range').addEventListener( 'change', e => {

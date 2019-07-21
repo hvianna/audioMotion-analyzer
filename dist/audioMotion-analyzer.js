@@ -23,7 +23,7 @@
  */
 
 // current visualization settings
-export var mode, minFreq, maxFreq, gradient, showBgColor, showLeds, showScale, showPeaks, highSens, loRes, showFPS;
+export var mode, minFreq, maxFreq, gradient, showBgColor, showLeds, showScale, showPeaks, loRes, showFPS;
 
 // data for drawing the analyzer bars and scale-related variables
 var analyzerBars, barWidth, ledOptions, freqLabels;
@@ -81,10 +81,11 @@ var defaults = {
 	maxFreq     : 22000,
 	smoothing   : 0.5,
 	gradient    : 'classic',
+	minDb       : -85,
+	maxDb       : -25,
 	showBgColor : true,
 	showLeds    : false,
 	showScale   : true,
-	highSens    : false,
 	showPeaks   : true,
 	showFPS     : false,
 	loRes       : false,
@@ -104,6 +105,7 @@ export function isFullscreen() {
 	else if ( document.webkitFullscreenElement )
 		return document.webkitFullscreenElement === canvas;
 }
+
 /**
  * Checks if the analyzer canvas animation is running or not
  *
@@ -265,22 +267,12 @@ export function toggleLoRes ( value ) {
 /**
  * Adjust the analyzer's sensitivity
  *
- * @param {(boolean|number)} [min=-85] min decibels or true for high sensitivity, false for low sensitivity
- * @param {number}           [max=-25] max decibels
+ * @param {number} [min] min decibels value
+ * @param {number} [max] max decibels value
  */
-export function setSensitivity( min = -85, max = -25 ) {
-	if ( min === true ) {
-		analyzer.minDecibels = -100;
-		analyzer.maxDecibels = -30;
-	}
-	else if ( min === false ) {
-		analyzer.minDecibels = -85;
-		analyzer.maxDecibels = -25;
-	}
-	else {
-		analyzer.minDecibels = Math.min( min, max );
-		analyzer.maxDecibels = Math.max( min, max );
-	}
+export function setSensitivity( min = defaults.minDb, max = defaults.maxDb ) {
+	analyzer.minDecibels = Math.min( min, max );
+	analyzer.maxDecibels = Math.max( min, max );
 }
 
 /**
@@ -311,8 +303,11 @@ export function setOptions( options ) {
 	if ( options.showScale !== undefined )
 		showScale = options.showScale;
 
-	if ( options.highSens !== undefined )
-		highSens = options.highSens;
+	if ( options.minDb !== undefined )
+		analyzer.minDecibels = options.minDb;
+
+	if ( options.maxDb !== undefined )
+		analyzer.maxDecibels = options.maxDb;
 
 	if ( options.showPeaks !== undefined )
 		showPeaks = options.showPeaks;
@@ -340,8 +335,6 @@ export function setOptions( options ) {
 
 	if ( options.height !== undefined )
 		height = options.height;
-
-	setSensitivity( highSens );
 
 	dataArray = new Uint8Array( analyzer.frequencyBinCount );
 
@@ -866,7 +859,6 @@ export function create( container, options = {} ) {
 	showBgColor = options.showBgColor === undefined ? defaults.showBgColor : options.showBgColor;
 	showLeds    = options.showLeds    === undefined ? defaults.showLeds    : options.showLeds;
 	showScale   = options.showScale   === undefined ? defaults.showScale   : options.showScale;
-	highSens    = options.highSens    === undefined ? defaults.highSens    : options.highSens;
 	showPeaks   = options.showPeaks   === undefined ? defaults.showPeaks   : options.showPeaks;
 	showFPS     = options.showFPS     === undefined ? defaults.showFPS     : options.showFPS;
 	loRes       = options.loRes       === undefined ? defaults.loRes       : options.loRes;
@@ -875,6 +867,9 @@ export function create( container, options = {} ) {
 
 	analyzer.fftSize               = options.fftSize   === undefined ? defaults.fftSize   : options.fftSize;
 	analyzer.smoothingTimeConstant = options.smoothing === undefined ? defaults.smoothing : options.smoothing;
+	analyzer.minDecibels           = options.minDb     === undefined ? defaults.minDb     : options.minDb;
+	analyzer.maxDecibels           = options.maxDb     === undefined ? defaults.maxDb     : options.maxDb;
+
 	dataArray = new Uint8Array( analyzer.frequencyBinCount );
 
 	if ( typeof options.onCanvasDraw == 'function' )
@@ -882,8 +877,6 @@ export function create( container, options = {} ) {
 
 	if ( typeof options.onCanvasResize == 'function' )
 		canvasResizeCallback = options.onCanvasResize;
-
-	setSensitivity( highSens );
 
 	// Create canvas
 
