@@ -95,10 +95,6 @@ Key to currently selected gradient.
 Nominal dimensions of the analyzer container. Actual canvas dimensions may differ from these, depending on the current pixel ratio and fullscreen status.
 For the current canvas dimensions use `audioMotion.canvas.width` and `audioMotion.canvas.height`.
 
-### `highSens` *boolean*
-
-*true* when high sensitivity mode is active.
-
 ### `loRes` *boolean*
 
 *true* when canvas is set to low resolution (half the original width and height).
@@ -150,15 +146,18 @@ If `source` is specified in the *options*, returns a [MediaElementAudioSourceNod
 
 ```
 options = {
-	drawCallback: <function>
 	fftSize: <number> (8192)
 	gradient: <string> ('classic')
-	height: <number> (container.clientHeight || 270px)
+	height: <number> (container.clientHeight || 270)
 	highSens: <boolean> (false)
 	loRes: <boolean> (false)
+	maxDb: <number> (-25)
 	maxFreq: <number> (22000)
+	minDb: <number> (-85)
 	minFreq: <number> (20)
 	mode: <number> (0)
+	onCanvasDraw: <function>
+	onCanvasResize: <function>
 	showBgColor: <boolean> (true)
 	showFPS: <boolean> (false)
 	showLeds: <boolean> (false)
@@ -167,7 +166,7 @@ options = {
 	smoothing: <number> (0.5)
 	source: <HTMLMediaElement>
 	start: <boolean> (true)
-	width: <number> (container.clientWidth || 640px)
+	width: <number> (container.clientWidth || 640)
 }
 ```
 
@@ -205,11 +204,28 @@ options = {
 Sets the canvas' nominal dimensions in pixels (see [`height, width`](#height-number-width-number)). *width* defaults to the container's width, or **640** if container's width is 0. *height* defaults to the container's height, or **270**.
 These will be automatically multiplied by the current pixel ratio to set actual canvas dimensions, so values will be doubled for HiDPI / retina displays, or halved when low-resolution mode is on.
 
-### `setDrawCallback( func )`
+### `setCanvasDrawCallback( func )`
 
 Sets a function to be called after audioMotion finishes rendering each frame of the canvas. If *func* is undefined or not a function, clears any function previously set.
 
 For convenience, `canvas`, `canvasCtx` and `pixelRatio` are passed as arguments to the callback function.
+
+### `setCanvasResizeCallback( func )`
+
+Sets a function to be called whenever the canvas is resized. If *func* is undefined or not a function, clears any function previously set.
+
+The following variables are passed as arguments to the callback function:
+
++ `reason` (string) - the reason why the canvas was resized, which can be one of the following:
+  + `'create'` - analyzer element created via `create()` function
+  + `'lores'` - low resolution mode toggled on or off
+  + `'resize'` - browser window resized, entered or left fullscreen mode
+  + `'user'` - canvas dimensions changed via `setCanvasSize()` or `setOptions()` functions
++ `width` (number) - current actual canvas width in pixels
++ `height` (number) - current actual canvas height in pixels
++ `isFullscreen` (boolean) - *true* if currently in fullscreen mode
++ `isLoRes` (boolean) - *true* if low resolution mode is active
++ `pixelRatio` (number) - current pixel ratio
 
 ### `setFFTSize( [samples] )`
 
@@ -247,10 +263,9 @@ Shorthand function for setting several options at once. *options* is an object w
 
 ### `setSensitivity( [min], [max] )`
 
-Adjust the analyzer's sensitivity. If *min* is a boolean, sets high sensitivity mode on (*true*) or off (*false*).
-Custom values can be specified in dB (decibels). For reference values, see [AnalyserNode.minDecibels](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels).
+Adjust the analyzer's sensitivity. Values in dB (decibels), where 0 is the loudest volume possible. *min* defaults to **-85** and *max* defaults to **-25**.
 
-*min* defaults to **-85** and *max* defaults to **-25**. These are the same values set by calling `setSensitivity( false )` which is the normal sensitivity mode.
+For more info, see [AnalyserNode.minDecibels](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels).
 
 ### `setSmoothing( [value] )`
 

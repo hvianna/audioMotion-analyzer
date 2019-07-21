@@ -17,7 +17,7 @@ try {
 			freqMin: 30,    // lowest frequency represented on X-axis
 			freqMax: 16000, // highest frequency represented on X-axis
 			showFPS: true,  // show framerate
-			drawCallback: displayCanvasMsg  // callback function (called after rendering each frame)
+			onCanvasDraw: displayCanvasMsg  // callback function (called after rendering each frame)
 		}
 	);
 }
@@ -71,4 +71,4 @@ If you plan on allowing your application users to interactively toggle the low r
 }
 ```
 
-If you don't do this, the canvas will shrink and grow when changing the resolution mode.
+Otherwise the canvas will shrink and grow when changing the resolution mode.
