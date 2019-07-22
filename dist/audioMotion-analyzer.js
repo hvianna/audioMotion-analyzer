@@ -893,6 +893,8 @@ export function create( container, options = {} ) {
 		setCanvas('resize');
 	});
 
+	canvas.addEventListener( 'fullscreenchange', () => setCanvas('resize') ); // required for Firefox Android TV
+
 	// Start analyzer
 	if ( options.start === undefined || options.start !== false )
 		toggleAnalyzer( true );
