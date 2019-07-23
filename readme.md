@@ -97,7 +97,7 @@ For the current canvas dimensions use `audioMotion.canvas.width` and `audioMotio
 
 ### `loRes` *boolean*
 
-*true* when canvas is set to low resolution (half the original width and height).
+*true* when [low resolution mode](#togglelores-boolean-) is active.
 
 ### `maxFreq` *number*
 
@@ -294,6 +294,15 @@ Toggles full-screen mode. As per [API specification](https://fullscreen.spec.wha
 ### `toggleLeds( [boolean] )`
 
 Toggles LED display effect on (*true*) or off (*false*). If no argument provided, inverts the current status. Returns the resulting status after the change.
+
+### `toggleLoRes( [boolean] )`
+
+Toggles low resolution mode on (*true*) or off (*false*). If no argument provided, inverts the current status. Returns the resulting status after the change.
+
+audioMotion-analyzer may require a lot of processing power to render the canvas in high-resolution displays, such as 4K+ monitors and retina / HiDPI devices.
+Low resolution mode will half the display pixel ratio, resulting in four times less pixels to render.
+
+See [this note](demo/README.md#additional-notes) on using this feature interactively.
 
 ### `togglePeaks( [boolean] )`
 
