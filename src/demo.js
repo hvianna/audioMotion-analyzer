@@ -83,6 +83,10 @@ document.querySelectorAll('.tones').forEach( el =>
 document.getElementById('btn_soundoff').addEventListener( 'click', () => gainNode.gain.setValueAtTime( 0, audioCtx.currentTime ) );
 
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
+document.getElementById('loadFromURL').addEventListener( 'click', () => {
+	audioEl.src = document.getElementById('fileURL').value;
+	audioEl.play();
+});
 
 // Resume audio context if in suspended state (autoplay policy)
 

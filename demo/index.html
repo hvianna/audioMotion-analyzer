@@ -28,7 +28,7 @@
 	<h1>audioMotion-analyzer Demo</h1>
 
 	<div id="container"></div>
-	<audio id="audio" controls></audio>
+	<audio id="audio" controls crossorigin="anonymous"></audio>
 
 	<p>
 		<select id="mode">
@@ -72,8 +72,10 @@
 	</p>
 
 	<p>
-		Load a song:
-		<input type="file" id="uploadFile">
+		Load an audio file from your PC:
+		<input type="file" id="uploadFile" accept="audio/*"><br>
+		Load a song or stream from an URL:
+		<input type="text" id="fileURL" size="50"> <button id="loadFromURL">Load</button>
 	</p>
 
 	<p>
