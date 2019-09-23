@@ -418,11 +418,14 @@ function preCalcPosX() {
 	}
 	else { // octave bands modes
 
+		var spaceV = Math.min( 6, canvas.height / ( 90 * pixelRatio ) | 0 ), // for modes 3, 4, 5 and 6
+			groupnotes = mode; // for modes 1, 2, 3 and 4
+
 		// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
-		var spaceV;
 
 		switch ( mode ) {
-			case 24:
+			case 8:
+				groupnotes = 24;
 				spaceV = Math.min( 16, canvas.height / ( 33 * pixelRatio ) | 0 );
 				ledOptions = {
 					nLeds: 24,
@@ -430,7 +433,8 @@ function preCalcPosX() {
 				};
 				break;
 
-			case 12:
+			case 7:
+				groupnotes = 12;
 				spaceV = Math.min( 8, canvas.height / ( 67 * pixelRatio ) | 0 );
 				ledOptions = {
 					nLeds: 48,
@@ -438,23 +442,31 @@ function preCalcPosX() {
 				};
 				break;
 
-			case  8:
-				spaceV = Math.min( 6, canvas.height / ( 90 * pixelRatio ) | 0 );
+			case 6:
+				groupnotes = 8;
 				ledOptions = {
 					nLeds: 64,
 					spaceH: Math.min( 10, canvas.width / ( 96 * pixelRatio ) | 0 )
 				};
 				break;
 
-			case  4:
-				spaceV = Math.min( 6, canvas.height / ( 90 * pixelRatio ) | 0 );
+			case 5:
+				groupnotes = 6;
+			case 4:
 				ledOptions = {
 					nLeds: 80,
 					spaceH: Math.min( 8, canvas.width / ( 120 * pixelRatio ) | 0 )
 				};
 				break;
 
-			case  2:
+			case 3:
+				ledOptions = {
+					nLeds: 96,
+					spaceH: Math.min( 6, canvas.width / ( 160 * pixelRatio ) | 0 )
+				};
+				break;
+
+			case 2:
 				spaceV = Math.min( 4, canvas.height / ( 135 * pixelRatio ) | 0 );
 				ledOptions = {
 					nLeds: 128,
@@ -463,6 +475,7 @@ function preCalcPosX() {
 				break;
 
 			default:
+				mode = groupnotes = 1; // convert any invalid mode to mode 1
 				spaceV = Math.min( 3, Math.max( 2, canvas.height / ( 180 * pixelRatio ) | 0 ) );
 				ledOptions = {
 					nLeds: 128,
@@ -483,7 +496,7 @@ function preCalcPosX() {
 
 		i = 0;
 		while ( ( freq = c0 * root24 ** i ) <= maxFreq ) {
-			if ( freq >= minFreq && i % mode == 0 )
+			if ( freq >= minFreq && i % groupnotes == 0 )
 				temperedScale.push( freq );
 			i++;
 		}
@@ -542,7 +555,7 @@ function preCalcPosX() {
 
 	if ( mode > 0 ) {
 		// adds a vertical black line in the mask canvas after the last led column
-		ledsCtx.fillRect( analyzerBars[ analyzerBars.length - 1 ].posX + barWidth - ledOptions.spaceH / 2 + ( mode < 8 ? 2 : 1 ), 0, ledOptions.spaceH, canvas.height );
+		ledsCtx.fillRect( analyzerBars[ analyzerBars.length - 1 ].posX + barWidth - ledOptions.spaceH / 2 + ( mode < 5 ? 2 : 1 ), 0, ledOptions.spaceH, canvas.height );
 
 		// adds horizontal black lines in the mask canvas, to separate the LED rows
 		for ( i = ledOptions.ledHeight; i < canvas.height; i += ledOptions.ledHeight + ledOptions.spaceV )

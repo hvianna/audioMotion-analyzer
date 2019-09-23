@@ -248,12 +248,14 @@ Set visualization mode. Valid values for *mode* are:
 | Value | Mode |
 |-------|------|
 | 0 | Discrete frequencies |
-| 1 | 1/24th-octave bands |
-| 2 | 1/12th-octave bands |
-| 4 | 1/6th-octave bands |
-| 8 | 1/3rd-octave bands |
-| 12 | half-octave bands |
-| 24 | full-octave bands |
+| 1 | 1/24th octave bands |
+| 2 | 1/12th octave bands |
+| 3 | 1/8th octave bands |
+| 4 | 1/6th octave bands |
+| 5 | 1/4th octave bands |
+| 6 | 1/3rd octave bands |
+| 7 | half octave bands |
+| 8 | full octave bands |
 
 Defaults to **0** (discrete frequencies).
 
