@@ -1,4 +1,4 @@
-import * as audioMotion from '../dist/audioMotion-analyzer.js';
+import AudioMotionAnalyzer from '../dist/audioMotion-analyzer.js';
 
 var audioEl = document.getElementById('audio'),
 	showLogo = true;
@@ -6,7 +6,7 @@ var audioEl = document.getElementById('audio'),
 // Create audioMotion analyzer
 
 try {
-	audioMotion.create(
+	var audioMotion = new AudioMotionAnalyzer(
 		document.getElementById('container'),
 		{
 			mode: 4, // 1/6th-octave bands
@@ -84,11 +84,11 @@ document.getElementById('btn_soundoff').addEventListener( 'click', () => gainNod
 
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
 document.getElementById('loadFromURL').addEventListener( 'click', () => {
-	audioEl.src = document.getElementById('fileURL').value;
+	audioEl.src = document.getElementById('remoteURL').value;
 	audioEl.play();
 });
 
-// Resume audio context if in suspended state (autoplay policy)
+// Resume audio context if in suspended state (browsers' autoplay policy)
 
 window.addEventListener( 'click', () => {
 	if ( audioMotion.audioCtx.state == 'suspended' )
@@ -97,19 +97,19 @@ window.addEventListener( 'click', () => {
 
 // Callback function to add custom content to the canvas
 
-function displayCanvasMsg( canvas, canvasCtx, pixelRatio ) {
+function displayCanvasMsg() {
 	if ( ! showLogo )
 		return;
-	var size = 20 * pixelRatio;
+	var size = 20 * audioMotion.pixelRatio;
 	if ( audioMotion.isFullscreen() )
 		size *= 2;
-	canvasCtx.font = `${size}px Orbitron,sans-serif`;
-	var w = canvasCtx.measureText('audioMotion').width / 2;
+	audioMotion.canvasCtx.font = `${size}px Orbitron,sans-serif`;
+	var w = audioMotion.canvasCtx.measureText('audioMotion').width / 2;
 
-	canvasCtx.font = `${size + audioMotion.dataArray[ 1 ] / 16 * pixelRatio}px Orbitron,sans-serif`;
-	canvasCtx.fillStyle = '#fff8';
-	canvasCtx.textAlign = 'center';
-	canvasCtx.fillText( 'audioMotion', canvas.width - w - size * 4, size * 2 );
+	audioMotion.canvasCtx.font = `${size + audioMotion.dataArray[ 1 ] / 16 * audioMotion.pixelRatio}px Orbitron,sans-serif`;
+	audioMotion.canvasCtx.fillStyle = '#fff8';
+	audioMotion.canvasCtx.textAlign = 'center';
+	audioMotion.canvasCtx.fillText( 'audioMotion', audioMotion.canvas.width - w - size * 4, size * 2 );
 }
 
 // Load song from user's computer

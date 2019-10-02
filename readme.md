@@ -16,22 +16,58 @@ npm install audioMotion-analyzer
 ES6 import:
 
 ```
-import * as audioMotion from 'audioMotion-analyzer';
+import AudioMotionAnalyzer from 'audioMotion-analyzer';
 ```
 
 Minimal constructor:
 
 ```
-audioMotion.create(
-	document.getElementById('container'), {
+var audioMotion = new AudioMotionAnalyzer(
+	document.getElementById('container'),
+	{
 		source: document.getElementById('audio')
 	}
 );
 ```
 
-This will insert the analyzer canvas inside the *#container* element and start the visualization of audio coming from the *#audio* element. You can connect additional audio sources via the `connectAudio()` function or directly to the `audioCtx` object exposed by audioMotion.
+This will insert the analyzer canvas inside the *#container* element and start the visualization of audio coming from the *#audio* element. You can connect additional audio sources via the `connectAudio()` method or directly to the `audioCtx` object exposed by audioMotion.
 
-See the [demo folder](demo/) for more comprehensive examples. See [functions](#functions) for additional configuration options and other ways to interact with the analyzer.
+See the [demo folder](demo/) for more comprehensive examples. See [Methods](#methods) for additional configuration options and other ways to interact with the analyzer.
+
+
+## Constructor
+
+`AudioMotionAnalyzer( [container], [{options}] )`
+
+Creates a new analyzer and inserts a canvas into the *container* element. If *container* is undefined, the canvas is appended to the document's body.
+
+If `source` is specified in the *options*, it will be connected to the analyzer. You can later disconnect it by referring to the [audioSource](#audio-source) property.
+
+```
+options = {
+	fftSize: <number> (8192)
+	gradient: <string> ('classic')
+	height: <number> (container.clientHeight || 270)
+	highSens: <boolean> (false)
+	loRes: <boolean> (false)
+	maxDb: <number> (-25)
+	maxFreq: <number> (22000)
+	minDb: <number> (-85)
+	minFreq: <number> (20)
+	mode: <number> (0)
+	onCanvasDraw: <function>
+	onCanvasResize: <function>
+	showBgColor: <boolean> (true)
+	showFPS: <boolean> (false)
+	showLeds: <boolean> (false)
+	showPeaks: <boolean> (true)
+	showScale: <boolean> (true)
+	smoothing: <number> (0.5)
+	source: <HTMLMediaElement>
+	start: <boolean> (true)
+	width: <number> (container.clientWidth || 640)
+}
+```
 
 
 ## Interface objects
@@ -46,17 +82,9 @@ Use this object to create additional audio sources to be connected to the analyz
 
 Connect any additional audio sources to this object, so their output is displayed in the graphic analyzer.
 
-**Analyzer properties:**
-
-    + `fftSize`
-    + `frequencyBinCount`
-    + `minDecibels`
-    + `maxDecibels`
-    + `smoothingTimeConstant`
-
-These properties are [documented here](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode#Properties) and should be used for read only.
+The analyzer properties are [documented here](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode#Properties) and **should be used for read only.**
 Please use the [`setFFTSize()`](#setfftsize-samples-), [`setSensitivity()`](#setsensitivity-min-max-) or [`setSmoothing()`](#setsmoothing-value-)
-functions to ensure all dependent variables are updated accordingly inside audioMotion.
+methods to ensure all dependent variables are updated accordingly inside audioMotion.
 
 ### `canvas` *HTMLCanvasElement object*
 
@@ -68,6 +96,10 @@ Canvas element created by audioMotion.
 
 
 ## Read only properties
+
+### `audioSource` *[MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) object*
+
+
 
 ### `dataArray` *[UInt8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) array*
 
@@ -102,12 +134,12 @@ For the current canvas dimensions use `audioMotion.canvas.width` and `audioMotio
 ### `maxFreq` *number*
 
 Highest frequency represented in the X-axis of the analyzer.
-This can be set when [creating](#create-container-options-) the analyzer, or with the [`setFreqRange()`](#setfreqrange-min-max-) function.
+This can be set when [creating](#create-container-options-) the analyzer, or with the [`setFreqRange()`](#setfreqrange-min-max-) method.
 
 ### `minFreq` *number*
 
 Lowest frequency represented in the X-axis of the analyzer.
-This can be set when [creating](#create-container-options-) the analyzer, or with the [`setFreqRange()`](#setfreqrange-min-max-) function.
+This can be set when [creating](#create-container-options-) the analyzer, or with the [`setFreqRange()`](#setfreqrange-min-max-) method.
 
 ### `mode` *number*
 
@@ -136,39 +168,7 @@ When low-resolution mode is active (`loRes` option set to *true*) *pixelRatio* i
 *true* when frequency labels are being displayed in the X axis.
 
 
-## Functions
-
-### `create( [container], [{options}] )`
-
-Constructor function. Initializes the analyzer and inserts the canvas into the *container* element. If *container* is undefined, the canvas is appended to the document's body.
-
-If `source` is specified in the *options*, returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) object to the connected audio element.
-
-```
-options = {
-	fftSize: <number> (8192)
-	gradient: <string> ('classic')
-	height: <number> (container.clientHeight || 270)
-	highSens: <boolean> (false)
-	loRes: <boolean> (false)
-	maxDb: <number> (-25)
-	maxFreq: <number> (22000)
-	minDb: <number> (-85)
-	minFreq: <number> (20)
-	mode: <number> (0)
-	onCanvasDraw: <function>
-	onCanvasResize: <function>
-	showBgColor: <boolean> (true)
-	showFPS: <boolean> (false)
-	showLeds: <boolean> (false)
-	showPeaks: <boolean> (true)
-	showScale: <boolean> (true)
-	smoothing: <number> (0.5)
-	source: <HTMLMediaElement>
-	start: <boolean> (true)
-	width: <number> (container.clientWidth || 640)
-}
-```
+## Methods
 
 ### `connectAudio( element )`
 
@@ -206,26 +206,21 @@ These will be automatically multiplied by the current pixel ratio to set actual 
 
 ### `setCanvasDrawCallback( func )`
 
-Sets a function to be called after audioMotion finishes rendering each frame of the canvas. If *func* is undefined or not a function, clears any function previously set.
+Sets a function to be called after audioMotion finishes rendering a frame on the canvas. If *func* is undefined or not a function, clears any function previously set.
 
-For convenience, `canvas`, `canvasCtx` and `pixelRatio` are passed as arguments to the callback function.
+The audioMotion object will be passed as an argument to the callback function.
 
 ### `setCanvasResizeCallback( func )`
 
 Sets a function to be called whenever the canvas is resized. If *func* is undefined or not a function, clears any function previously set.
 
-The following variables are passed as arguments to the callback function:
+Two arguments will be passed to the callback function: a string with the reason why the function was called (see below) and the audioMotion object.
 
-+ `reason` (string) - the reason why the canvas was resized, which can be one of the following:
-  + `'create'` - analyzer element created via `create()` function
-  + `'lores'` - low resolution mode toggled on or off
-  + `'resize'` - browser window resized, entered or left fullscreen mode
-  + `'user'` - canvas dimensions changed via `setCanvasSize()` or `setOptions()` functions
-+ `width` (number) - current actual canvas width in pixels
-+ `height` (number) - current actual canvas height in pixels
-+ `isFullscreen` (boolean) - *true* if currently in fullscreen mode
-+ `isLoRes` (boolean) - *true* if low resolution mode is active
-+ `pixelRatio` (number) - current pixel ratio
+Reasons for canvas resize:
++ `'create'` - canvas created by the object constructor
++ `'lores'` - low resolution mode toggled on or off
++ `'resize'` - browser window resized, entered or left fullscreen mode
++ `'user'` - canvas dimensions changed by the user, via `setCanvasSize()` or `setOptions()` methods
 
 ### `setFFTSize( [samples] )`
 
@@ -261,11 +256,11 @@ Defaults to **0** (discrete frequencies).
 
 ### `setOptions( {options} )`
 
-Shorthand function for setting several options at once. *options* is an object with the same structure as in the [`create()`](#create-container-options-) function.
+Shorthand function for setting several options at once. *options* is an object with the same structure as in the [Constructor](#constructor).
 
 ### `setSensitivity( [min], [max] )`
 
-Adjust the analyzer's sensitivity. Values in dB (decibels), where 0 is the loudest volume possible. *min* defaults to **-85** and *max* defaults to **-25**.
+Adjust the analyzer's sensitivity. Values are in dB (decibels), where 0 is the loudest volume possible. *min* defaults to **-85** and *max* defaults to **-25**.
 
 For more info, see [AnalyserNode.minDecibels](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels).
 
@@ -291,7 +286,7 @@ Toggles display of current frame rate on (*true*) or off (*false*). If no argume
 
 ### `toggleFullscreen()`
 
-Toggles full-screen mode. As per [API specification](https://fullscreen.spec.whatwg.org/), fullscreen requests must be triggered by user activation, so you must call this function from within an event handler or otherwise the request will be denied.
+Toggles fullscreen mode. As per [API specification](https://fullscreen.spec.whatwg.org/), fullscreen requests must be triggered by user activation, so you must call this function from within an event handler or otherwise the request will be denied.
 
 ### `toggleLeds( [boolean] )`
 
