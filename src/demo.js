@@ -36,12 +36,12 @@ gainNode.connect( audioMotion.analyzer );
 // Event listeners for UI buttons
 
 document.getElementById('btn_fullscr').addEventListener( 'click', () => audioMotion.toggleFullscreen() );
-document.getElementById('btn_bgcolor').addEventListener( 'click', () => audioMotion.toggleBgColor() );
-document.getElementById('btn_peaks').addEventListener( 'click', () => audioMotion.togglePeaks() );
-document.getElementById('btn_leds').addEventListener( 'click', () => audioMotion.toggleLeds() );
-document.getElementById('btn_scale').addEventListener( 'click', () => audioMotion.toggleScale() );
-document.getElementById('btn_lores').addEventListener( 'click', () => audioMotion.toggleLoRes() );
-document.getElementById('btn_fps').addEventListener( 'click', () => audioMotion.toggleFPS() );
+document.getElementById('btn_bgcolor').addEventListener( 'click', () => audioMotion.showBgColor = ! audioMotion.showBgColor );
+document.getElementById('btn_peaks').addEventListener( 'click', () => audioMotion.showPeaks = ! audioMotion.showPeaks );
+document.getElementById('btn_leds').addEventListener( 'click', () => audioMotion.showLeds = ! audioMotion.showLeds );
+document.getElementById('btn_scale').addEventListener( 'click', () => audioMotion.showScale = ! audioMotion.showScale );
+document.getElementById('btn_lores').addEventListener( 'click', () => audioMotion.loRes = ! audioMotion.loRes );
+document.getElementById('btn_fps').addEventListener( 'click', () => audioMotion.showFPS = ! audioMotion.showFPS );
 document.getElementById('btn_logo').addEventListener( 'click', () => showLogo = ! showLogo );
 document.getElementById('btn_freeze').addEventListener( 'click', () => audioMotion.toggleAnalyzer() );
 
@@ -65,8 +65,8 @@ document.getElementById('sensitivity').addEventListener( 'change', e => {
 	}
 });
 
-document.getElementById('mode').addEventListener( 'change', e => audioMotion.setMode( e.target.value ) );
-document.getElementById('gradient').addEventListener( 'change', e => audioMotion.setGradient( e.target.value ) );
+document.getElementById('mode').addEventListener( 'change', e => audioMotion.mode = e.target.value );
+document.getElementById('gradient').addEventListener( 'change', e => audioMotion.gradient = e.target.value );
 document.getElementById('range').addEventListener( 'change', e => {
 	let selected = e.target[ e.target.selectedIndex ];
 	audioMotion.setFreqRange( selected.dataset.min, selected.dataset.max );
@@ -95,13 +95,13 @@ window.addEventListener( 'click', () => {
 		audioMotion.audioCtx.resume();
 });
 
-// Callback function to add custom content to the canvas
+// The callback function is used here to draw the pulsating logo on the canvas
 
 function displayCanvasMsg() {
 	if ( ! showLogo )
 		return;
 	var size = 20 * audioMotion.pixelRatio;
-	if ( audioMotion.isFullscreen() )
+	if ( audioMotion.isFullscreen )
 		size *= 2;
 	audioMotion.canvasCtx.font = `${size}px Orbitron,sans-serif`;
 	var w = audioMotion.canvasCtx.measureText('audioMotion').width / 2;

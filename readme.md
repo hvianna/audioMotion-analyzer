@@ -39,7 +39,7 @@ See the [demo folder](demo/) for more comprehensive examples. See [Methods](#met
 
 `AudioMotionAnalyzer( [container], [{options}] )`
 
-Creates a new analyzer and inserts a canvas into the *container* element. If *container* is undefined, the canvas is appended to the document's body.
+Creates an instance of the audioMotion analyzer. A canvas element will be created and inserted into the *container* element. If *container* is undefined, the canvas is appended to the document's body.
 
 If `source` is specified in the *options*, it will be connected to the analyzer. You can later disconnect it by referring to the [audioSource](#audio-source) property.
 
@@ -48,11 +48,10 @@ options = {
 	fftSize: <number> (8192)
 	gradient: <string> ('classic')
 	height: <number> (container.clientHeight || 270)
-	highSens: <boolean> (false)
 	loRes: <boolean> (false)
-	maxDb: <number> (-25)
+	maxDecibels: <number> (-25)
 	maxFreq: <number> (22000)
-	minDb: <number> (-85)
+	minDecibels: <number> (-85)
 	minFreq: <number> (20)
 	mode: <number> (0)
 	onCanvasDraw: <function>
@@ -82,10 +81,6 @@ Use this object to create additional audio sources to be connected to the analyz
 
 Connect any additional audio sources to this object, so their output is displayed in the graphic analyzer.
 
-The analyzer properties are [documented here](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode#Properties) and **should be used for read only.**
-Please use the [`setFFTSize()`](#setfftsize-samples-), [`setSensitivity()`](#setsensitivity-min-max-) or [`setSmoothing()`](#setsmoothing-value-)
-methods to ensure all dependent variables are updated accordingly inside audioMotion.
-
 ### `canvas` *HTMLCanvasElement object*
 
 Canvas element created by audioMotion.
@@ -95,150 +90,77 @@ Canvas element created by audioMotion.
 2D rendering context for drawing in audioMotion's canvas.
 
 
-## Read only properties
+## Properties
 
-### `audioSource` *[MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) object*
+### `audioSource` *[MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) object* *(Read only)*
 
+Object representing the HTML media element connected using the `source` option of the class [constructor](#constructor). See also the [`connectAudio()`](#connectaudio-element) method.
 
-
-### `dataArray` *[UInt8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) array*
+### `dataArray` *[UInt8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) array* *(Read only)*
 
 Data array returned by the analyzer's [`getByteFrequencyData()`](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteFrequencyData).
 Array size is half the current FFT size, with element values ranging from 0 to 255.
 
-Each array element represents a specific value in the frequency domain, such that: `frequency = arrayIndex * audioCtx.sampleRate / analyzer.fftSize`
+Each array element represents a specific value in the frequency domain, such that: `frequency = i * audioCtx.sampleRate / fftSize`, where *i* is the array index.
 
 The data is updated on every animation frame (ideally 60 times per second).
 
-### `fps` *number*
+### `fftSize` *number*
+
+Number of samples used for the FFT performed by the analyzer node. *samples* must be a power of 2 between 32 and 32768, so valid values are: 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, and 32768.
+
+Higher values provide more detail in the frequency domain, but less detail in the time domain. Defaults to **8192**.
+
+### `fps` *number* *(Read only)*
 
 Current frame rate.
 
-### `fsHeight` *number*, `fsWidth` *number*
+### `fsHeight` *number* *(Read only)*
+### `fsWidth` *number* *(Read only)*
 
 Canvas dimensions used during fullscreen mode. These take the current pixel ratio into account and will change accordingly when low-resolution mode is set.
 
 ### `gradient` *string*
 
-Key to currently selected gradient.
+Currently selected gradient. *gradient* must be the name of a built-in or [registered](#registergradient-name-options-) gradient. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*. Defaults to **'classic'**.
 
-### `height` *number*, `width` *number*
+### `height` *number*
+### `width` *number*
 
 Nominal dimensions of the analyzer container. Actual canvas dimensions may differ from these, depending on the current pixel ratio and fullscreen status.
-For the current canvas dimensions use `audioMotion.canvas.width` and `audioMotion.canvas.height`.
+If you need to read the actual canvas dimensions, use `audioMotion.canvas.width` and `audioMotion.canvas.height`.
+
+You can set both values at once using the [setCanvasSize](#setcanvassize-width-height-) method.
+
+### `isFullscreen` *boolean* *(Read only)*
+
+*true* when the analyzer is being displayed in fullscreen, or *false* otherwise.
+
+### `isOn` *boolean* *(Read only)*
+
+*true* if the analyzer canvas animation is running, or *false* if it's stopped.
 
 ### `loRes` *boolean*
 
-*true* when [low resolution mode](#togglelores-boolean-) is active.
+*true* for low resolution mode.
+
+Low resolution mode halves the effective pixel ratio, resulting in four times less pixels to render. This may improving performance significantly, especially in high-resolution displays, such as 4K+ monitors.
+
+See [this note](demo/README.md#additional-notes) on using this feature interactively.
+
+### `maxDecibels` *number*
+### `minDecibels` *number*
+
+Highest and lowest volumes (in decibels) . You can set both values at once using the [`setSensitivity()`](#setsensitivity-min-max-) method.
 
 ### `maxFreq` *number*
-
-Highest frequency represented in the X-axis of the analyzer.
-This can be set when [creating](#create-container-options-) the analyzer, or with the [`setFreqRange()`](#setfreqrange-min-max-) method.
-
 ### `minFreq` *number*
 
-Lowest frequency represented in the X-axis of the analyzer.
-This can be set when [creating](#create-container-options-) the analyzer, or with the [`setFreqRange()`](#setfreqrange-min-max-) method.
+Highest and lowest frequencies represented in the X-axis of the analyzer. You can set both values at once using the [`setFreqRange()`](#setfreqrange-min-max-) method.
 
 ### `mode` *number*
 
-Current visualization mode. See [setMode()](#setmode-mode-) for valid values.
-
-### `pixelRatio` *number*
-
-Current [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio).
-This is usually **1** for standard displays and **2** for retina / Hi-DPI screens. You can refer to this value to adjust any additional drawings done in the canvas.
-When low-resolution mode is active (`loRes` option set to *true*) *pixelRatio* is halved, i.e. **0.5** for standard displays and **1** for retina / Hi-DPI.
-
-### `showBgColor` *boolean*
-
-*true* when using background color defined by current gradient; *false* for black background.
-
-### `showLeds` *boolean*
-
-*true* when LED display effect is active.
-
-### `showPeaks` *boolean*
-
-*true* when amplitude peaks for each frequency are being displayed.
-
-### `showScale` *boolean*
-
-*true* when frequency labels are being displayed in the X axis.
-
-
-## Methods
-
-### `connectAudio( element )`
-
-Connects an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) (`<audio>` or `<video>` HTML element) to the analyzer.
-Returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) which can be used for later disconnection.
-
-### `isFullscreen()`
-
-Returns *true* if the analyzer is being displayed in fullscreen, or *false* otherwise.
-
-### `isOn()`
-
-Returns *true* if the analyzer canvas animation is running, or *false* if it's stopped.
-
-### `registerGradient( name, options )`
-
-Registers a custom gradient. *name* is a string to be used with `setGradient()`.
-
-```
-options = {
-	bgColor: '#111', // background color (required)
-	dir: 'h',        // add this for a horizontal gradient (optional)
-	colorStops: [
-		'#f00',                     // list your gradient colors here (at least 2 colors are required)
-		{ pos: .6, color: '#ff0' }, // use an object to specify the position (0 to 1) of a color
-		'hsl( 120, 100%, 50% )'     // colors may be defined in any HTML valid format
-	]
-}
-```
-
-### `setCanvasSize( [width], [height] )`
-
-Sets the canvas' nominal dimensions in pixels (see [`height, width`](#height-number-width-number)). *width* defaults to the container's width, or **640** if container's width is 0. *height* defaults to the container's height, or **270**.
-These will be automatically multiplied by the current pixel ratio to set actual canvas dimensions, so values will be doubled for HiDPI / retina displays, or halved when low-resolution mode is on.
-
-### `setCanvasDrawCallback( func )`
-
-Sets a function to be called after audioMotion finishes rendering a frame on the canvas. If *func* is undefined or not a function, clears any function previously set.
-
-The audioMotion object will be passed as an argument to the callback function.
-
-### `setCanvasResizeCallback( func )`
-
-Sets a function to be called whenever the canvas is resized. If *func* is undefined or not a function, clears any function previously set.
-
-Two arguments will be passed to the callback function: a string with the reason why the function was called (see below) and the audioMotion object.
-
-Reasons for canvas resize:
-+ `'create'` - canvas created by the object constructor
-+ `'lores'` - low resolution mode toggled on or off
-+ `'resize'` - browser window resized, entered or left fullscreen mode
-+ `'user'` - canvas dimensions changed by the user, via `setCanvasSize()` or `setOptions()` methods
-
-### `setFFTSize( [samples] )`
-
-Sets the number of samples used for the FFT performed by the analyzer node. *samples* must be a power of 2 between 32 and 32768, so valid values are: 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, and 32768.
-
-Higher values provide more detail in the frequency domain, but less detail in the time domain. Defaults to **8192**.
-
-### `setFreqRange( [min], [max] )`
-
-Sets the desired frequency range. Values are expressed in Hz (Hertz). *min* defaults to **20**, and *max* defaults to **22000**.
-
-### `setGradient( [gradient] )`
-
-Selects gradient for visualization. *gradient* must be the name of a built-in or [registered](#registergradient-name-options-) gradient. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*. Defaults to **'classic'**.
-
-### `setMode( [mode] )`
-
-Set visualization mode. Valid values for *mode* are:
+Current visualization mode. Valid values are:
 
 | Value | Mode |
 |-------|------|
@@ -254,9 +176,93 @@ Set visualization mode. Valid values for *mode* are:
 
 Defaults to **0** (discrete frequencies).
 
+### `onCanvasDraw` *function*
+
+Function to be called after audioMotion finishes rendering a frame on the canvas. The audioMotion object will be passed as an argument to the callback function.
+
+### `onCanvasResize` *function*
+
+Function to be called whenever the canvas is resized.
+Two arguments will be passed to the callback function: a string with the reason why the function was called (see below) and the audioMotion object.
+
+Reasons for canvas resize:
++ `'create'` - canvas created by the class constructor
++ `'lores'` - low resolution mode toggled on or off
++ `'resize'` - browser window resized, entered or left fullscreen mode
++ `'user'` - canvas dimensions changed by the user, via `setCanvasSize()` or `setOptions()` methods
+
+### `pixelRatio` *number* *(Read only)*
+
+Current [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio).
+This is usually **1** for standard displays and **2** for retina / Hi-DPI screens. You can refer to this value to adjust any additional drawings done in the canvas.
+When [low-resolution mode](#lores) is active *pixelRatio* is halved, i.e. **0.5** for standard displays and **1** for retina / Hi-DPI.
+
+### `showBgColor` *boolean*
+
+*true* to use background color defined by current gradient; *false* for black background.
+
+### `showFPS` *boolean*
+
+*true* to display the current frame rate.
+
+### `showLeds` *boolean*
+
+*true* to activate LED display effect. It has no effect when [visualization mode](#mode) is 0 (discrete frequencies).
+
+### `showPeaks` *boolean*
+
+*true* to show amplitude peaks for each frequency.
+
+### `showScale` *boolean*
+
+*true* to display frequency labels in the X axis.
+
+### `smoothing` *number*
+
+Sets the analyzer's [smoothingTimeConstant](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/smoothingTimeConstant). *value* must be a float between 0 and 1.
+
+Lower values make the analyzer respond faster to changes. Defaults to **0.5**.
+
+
+## Methods
+
+### `connectAudio( element )`
+
+Connects an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) (`<audio>` or `<video>` HTML element) to the analyzer.
+Returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) which can be used for later disconnection.
+
+For connecting other audio sources, like oscillators and streams, use the [`audioCtx`](#audioctx) and [`analyzer`](#analyzer) objects. See [this example](demo/README.md#connecting-additional-audio-nodes).
+
+### `registerGradient( name, options )`
+
+Registers a custom gradient. *name* is a string that will be used for the [`gradient`](#gradient) property.
+
+```
+options = {
+	bgColor: '#111', // background color (required)
+	dir: 'h',        // add this for a horizontal gradient (optional)
+	colorStops: [
+		'#f00',                     // list your gradient colors here (at least 2 colors are required)
+		{ pos: .6, color: '#ff0' }, // use an object to specify the position (0 to 1) of a color
+		'hsl( 120, 100%, 50% )'     // colors may be defined in any HTML valid format
+	]
+}
+```
+
+### `setCanvasSize( [width], [height] )`
+
+Sets the canvas' nominal dimensions in pixels. *width* defaults to the container's width, or **640** if container's width is 0. *height* defaults to the container's height, or **270**.
+These will be automatically multiplied by the current pixel ratio to set actual canvas dimensions, so values will be doubled for HiDPI / retina displays, or halved when low-resolution mode is on.
+
+See [height](#height) and [width](#width) properties.
+
+### `setFreqRange( [min], [max] )`
+
+Sets the desired frequency range. Values are expressed in Hz (Hertz). *min* defaults to **20**, and *max* defaults to **22000**.
+
 ### `setOptions( {options} )`
 
-Shorthand function for setting several options at once. *options* is an object with the same structure as in the [Constructor](#constructor).
+Shorthand method for setting several options at once. *options* is an object with the same structure used in the class [constructor](#constructor), except for the `source` option which is only available at construction time.
 
 ### `setSensitivity( [min], [max] )`
 
@@ -264,50 +270,15 @@ Adjust the analyzer's sensitivity. Values are in dB (decibels), where 0 is the l
 
 For more info, see [AnalyserNode.minDecibels](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels).
 
-### `setSmoothing( [value] )`
-
-Sets the analyzer's [smoothingTimeConstant](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/smoothingTimeConstant). *value* must be a float between 0 and 1.
-
-Lower values make the analyzer respond faster to changes. Defaults to **0.5**.
-
 ### `toggleAnalyzer( [boolean] )`
 
-Starts (*true*) or stops (*false*) the analyzer and returns the resulting status.
-The analyzer is started by default on `create()`, unless you specify `start: false` in the options.
-
-### `toggleBgColor( [boolean] )`
-
-Toggles the display of background color. If *true*, uses the background color defined by the active gradient; if *false* sets background to black.
-If no argument provided, inverts the current status. Returns the resulting status after the change.
-
-### `toggleFPS( [boolean] )`
-
-Toggles display of current frame rate on (*true*) or off (*false*). If no argument provided, inverts the current status. Returns the resulting status after the change.
+Starts (*true*) or stops (*false*) the analyzer animation. If no argument provided, inverts the current status. Returns the resulting status.
+The analyzer is started by default upon [creation](#constructor), unless you specify `start: false` in the options.
 
 ### `toggleFullscreen()`
 
 Toggles fullscreen mode. As per [API specification](https://fullscreen.spec.whatwg.org/), fullscreen requests must be triggered by user activation, so you must call this function from within an event handler or otherwise the request will be denied.
 
-### `toggleLeds( [boolean] )`
-
-Toggles LED display effect on (*true*) or off (*false*). If no argument provided, inverts the current status. Returns the resulting status after the change.
-
-### `toggleLoRes( [boolean] )`
-
-Toggles low resolution mode on (*true*) or off (*false*). If no argument provided, inverts the current status. Returns the resulting status after the change.
-
-audioMotion-analyzer may require a lot of processing power to render the canvas in high-resolution displays, such as 4K+ monitors and retina / HiDPI devices.
-Low resolution mode will half the display pixel ratio, resulting in four times less pixels to render.
-
-See [this note](demo/README.md#additional-notes) on using this feature interactively.
-
-### `togglePeaks( [boolean] )`
-
-Toggles the display of amplitude peaks for each frequency on (*true*) or off (*false*). If no argument provided, inverts the current status. Returns the resulting status after the change.
-
-### `toggleScale ( [boolean] )`
-
-Toggles display of frequency scale in the X-axis on (*true*) or off (*false*). If no argument provided, inverts the current status. Returns the resulting status after the change.
 
 ## License
 
