@@ -1,7 +1,7 @@
 audioMotion-analyzer demos
 ==========================
 
-## [Fluid layout demo](fluid.html)
+## [Fluid layout demo](https://hvianna.github.io/audioMotion-analyzer/demo/fluid.html)
 
 + Allows you to interactively test all functionalities of audioMotion-analyzer
 + The analyzer canvas will adjust to the container's size (set via CSS)
@@ -10,7 +10,7 @@ audioMotion-analyzer demos
 + Load a song from your computer, or open a remote file or stream via URL
 + Demonstrates the [connection with other audio sources](#connecting-additional-audio-nodes), by using a frequency oscillator to generate test tones
 
-## [Multiple instances demo](multi.html)
+## [Multiple instances demo](https://hvianna.github.io/audioMotion-analyzer/demo/multi.html)
 
 + Shows multiple instances of audioMotion-analyzer working simultaneously
 
@@ -84,7 +84,7 @@ The demo script reads the `dataArray` variable exposed by audioMotion-analyzer a
 
 ## Additional notes
 
-If you plan on allowing users to interactively toggle the [low resolution mode](../README.md#togglelores-boolean-), you may want to set a fixed size for the canvas via CSS, like so:
+If you plan on allowing users to interactively toggle the [low resolution mode](../README.md#lores-boolean), you may want to set a fixed size for the canvas via CSS, like so:
 
 ```
 #container canvas {
