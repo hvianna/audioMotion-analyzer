@@ -1,3 +1,9 @@
+/**
+ * audioMotion-analyzer multi-instance demo
+ *
+ * https://github.com/hvianna/audioMotion-analyzer
+ */
+
 import AudioMotionAnalyzer from '../dist/audioMotion-analyzer.js';
 
 var audioEl = document.getElementById('audio'),
@@ -7,23 +13,30 @@ var audioEl = document.getElementById('audio'),
 // Create three audioMotion analyzer instances and connect them to the audio element
 
 try {
-	audioMotion[0] = new AudioMotionAnalyzer( document.getElementById('container0'), { source: audioEl } );
-	audioMotion[1] = new AudioMotionAnalyzer( document.getElementById('container1'), { source: audioEl } );
-	audioMotion[2] = new AudioMotionAnalyzer( document.getElementById('container2'), { source: audioEl } );
+	for ( let i = 0; i < 3; i++ ) {
+		audioMotion[ i ] = new AudioMotionAnalyzer(
+			document.getElementById( `container${i}` ),
+			{
+				source: audioEl,
+				onCanvasDraw: displayCanvasMsg
+			}
+		);
+	}
 }
 catch( err ) {
 	document.getElementById('container0').innerHTML = `<p>audioMotion failed with error: <em>${err}</em></p>`;
 }
 
-// Set options for each instance - we could've also set them all at the constructor
+// Set options for each instance
 
 audioMotion[0].setOptions({
 	mode: 3,
 	showLeds: true,
 	showFPS: true,
-	onCanvasDraw: displayCanvasMsg
+	width: 640,
+	height: 270
 });
-// add a custom property to the object, to save the logo display preference for each analyzer
+// we add a custom property to the object, so we can save the logo display preference for each analyzer
 audioMotion[0].showLogo = true;
 
 audioMotion[1].setOptions({
@@ -32,10 +45,8 @@ audioMotion[1].setOptions({
 	minFreq: 30,
 	maxFreq: 16000,
 	showScale: false,
-	width: 640,
-	height: 290,
-	loRes: true,
-	onCanvasDraw: displayCanvasMsg
+	width: 320,
+	height: 145
 });
 audioMotion[1].showLogo = false;
 
@@ -50,10 +61,8 @@ audioMotion[2].setOptions({
 	smoothing: .8,
 	minDecibels: -90,
 	maxDecibels: -30,
-	width: 640,
-	height: 290,
-	loRes: true,
-	onCanvasDraw: displayCanvasMsg
+	width: 320,
+	height: 145
 });
 audioMotion[2].showLogo = false;
 
@@ -68,10 +77,10 @@ document.querySelectorAll('[name="analyzer"]').forEach( el => {
 	});
 });
 
-// select analyzer by clicking on the canvas
+// user can also select an analyzer by clicking on its canvas
 document.querySelectorAll('canvas').forEach( el => {
 	el.addEventListener( 'click', () => {
-		selectedAnalyzer = el.parentNode.id.substr(-1,1);
+		selectedAnalyzer = el.parentNode.id.slice(-1);
 		document.querySelector(`[name="analyzer"][value="${selectedAnalyzer}"`).checked = true;
 		updateUI();
 	});

@@ -1,9 +1,22 @@
-audioMotion-analyzer demo
-=========================
+audioMotion-analyzer demos
+==========================
 
-The demo allows you to interactively test several functionalities of audioMotion-analyzer. [See it online.](https://hvianna.github.io/audioMotion-analyzer)
+## [Fluid layout demo](fluid.html)
 
-Note: the demo script is bundled/compressed with [webpack](https://webpack.js.org/). Source code is in the project's [`src/` folder](../src/).
++ Allows you to interactively test all functionalities of audioMotion-analyzer
++ The analyzer canvas will adjust to the container's size (set via CSS)
++ Demonstrates the use of the `onCanvasResize` - try resizing the window and check the messages logged to the JavaScript console
++ The `onCanvasDraw` callback is used to add custom content to the canvas, the audioMotion logo pulsating to the song beats!
++ Load a song from your computer, or open a remote file or stream via URL
++ Demonstrates the [connection with other audio sources](#connecting-additional-audio-nodes), by using a frequency oscillator to generate test tones
+
+## [Multiple instances demo](multi.html)
+
++ Shows multiple instances of audioMotion-analyzer working simultaneously
+
+## Code tips
+
+Note: the demo scripts are bundled/compressed with [webpack](https://webpack.js.org/). Source code is in the project's [`src/` folder](../src/).
 
 ### Creating the analyzer element
 

@@ -1,7 +1,12 @@
 body {
 	font: 13px Arial,sans-serif;
 	margin: 0 auto;
-	width: 990px;
+	max-width: 100%;
+	width: 1000px;
+}
+
+a {
+	color: #090;
 }
 
 button, select {
@@ -22,14 +27,23 @@ input[type="range"] {
 	width: 100%;
 }
 
-/* full-width analyzer (single instance demo) */
+/* fluid full-width analyzer (single instance demo) */
 #container {
-	height: 400px;
+	height: 45vh;
 	margin: 0 calc( 50% - 50vw );
 }
 
 #container1 {
 	margin-bottom: 15px;
+}
+
+.header-link {
+	float: right;
+	font-size: 12px;
+}
+
+.center {
+	text-align: center;
 }
 
 .main {
@@ -38,7 +52,7 @@ input[type="range"] {
 	width: 640px;
 }
 
-.right {
+.aside {
 	display: inline-block;
 	vertical-align: top;
 	width: 320px;
@@ -67,7 +81,4 @@ input[type="range"] {
 	font-size: 12px;
 	margin: 40px 0;
 	text-align: center;
-}
-.credits a {
-	color: #090;
 }

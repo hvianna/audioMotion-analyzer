@@ -9,14 +9,14 @@
 </head>
 
 <body>
-	<h1>audioMotion-analyzer multi-instance demo</h1>
+	<h1>audioMotion-analyzer multi-instance demo <a class="header-link" href="README.md">&larr; Demo home</a></h1>
 
 	<div id="analyzer-block">
 		<div class="main">
 			<div id="container0"></div>
 			<audio id="audio" controls crossorigin="anonymous"></audio>
 		</div>
-		<div class="right">
+		<div class="aside">
 			<div id="container1"></div>
 			<div id="container2"></div>
 		</div>
@@ -29,12 +29,12 @@
 		<input type="text" id="remoteURL" size="50" value="http://a1rj.streams.com.br:7801/stream"> <button id="loadFromURL">Load</button>
 	</p>
 
-	<div class="analyzer-configuration">
+	<div class="analyzer-configuration center">
 
 		<p>Selected analyzer:
-			<input type="radio" name="analyzer" value="0" checked> Main &nbsp;
-			<input type="radio" name="analyzer" value="1"> Top &nbsp;
-			<input type="radio" name="analyzer" value="2"> Bottom
+			<label><input type="radio" name="analyzer" value="0" checked> Main &nbsp;</label>
+			<label><input type="radio" name="analyzer" value="1"> Top &nbsp;</label>
+			<label><input type="radio" name="analyzer" value="2"> Bottom</label>
 		</p>
 
 		<p>

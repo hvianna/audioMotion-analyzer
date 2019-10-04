@@ -1,3 +1,9 @@
+/**
+ * audioMotion-analyzer demo
+ *
+ * https://github.com/hvianna/audioMotion-analyzer
+ */
+
 import AudioMotionAnalyzer from '../dist/audioMotion-analyzer.js';
 
 var audioEl = document.getElementById('audio'),
@@ -9,18 +15,18 @@ try {
 	var audioMotion = new AudioMotionAnalyzer(
 		document.getElementById('container'),
 		{
-			mode: 4, // 1/6th-octave bands
 			source: audioEl, // main source is the HTML audio element
-			minFreq: 30,
-			maxFreq: 16000,
 			showFPS: true,
-			onCanvasDraw: displayCanvasMsg // custom callback function (see below)
+			onCanvasDraw: displayCanvasMsg, // callback function to add custom content to the canvas
+			onCanvasResize: logCanvasResize
 		}
 	);
 }
 catch( err ) {
 	document.getElementById('container').innerHTML = `<p>audioMotion failed with error: <em>${err}</em></p>`;
 }
+
+updateUI();
 
 // Create oscillator and gain nodes, and connect them to the analyzer
 
@@ -45,6 +51,14 @@ document.getElementById('btn_fps').addEventListener( 'click', () => audioMotion.
 document.getElementById('btn_logo').addEventListener( 'click', () => showLogo = ! showLogo );
 document.getElementById('btn_freeze').addEventListener( 'click', () => audioMotion.toggleAnalyzer() );
 
+document.getElementById('fft').addEventListener( 'change', e => audioMotion.fftSize = e.target.value );
+document.getElementById('mode').addEventListener( 'change', e => audioMotion.mode = e.target.value );
+document.getElementById('gradient').addEventListener( 'change', e => audioMotion.gradient = e.target.value );
+document.getElementById('range').addEventListener( 'change', e => {
+	let selected = e.target[ e.target.selectedIndex ];
+	audioMotion.setFreqRange( selected.dataset.min, selected.dataset.max );
+});
+document.getElementById('smoothing').addEventListener( 'change', e => audioMotion.smoothing = e.target.value );
 document.getElementById('sensitivity').addEventListener( 'change', e => {
 	switch ( e.target.value ) {
 		case '0':
@@ -63,13 +77,6 @@ document.getElementById('sensitivity').addEventListener( 'change', e => {
 			audioMotion.setSensitivity( -100, -40 );
 			break;
 	}
-});
-
-document.getElementById('mode').addEventListener( 'change', e => audioMotion.mode = e.target.value );
-document.getElementById('gradient').addEventListener( 'change', e => audioMotion.gradient = e.target.value );
-document.getElementById('range').addEventListener( 'change', e => {
-	let selected = e.target[ e.target.selectedIndex ];
-	audioMotion.setFreqRange( selected.dataset.min, selected.dataset.max );
 });
 
 document.querySelectorAll('.tones').forEach( el =>
@@ -122,4 +129,47 @@ function loadSong( el ) {
 		audioEl.src = reader.result;
 		audioEl.play();
 	};
+}
+
+// Update UI elements to reflect the analyzer's current settings
+
+function updateUI() {
+	document.getElementById('fft').value = audioMotion.fftSize;
+	document.getElementById('mode').value = audioMotion.mode;
+	document.getElementById('gradient').value = audioMotion.gradient;
+	document.getElementById('smoothing').value = audioMotion.smoothing;
+
+	switch ( audioMotion.minFreq ) {
+		case 20:
+			document.getElementById('range').selectedIndex = 1;
+			break;
+		case 30:
+			document.getElementById('range').selectedIndex = 2;
+			break;
+		case 100:
+			document.getElementById('range').selectedIndex = 3;
+	}
+
+	switch ( audioMotion.maxDecibels ) {
+		case -10:
+			document.getElementById('sensitivity').value = 0;
+			break;
+		case -20:
+			document.getElementById('sensitivity').value = 1;
+			break;
+		case -25:
+			document.getElementById('sensitivity').value = 2;
+			break;
+		case -30:
+			document.getElementById('sensitivity').value = 3;
+			break;
+		case -40:
+			document.getElementById('sensitivity').value = 4;
+	}
+}
+
+// Log canvas size changes to the JavaScript console
+
+function logCanvasResize( reason, instance ) {
+	console.log( `[${reason}] set: ${instance.width}x${instance.height} | actual: ${instance.canvas.width}x${instance.canvas.height}` );
 }
