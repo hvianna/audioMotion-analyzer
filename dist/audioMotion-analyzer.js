@@ -431,7 +431,7 @@ export default class AudioMotionAnalyzer {
 			this.onCanvasDraw = options.onCanvasDraw;
 
 		if ( typeof options.onCanvasResize == 'function' )
-			this.onCanvasResize = options.onCanvasDraw;
+			this.onCanvasResize = options.onCanvasResize;
 
 		if ( options.width !== undefined )
 			this._width = options.width;
