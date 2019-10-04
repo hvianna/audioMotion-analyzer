@@ -37,11 +37,11 @@ See the [demo folder](demo/) for more comprehensive examples. See [Methods](#met
 
 ## Constructor
 
-`AudioMotionAnalyzer( [container], [{options}] )`
+`new AudioMotionAnalyzer( [container], [{options}] )`
 
 Creates an instance of the audioMotion analyzer. A canvas element will be created and inserted into the *container* element. If *container* is undefined, the canvas is appended to the document's body.
 
-If `source` is specified in the *options*, it will be connected to the analyzer. You can later disconnect it by referring to the [audioSource](#audio-source) property.
+If `source` is specified in the *options*, it will be connected to the analyzer. You can later disconnect it by referring to the [audioSource](#audiosource-mediaelementaudiosourcenode-object) object.
 
 ```
 options = {
@@ -73,13 +73,17 @@ options = {
 
 See the [demo folder](demo/) for code examples of interaction with the objects below.
 
+### `analyzer` *[AnalyserNode](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode) object*
+
+Connect any additional audio sources to this object, so their output is displayed in the graphic analyzer.
+
 ### `audioCtx` *[AudioContext](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) object*
 
 Use this object to create additional audio sources to be connected to the analyzer, like oscillator nodes, gain nodes and media streams.
 
-### `analyzer` *[AnalyserNode](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode) object*
+### `audioSource` *[MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) object*
 
-Connect any additional audio sources to this object, so their output is displayed in the graphic analyzer.
+Object representing the HTML media element connected using the `source` option of the class [constructor](#constructor). See also the [`connectAudio()`](#connectaudio-element-) method.
 
 ### `canvas` *HTMLCanvasElement object*
 
@@ -91,10 +95,6 @@ Canvas element created by audioMotion.
 
 
 ## Properties
-
-### `audioSource` *[MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) object* *(Read only)*
-
-Object representing the HTML media element connected using the `source` option of the class [constructor](#constructor). See also the [`connectAudio()`](#connectaudio-element) method.
 
 ### `dataArray` *[UInt8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) array* *(Read only)*
 
@@ -115,17 +115,15 @@ Higher values provide more detail in the frequency domain, but less detail in th
 
 Current frame rate.
 
-### `fsHeight` *number* *(Read only)*
-### `fsWidth` *number* *(Read only)*
+### `fsHeight` *number* *(Read only)*, `fsWidth` *number* *(Read only)*
 
-Canvas dimensions used during fullscreen mode. These take the current pixel ratio into account and will change accordingly when [low-resolution mode](#lores) is set.
+Canvas dimensions used during fullscreen mode. These take the current pixel ratio into account and will change accordingly when [low-resolution mode](#lores-boolean) is set.
 
 ### `gradient` *string*
 
 Currently selected gradient. *gradient* must be the name of a built-in or [registered](#registergradient-name-options-) gradient. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*. Defaults to **'classic'**.
 
-### `height` *number*
-### `width` *number*
+### `height` *number*, `width` *number*
 
 Nominal dimensions of the analyzer.
 
@@ -153,13 +151,15 @@ Low resolution mode halves the effective pixel ratio, resulting in four times le
 
 See [this note](demo/README.md#additional-notes) on using this feature interactively.
 
-### `maxDecibels` *number*
-### `minDecibels` *number*
+### `maxDecibels` *number*, `minDecibels` *number*
 
-Highest and lowest decibel values represented in the Y-axis of the analyzer. You can set both values at once using the [`setSensitivity()`](#setsensitivity-min-max-) method.
+Highest and lowest decibel values represented in the Y-axis of the analyzer. Default values are **-25** for *maxDecibels* and **-85** for *maxDecibels*. **0** is the loudest volume possible.
 
-### `maxFreq` *number*
-### `minFreq` *number*
+You can set both values at once using the [`setSensitivity()`](#setsensitivity-min-max-) method.
+
+For more info, see [AnalyserNode.minDecibels](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels).
+
+### `maxFreq` *number*, `minFreq` *number*
 
 Highest and lowest frequencies represented in the X-axis of the analyzer. You can set both values at once using the [`setFreqRange()`](#setfreqrange-min-max-) method.
 
@@ -195,14 +195,14 @@ Reason | Description
 `'create'` | canvas created by the class constructor
 `'fschange'` | analyzer entered or left fullscreen mode
 `'lores'` | low resolution mode toggled on or off
-`'resize'` | browser window resized (only when [width and/or height](#height) are undefined)
+`'resize'` | browser window resized (only when [width and/or height](#height-number-width-number) are undefined)
 `'user'` | canvas dimensions changed by the user, via `setCanvasSize()` or `setOptions()` methods
 
 ### `pixelRatio` *number* *(Read only)*
 
 Current [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio).
 This is usually **1** for standard displays and **2** for retina / Hi-DPI screens. You can refer to this value to adjust any additional drawings done in the canvas.
-When [low-resolution mode](#lores) is active *pixelRatio* is halved, i.e. **0.5** for standard displays and **1** for retina / Hi-DPI.
+When [low-resolution mode](#lores-boolean) is active *pixelRatio* is halved, i.e. **0.5** for standard displays and **1** for retina / Hi-DPI.
 
 ### `showBgColor` *boolean*
 
@@ -214,7 +214,7 @@ When [low-resolution mode](#lores) is active *pixelRatio* is halved, i.e. **0.5*
 
 ### `showLeds` *boolean*
 
-*true* to activate LED display effect. It has no effect when [visualization mode](#mode) is 0 (discrete frequencies).
+*true* to activate LED display effect. It has no effect when [visualization mode](#mode-number) is 0 (discrete frequencies).
 
 ### `showPeaks` *boolean*
 
@@ -238,11 +238,11 @@ Lower values make the analyzer respond faster to changes. Defaults to **0.5**.
 Connects an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) (`<audio>` or `<video>` HTML element) to the analyzer.
 Returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) which can be used for later disconnection.
 
-For connecting other audio sources, like oscillators and streams, use the [`audioCtx`](#audioctx) and [`analyzer`](#analyzer) objects. See [this example](demo/README.md#connecting-additional-audio-nodes).
+For connecting other audio sources, like oscillators and streams, use the [`audioCtx`](#audioctx-audiocontext-object) and [`analyzer`](#analyzer-analysernode-object) objects. See [this example](demo/README.md#connecting-additional-audio-nodes).
 
 ### `registerGradient( name, options )`
 
-Registers a custom gradient. *name* is a string that will be used for the [`gradient`](#gradient) property.
+Registers a custom gradient. *name* is a string that will be used for the [`gradient`](#gradient-string) property.
 
 ```
 options = {
@@ -258,7 +258,7 @@ options = {
 
 ### `setCanvasSize( [width], [height] )`
 
-Sets the analyzer nominal dimensions in pixels. See [height and width](#height) properties for details.
+Sets the analyzer nominal dimensions in pixels. See [height and width](#height-number-width-number) properties for details.
 
 ### `setFreqRange( [min], [max] )`
 
@@ -270,9 +270,7 @@ Shorthand method for setting several options at once. *options* is an object wit
 
 ### `setSensitivity( [min], [max] )`
 
-Adjust the analyzer's sensitivity. Values are in dB (decibels), where 0 is the loudest volume possible. *min* defaults to **-85** and *max* defaults to **-25**.
-
-For more info, see [AnalyserNode.minDecibels](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels).
+Adjust the analyzer's sensitivity. See [maxDecibels and minDecibels](#maxdecibels-number-mindecibels-number) properties.
 
 ### `toggleAnalyzer( [boolean] )`
 
