@@ -171,5 +171,5 @@ function updateUI() {
 // Log canvas size changes to the JavaScript console
 
 function logCanvasResize( reason, instance ) {
-	console.log( `[${reason}] set: ${instance.width}x${instance.height} | actual: ${instance.canvas.width}x${instance.canvas.height}` );
+	console.log( `[${reason}] set: ${instance.width} x ${instance.height} | actual: ${instance.canvas.width} x ${instance.canvas.height}` );
 }
