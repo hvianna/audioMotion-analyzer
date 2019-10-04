@@ -24,15 +24,14 @@ This creates the audioMotion-analyzer element, sets some initial options, and ch
 
 ```
 try {
-    audioMotion.create(
+    var audioMotion = new AudioMotionAnalyzer(
         document.getElementById('container'),
         {
-            mode: 4, // visualization mode: 1/6th-octave bands
-            source: document.getElementById('audio'), // HTML audio element
-            freqMin: 30,    // lowest frequency represented on X-axis
-            freqMax: 16000, // highest frequency represented on X-axis
-            showFPS: true,  // show framerate
-            onCanvasDraw: displayCanvasMsg  // callback function (called after rendering each frame)
+            source: document.getElementById('audio'),
+            showFPS: true,
+            minFreq: 30,
+            maxFreq: 16000,
+            onCanvasDraw: displayCanvasMsg
         }
     );
 }
@@ -41,11 +40,9 @@ catch( err ) {
 }
 ```
 
-Right now, audioMotion-analyzer throws only one custom exception, if it fails to create an audio context.
-
 ### Connecting additional audio nodes
 
-This shows how to create an oscillator and a gain node, and connect them to the analyzer:
+This code fragment creates an oscillator and a gain node using audioMotion's audioContext, and then connects them to the analyzer:
 
 ```
 var audioCtx = audioMotion.audioCtx,
@@ -60,26 +57,27 @@ gainNode.connect( audioMotion.analyzer );
 
 ### onCanvasDraw callback
 
-The audioMotion logo is drawn over the analyzer by this callback function:
+The demos use the onCanvasDraw callback function to draw the audioMotion logo over the analyzer canvas.
+The function below is from the multi-instance demo - the calling instance object is passed as an argument to the function:
 
 ```
-function displayCanvasMsg( canvas, canvasCtx, pixelRatio ) {
-    if ( ! showLogo )
+function displayCanvasMsg( instance ) {
+    if ( ! instance.showLogo )
         return;
-    var size = 20 * pixelRatio;
-    if ( audioMotion.isFullscreen() )
+    var size = 20 * instance.pixelRatio;
+    if ( instance.isFullscreen )
         size *= 2;
-    canvasCtx.font = `${size}px Orbitron,sans-serif`;
-    var w = canvasCtx.measureText('audioMotion').width / 2;
+    instance.canvasCtx.font = `${size}px Orbitron,sans-serif`;
+    var w = instance.canvasCtx.measureText('audioMotion').width / 2;
 
-    canvasCtx.font = `${size + audioMotion.dataArray[ 1 ] / 16 * pixelRatio}px Orbitron,sans-serif`;
-    canvasCtx.fillStyle = '#fff8';
-    canvasCtx.textAlign = 'center';
-    canvasCtx.fillText( 'audioMotion', canvas.width - w - size * 4, size * 2 );
+    instance.canvasCtx.font = `${size + instance.dataArray[ 1 ] / 16 * instance.pixelRatio}px Orbitron,sans-serif`;
+    instance.canvasCtx.fillStyle = '#fff8';
+    instance.canvasCtx.textAlign = 'center';
+    instance.canvasCtx.fillText( 'audioMotion', instance.canvas.width - w - size * 4, size * 2 );
 }
 ```
 
-The demo script reads the `dataArray` variable exposed by audioMotion-analyzer and uses the amplitude of the first low frequency bin to change the size of the text, making the audioMotion logo pulsate to the rhythm of the music.
+It reads the `dataArray` property exposed by audioMotion-analyzer and uses the amplitude of the first frequency bin to change the size of the text, making the audioMotion logo pulsate to the rhythm of the music.
 
 
 ## Additional notes

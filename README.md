@@ -7,7 +7,7 @@ This is the just the spectrum analyzer module written for my [audioMotion](https
 
 ## Usage
 
-Using npm:
+Install with npm:
 
 ```
 npm install audioMotion-analyzer
@@ -30,7 +30,7 @@ var audioMotion = new AudioMotionAnalyzer(
 );
 ```
 
-This will insert the analyzer canvas inside the *#container* element and start the visualization of audio coming from the *#audio* element. You can connect additional audio sources via the `connectAudio()` method or directly to the `audioCtx` object exposed by audioMotion.
+This will insert the analyzer canvas inside the *#container* element and start the visualization of audio coming from the *#audio* element.
 
 See the [demo folder](demo/) for more comprehensive examples. See [Methods](#methods) for additional configuration options and other ways to interact with the analyzer.
 
@@ -39,15 +39,15 @@ See the [demo folder](demo/) for more comprehensive examples. See [Methods](#met
 
 `new AudioMotionAnalyzer( [container], [{options}] )`
 
-Creates an instance of the audioMotion analyzer. A canvas element will be created and inserted into the *container* element. If *container* is undefined, the canvas is appended to the document's body.
+Creates a new instance of audioMotion-analyzer. A canvas element will be created and inserted into the *container* element. If *container* is undefined, the canvas is appended to the document's body.
 
-If `source` is specified in the *options*, it will be connected to the analyzer. You can later disconnect it by referring to the [audioSource](#audiosource-mediaelementaudiosourcenode-object) object.
+Available options with default values shown inside parentheses:
 
 ```
 options = {
 	fftSize: <number> (8192)
 	gradient: <string> ('classic')
-	height: <number> (container.clientHeight || 270)
+	height: <number>
 	loRes: <boolean> (false)
 	maxDecibels: <number> (-25)
 	maxFreq: <number> (22000)
@@ -64,9 +64,13 @@ options = {
 	smoothing: <number> (0.5)
 	source: <HTMLMediaElement>
 	start: <boolean> (true)
-	width: <number> (container.clientWidth || 640)
+	width: <number>
 }
 ```
+
+If `source` is specified in the *options*, the media element will be connected to the analyzer. You can later disconnect it by referring to the [audioSource](#audiosource-mediaelementaudiosourcenode-object) object.
+
+You can connect additional audio sources with the [connectAudio()](#connectaudio-element) method.
 
 
 ## Interface objects
