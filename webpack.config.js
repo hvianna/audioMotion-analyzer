@@ -2,9 +2,12 @@ const path = require('path');
 
 module.exports = {
   mode: 'production',
-  entry: './src/demo.js',
+  entry: {
+  	'demo': './src/demo.js',
+  	'demo-multi': './src/demo-multi.js'
+  },
   output: {
     path: path.resolve(__dirname, 'demo'),
-    filename: 'demo.js'
+    filename: '[name].js'
   }
 };

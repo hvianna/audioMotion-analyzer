@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>audioMotion-analyzer multi-instance demo</title>
+	<link href="https://fonts.googleapis.com/css?family=Orbitron:700" rel="stylesheet">
+	<link href="styles.css" rel="stylesheet">
+</head>
+
+<body>
+	<h1>audioMotion-analyzer multi-instance demo</h1>
+
+	<div id="analyzer-block">
+		<div class="main">
+			<div id="container0"></div>
+			<audio id="audio" controls crossorigin="anonymous"></audio>
+		</div>
+		<div class="right">
+			<div id="container1"></div>
+			<div id="container2"></div>
+		</div>
+	</div>
+
+	<p>
+		Load an audio file from your computer:
+		<input type="file" id="uploadFile" accept="audio/*"><br>
+		Load audio file or stream from an URL:
+		<input type="text" id="remoteURL" size="50" value="http://a1rj.streams.com.br:7801/stream"> <button id="loadFromURL">Load</button>
+	</p>
+
+	<div class="analyzer-configuration">
+
+		<p>Selected analyzer:
+			<input type="radio" name="analyzer" value="0" checked> Main &nbsp;
+			<input type="radio" name="analyzer" value="1"> Top &nbsp;
+			<input type="radio" name="analyzer" value="2"> Bottom
+		</p>
+
+		<p>
+			<select id="mode">
+				<option value="" disabled>Visualization Mode:</option>
+				<option value="0">Discrete frequencies</option>
+				<option value="1">1/24th octave bands</option>
+				<option value="2">1/12th octave bands</option>
+				<option value="3">1/8th octave bands</option>
+				<option value="4">1/6th octave bands</option>
+				<option value="5">1/4th octave bands</option>
+				<option value="6">1/3rd octave bands</option>
+				<option value="7">Half octave bands</option>
+				<option value="8">Full octave bands</option>
+			</select>
+
+			<select id="gradient">
+				<option value="" disabled>Gradient:</option>
+				<option value="classic">Classic</option>
+				<option value="prism">Prism</option>
+				<option value="rainbow">Rainbow</option>
+			</select>
+
+			<select id="fft">
+				<option value="" disabled>FFT size:</option>
+				<option value="1024">1024</option>
+				<option value="2048">2048</option>
+				<option value="4096">4096</option>
+				<option value="8192">8192</option>
+				<option value="16384">16384</option>
+				<option value="32768">32768</option>
+			</select>
+
+			<select id="range">
+				<option value="" disabled>Frequency Range:</option>
+				<option data-min="20" data-max="22000">20Hz - 22KHz</option>
+				<option data-min="30" data-max="16000">30Hz - 16KHz</option>
+				<option data-min="100" data-max="10000">100Hz - 10KHz</option>
+			</select>
+
+			<span class="slider">Sensitivity:<br>
+				<input type="range" id="sensitivity" min="0" max="4">
+			</span>
+
+			<span class="slider">Smoothing:<br>
+				<input type="range" id="smoothing" min="0" max=".9" step=".1">
+			</span>
+
+		</p>
+
+		<p>
+			<button id="btn_bgcolor">Background</button>
+			<button id="btn_peaks">Peaks</button>
+			<button id="btn_leds">LEDs</button>
+			<button id="btn_scale">Scale</button>
+			<button id="btn_lores">Lo-Res</button>
+			<button id="btn_fps">Frame rate</button>
+			<button id="btn_logo">Logo</button>
+			<button id="btn_freeze">Freeze</button>
+			<button id="btn_fullscr">Fullscreen</button>
+		</p>
+
+	</div>
+
+	<div class="credits">
+		<strong>audioMotion-analyzer</strong> Copyright &copy; 2018-2019 Henrique Avila Vianna.	Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
+	</div>
+
+	<script src="demo-multi.js"></script>
+
+</body>
+</html>
