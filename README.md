@@ -147,7 +147,7 @@ If you want the actual canvas dimensions, use `audioMotion.canvas.width` and `au
 
 *true* for low resolution mode.
 
-Low resolution mode halves the effective pixel ratio, resulting in four times less pixels to render. This may improving performance significantly, especially in 4K+ monitors.
+Low resolution mode halves the effective pixel ratio, resulting in four times less pixels to render. This may improve performance significantly, especially in 4K+ monitors.
 
 See [this note](demo/README.md#additional-notes) on using this feature interactively.
 
