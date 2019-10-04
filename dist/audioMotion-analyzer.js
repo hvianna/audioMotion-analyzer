@@ -27,7 +27,7 @@ export default class AudioMotionAnalyzer {
 /*
 	TO DO:
 
-	use public and private class fields..
+	use public and private class fields and methods when they become standard?
 	https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Class_fields
 
 	// current visualization settings
@@ -248,8 +248,16 @@ export default class AudioMotionAnalyzer {
 	get minFreq() {
 		return this._minFreq;
 	}
+	set minFreq( value ) {
+		this._minFreq = value;
+		this._precalculateBarPositions();
+	}
 	get maxFreq() {
 		return this._maxFreq;
+	}
+	set maxFreq( value ) {
+		this._maxFreq = value;
+		this._precalculateBarPositions();
 	}
 
 	// Analyzer's sensitivity
