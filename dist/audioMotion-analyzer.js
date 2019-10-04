@@ -1,8 +1,8 @@
 /**
- * audioMotion-analyzer.js
+ * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * https://github.com/hvianna/audioMotion.js
+ * https://github.com/hvianna/audioMotion-analyzer
  *
  * @author    Henrique Vianna <hvianna@gmail.com>
  * @copyright (c) 2018-2019 Henrique Avila Vianna
@@ -114,10 +114,9 @@ export default class AudioMotionAnalyzer {
 			},
 		};
 
-		// Container defaults to document body
+		// If container not specified, use document body
 
-		if ( ! container )
-			container = document.body;
+		this._container = container || document.body;
 
 		// Create audio context
 
@@ -138,8 +137,8 @@ export default class AudioMotionAnalyzer {
 
 		// Adjust settings
 
-		this._defaults.width  = container.clientWidth  || this._defaults.width;
-		this._defaults.height = container.clientHeight || this._defaults.height;
+		this._defaults.width  = this._container.clientWidth  || this._defaults.width;
+		this._defaults.height = this._container.clientHeight || this._defaults.height;
 
 		this._mode       = options.mode        === undefined ? this._defaults.mode        : Number( options.mode );
 		this._minFreq    = options.minFreq     === undefined ? this._defaults.minFreq     : options.minFreq;
@@ -151,8 +150,8 @@ export default class AudioMotionAnalyzer {
 		this.showPeaks   = options.showPeaks   === undefined ? this._defaults.showPeaks   : options.showPeaks;
 		this.showFPS     = options.showFPS     === undefined ? this._defaults.showFPS     : options.showFPS;
 		this._loRes      = options.loRes       === undefined ? this._defaults.loRes       : options.loRes;
-		this._width      = options.width       === undefined ? this._defaults.width       : options.width;
-		this._height     = options.height      === undefined ? this._defaults.height      : options.height;
+		this._width      = options.width;
+		this._height     = options.height;
 
 		this.analyzer.fftSize               = options.fftSize     === undefined ? this._defaults.fftSize     : options.fftSize;
 		this.analyzer.smoothingTimeConstant = options.smoothing   === undefined ? this._defaults.smoothing   : options.smoothing;
@@ -168,20 +167,21 @@ export default class AudioMotionAnalyzer {
 
 		this.canvas = document.createElement('canvas');
 		this.canvas.style = 'max-width: 100%;';
-		container.appendChild( this.canvas );
+		this._container.appendChild( this.canvas );
 		this.canvasCtx = this.canvas.getContext( '2d', { alpha: false } );
 		this._setCanvas('create');
 
-		// adjust canvas on window resize / fullscreen change
+		// adjust canvas on window resize
 		window.addEventListener( 'resize', () => {
-			this._width = options.width || container.clientWidth || this._defaults.width;
-			this._height = options.height || container.clientHeight || this._defaults.height;
-			this._setCanvas('resize');
+			if ( ! this._width || ! this._height ) // fluid width or height
+				this._setCanvas('resize');
 		});
 
-		this.canvas.addEventListener( 'fullscreenchange', () => this._setCanvas('resize') ); // required for Firefox Android TV
+		// adjust canvas size on fullscreen change
+		this.canvas.addEventListener( 'fullscreenchange', () => this._setCanvas('fschange') );
 
-		// Start analyzer
+		// Start animation
+
 		if ( options.start !== false )
 			this.toggleAnalyzer( true );
 
@@ -870,7 +870,7 @@ export default class AudioMotionAnalyzer {
 
 
 	/**
-	 * Internal function to change canvas dimensions on the fly
+	 * Internal function to change canvas dimensions on demand
 	 */
 	_setCanvas( reason ) {
 		this._pixelRatio = window.devicePixelRatio; // for Retina / HiDPI devices
@@ -886,8 +886,8 @@ export default class AudioMotionAnalyzer {
 			this.canvas.height = this._fsHeight;
 		}
 		else {
-			this.canvas.width = this._width * this._pixelRatio;
-			this.canvas.height = this._height * this._pixelRatio;
+			this.canvas.width = ( this._width || this._container.clientWidth || this._defaults.width ) * this._pixelRatio;
+			this.canvas.height = ( this._height || this._container.clientHeight || this._defaults.height ) * this._pixelRatio;
 		}
 
 		// workaround for wrong dPR reported on Android TV

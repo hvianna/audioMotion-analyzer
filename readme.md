@@ -118,7 +118,7 @@ Current frame rate.
 ### `fsHeight` *number* *(Read only)*
 ### `fsWidth` *number* *(Read only)*
 
-Canvas dimensions used during fullscreen mode. These take the current pixel ratio into account and will change accordingly when low-resolution mode is set.
+Canvas dimensions used during fullscreen mode. These take the current pixel ratio into account and will change accordingly when [low-resolution mode](#lores) is set.
 
 ### `gradient` *string*
 
@@ -127,10 +127,15 @@ Currently selected gradient. *gradient* must be the name of a built-in or [regis
 ### `height` *number*
 ### `width` *number*
 
-Nominal dimensions of the analyzer container. Actual canvas dimensions may differ from these, depending on the current pixel ratio and fullscreen status.
-If you need to read the actual canvas dimensions, use `audioMotion.canvas.width` and `audioMotion.canvas.height`.
+Nominal dimensions of the analyzer.
+
+If one or both of these are `undefined`, the analyzer will try to adjust to the container's width and/or height.
+If the container's width and/or height are 0 (inline elements), a reference size of **640 x 270 pixels** will be used to replace the missing dimension(s).
+This should be considered the minimum dimensions for proper visualization of all available modes with the LED effect on.
 
 You can set both values at once using the [setCanvasSize](#setcanvassize-width-height-) method.
+
+If you want the actual canvas dimensions, use `audioMotion.canvas.width` and `audioMotion.canvas.height`.
 
 ### `isFullscreen` *boolean* *(Read only)*
 
@@ -144,14 +149,14 @@ You can set both values at once using the [setCanvasSize](#setcanvassize-width-h
 
 *true* for low resolution mode.
 
-Low resolution mode halves the effective pixel ratio, resulting in four times less pixels to render. This may improving performance significantly, especially in high-resolution displays, such as 4K+ monitors.
+Low resolution mode halves the effective pixel ratio, resulting in four times less pixels to render. This may improving performance significantly, especially in 4K+ monitors.
 
 See [this note](demo/README.md#additional-notes) on using this feature interactively.
 
 ### `maxDecibels` *number*
 ### `minDecibels` *number*
 
-Highest and lowest volumes (in decibels) . You can set both values at once using the [`setSensitivity()`](#setsensitivity-min-max-) method.
+Highest and lowest decibel values represented in the Y-axis of the analyzer. You can set both values at once using the [`setSensitivity()`](#setsensitivity-min-max-) method.
 
 ### `maxFreq` *number*
 ### `minFreq` *number*
@@ -185,11 +190,13 @@ Function to be called after audioMotion finishes rendering a frame on the canvas
 Function to be called whenever the canvas is resized.
 Two arguments will be passed to the callback function: a string with the reason why the function was called (see below) and the audioMotion object.
 
-Reasons for canvas resize:
-+ `'create'` - canvas created by the class constructor
-+ `'lores'` - low resolution mode toggled on or off
-+ `'resize'` - browser window resized, entered or left fullscreen mode
-+ `'user'` - canvas dimensions changed by the user, via `setCanvasSize()` or `setOptions()` methods
+Reason | Description
+-------|------------
+`'create'` | canvas created by the class constructor
+`'fschange'` | analyzer entered or left fullscreen mode
+`'lores'` | low resolution mode toggled on or off
+`'resize'` | browser window resized (only when [width and/or height](#height) are undefined)
+`'user'` | canvas dimensions changed by the user, via `setCanvasSize()` or `setOptions()` methods
 
 ### `pixelRatio` *number* *(Read only)*
 
@@ -251,10 +258,7 @@ options = {
 
 ### `setCanvasSize( [width], [height] )`
 
-Sets the canvas' nominal dimensions in pixels. *width* defaults to the container's width, or **640** if container's width is 0. *height* defaults to the container's height, or **270**.
-These will be automatically multiplied by the current pixel ratio to set actual canvas dimensions, so values will be doubled for HiDPI / retina displays, or halved when low-resolution mode is on.
-
-See [height](#height) and [width](#width) properties.
+Sets the analyzer nominal dimensions in pixels. See [height and width](#height) properties for details.
 
 ### `setFreqRange( [min], [max] )`
 
