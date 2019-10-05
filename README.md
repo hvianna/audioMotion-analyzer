@@ -10,13 +10,13 @@ This is the graphic spectrum analyzer I originally wrote for [audioMotion](https
 Install with npm:
 
 ```
-npm install audioMotion-analyzer
+npm install audiomotion-analyzer
 ```
 
 ES6 import:
 
 ```
-import AudioMotionAnalyzer from 'audioMotion-analyzer';
+import AudioMotionAnalyzer from 'audiomotion-analyzer';
 ```
 
 Minimal constructor:
