@@ -260,19 +260,21 @@ options = {
 }
 ```
 
-### `setCanvasSize( [width], [height] )`
+### `setCanvasSize( width, height )`
 
 Sets the analyzer nominal dimensions in pixels. See [height and width](#height-number-width-number) properties for details.
 
-### `setFreqRange( [min], [max] )`
+### `setFreqRange( minFreq, maxFreq )`
 
-Sets the desired frequency range. Values are expressed in Hz (Hertz). *min* defaults to **20**, and *max* defaults to **22000**.
+Sets the desired frequency range. Values are expressed in Hz (Hertz).
 
 ### `setOptions( {options} )`
 
-Shorthand method for setting several options at once. *options* is an object with the same structure used in the class [constructor](#constructor), except for the `source` option which is only available at construction time.
+Shorthand method for setting several options at once.
 
-### `setSensitivity( [min], [max] )`
+`options` is an object with the same structure used in the class [constructor](#constructor), except for the `source` option which is only available at construction time.
+
+### `setSensitivity( minDecibels, maxDecibels )`
 
 Adjust the analyzer's sensitivity. See [maxDecibels and minDecibels](#maxdecibels-number-mindecibels-number) properties.
 
