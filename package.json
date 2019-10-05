@@ -1,5 +1,5 @@
 {
-  "name": "audioMotion-analyzer",
+  "name": "audiomotion-analyzer",
   "description": "High-resolution real-time graphic audio spectrum analyzer JavaScript module with no dependencies.",
   "version": "1.0.0-rc.1",
   "main": "./dist/audioMotion-analyzer.js",
