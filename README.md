@@ -72,7 +72,7 @@ options = {
 
 If `source` is specified in the *options*, the media element will be connected to the analyzer. You can later disconnect it by referring to the [audioSource](#audiosource-mediaelementaudiosourcenode-object) object.
 
-You can connect additional audio sources with the [connectAudio()](#connectaudio-element) method.
+You can connect additional audio sources with the [connectAudio()](#connectaudio-element-) method.
 
 
 ## Interface objects
@@ -113,7 +113,7 @@ The data is updated on every animation frame (ideally 60 times per second).
 
 ### `fftSize` *number*
 
-Number of samples used for the FFT performed by the analyzer node. *samples* must be a power of 2 between 32 and 32768, so valid values are: 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, and 32768.
+Number of samples used for the FFT performed by the analyzer node. It must be a power of 2 between 32 and 32768, so valid values are: 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, and 32768.
 
 Higher values provide more detail in the frequency domain, but less detail in the time domain. Defaults to **8192**.
 
@@ -151,7 +151,7 @@ If you want the actual canvas dimensions, use `audioMotion.canvas.width` and `au
 
 ### `loRes` *boolean*
 
-*true* for low resolution mode.
+*true* for low resolution mode. Defaults to **false**.
 
 Low resolution mode halves the effective pixel ratio, resulting in four times less pixels to render. This may improve performance significantly, especially in 4K+ monitors.
 
@@ -159,15 +159,17 @@ See [this note](demo/README.md#additional-notes) on using this feature interacti
 
 ### `maxDecibels` *number*, `minDecibels` *number*
 
-Highest and lowest decibel values represented in the Y-axis of the analyzer. Default values are **-25** for *maxDecibels* and **-85** for *maxDecibels*. **0** is the loudest volume possible.
+Highest and lowest decibel values represented in the Y-axis of the analyzer. The loudest volume possible is **0**. *maxDecibels* defaults to **-25** and *minDecibels* defaults to **-85**.
 
-You can set both values at once using the [`setSensitivity()`](#setsensitivity-min-max-) method.
+You can set both values at once using the [`setSensitivity()`](#setsensitivity-mindecibels-maxdecibels-) method.
 
 For more info, see [AnalyserNode.minDecibels](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels).
 
 ### `maxFreq` *number*, `minFreq` *number*
 
-Highest and lowest frequencies represented in the X-axis of the analyzer. You can set both values at once using the [`setFreqRange()`](#setfreqrange-min-max-) method.
+Highest and lowest frequencies represented in the X-axis of the analyzer. Values in Hertz. *maxFreq* defaults to **22000** and *minFreq* defaults to **20**.
+
+You can set both values at once using the [`setFreqRange()`](#setfreqrange-minfreq-maxfreq-) method.
 
 ### `mode` *number*
 
@@ -212,23 +214,23 @@ When [low-resolution mode](#lores-boolean) is active *pixelRatio* is halved, i.e
 
 ### `showBgColor` *boolean*
 
-*true* to use background color defined by current gradient; *false* for black background.
+*true* to use background color defined by current gradient; *false* for black background. Defaults to **true**.
 
 ### `showFPS` *boolean*
 
-*true* to display the current frame rate.
+*true* to display the current frame rate. Defaults to **false**.
 
 ### `showLeds` *boolean*
 
-*true* to activate LED display effect. It has no effect when [visualization mode](#mode-number) is 0 (discrete frequencies).
+*true* to activate LED display effect. It has no effect when [visualization mode](#mode-number) is 0 (discrete frequencies). Defaults to **false**.
 
 ### `showPeaks` *boolean*
 
-*true* to show amplitude peaks for each frequency.
+*true* to show amplitude peaks for each frequency. Defaults to **true**.
 
 ### `showScale` *boolean*
 
-*true* to display frequency labels in the X axis.
+*true* to display frequency labels in the X axis. Defaults to **true**.
 
 ### `smoothing` *number*
 
@@ -283,7 +285,7 @@ Adjust the analyzer's sensitivity. See [maxDecibels and minDecibels](#maxdecibel
 ### `toggleAnalyzer( [boolean] )`
 
 Starts (*true*) or stops (*false*) the analyzer animation. If no argument provided, inverts the current status. Returns the resulting status.
-The analyzer is started by default upon [creation](#constructor), unless you specify `start: false` in the options.
+The analyzer is started by default upon [object construction](#constructor), unless you specify `start: false` in the options.
 
 ### `toggleFullscreen()`
 
