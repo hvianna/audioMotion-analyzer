@@ -767,7 +767,7 @@ export default class AudioMotionAnalyzer {
 					break;
 
 				default:
-					mode = groupnotes = 1; // convert any invalid mode to mode 1
+					this._mode = groupnotes = 1; // convert any invalid mode to mode 1
 					spaceV = Math.min( 3, Math.max( 2, this.canvas.height / ( 180 * this._pixelRatio ) | 0 ) );
 					this._ledOptions = {
 						nLeds: 128,
