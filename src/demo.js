@@ -9,7 +9,7 @@ import AudioMotionAnalyzer from '../dist/audioMotion-analyzer.js';
 var audioEl = document.getElementById('audio'),
 	showLogo = true;
 
-// Create audioMotion analyzer
+// Create audioMotion-analyzer object
 
 try {
 	var audioMotion = new AudioMotionAnalyzer(
@@ -23,7 +23,7 @@ try {
 	);
 }
 catch( err ) {
-	document.getElementById('container').innerHTML = `<p>audioMotion failed with error: <em>${err}</em></p>`;
+	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
 }
 
 updateUI();

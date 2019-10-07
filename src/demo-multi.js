@@ -10,7 +10,7 @@ var audioEl = document.getElementById('audio'),
 	audioMotion = [],
 	selectedAnalyzer = 0;
 
-// Create three audioMotion analyzer instances and connect them to the audio element
+// Create three audioMotion-analyzer instances and connect them to the audio element
 
 try {
 	for ( let i = 0; i < 3; i++ ) {
@@ -24,7 +24,7 @@ try {
 	}
 }
 catch( err ) {
-	document.getElementById('container0').innerHTML = `<p>audioMotion failed with error: <em>${err}</em></p>`;
+	document.getElementById('container0').innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
 }
 
 // Set options for each instance
