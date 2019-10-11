@@ -2,24 +2,8 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * https://github.com/hvianna/audioMotion-analyzer
- *
- * @author    Henrique Vianna <hvianna@gmail.com>
- * @copyright (c) 2018-2019 Henrique Avila Vianna
- * @license   AGPL-3.0-or-later
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
+ * @license AGPL-3.0-or-later
  */
 
 export default class AudioMotionAnalyzer {
@@ -29,23 +13,6 @@ export default class AudioMotionAnalyzer {
 
 	use public and private class fields and methods when they become standard?
 	https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Class_fields
-
-	// current visualization settings
-	mode, minFreq, maxFreq, gradient, showBgColor, showLeds, showScale, showPeaks, loRes, showFPS;
-
-	// Web Audio API related variables
-	audioCtx, analyzer, dataArray;
-
-	// data for drawing the analyzer bars and scale-related variables
-	#analyzerBars, #barWidth, #ledOptions, #freqLabels;
-
-	// canvas-related variables
-	canvas, canvasCtx, pixelRatio, width, height, fsWidth, fsHeight, fps;
-	#animationReq, #drawCallback, #ledsMask, #ledsCtx, #time, #frame, #canvasResizeCallback;
-
-	// settings defaults and gradient definitions
-	#defaults, #gradients;
-
 */
 
 /**
