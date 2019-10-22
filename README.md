@@ -5,6 +5,10 @@ High-resolution real-time graphic audio spectrum analyzer JavaScript module with
 
 This is the graphic spectrum analyzer I originally wrote for [audioMotion](https://github.com/hvianna/audioMotion.js), here in a standalone module for you to use in your own JavaScript projects.
 
+## Online demo
+
+[See here](https://hvianna.github.io/audioMotion-analyzer/demo/).
+
 ## Usage
 
 Install with npm:
@@ -31,11 +35,6 @@ var audioMotion = new AudioMotionAnalyzer(
 ```
 
 This will insert the analyzer canvas inside the *#container* element and start the visualization of audio coming from the *#audio* element.
-
-## Online demo
-
-[See here](https://hvianna.github.io/audioMotion-analyzer/demo/).
-
 
 ## Constructor
 
