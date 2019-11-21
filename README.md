@@ -194,6 +194,8 @@ Current visualization mode. Valid values are:
 | 6 | 1/3rd octave bands |
 | 7 | half octave bands |
 | 8 | full octave bands |
+| 9 | *invalid* (reserved) |
+| 10 | Area fill |
 
 Defaults to **0** (discrete frequencies).
 
@@ -230,7 +232,7 @@ When [low-resolution mode](#lores-boolean) is active *pixelRatio* is halved, i.e
 
 ### `showLeds` *boolean*
 
-*true* to activate LED display effect. It has no effect when [visualization mode](#mode-number) is 0 (discrete frequencies). Defaults to **false**.
+*true* to activate LED display effect. Only effective for [visualization modes](#mode-number) 1 to 8 (octave bands). Defaults to **false**.
 
 ### `showPeaks` *boolean*
 

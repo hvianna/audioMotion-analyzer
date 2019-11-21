@@ -490,7 +490,7 @@ export default class AudioMotionAnalyzer {
 	_draw() {
 
 		var i, j, l, bar, barHeight, size,
-			isLedDisplay = ( this.showLeds && this._mode > 0 );
+			isLedDisplay = ( this.showLeds && this._mode > 0 && this._mode < 10 );
 
 		if ( ! this.showBgColor )	// use black background
 			this.canvasCtx.fillStyle = '#000';
@@ -506,6 +506,16 @@ export default class AudioMotionAnalyzer {
 		// get a new array of data from the FFT
 		this.analyzer.getByteFrequencyData( this._dataArray );
 
+		// set selected gradient
+		this.canvasCtx.fillStyle = this._gradients[ this.gradient ].gradient;
+
+		// if in "area fill" mode, start the drawing path
+		if ( this._mode == 10 ) {
+			this.canvasCtx.beginPath();
+			this.canvasCtx.moveTo( 0, this.canvas.height );
+		}
+
+		// draw bars / lines
 		l = this._analyzerBars.length;
 		for ( i = 0; i < l; i++ ) {
 
@@ -539,8 +549,9 @@ export default class AudioMotionAnalyzer {
 				bar.accel = 0;
 			}
 
-			this.canvasCtx.fillStyle = this._gradients[ this.gradient ].gradient;
-			if ( isLedDisplay )
+			if ( this._mode == 10 )
+				this.canvasCtx.lineTo( bar.posX, this.canvas.height - barHeight );
+			else if ( isLedDisplay )
 				this.canvasCtx.fillRect( bar.posX + this._ledOptions.spaceH / 2, this.canvas.height, this._barWidth, -barHeight );
 			else
 				this.canvasCtx.fillRect( bar.posX, this.canvas.height, this._barWidth, -barHeight );
@@ -559,9 +570,13 @@ export default class AudioMotionAnalyzer {
 					bar.peak -= bar.accel;
 				}
 			}
-		}
+		} // for ( i = 0; i < l; i++ )
 
-		if ( isLedDisplay ) // applies LEDs mask over the canvas
+		if ( this._mode == 10 ) { // fill area
+			this.canvasCtx.lineTo( bar.posX, this.canvas.height );
+			this.canvasCtx.fill();
+		}
+		else if ( isLedDisplay ) // applies LEDs mask over the canvas
 			this.canvasCtx.drawImage( this._ledsMask, 0, 0 );
 
 		if ( this.showScale ) {
@@ -654,7 +669,7 @@ export default class AudioMotionAnalyzer {
 
 		this._analyzerBars = [];
 
-		if ( this._mode == 0 ) { // discrete frequencies mode
+		if ( this._mode == 0 || this._mode == 10 ) { // discrete frequencies or area fill modes
 			this._barWidth = 1;
 
 	 		var pos,
@@ -812,7 +827,7 @@ export default class AudioMotionAnalyzer {
 			} );
 		}
 
-		if ( this._mode > 0 ) {
+		if ( this._mode > 0 && this._mode < 10 ) {
 			// adds a vertical black line in the mask canvas after the last led column
 			this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - this._ledOptions.spaceH / 2 + ( this._mode < 5 ? 2 : 1 ), 0, this._ledOptions.spaceH, this.canvas.height );
 
