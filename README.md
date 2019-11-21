@@ -9,6 +9,15 @@ This is the graphic spectrum analyzer I originally wrote for [audioMotion](https
 
 [See here](https://hvianna.github.io/audioMotion-analyzer/demo/).
 
+## Features
+
++ High-resolution (retina / HiDPI ready) real-time audio spectrum analyzer with fullscreen support
++ Logarithmic frequency scale with customizable range
++ Choose between discrete frequencies or octave bands based on the equal tempered scale
++ Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing
++ Optional vintage LED effect for octave bands modes
++ Easily add your own color gradients!
+
 ## Usage
 
 Install with npm:
