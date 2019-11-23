@@ -15,7 +15,7 @@ This is the graphic spectrum analyzer I originally wrote for [audioMotion](https
 + Logarithmic frequency scale with customizable range
 + Choose between discrete frequencies or octave bands based on the equal tempered scale
 + Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing
-+ Optional vintage LED effect for octave bands modes
++ Optional vintage LED effect and variable luminance bars for octave bands modes
 + Easily add your own color gradients!
 
 ## Usage
@@ -59,6 +59,7 @@ options = {
 	gradient: <string> ('classic')
 	height: <number>
 	loRes: <boolean> (false)
+	lumiBars: <boolean> (false)
 	maxDecibels: <number> (-25)
 	maxFreq: <number> (22000)
 	minDecibels: <number> (-85)
@@ -164,6 +165,10 @@ If you want the actual canvas dimensions, use `audioMotion.canvas.width` and `au
 Low resolution mode halves the effective pixel ratio, resulting in four times less pixels to render. This may improve performance significantly, especially in 4K+ monitors.
 
 See [this note](demo/README.md#additional-notes) on using this feature interactively.
+
+### `lumiBars` *boolean*
+
+*true* to always display full-height bars and vary their luminance instead. Only effective for [visualization modes](#mode-number) 1 to 8 (octave bands). Defaults to **false**.
 
 ### `maxDecibels` *number*, `minDecibels` *number*
 
