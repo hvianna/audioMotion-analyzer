@@ -40,11 +40,13 @@ audioMotion[0].setOptions({
 audioMotion[0].showLogo = true;
 
 audioMotion[1].setOptions({
+	mode: 10,
 	fftSize: 4096,
 	gradient: 'rainbow',
 	minFreq: 30,
 	maxFreq: 16000,
 	showScale: false,
+	showPeaks: false,
 	width: 320,
 	height: 145
 });
@@ -144,16 +146,20 @@ window.addEventListener( 'click', () => {
 function displayCanvasMsg( instance ) {
 	if ( ! instance.showLogo )
 		return;
+
 	var size = 20 * instance.pixelRatio;
 	if ( instance.isFullscreen )
 		size *= 2;
-	instance.canvasCtx.font = `${size}px Orbitron,sans-serif`;
-	var w = instance.canvasCtx.measureText('audioMotion').width / 2;
 
-	instance.canvasCtx.font = `${size + instance.dataArray[ 1 ] / 16 * instance.pixelRatio}px Orbitron,sans-serif`;
+	// find the data array index for 140Hz
+	var idx = Math.round( 140 * instance.analyzer.fftSize / instance.audioCtx.sampleRate );
+
+	// use the 140Hz amplitude to increase the font size and make the logo pulse to the beat
+	instance.canvasCtx.font = `${size + instance.dataArray[ idx ] / 16 * instance.pixelRatio}px Orbitron,sans-serif`;
+
 	instance.canvasCtx.fillStyle = '#fff8';
 	instance.canvasCtx.textAlign = 'center';
-	instance.canvasCtx.fillText( 'audioMotion', instance.canvas.width - w - size * 4, size * 2 );
+	instance.canvasCtx.fillText( 'audioMotion', instance.canvas.width - size * 8, size * 2 );
 }
 
 // Load song from user's computer

@@ -107,16 +107,20 @@ window.addEventListener( 'click', () => {
 function displayCanvasMsg() {
 	if ( ! showLogo )
 		return;
+
 	var size = 20 * audioMotion.pixelRatio;
 	if ( audioMotion.isFullscreen )
 		size *= 2;
-	audioMotion.canvasCtx.font = `${size}px Orbitron,sans-serif`;
-	var w = audioMotion.canvasCtx.measureText('audioMotion').width / 2;
 
-	audioMotion.canvasCtx.font = `${size + audioMotion.dataArray[ 1 ] / 16 * audioMotion.pixelRatio}px Orbitron,sans-serif`;
+	// find the data array index for 140Hz
+	var idx = Math.round( 140 * audioMotion.analyzer.fftSize / audioMotion.audioCtx.sampleRate );
+
+	// use the 140Hz amplitude to increase the font size and make the logo pulse to the beat
+	audioMotion.canvasCtx.font = `${size + audioMotion.dataArray[ idx ] / 16 * audioMotion.pixelRatio}px Orbitron,sans-serif`;
+
 	audioMotion.canvasCtx.fillStyle = '#fff8';
 	audioMotion.canvasCtx.textAlign = 'center';
-	audioMotion.canvasCtx.fillText( 'audioMotion', audioMotion.canvas.width - w - size * 4, size * 2 );
+	audioMotion.canvasCtx.fillText( 'audioMotion', audioMotion.canvas.width - size * 8, size * 2 );
 }
 
 // Load song from user's computer
