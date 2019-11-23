@@ -40,6 +40,7 @@ export default class AudioMotionAnalyzer {
 			showScale   : true,
 			showPeaks   : true,
 			showFPS     : false,
+			lumiBars    : false,
 			loRes       : false,
 			width       : 640,
 			height      : 270
@@ -116,6 +117,7 @@ export default class AudioMotionAnalyzer {
 		this.showScale   = options.showScale   === undefined ? this._defaults.showScale   : options.showScale;
 		this.showPeaks   = options.showPeaks   === undefined ? this._defaults.showPeaks   : options.showPeaks;
 		this.showFPS     = options.showFPS     === undefined ? this._defaults.showFPS     : options.showFPS;
+		this.lumiBars    = options.lumiBars    === undefined ? this._defaults.lumiBars    : options.lumiBars;
 		this._loRes      = options.loRes       === undefined ? this._defaults.loRes       : options.loRes;
 		this._width      = options.width;
 		this._height     = options.height;
@@ -381,6 +383,9 @@ export default class AudioMotionAnalyzer {
 		if ( options.showScale !== undefined )
 			this.showScale = options.showScale;
 
+		if ( options.lumiBars !== undefined )
+			this.lumiBars = options.lumiBars;
+
 		if ( options.minDecibels !== undefined )
 			this.analyzer.minDecibels = options.minDecibels;
 
@@ -490,7 +495,8 @@ export default class AudioMotionAnalyzer {
 	_draw() {
 
 		var i, j, l, bar, barHeight, size,
-			isLedDisplay = ( this.showLeds && this._mode > 0 && this._mode < 10 );
+			isLedDisplay = ( this.showLeds && this._mode > 0 && this._mode < 10 ),
+			isLumiBars   = ( this.lumiBars && this._mode > 0 && this._mode < 10 );
 
 		if ( ! this.showBgColor )	// use black background
 			this.canvasCtx.fillStyle = '#000';
@@ -538,6 +544,9 @@ export default class AudioMotionAnalyzer {
 				}
 			}
 
+			if ( isLumiBars )
+				this.canvasCtx.globalAlpha = barHeight / 255;
+
 			if ( isLedDisplay ) // normalize barHeight to match one of the "led" elements
 				barHeight = ( barHeight / 255 * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV );
 			else
@@ -551,13 +560,17 @@ export default class AudioMotionAnalyzer {
 
 			if ( this._mode == 10 )
 				this.canvasCtx.lineTo( bar.posX, this.canvas.height - barHeight );
+			else if ( isLumiBars ) {
+				this.canvasCtx.fillRect( bar.posX, 0, this._barWidth, this.canvas.height );
+				this.canvasCtx.globalAlpha = 1;
+			}
 			else if ( isLedDisplay )
 				this.canvasCtx.fillRect( bar.posX + this._ledOptions.spaceH / 2, this.canvas.height, this._barWidth, -barHeight );
 			else
 				this.canvasCtx.fillRect( bar.posX, this.canvas.height, this._barWidth, -barHeight );
 
 			if ( bar.peak > 0 ) {
-				if ( this.showPeaks )
+				if ( this.showPeaks && ! isLumiBars )
 					if ( isLedDisplay )
 						this.canvasCtx.fillRect( bar.posX + this._ledOptions.spaceH / 2, ( this._ledOptions.nLeds - ( bar.peak / this.canvas.height * this._ledOptions.nLeds | 0 ) ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ), this._barWidth, this._ledOptions.ledHeight );
 					else
