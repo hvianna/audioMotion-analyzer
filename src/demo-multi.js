@@ -94,6 +94,7 @@ document.getElementById('btn_fullscr').addEventListener( 'click', () => audioMot
 document.getElementById('btn_bgcolor').addEventListener( 'click', () => audioMotion[ selectedAnalyzer ].showBgColor = ! audioMotion[ selectedAnalyzer ].showBgColor );
 document.getElementById('btn_peaks').addEventListener( 'click', () => audioMotion[ selectedAnalyzer ].showPeaks = ! audioMotion[ selectedAnalyzer ].showPeaks );
 document.getElementById('btn_leds').addEventListener( 'click', () => audioMotion[ selectedAnalyzer ].showLeds = ! audioMotion[ selectedAnalyzer ].showLeds );
+document.getElementById('btn_lumi').addEventListener( 'click', () => audioMotion[ selectedAnalyzer ].lumiBars = ! audioMotion[ selectedAnalyzer ].lumiBars );
 document.getElementById('btn_scale').addEventListener( 'click', () => audioMotion[ selectedAnalyzer ].showScale = ! audioMotion[ selectedAnalyzer ].showScale );
 document.getElementById('btn_lores').addEventListener( 'click', () => audioMotion[ selectedAnalyzer ].loRes = ! audioMotion[ selectedAnalyzer ].loRes );
 document.getElementById('btn_fps').addEventListener( 'click', () => audioMotion[ selectedAnalyzer ].showFPS = ! audioMotion[ selectedAnalyzer ].showFPS );

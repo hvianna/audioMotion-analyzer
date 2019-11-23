@@ -45,6 +45,7 @@ document.getElementById('btn_fullscr').addEventListener( 'click', () => audioMot
 document.getElementById('btn_bgcolor').addEventListener( 'click', () => audioMotion.showBgColor = ! audioMotion.showBgColor );
 document.getElementById('btn_peaks').addEventListener( 'click', () => audioMotion.showPeaks = ! audioMotion.showPeaks );
 document.getElementById('btn_leds').addEventListener( 'click', () => audioMotion.showLeds = ! audioMotion.showLeds );
+document.getElementById('btn_lumi').addEventListener( 'click', () => audioMotion.lumiBars = ! audioMotion.lumiBars );
 document.getElementById('btn_scale').addEventListener( 'click', () => audioMotion.showScale = ! audioMotion.showScale );
 document.getElementById('btn_lores').addEventListener( 'click', () => audioMotion.loRes = ! audioMotion.loRes );
 document.getElementById('btn_fps').addEventListener( 'click', () => audioMotion.showFPS = ! audioMotion.showFPS );
