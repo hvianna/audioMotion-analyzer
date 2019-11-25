@@ -686,7 +686,7 @@ export default class AudioMotionAnalyzer {
 			this._barWidth = 1;
 
 	 		var pos,
-	 			lastPos = -1,
+	 			lastPos = -999,
 				minIndex = Math.floor( this._minFreq * this.analyzer.fftSize / this.audioCtx.sampleRate ),
 			    maxIndex = Math.min( Math.round( this._maxFreq * this.analyzer.fftSize / this.audioCtx.sampleRate ), this.analyzer.frequencyBinCount - 1 );
 
