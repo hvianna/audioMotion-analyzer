@@ -108,7 +108,7 @@ export default class AudioMotionAnalyzer {
 		this._defaults.width  = this._container.clientWidth  || this._defaults.width;
 		this._defaults.height = this._container.clientHeight || this._defaults.height;
 
-		this._mode       = options.mode        === undefined ? this._defaults.mode        : Number( options.mode );
+		this.mode        = options.mode        === undefined ? this._defaults.mode        : options.mode;
 		this._minFreq    = options.minFreq     === undefined ? this._defaults.minFreq     : options.minFreq;
 		this._maxFreq    = options.maxFreq     === undefined ? this._defaults.maxFreq     : options.maxFreq;
 		this.gradient    = options.gradient    === undefined ? this._defaults.gradient    : options.gradient;
@@ -198,8 +198,13 @@ export default class AudioMotionAnalyzer {
 		return this._mode;
 	}
 	set mode( value ) {
-		this._mode = Number( value );
-		this._precalculateBarPositions();
+		let mode = Number( value );
+		if ( mode >= 0 && mode <= 10 && mode != 9 ) {
+			this._mode = mode;
+			this._precalculateBarPositions();
+		}
+		else
+			throw `Invalid mode: ${mode}`;
 	}
 
 	// Low-resolution mode
@@ -363,7 +368,7 @@ export default class AudioMotionAnalyzer {
 	setOptions( options ) {
 
 		if ( options.mode !== undefined )
-			this._mode = Number( options.mode );
+			this.mode = options.mode;
 
 		if ( options.minFreq !== undefined )
 			this._minFreq = options.minFreq;
@@ -675,6 +680,11 @@ export default class AudioMotionAnalyzer {
 	 *                           minLog
 	 */
 	_precalculateBarPositions() {
+
+		// if this function is called during the constructor initialization (by a property setter)
+		// the canvas isn't ready yet, so we just exit without doing anything
+		if ( ! this.canvas )
+			return;
 
 		var i, freq,
 			minLog = Math.log10( this._minFreq ),
