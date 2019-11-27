@@ -3,8 +3,8 @@ Changelog
 
 ## version 1.1.0 - released 9999-99-99
 
-+ New **Area fill** visualization mode, which uses the same full-frequency logarithmic scale of the *discrete frequencies* mode,
-but generates a bright, colorful filled polygon shape! :heart_eyes: :notes:
++ New **Area fill** visualization mode (`mode: 10`), which uses the same full-frequency data of the *discrete frequencies* mode, but generates a bright, colorful filled shape;
++ New **Luminance Bars** option (`lumiBars: <boolean>`) for octave bands modes, which displays analyzer bars always at full-height, with varying luminance instead.
 
 
 ## version 1.0.1 - released 2019-10-22
