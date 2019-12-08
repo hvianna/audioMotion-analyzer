@@ -1,9 +1,9 @@
 Changelog
 =========
 
-## version 1.1.0 - released 9999-99-99
+## version 1.1.0 - released 2019-12-08
 
-+ New **Area fill** visualization mode (`mode: 10`), which uses the same full-frequency data of the *discrete frequencies* mode, but generates a bright, colorful filled shape;
++ New **Area fill** visualization mode (`mode: 10`), which uses the same full-frequency data of the *discrete frequencies* mode, but generates a brighter filled shape;
 + New **Luminance Bars** option (`lumiBars: <boolean>`) for octave bands modes, which displays analyzer bars always at full-height, with varying luminance instead.
 
 
