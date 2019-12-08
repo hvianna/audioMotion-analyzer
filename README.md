@@ -7,16 +7,19 @@ This is the graphic spectrum analyzer I originally wrote for [audioMotion](https
 
 ## Online demo
 
-[DEMO SITE ▶ audioMotion.dev/demo](https://audiomotion.dev/demo/).
+[▶ audioMotion.dev/demo](https://audiomotion.dev/demo/)
+
+![demo-animation](demo.gif)
 
 ## Features
 
 + High-resolution (retina / HiDPI ready) real-time audio spectrum analyzer with fullscreen support
 + Logarithmic frequency scale with customizable range
-+ Choose between discrete frequencies or octave bands based on the equal tempered scale, for a total of 10 visualization modes
-+ Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing
++ 10 visualization modes: choose between discrete frequencies or octave bands based on the equal tempered scale
 + Optional vintage LED effect and variable luminance bars for octave bands modes
++ Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing
 + Comes with 3 predefined color gradients - easily add your own!
++ No dependencies, less than 20kB minified
 
 ## Usage
 
