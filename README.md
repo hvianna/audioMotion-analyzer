@@ -9,7 +9,7 @@ This is the graphic spectrum analyzer I originally wrote for [audioMotion](https
 
 [▶ audioMotion.dev/demo](https://audiomotion.dev/demo/)
 
-![demo-animation](demo.gif)
+![demo-animation](demo/demo.gif)
 
 ## Features
 
