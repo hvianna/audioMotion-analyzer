@@ -532,21 +532,17 @@ export default class AudioMotionAnalyzer {
 
 			bar = this._analyzerBars[ i ];
 
-			if ( bar.endIdx == 0 ) 	// single FFT bin
+			if ( bar.endIdx == 0 ) { // single FFT bin
 				barHeight = this._dataArray[ bar.dataIdx ];
+				// apply smoothing factor when several bars share the same bin
+				if ( bar.factor )
+					barHeight += ( this._dataArray[ bar.dataIdx + 1 ] - barHeight ) * bar.factor;
+			}
 			else { 					// range of bins
 				barHeight = 0;
-				if ( bar.average ) {
-					// use the average value of the range
-					for ( j = bar.dataIdx; j <= bar.endIdx; j++ )
-						barHeight += this._dataArray[ j ];
-					barHeight = barHeight / ( bar.endIdx - bar.dataIdx + 1 );
-				}
-				else {
-					// use the highest value in the range
-					for ( j = bar.dataIdx; j <= bar.endIdx; j++ )
-						barHeight = Math.max( barHeight, this._dataArray[ j ] );
-				}
+				// use the highest value in the range
+				for ( j = bar.dataIdx; j <= bar.endIdx; j++ )
+					barHeight = Math.max( barHeight, this._dataArray[ j ] );
 			}
 
 			if ( isLumiBars )
@@ -706,7 +702,7 @@ export default class AudioMotionAnalyzer {
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
 				if ( pos > lastPos ) {
-					this._analyzerBars.push( { posX: pos, dataIdx: i, endIdx: 0, average: false, peak: 0, hold: 0, accel: 0 } );
+					this._analyzerBars.push( { posX: pos, dataIdx: i, endIdx: 0, factor: 0, peak: 0, hold: 0, accel: 0 } );
 					lastPos = pos;
 				} // otherwise, add this frequency to the last bar's range
 				else if ( this._analyzerBars.length )
@@ -789,7 +785,6 @@ export default class AudioMotionAnalyzer {
 			var root24 = 2 ** ( 1 / 24 ); // for 1/24th-octave bands
 			var c0 = 440 * root24 ** -114;
 			var temperedScale = [];
-			var prevBin = 0;
 
 			i = 0;
 			while ( ( freq = c0 * root24 ** i ) <= this._maxFreq ) {
@@ -806,16 +801,34 @@ export default class AudioMotionAnalyzer {
 
 			this._ledsMask.width |= 0; // clear LEDs mask canvas
 
+			var prevBin = 0,  // last bin included in previous frequency band
+				prevIdx = -1, // previous bar FFT array index
+				nBars   = 0;  // count of bars with the same index
+
 			temperedScale.forEach( ( freq, index ) => {
 				// which FFT bin represents this frequency?
 				var bin = Math.round( freq * this.analyzer.fftSize / this.audioCtx.sampleRate );
 
-				var idx, nextBin, avg = false;
+				var idx, nextBin;
 				// start from the last used FFT bin
 				if ( prevBin > 0 && prevBin + 1 <= bin )
 					idx = prevBin + 1;
 				else
 					idx = bin;
+
+				// FFT does not provide many coefficients for low frequencies, so several bars end up using the same data
+				if ( idx == prevIdx ) {
+					nBars++;
+				}
+				else {
+					// update previous bars using the same index with a smoothing factor
+					if ( nBars > 1 ) {
+						for ( let i = 1; i <= nBars; i++ )
+							this._analyzerBars[ this._analyzerBars.length - i ].factor = ( nBars - i ) / nBars;
+					}
+					prevIdx = idx;
+					nBars = 1;
+				}
 
 				prevBin = nextBin = bin;
 				// check if there's another band after this one
@@ -824,21 +837,13 @@ export default class AudioMotionAnalyzer {
 					// and use half the bins in between for this band
 					if ( nextBin - bin > 1 )
 						prevBin += Math.round( ( nextBin - bin ) / 2 );
-					else if ( nextBin - bin == 1 ) {
-					// for low frequencies the FFT may not provide as many coefficients as we need, so more than one band will use the same FFT data
-					// in these cases, we set a flag to perform an average to smooth the transition between adjacent bands
-						if ( this._analyzerBars.length > 0 && idx == this._analyzerBars[ this._analyzerBars.length - 1 ].dataIdx ) {
-							avg = true;
-							prevBin += Math.round( ( nextBin - bin ) / 2 );
-						}
-					}
 				}
 
 				this._analyzerBars.push( {
 					posX: index * ( this._barWidth + barSpace ),
 					dataIdx: idx,
 					endIdx: prevBin - idx > 0 ? prevBin : 0,
-					average: avg,
+					factor: 0,
 					peak: 0,
 					hold: 0,
 					accel: 0
