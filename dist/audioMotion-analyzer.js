@@ -816,7 +816,7 @@ export default class AudioMotionAnalyzer {
 				else
 					idx = bin;
 
-				// FFT does not provide many coefficients for low frequencies, so several bars end up using the same data
+				// FFT does not provide many coefficients for low frequencies, so several bars may end up using the same data
 				if ( idx == prevIdx ) {
 					nBars++;
 				}
