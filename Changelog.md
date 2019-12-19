@@ -1,6 +1,12 @@
 Changelog
 =========
 
+## version 1.2.0 - released 2019-12-19
+
++ Improves the look of bars at lower frequencies in octave bands modes (especially 1/12th and 1/24th);
++ Minor tweak to the "Rainbow" gradient to make cyan and blue shades a little more balanced.
+
+
 ## version 1.1.0 - released 2019-12-08
 
 + New **Area fill** visualization mode (`mode: 10`), which uses the same full-frequency data of the *discrete frequencies* mode, but generates a brighter filled shape;

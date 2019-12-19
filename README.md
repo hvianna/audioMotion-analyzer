@@ -3,7 +3,7 @@ audioMotion-analyzer
 
 High-resolution real-time graphic audio spectrum analyzer JavaScript module with no dependencies.
 
-This is the graphic spectrum analyzer I originally wrote for [audioMotion](https://github.com/hvianna/audioMotion.js), here in a standalone module for you to use in your own JavaScript projects.
+This is the graphic spectrum analyzer I originally wrote for [audioMotion](https://audiomotion.me), here in a standalone module for you to use in your own JavaScript projects.
 
 ## Online demo
 
@@ -17,7 +17,7 @@ This is the graphic spectrum analyzer I originally wrote for [audioMotion](https
 + Logarithmic frequency scale with customizable range
 + 10 visualization modes: choose between discrete frequencies or octave bands based on the equal tempered scale
 + Optional vintage LED effect and variable luminance bars for octave bands modes
-+ Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing
++ Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing constant
 + Comes with 3 predefined color gradients - easily add your own!
 + No dependencies, less than 20kB minified
 
