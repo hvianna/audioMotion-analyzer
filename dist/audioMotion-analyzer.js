@@ -43,7 +43,9 @@ export default class AudioMotionAnalyzer {
 			lumiBars    : false,
 			loRes       : false,
 			width       : 640,
-			height      : 270
+			height      : 270,
+			lineWidth   : 0,
+			fillAlpha   : 1
 		};
 
 		// Gradient definitions
@@ -119,6 +121,8 @@ export default class AudioMotionAnalyzer {
 		this.showFPS     = options.showFPS     === undefined ? this._defaults.showFPS     : options.showFPS;
 		this.lumiBars    = options.lumiBars    === undefined ? this._defaults.lumiBars    : options.lumiBars;
 		this._loRes      = options.loRes       === undefined ? this._defaults.loRes       : options.loRes;
+		this.lineWidth   = options.lineWidth   === undefined ? this._defaults.lineWidth   : options.lineWidth;
+		this.fillAlpha   = options.fillAlpha   === undefined ? this._defaults.fillAlpha   : options.fillAlpha;
 		this._width      = options.width;
 		this._height     = options.height;
 
@@ -499,7 +503,7 @@ export default class AudioMotionAnalyzer {
 	 */
 	_draw() {
 
-		var i, j, l, bar, barHeight, size,
+		var i, j, l, bar, barHeight, size, lineWidth,
 			isLedDisplay = ( this.showLeds && this._mode > 0 && this._mode < 10 ),
 			isLumiBars   = ( this.lumiBars && this._mode > 0 && this._mode < 10 );
 
@@ -522,8 +526,9 @@ export default class AudioMotionAnalyzer {
 
 		// if in "area fill" mode, start the drawing path
 		if ( this._mode == 10 ) {
+			lineWidth = this.lineWidth * this._pixelRatio;
 			this.canvasCtx.beginPath();
-			this.canvasCtx.moveTo( 0, this.canvas.height );
+			this.canvasCtx.moveTo( -lineWidth, this.canvas.height );
 		}
 
 		// draw bars / lines
@@ -587,8 +592,17 @@ export default class AudioMotionAnalyzer {
 		} // for ( i = 0; i < l; i++ )
 
 		if ( this._mode == 10 ) { // fill area
-			this.canvasCtx.lineTo( bar.posX, this.canvas.height );
+			this.canvasCtx.lineTo( bar.posX + lineWidth, this.canvas.height );
+
+			if ( lineWidth > 0 ) {
+				this.canvasCtx.lineWidth = lineWidth;
+				this.canvasCtx.strokeStyle = this.canvasCtx.fillStyle;
+				this.canvasCtx.stroke();
+			}
+
+			this.canvasCtx.globalAlpha = this.fillAlpha;
 			this.canvasCtx.fill();
+			this.canvasCtx.globalAlpha = 1;
 		}
 		else if ( isLedDisplay ) // applies LEDs mask over the canvas
 			this.canvasCtx.drawImage( this._ledsMask, 0, 0 );
@@ -677,8 +691,7 @@ export default class AudioMotionAnalyzer {
 	 */
 	_precalculateBarPositions() {
 
-		// if this function is called during the constructor initialization (by a property setter)
-		// the canvas isn't ready yet, so we just exit without doing anything
+		// just exit if the canvas isn't ready yet (called during the constructor initialization)
 		if ( ! this.canvas )
 			return;
 
@@ -915,6 +928,7 @@ export default class AudioMotionAnalyzer {
 		// clear the canvas
 		this.canvasCtx.fillStyle = '#000';
 		this.canvasCtx.fillRect( 0, 0, this.canvas.width, this.canvas.height );
+		this.canvasCtx.lineJoin = 'bevel'; // for area line
 
 		// (re)generate gradients
 		this._generateGradients();
