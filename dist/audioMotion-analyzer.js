@@ -262,6 +262,17 @@ export default class AudioMotionAnalyzer {
 		this.analyzer.smoothingTimeConstant = value;
 	}
 
+	// Line width
+
+	get lineWidth() {
+		return this._lineWidth;
+	}
+	set lineWidth( value ) {
+		this._lineWidth = value;
+		if ( this.canvasCtx )
+			this.canvasCtx.lineWidth = this._lineWidth * this._pixelRatio || 1; // 0 is not a valid value
+	}
+
 	// Read only properties
 
 	get audioSource() {
@@ -503,7 +514,7 @@ export default class AudioMotionAnalyzer {
 	 */
 	_draw() {
 
-		var i, j, l, bar, barHeight, size, lineWidth,
+		var i, j, l, bar, barHeight, size,
 			isLedDisplay = ( this.showLeds && this._mode > 0 && this._mode < 10 ),
 			isLumiBars   = ( this.lumiBars && this._mode > 0 && this._mode < 10 );
 
@@ -526,9 +537,8 @@ export default class AudioMotionAnalyzer {
 
 		// if in "area fill" mode, start the drawing path
 		if ( this._mode == 10 ) {
-			lineWidth = this.lineWidth * this._pixelRatio;
 			this.canvasCtx.beginPath();
-			this.canvasCtx.moveTo( -lineWidth, this.canvas.height );
+			this.canvasCtx.moveTo( -this.canvasCtx.lineWidth, this.canvas.height );
 		}
 
 		// draw bars / lines
@@ -592,17 +602,18 @@ export default class AudioMotionAnalyzer {
 		} // for ( i = 0; i < l; i++ )
 
 		if ( this._mode == 10 ) { // fill area
-			this.canvasCtx.lineTo( bar.posX + lineWidth, this.canvas.height );
+			this.canvasCtx.lineTo( bar.posX + this.canvasCtx.lineWidth, this.canvas.height );
 
-			if ( lineWidth > 0 ) {
-				this.canvasCtx.lineWidth = lineWidth;
+			if ( this._lineWidth > 0 ) {
 				this.canvasCtx.strokeStyle = this.canvasCtx.fillStyle;
 				this.canvasCtx.stroke();
 			}
 
-			this.canvasCtx.globalAlpha = this.fillAlpha;
-			this.canvasCtx.fill();
-			this.canvasCtx.globalAlpha = 1;
+			if ( this.fillAlpha > 0 ) {
+				this.canvasCtx.globalAlpha = this.fillAlpha;
+				this.canvasCtx.fill();
+				this.canvasCtx.globalAlpha = 1;
+			}
 		}
 		else if ( isLedDisplay ) // applies LEDs mask over the canvas
 			this.canvasCtx.drawImage( this._ledsMask, 0, 0 );
@@ -931,7 +942,10 @@ export default class AudioMotionAnalyzer {
 		// clear the canvas
 		this.canvasCtx.fillStyle = '#000';
 		this.canvasCtx.fillRect( 0, 0, this.canvas.width, this.canvas.height );
-		this.canvasCtx.lineJoin = 'bevel'; // for area line
+
+		// set line properties for area fill mode (these are reset when the canvas size changes)
+		this.canvasCtx.lineWidth = this._lineWidth * this._pixelRatio;
+		this.canvasCtx.lineJoin = 'bevel';
 
 		// (re)generate gradients
 		this._generateGradients();
