@@ -639,8 +639,11 @@ export default class AudioMotionAnalyzer {
 			this.canvasCtx.fillText( Math.round( this._fps ), this.canvas.width - size, size * 2 );
 		}
 
-		if ( this.onCanvasDraw )
+		if ( this.onCanvasDraw ) {
+			this.canvasCtx.save();
 			this.onCanvasDraw( this );
+			this.canvasCtx.restore();
+		}
 
 		// schedule next canvas update
 		this._animationReq = requestAnimationFrame( () => this._draw() );
