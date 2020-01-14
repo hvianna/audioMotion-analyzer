@@ -126,12 +126,10 @@ export default class AudioMotionAnalyzer {
 		this._width      = options.width;
 		this._height     = options.height;
 
-		this.analyzer.fftSize               = options.fftSize     === undefined ? this._defaults.fftSize     : options.fftSize;
-		this.analyzer.smoothingTimeConstant = options.smoothing   === undefined ? this._defaults.smoothing   : options.smoothing;
-		this.analyzer.minDecibels           = options.minDecibels === undefined ? this._defaults.minDecibels : options.minDecibels;
-		this.analyzer.maxDecibels           = options.maxDecibels === undefined ? this._defaults.maxDecibels : options.maxDecibels;
-
-		this._dataArray = new Uint8Array( this.analyzer.frequencyBinCount );
+		this.fftSize     = options.fftSize     === undefined ? this._defaults.fftSize     : options.fftSize;
+		this.smoothing   = options.smoothing   === undefined ? this._defaults.smoothing   : options.smoothing;
+		this.minDecibels = options.minDecibels === undefined ? this._defaults.minDecibels : options.minDecibels;
+		this.maxDecibels = options.maxDecibels === undefined ? this._defaults.maxDecibels : options.maxDecibels;
 
 		this.onCanvasDraw = ( typeof options.onCanvasDraw == 'function' ) ? options.onCanvasDraw : undefined;
 		this.onCanvasResize = ( typeof options.onCanvasResize == 'function' ) ? options.onCanvasResize : undefined;
@@ -421,8 +419,14 @@ export default class AudioMotionAnalyzer {
 		if ( options.loRes !== undefined )
 			this._loRes = options.loRes;
 
+		if ( options.lineWidth !== undefined )
+			this._lineWidth = options.lineWidth;
+
+		if ( options.fillAlpha !== undefined )
+			this.fillAlpha = options.fillAlpha;
+
 		if ( options.fftSize !== undefined )
-			this.analyzer.fftSize = options.fftSize;
+			this.fftSize = options.fftSize;
 
 		if ( options.smoothing !== undefined )
 			this.analyzer.smoothingTimeConstant = options.smoothing;
@@ -438,8 +442,6 @@ export default class AudioMotionAnalyzer {
 
 		if ( options.height !== undefined )
 			this._height = options.height;
-
-		this._dataArray = new Uint8Array( this.analyzer.frequencyBinCount );
 
 		this._setCanvas('user');
 
