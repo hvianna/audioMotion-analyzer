@@ -23,6 +23,11 @@ input[type="range"] {
 	width: 100px;
 }
 
+input[type="number"] {
+	padding: 4px;
+	width: 60px;
+}
+
 #audio {
 	width: 100%;
 }

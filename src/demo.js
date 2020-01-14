@@ -60,6 +60,8 @@ document.getElementById('range').addEventListener( 'change', e => {
 	audioMotion.setFreqRange( selected.dataset.min, selected.dataset.max );
 });
 document.getElementById('smoothing').addEventListener( 'change', e => audioMotion.smoothing = e.target.value );
+document.getElementById('line_width').addEventListener( 'change', e => audioMotion.lineWidth = e.target.value );
+document.getElementById('fill_alpha').addEventListener( 'change', e => audioMotion.fillAlpha = e.target.value );
 document.getElementById('sensitivity').addEventListener( 'change', e => {
 	switch ( e.target.value ) {
 		case '0':

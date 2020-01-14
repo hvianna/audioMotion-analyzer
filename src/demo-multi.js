@@ -47,6 +47,8 @@ audioMotion[1].setOptions({
 	maxFreq: 16000,
 	showScale: false,
 	showPeaks: false,
+	lineWidth: 2,
+	fillAlpha: .3,
 	width: 320,
 	height: 145
 });
