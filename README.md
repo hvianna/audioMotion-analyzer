@@ -56,35 +56,38 @@ Creates a new instance of audioMotion-analyzer. A canvas element will be created
 
 Available options with default values shown inside parentheses:
 
-```
-options = {
-	fftSize: <number> (8192)
-	gradient: <string> ('classic')
-	height: <number>
-	loRes: <boolean> (false)
-	lumiBars: <boolean> (false)
-	maxDecibels: <number> (-25)
-	maxFreq: <number> (22000)
-	minDecibels: <number> (-85)
-	minFreq: <number> (20)
-	mode: <number> (0)
-	onCanvasDraw: <function>
-	onCanvasResize: <function>
-	showBgColor: <boolean> (true)
-	showFPS: <boolean> (false)
-	showLeds: <boolean> (false)
-	showPeaks: <boolean> (true)
-	showScale: <boolean> (true)
-	smoothing: <number> (0.5)
-	source: <HTMLMediaElement>
-	start: <boolean> (true)
-	width: <number>
+options = {<br>
+&emsp;&emsp;[fftSize](#fftsize-number): *number* (8192),<br>
+&emsp;&emsp;[fillAlpha](#fillalpha-number): *number* (1),<br>
+&emsp;&emsp;[gradient](#gradient-string): *string* ('classic'),<br>
+&emsp;&emsp;[height](#height-number-width-number): *number*,<br>
+&emsp;&emsp;[lineWidth](#linewidth-number): *number* (0),<br>
+&emsp;&emsp;[loRes](#lores-boolean): *boolean* (false),<br>
+&emsp;&emsp;[lumiBars](#lumibars-boolean): *boolean* (false),<br>
+&emsp;&emsp;[maxDecibels](#maxdecibels-number-mindecibels-number): *number* (-25),<br>
+&emsp;&emsp;[maxFreq](#maxfreq-number-minfreq-number): *number* (22000),<br>
+&emsp;&emsp;[minDecibels](#maxdecibels-number-mindecibels-number): *number* (-85),<br>
+&emsp;&emsp;[minFreq](#maxfreq-number-minfreq-number): *number* (20),<br>
+&emsp;&emsp;[mode](#mode-number): *number* (0),<br>
+&emsp;&emsp;[onCanvasDraw](#oncanvasdraw-function): *function*,<br>
+&emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *function*,<br>
+&emsp;&emsp;[showBgColor](#showbgcolor-boolean): *boolean* (true),<br>
+&emsp;&emsp;[showFPS](#showfps-boolean): *boolean* (false),<br>
+&emsp;&emsp;[showLeds](#showleds-boolean): *boolean* (false),<br>
+&emsp;&emsp;[showPeaks](#showpeaks-boolean): *boolean* (true),<br>
+&emsp;&emsp;[showScale](#showscale-boolean): *boolean* (true),<br>
+&emsp;&emsp;[smoothing](#smoothing-number): *number* (0.5),<br>
+&emsp;&emsp;**source**: *HTMLMediaElement*,<br>
+&emsp;&emsp;**start**: *boolean* (true),<br>
+&emsp;&emsp;[width](#height-number-width-number): *number*<br>
 }
-```
 
-If `source` is specified in the *options*, the media element will be connected to the analyzer. You can later disconnect it by referring to the [audioSource](#audiosource-mediaelementaudiosourcenode-object) object.
 
-You can connect additional audio sources with the [connectAudio()](#connectaudio-element-) method.
+If `source` is specified, the provided media element will be connected to the analyzer. You can later disconnect it by referring to the [audioSource](#audiosource-mediaelementaudiosourcenode-object) object.
+
+You can also connect audio sources later with the [connectAudio()](#connectaudio-element-) method.
+
+If `start: false` is specified, the analyzer will be created stopped. You can then start it with the [toggleAnalyzer()](#toggleanalyzer-boolean-) method.
 
 
 ## Interface objects
@@ -129,6 +132,14 @@ Number of samples used for the FFT performed by the analyzer node. It must be a 
 
 Higher values provide more detail in the frequency domain, but less detail in the time domain. Defaults to **8192**.
 
+### `fillAlpha` *number*
+
+*Available since v1.3.0*
+
+Opacity for the **Area fill** mode. Must be a float between 0 (completely transparent) and 1 (completely opaque). Defaults to **1**.
+
+See also [`lineWidth`](#linewidth-number).
+
 ### `fps` *number* *(Read only)*
 
 Current frame rate.
@@ -149,7 +160,7 @@ If one or both of these are `undefined`, the analyzer will try to adjust to the 
 If the container's width and/or height are 0 (inline elements), a reference size of **640 x 270 pixels** will be used to replace the missing dimension(s).
 This should be considered the minimum dimensions for proper visualization of all available modes with the LED effect on.
 
-You can set both values at once using the [setCanvasSize](#setcanvassize-width-height-) method.
+You can set both values at once using the [setCanvasSize()](#setcanvassize-width-height-) method.
 
 If you want the actual canvas dimensions, use `audioMotion.canvas.width` and `audioMotion.canvas.height`.
 
@@ -161,6 +172,14 @@ If you want the actual canvas dimensions, use `audioMotion.canvas.width` and `au
 
 *true* if the analyzer canvas animation is running, or *false* if it's stopped.
 
+### `lineWidth` *number*
+
+*Available since v1.3.0*
+
+Line width for the **Area fill** mode. Defaults to **0**.
+
+Should be used with [`fillAlpha`](#fillalpha-number) < 1.
+
 ### `loRes` *boolean*
 
 *true* for low resolution mode. Defaults to **false**.
@@ -170,6 +189,8 @@ Low resolution mode halves the effective pixel ratio, resulting in four times le
 See [this note](demo/README.md#additional-notes) on using this feature interactively.
 
 ### `lumiBars` *boolean*
+
+*Available since v1.1.0*
 
 *true* to always display full-height bars and vary their luminance instead. Only effective for [visualization modes](#mode-number) 1 to 8 (octave bands). Defaults to **false**.
 
@@ -189,23 +210,29 @@ You can set both values at once using the [`setFreqRange()`](#setfreqrange-minfr
 
 ### `mode` *number*
 
-Current visualization mode. Valid values are:
+Current visualization mode.
 
-| Value | Mode |
-|-------|------|
-| 0 | Discrete frequencies |
-| 1 | 1/24th octave bands |
-| 2 | 1/12th octave bands |
-| 3 | 1/8th octave bands |
-| 4 | 1/6th octave bands |
-| 5 | 1/4th octave bands |
-| 6 | 1/3rd octave bands |
-| 7 | half octave bands |
-| 8 | full octave bands |
-| 9 | *reserved* (not valid) |
-| 10 | Area fill |
++ **Discrete frequencies** is the highest resolution mode, allowing you to visualize individual frequencies provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform);
++ **Octave bands** modes will display wider vertical bars, each one representing the *n*th part of an octave, based on a [24-tone equal tempered scale](https://en.wikipedia.org/wiki/Quarter_tone);
++ **Area fill** mode uses the discrete frequencies data to draw a filled shape and/or a continuous line (see [fillAlpha](#fillalpha-number) and [lineWidth](#linewidth-number)).
 
-Defaults to **0** (discrete frequencies).
+Valid values are:
+
+| Value | Mode | Available since |
+|-------|------|-----------------|
+| 0 | Discrete frequencies | |
+| 1 | 1/24th octave bands | |
+| 2 | 1/12th octave bands | |
+| 3 | 1/8th octave bands | |
+| 4 | 1/6th octave bands | |
+| 5 | 1/4th octave bands | |
+| 6 | 1/3rd octave bands | |
+| 7 | half octave bands | |
+| 8 | full octave bands | |
+| 9 | *reserved* (not valid) | |
+| 10 | Area fill | v1.1.0 |
+
+Defaults to **0**.
 
 ### `onCanvasDraw` *function*
 
@@ -312,5 +339,5 @@ Toggles fullscreen mode. As per [API specification](https://fullscreen.spec.what
 
 ## License
 
-audioMotion-analyzer copyright (c) 2018-2019 Henrique Avila Vianna<br>
+audioMotion-analyzer copyright (c) 2018-2020 Henrique Avila Vianna<br>
 Licensed under the [GNU Affero General Public License, version 3 or later](https://www.gnu.org/licenses/agpl.html).
