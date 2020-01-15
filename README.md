@@ -212,9 +212,9 @@ You can set both values at once using the [`setFreqRange()`](#setfreqrange-minfr
 
 Current visualization mode.
 
-+ **Discrete frequencies** is the highest resolution mode, allowing you to visualize individual frequencies provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform);
-+ **Octave bands** modes will display wider vertical bars, each one representing the *n*th part of an octave, based on a [24-tone equal tempered scale](https://en.wikipedia.org/wiki/Quarter_tone);
-+ **Area fill** mode uses the discrete frequencies data to draw a filled shape and/or a continuous line (see [fillAlpha](#fillalpha-number) and [lineWidth](#linewidth-number)).
++ **Discrete frequencies** mode provides the highest resolution, allowing you to visualize individual frequencies provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform);
++ **Octave bands** modes displays wider vertical bars, each one representing the *n*th part of an octave, based on a [24-tone equal tempered scale](https://en.wikipedia.org/wiki/Quarter_tone);
++ **Area fill** mode uses the discrete frequencies data to draw a filled shape and/or a continuous line (see [fillAlpha](#fillalpha-number) and [lineWidth](#linewidth-number) properties).
 
 Valid values are:
 
