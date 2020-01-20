@@ -83,18 +83,28 @@ document.getElementById('sensitivity').addEventListener( 'change', e => {
 	}
 });
 
-// value divs for range input elements
+// Display value of ranged input elements
 document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
 
-document.querySelectorAll('.tones').forEach( el =>
-	el.addEventListener( 'click', e => {
-		oscillator.type = e.target.dataset.wave;
-		oscillator.frequency.setValueAtTime( e.target.dataset.freq, audioCtx.currentTime );
+// Test tones playback
+
+document.querySelectorAll('#wave, #note, #frequency').forEach( el => {
+	el.addEventListener( 'input', () => {
+		if ( el.id == 'frequency' )
+			document.getElementById('note').selectedIndex = 0;
+		document.getElementById('btn_play').dispatchEvent( new Event('click') );
+	});
+});
+
+document.getElementById('btn_play').addEventListener( 'click', () => {
+		oscillator.type = document.getElementById('wave').value;
+		oscillator.frequency.setValueAtTime( document.getElementById('note').value || document.getElementById('frequency').value, audioCtx.currentTime );
 		gainNode.gain.setValueAtTime( .2, audioCtx.currentTime );
-	})
-);
+});
 
 document.getElementById('btn_soundoff').addEventListener( 'click', () => gainNode.gain.setValueAtTime( 0, audioCtx.currentTime ) );
+
+// File and URL loading
 
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
 document.getElementById('loadFromURL').addEventListener( 'click', () => {
@@ -102,7 +112,7 @@ document.getElementById('loadFromURL').addEventListener( 'click', () => {
 	audioEl.play();
 });
 
-// initialize UI elements
+// Initialize UI elements
 updateUI();
 
 // Resume audio context if in suspended state (browsers' autoplay policy)

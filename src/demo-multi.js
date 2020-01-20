@@ -136,8 +136,10 @@ document.getElementById('sensitivity').addEventListener( 'change', e => {
 	}
 });
 
-// value divs for range input elements
+// Display value of ranged input elements
 document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
+
+// File and URL loading
 
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
 document.getElementById('loadFromURL').addEventListener( 'click', () => {
@@ -145,7 +147,7 @@ document.getElementById('loadFromURL').addEventListener( 'click', () => {
 	audioEl.play();
 });
 
-// initialize UI elements
+// Initialize UI elements
 updateUI();
 
 // Resume audio context if in suspended state (browsers' autoplay policy)

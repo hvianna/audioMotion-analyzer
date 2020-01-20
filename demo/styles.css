@@ -12,20 +12,12 @@ a {
 button {
 	margin: 6px;
 	padding: 6px;
-}
-
-select {
-	margin: 6px 0;
-	padding: 6px;
+	vertical-align: bottom;
 }
 
 canvas {
 	display: block;
 	width: 100%;
-}
-
-input[type="range"] {
-	width: 90px;
 }
 
 fieldset {
@@ -37,6 +29,25 @@ fieldset {
 }
 fieldset:disabled {
 	display: none;
+}
+
+input[type="range"] {
+	width: 90px;
+}
+
+input[type="text"],
+select {
+	margin: 6px 0;
+	padding: 6px;
+}
+
+.box {
+	margin-top: 10px;
+}
+.box .title {
+	font-weight: bold;
+	line-height: 2;
+	margin-right: 1em;
 }
 
 .label {
@@ -53,6 +64,20 @@ fieldset:disabled {
 
 #audio {
 	width: 100%;
+}
+
+.analyzer-configuration {
+	background: #f5f5f5;
+	border: 1px solid #ccc;
+	margin-bottom: 20px;
+	padding: 10px 0;
+}
+
+.credits {
+	color: #030;
+	font-size: 12px;
+	margin: 40px 0;
+	text-align: center;
 }
 
 /* fluid full-width analyzer (single instance demo) */
@@ -86,19 +111,10 @@ fieldset:disabled {
 	width: 320px;
 }
 
+.selector {
+	margin-bottom: 20px;
+}
+
 .selected {
 	outline: 3px solid #c00;
-}
-
-.analyzer-configuration {
-	background: #f5f5f5;
-	border: 1px solid #ccc;
-	padding: 10px;
-}
-
-.credits {
-	color: #030;
-	font-size: 12px;
-	margin: 40px 0;
-	text-align: center;
 }
