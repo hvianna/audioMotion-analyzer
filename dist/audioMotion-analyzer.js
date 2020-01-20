@@ -260,17 +260,6 @@ export default class AudioMotionAnalyzer {
 		this.analyzer.smoothingTimeConstant = value;
 	}
 
-	// Line width
-
-	get lineWidth() {
-		return this._lineWidth;
-	}
-	set lineWidth( value ) {
-		this._lineWidth = value;
-		if ( this.canvasCtx )
-			this.canvasCtx.lineWidth = this._lineWidth * this._pixelRatio || 1; // 0 is not a valid value
-	}
-
 	// Read only properties
 
 	get audioSource() {
@@ -420,7 +409,7 @@ export default class AudioMotionAnalyzer {
 			this._loRes = options.loRes;
 
 		if ( options.lineWidth !== undefined )
-			this._lineWidth = options.lineWidth;
+			this.lineWidth = options.lineWidth;
 
 		if ( options.fillAlpha !== undefined )
 			this.fillAlpha = options.fillAlpha;
@@ -540,7 +529,7 @@ export default class AudioMotionAnalyzer {
 		// if in "area fill" mode, start the drawing path
 		if ( this._mode == 10 ) {
 			this.canvasCtx.beginPath();
-			this.canvasCtx.moveTo( -this.canvasCtx.lineWidth, this.canvas.height );
+			this.canvasCtx.moveTo( -this.lineWidth, this.canvas.height );
 		}
 
 		// draw bars / lines
@@ -604,9 +593,10 @@ export default class AudioMotionAnalyzer {
 		} // for ( i = 0; i < l; i++ )
 
 		if ( this._mode == 10 ) { // fill area
-			this.canvasCtx.lineTo( bar.posX + this.canvasCtx.lineWidth, this.canvas.height );
+			this.canvasCtx.lineTo( bar.posX + this.lineWidth, this.canvas.height );
 
-			if ( this._lineWidth > 0 ) {
+			if ( this.lineWidth > 0 ) {
+				this.canvasCtx.lineWidth = this.lineWidth;
 				this.canvasCtx.strokeStyle = this.canvasCtx.fillStyle;
 				this.canvasCtx.stroke();
 			}
@@ -945,8 +935,7 @@ export default class AudioMotionAnalyzer {
 		this.canvasCtx.fillStyle = '#000';
 		this.canvasCtx.fillRect( 0, 0, this.canvas.width, this.canvas.height );
 
-		// set line properties for area fill mode (these are reset when the canvas size changes)
-		this.canvasCtx.lineWidth = this._lineWidth * this._pixelRatio;
+		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
 		this.canvasCtx.lineJoin = 'bevel';
 
 		// (re)generate gradients
