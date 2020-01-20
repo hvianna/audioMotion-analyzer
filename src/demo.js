@@ -26,8 +26,6 @@ catch( err ) {
 	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
 }
 
-updateUI();
-
 // Create oscillator and gain nodes, and connect them to the analyzer
 
 var audioCtx = audioMotion.audioCtx,
@@ -53,7 +51,10 @@ document.getElementById('btn_logo').addEventListener( 'click', () => showLogo = 
 document.getElementById('btn_freeze').addEventListener( 'click', () => audioMotion.toggleAnalyzer() );
 
 document.getElementById('fft').addEventListener( 'change', e => audioMotion.fftSize = e.target.value );
-document.getElementById('mode').addEventListener( 'change', e => audioMotion.mode = e.target.value );
+document.getElementById('mode').addEventListener( 'change', e => {
+	audioMotion.mode = e.target.value;
+	document.getElementById('area_options').disabled = ( audioMotion.mode != 10 );
+});
 document.getElementById('gradient').addEventListener( 'change', e => audioMotion.gradient = e.target.value );
 document.getElementById('range').addEventListener( 'change', e => {
 	let selected = e.target[ e.target.selectedIndex ];
@@ -82,6 +83,9 @@ document.getElementById('sensitivity').addEventListener( 'change', e => {
 	}
 });
 
+// value divs for range input elements
+document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
+
 document.querySelectorAll('.tones').forEach( el =>
 	el.addEventListener( 'click', e => {
 		oscillator.type = e.target.dataset.wave;
@@ -97,6 +101,9 @@ document.getElementById('loadFromURL').addEventListener( 'click', () => {
 	audioEl.src = document.getElementById('remoteURL').value;
 	audioEl.play();
 });
+
+// initialize UI elements
+updateUI();
 
 // Resume audio context if in suspended state (browsers' autoplay policy)
 
@@ -138,6 +145,14 @@ function loadSong( el ) {
 	};
 }
 
+// Update value div of range input elements
+
+function updateRangeElement( el ) {
+	let s = el.nextElementSibling;
+	if ( s && s.className == 'value' )
+		s.innerText = el.value;
+}
+
 // Update UI elements to reflect the analyzer's current settings
 
 function updateUI() {
@@ -146,15 +161,19 @@ function updateUI() {
 	document.getElementById('gradient').value = audioMotion.gradient;
 	document.getElementById('smoothing').value = audioMotion.smoothing;
 
+	document.getElementById('area_options').disabled = ( audioMotion.mode != 10 );
+	document.getElementById('line_width').value = audioMotion.lineWidth;
+	document.getElementById('fill_alpha').value = audioMotion.fillAlpha;
+
 	switch ( audioMotion.minFreq ) {
 		case 20:
-			document.getElementById('range').selectedIndex = 1;
+			document.getElementById('range').selectedIndex = 0;
 			break;
 		case 30:
-			document.getElementById('range').selectedIndex = 2;
+			document.getElementById('range').selectedIndex = 1;
 			break;
 		case 100:
-			document.getElementById('range').selectedIndex = 3;
+			document.getElementById('range').selectedIndex = 2;
 	}
 
 	switch ( audioMotion.maxDecibels ) {
@@ -173,6 +192,8 @@ function updateUI() {
 		case -40:
 			document.getElementById('sensitivity').value = 4;
 	}
+
+	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
 }
 
 // Log canvas size changes to the JavaScript console

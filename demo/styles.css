@@ -9,8 +9,13 @@ a {
 	color: #090;
 }
 
-button, select {
+button {
 	margin: 6px;
+	padding: 6px;
+}
+
+select {
+	margin: 6px 0;
 	padding: 6px;
 }
 
@@ -20,12 +25,30 @@ canvas {
 }
 
 input[type="range"] {
-	width: 100px;
+	width: 90px;
 }
 
-input[type="number"] {
-	padding: 4px;
-	width: 60px;
+fieldset {
+	border: none;
+	display: inline-block;
+	margin: 0;
+	padding: 0;
+	vertical-align: top;
+}
+fieldset:disabled {
+	display: none;
+}
+
+.label {
+	display: inline-block;
+	font-size: 11px;
+	margin: 0 6px;
+	text-transform: uppercase;
+	vertical-align: top;
+}
+.label input,
+.label select {
+	display: block;
 }
 
 #audio {
@@ -70,15 +93,7 @@ input[type="number"] {
 .analyzer-configuration {
 	background: #f5f5f5;
 	border: 1px solid #ccc;
-	padding: 10px 20px;
-}
-
-.slider {
-	display: inline-block;
-	font-size: 11px;
-	margin: 0 10px;
-	text-transform: uppercase;
-	vertical-align: top;
+	padding: 10px;
 }
 
 .credits {

@@ -21,61 +21,71 @@
 		<input type="text" id="remoteURL" size="50" placeholder="https://..."> <button id="loadFromURL">Load</button>
 	</p>
 
-	<p class="center">
-		<select id="mode">
-			<option value="" disabled>Visualization Mode:</option>
-			<option value="0">Discrete frequencies</option>
-			<option value="10">Area fill</option>
-			<option value="1">1/24th octave bands</option>
-			<option value="2">1/12th octave bands</option>
-			<option value="3">1/8th octave bands</option>
-			<option value="4">1/6th octave bands</option>
-			<option value="5">1/4th octave bands</option>
-			<option value="6">1/3rd octave bands</option>
-			<option value="7">Half octave bands</option>
-			<option value="8">Full octave bands</option>
-		</select>
+	<div class="center">
+		<label class="label">Visualization Mode
+			<select id="mode">
+				<option value="0">Discrete frequencies</option>
+				<option value="10">Area fill</option>
+				<option value="1">1/24th octave bands</option>
+				<option value="2">1/12th octave bands</option>
+				<option value="3">1/8th octave bands</option>
+				<option value="4">1/6th octave bands</option>
+				<option value="5">1/4th octave bands</option>
+				<option value="6">1/3rd octave bands</option>
+				<option value="7">Half octave bands</option>
+				<option value="8">Full octave bands</option>
+			</select>
+		</label>
 
-		<select id="gradient">
-			<option value="" disabled>Gradient:</option>
-			<option value="classic" selected>Classic</option>
-			<option value="prism">Prism</option>
-			<option value="rainbow">Rainbow</option>
-		</select>
+		<fieldset id="area_options">
+			<label class="label">Line width
+				<input type="range" id="line_width" min="0" max="9" step="1" value="0">
+				<div class="value"></div>
+			</label>
 
-		<select id="fft">
-			<option value="" disabled>FFT size:</option>
-			<option value="1024">1024</option>
-			<option value="2048">2048</option>
-			<option value="4096">4096</option>
-			<option value="8192">8192</option>
-			<option value="16384">16384</option>
-			<option value="32768">32768</option>
-		</select>
+			<label class="label">Fill opacity
+				<input type="range" id="fill_alpha" min="0" max="1" step=".1" value="1">
+				<div class="value"></div>
+			</label>
+		</fieldset>
 
-		<select id="range">
-			<option value="" disabled>Frequency Range:</option>
-			<option data-min="20" data-max="22000">20Hz - 22KHz</option>
-			<option data-min="30" data-max="16000">30Hz - 16KHz</option>
-			<option data-min="100" data-max="10000">100Hz - 10KHz</option>
-		</select>
+		<label class="label">Gradient
+			<select id="gradient">
+				<option value="classic">Classic</option>
+				<option value="prism">Prism</option>
+				<option value="rainbow">Rainbow</option>
+			</select>
+		</label>
 
-		<span class="slider">Sensitivity:<br>
+		<label class="label">FFT size
+			<select id="fft">
+				<option value="1024">1024</option>
+				<option value="2048">2048</option>
+				<option value="4096">4096</option>
+				<option value="8192">8192</option>
+				<option value="16384">16384</option>
+				<option value="32768">32768</option>
+			</select>
+		</label>
+
+		<label class="label">Frequency range
+			<select id="range">
+				<option data-min="20" data-max="22000">20Hz - 22KHz</option>
+				<option data-min="30" data-max="16000">30Hz - 16KHz</option>
+				<option data-min="100" data-max="10000">100Hz - 10KHz</option>
+			</select>
+		</label>
+
+		<label class="label">Sensitivity
 			<input type="range" id="sensitivity" min="0" max="4">
-		</span>
+			<div class="value"></div>
+		</label>
 
-		<span class="slider">Smoothing:<br>
+		<label class="label">Smoothing
 			<input type="range" id="smoothing" min="0" max=".9" step=".1">
-		</span>
-
-		<span class="slider">Line width:<br>
-			<input type="number" id="line_width" min="0" max="255" step="1" value="0">
-		</span>
-
-		<span class="slider">Fill opacity:<br>
-			<input type="number" id="fill_alpha" min="0" max="1" step=".05" value="1">
-		</span>
-	</p>
+			<div class="value"></div>
+		</label>
+	</div>
 
 	<p class="center">
 		<button id="btn_bgcolor">Background</button>

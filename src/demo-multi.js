@@ -70,8 +70,6 @@ audioMotion[2].setOptions({
 });
 audioMotion[2].showLogo = false;
 
-updateUI();
-
 // Analyzer selector
 
 document.querySelectorAll('[name="analyzer"]').forEach( el => {
@@ -104,13 +102,20 @@ document.getElementById('btn_logo').addEventListener( 'click', () => audioMotion
 document.getElementById('btn_freeze').addEventListener( 'click', () => audioMotion[ selectedAnalyzer ].toggleAnalyzer() );
 
 document.getElementById('fft').addEventListener( 'change', e => audioMotion[ selectedAnalyzer ].fftSize = e.target.value );
-document.getElementById('mode').addEventListener( 'change', e => audioMotion[ selectedAnalyzer ].mode = e.target.value );
+document.getElementById('mode').addEventListener( 'change', e => {
+	audioMotion[ selectedAnalyzer ].mode = e.target.value;
+	document.getElementById('area_options').disabled = ( audioMotion[ selectedAnalyzer ].mode != 10 );
+});
+
 document.getElementById('gradient').addEventListener( 'change', e => audioMotion[ selectedAnalyzer ].gradient = e.target.value );
 document.getElementById('range').addEventListener( 'change', e => {
 	let selected = e.target[ e.target.selectedIndex ];
 	audioMotion[ selectedAnalyzer ].setFreqRange( selected.dataset.min, selected.dataset.max );
 });
 document.getElementById('smoothing').addEventListener( 'change', e => audioMotion[ selectedAnalyzer ].smoothing = e.target.value );
+document.getElementById('line_width').addEventListener( 'change', e => audioMotion[ selectedAnalyzer ].lineWidth = e.target.value );
+document.getElementById('fill_alpha').addEventListener( 'change', e => audioMotion[ selectedAnalyzer ].fillAlpha = e.target.value );
+
 document.getElementById('sensitivity').addEventListener( 'change', e => {
 	switch ( e.target.value ) {
 		case '0':
@@ -131,11 +136,17 @@ document.getElementById('sensitivity').addEventListener( 'change', e => {
 	}
 });
 
+// value divs for range input elements
+document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
+
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
 document.getElementById('loadFromURL').addEventListener( 'click', () => {
 	audioEl.src = document.getElementById('remoteURL').value;
 	audioEl.play();
 });
+
+// initialize UI elements
+updateUI();
 
 // Resume audio context if in suspended state (browsers' autoplay policy)
 
@@ -177,6 +188,14 @@ function loadSong( el ) {
 	};
 }
 
+// Update value div of range input elements
+
+function updateRangeElement( el ) {
+	let s = el.nextElementSibling;
+	if ( s && s.className == 'value' )
+		s.innerText = el.value;
+}
+
 // Update UI elements to reflect the selected analyzer's current settings
 
 function updateUI() {
@@ -188,15 +207,19 @@ function updateUI() {
 	document.getElementById('gradient').value = audioMotion[ selectedAnalyzer ].gradient;
 	document.getElementById('smoothing').value = audioMotion[ selectedAnalyzer ].smoothing;
 
+	document.getElementById('area_options').disabled = ( audioMotion[ selectedAnalyzer ].mode != 10 );
+	document.getElementById('line_width').value = audioMotion[ selectedAnalyzer ].lineWidth;
+	document.getElementById('fill_alpha').value = audioMotion[ selectedAnalyzer ].fillAlpha;
+
 	switch ( audioMotion[ selectedAnalyzer ].minFreq ) {
 		case 20:
-			document.getElementById('range').selectedIndex = 1;
+			document.getElementById('range').selectedIndex = 0;
 			break;
 		case 30:
-			document.getElementById('range').selectedIndex = 2;
+			document.getElementById('range').selectedIndex = 1;
 			break;
 		case 100:
-			document.getElementById('range').selectedIndex = 3;
+			document.getElementById('range').selectedIndex = 2;
 	}
 
 	switch ( audioMotion[ selectedAnalyzer ].maxDecibels ) {
@@ -215,4 +238,6 @@ function updateUI() {
 		case -40:
 			document.getElementById('sensitivity').value = 4;
 	}
+
+	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
 }
