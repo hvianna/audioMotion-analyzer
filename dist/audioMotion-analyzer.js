@@ -45,7 +45,8 @@ export default class AudioMotionAnalyzer {
 			width       : 640,
 			height      : 270,
 			lineWidth   : 0,
-			fillAlpha   : 1
+			fillAlpha   : 1,
+			barSpace    : 2
 		};
 
 		// Gradient definitions
@@ -123,6 +124,7 @@ export default class AudioMotionAnalyzer {
 		this._loRes      = options.loRes       === undefined ? this._defaults.loRes       : options.loRes;
 		this.lineWidth   = options.lineWidth   === undefined ? this._defaults.lineWidth   : options.lineWidth;
 		this.fillAlpha   = options.fillAlpha   === undefined ? this._defaults.fillAlpha   : options.fillAlpha;
+		this.barSpace    = options.barSpace    === undefined ? this._defaults.barSpace    : options.barSpace;
 		this._width      = options.width;
 		this._height     = options.height;
 
@@ -165,6 +167,17 @@ export default class AudioMotionAnalyzer {
 	 *
 	 * ==========================================================================
 	 */
+
+	// Bar spacing (for octave bands modes)
+
+	get barSpace() {
+		return this._barSpace;
+	}
+	set barSpace( value ) {
+		this._barSpace = value;
+		this._calculateBarSpacePx();
+		this._precalculateBarPositions(); // to rebuild the leds mask
+	}
 
 	// FFT size
 
@@ -500,12 +513,19 @@ export default class AudioMotionAnalyzer {
 	 */
 
 	/**
+	 * Calculate bar spacing in pixels
+	 */
+	_calculateBarSpacePx() {
+		this._barSpacePx = ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace / 2 : this._barSpace;
+	}
+
+	/**
 	 * Redraw the canvas
 	 * this is called 60 times per second by requestAnimationFrame()
 	 */
 	_draw() {
 
-		var i, j, l, bar, barHeight, size,
+		var i, j, l, bar, barHeight, size, posX, width,
 			isLedDisplay = ( this.showLeds && this._mode > 0 && this._mode < 10 ),
 			isLumiBars   = ( this.lumiBars && this._mode > 0 && this._mode < 10 );
 
@@ -532,6 +552,11 @@ export default class AudioMotionAnalyzer {
 			this.canvasCtx.moveTo( -this.lineWidth, this.canvas.height );
 		}
 
+		// compute the effective bar width, considering the selected bar spacing
+		width = this._barWidth - ( this._mode == 0 ? 0 : isLedDisplay ? Math.max( this._ledOptions.spaceH, this._barSpacePx ) : this._barSpacePx );
+		if ( this._barSpace == 0 && ! isLedDisplay )
+			width |= 0;
+
 		// draw bars / lines
 		l = this._analyzerBars.length;
 		for ( i = 0; i < l; i++ ) {
@@ -551,6 +576,7 @@ export default class AudioMotionAnalyzer {
 					barHeight = Math.max( barHeight, this._dataArray[ j ] );
 			}
 
+			// set opacity for lumi bars before barHeight value is normalized
 			if ( isLumiBars )
 				this.canvasCtx.globalAlpha = barHeight / 255;
 
@@ -565,23 +591,45 @@ export default class AudioMotionAnalyzer {
 				bar.accel = 0;
 			}
 
-			if ( this._mode == 10 )
-				this.canvasCtx.lineTo( bar.posX, this.canvas.height - barHeight );
-			else if ( isLumiBars ) {
-				this.canvasCtx.fillRect( bar.posX, 0, this._barWidth, this.canvas.height );
-				this.canvasCtx.globalAlpha = 1;
-			}
-			else if ( isLedDisplay )
-				this.canvasCtx.fillRect( bar.posX + this._ledOptions.spaceH / 2, this.canvas.height, this._barWidth, -barHeight );
-			else
-				this.canvasCtx.fillRect( bar.posX, this.canvas.height, this._barWidth, -barHeight );
+			posX = bar.posX;
+			let adjWidth = width; // bar width may need small adjustments for some bars, when barSpace == 0
 
+			// Draw line / bar
+			if ( this._mode == 10 ) {
+				this.canvasCtx.lineTo( bar.posX, this.canvas.height - barHeight );
+			}
+			else {
+				if ( this._mode > 0 ) {
+					if ( isLedDisplay )
+						posX += Math.max( this._ledOptions.spaceH / 2, this._barSpacePx / 2 );
+					else {
+						if ( this._barSpace == 0 ) {
+							posX |= 0;
+							if ( i > 0 && posX > this._analyzerBars[ i - 1 ].posX + width ) {
+								posX--;
+								adjWidth++;
+							}
+						}
+						else
+							posX += this._barSpacePx / 2;
+					}
+				}
+
+				if ( isLumiBars ) {
+					this.canvasCtx.fillRect( posX, 0, adjWidth, this.canvas.height );
+					this.canvasCtx.globalAlpha = 1;
+				}
+				else
+					this.canvasCtx.fillRect( posX, this.canvas.height, adjWidth, -barHeight );
+			}
+
+			// Draw peak
 			if ( bar.peak > 0 ) {
 				if ( this.showPeaks && ! isLumiBars )
 					if ( isLedDisplay )
-						this.canvasCtx.fillRect( bar.posX + this._ledOptions.spaceH / 2, ( this._ledOptions.nLeds - ( bar.peak / this.canvas.height * this._ledOptions.nLeds | 0 ) ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ), this._barWidth, this._ledOptions.ledHeight );
+						this.canvasCtx.fillRect( posX, ( this._ledOptions.nLeds - ( bar.peak / this.canvas.height * this._ledOptions.nLeds | 0 ) ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ), width, this._ledOptions.ledHeight );
 					else
-						this.canvasCtx.fillRect( bar.posX, this.canvas.height - bar.peak, this._barWidth, 2 );
+						this.canvasCtx.fillRect( posX, this.canvas.height - bar.peak, adjWidth, 2 );
 
 				if ( bar.hold )
 					bar.hold--;
@@ -812,11 +860,9 @@ export default class AudioMotionAnalyzer {
 				i++;
 			}
 
-			// divide canvas space by the number of frequencies to display, allowing at least one pixel between bars
-			this._barWidth = Math.floor( this.canvas.width / temperedScale.length ) - 1;
-
-			// the space remaining from the integer division is split equally among the bars as separator
-			var barSpace = ( this.canvas.width - this._barWidth * temperedScale.length ) / ( temperedScale.length - 1 );
+			// divide canvas space by the number of frequencies (bars) to display
+			this._barWidth = this.canvas.width / temperedScale.length;
+			this._calculateBarSpacePx();
 
 			this._ledsMask.width |= 0; // clear LEDs mask canvas
 
@@ -859,7 +905,7 @@ export default class AudioMotionAnalyzer {
 				}
 
 				this._analyzerBars.push( {
-					posX: index * ( this._barWidth + barSpace ),
+					posX: index * this._barWidth,
 					dataIdx: idx,
 					endIdx: prevBin - idx > 0 ? prevBin : 0,
 					factor: 0,
@@ -869,14 +915,14 @@ export default class AudioMotionAnalyzer {
 				} );
 
 				// adds a vertical black line to the left of this bar in the mask canvas, to separate the LED columns
-				this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX - this._ledOptions.spaceH / 2, 0, this._ledOptions.spaceH, this.canvas.height );
+				this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX - Math.max( this._ledOptions.spaceH / 2, this._barSpacePx / 2 ), 0, Math.max( this._ledOptions.spaceH, this._barSpacePx ), this.canvas.height );
 
 			} );
 		}
 
 		if ( this._mode > 0 && this._mode < 10 ) {
 			// adds a vertical black line in the mask canvas after the last led column
-			this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - this._ledOptions.spaceH / 2 + ( this._mode < 5 ? 2 : 1 ), 0, this._ledOptions.spaceH, this.canvas.height );
+			this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - Math.max( this._ledOptions.spaceH / 2, this._barSpacePx / 2 ) + ( this._mode < 5 ? 2 : 1 ), 0, Math.max( this._ledOptions.spaceH, this._barSpacePx ), this.canvas.height );
 
 			// adds horizontal black lines in the mask canvas, to separate the LED rows
 			for ( i = this._ledOptions.ledHeight; i < this.canvas.height; i += this._ledOptions.ledHeight + this._ledOptions.spaceV )
