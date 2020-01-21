@@ -174,7 +174,7 @@ export default class AudioMotionAnalyzer {
 		return this._barSpace;
 	}
 	set barSpace( value ) {
-		this._barSpace = value;
+		this._barSpace = Number( value );
 		this._calculateBarSpacePx();
 		this._precalculateBarPositions(); // to rebuild the leds mask
 	}
@@ -427,6 +427,9 @@ export default class AudioMotionAnalyzer {
 		if ( options.fillAlpha !== undefined )
 			this.fillAlpha = options.fillAlpha;
 
+		if ( options.barSpace !== undefined )
+			this.barSpace = options.barSpace;
+
 		if ( options.fftSize !== undefined )
 			this.fftSize = options.fftSize;
 
@@ -516,7 +519,7 @@ export default class AudioMotionAnalyzer {
 	 * Calculate bar spacing in pixels
 	 */
 	_calculateBarSpacePx() {
-		this._barSpacePx = ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace / 2 : this._barSpace;
+		this._barSpacePx = Math.min( this._barWidth - 1, Number.isInteger( this._barSpace ) ? this._barSpace : this._barWidth * this._barSpace / 2 );
 	}
 
 	/**
