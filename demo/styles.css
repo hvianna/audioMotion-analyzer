@@ -14,6 +14,13 @@ button {
 	padding: 6px;
 	vertical-align: bottom;
 }
+button.active {
+	background: #444;
+	border: none;
+	box-shadow: inset 1px 1px 0 #000;
+	color: #eee;
+	padding: 8px;
+}
 
 canvas {
 	display: block;

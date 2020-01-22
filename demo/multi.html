@@ -40,7 +40,7 @@
 
 		<div class="box">
 			<label class="label">Visualization Mode
-				<select id="mode">
+				<select id="mode" data-setting="mode">
 					<option value="0">Discrete frequencies</option>
 					<option value="10">Area fill</option>
 					<option value="1">1/24th octave bands</option>
@@ -56,19 +56,19 @@
 
 			<fieldset id="area_options">
 				<label class="label">Line width
-					<input type="range" id="line_width" min="0" max="9" step="1" value="0">
+					<input type="range" id="line_width" min="0" max="9" step="1" data-setting="lineWidth">
 					<div class="value"></div>
 				</label>
 
 				<label class="label">Fill opacity
-					<input type="range" id="fill_alpha" min="0" max="1" step=".1" value="1">
+					<input type="range" id="fill_alpha" min="0" max="1" step=".1" data-setting="fillAlpha">
 					<div class="value"></div>
 				</label>
 			</fieldset>
 
 			<fieldset id="bar_options">
 				<label class="label">Bar spacing
-					<select id="bar_space">
+					<select id="bar_space" data-setting="barSpace">
 						<option value="0">None</option>
 						<option value="1">1px</option>
 						<option value="2">2px</option>
@@ -85,7 +85,7 @@
 			</fieldset>
 
 			<label class="label">Gradient
-				<select id="gradient">
+				<select id="gradient" data-setting="gradient">
 					<option value="classic">Classic</option>
 					<option value="prism">Prism</option>
 					<option value="rainbow">Rainbow</option>
@@ -93,7 +93,7 @@
 			</label>
 
 			<label class="label">FFT size
-				<select id="fft">
+				<select id="fft" data-setting="fftSize">
 					<option value="1024">1024</option>
 					<option value="2048">2048</option>
 					<option value="4096">4096</option>
@@ -117,22 +117,22 @@
 			</label>
 
 			<label class="label">Smoothing
-				<input type="range" id="smoothing" min="0" max=".9" step=".1">
+				<input type="range" id="smoothing" min="0" max=".9" step=".1" data-setting="smoothing">
 				<div class="value"></div>
 			</label>
 		</div>
 
 		<div class="box">
-			<button id="btn_bgcolor">Background</button>
-			<button id="btn_peaks">Peaks</button>
-			<button id="btn_leds">LEDs</button>
-			<button id="btn_lumi">Lumi Bars</button>
-			<button id="btn_scale">Scale</button>
-			<button id="btn_lores">Lo-Res</button>
-			<button id="btn_fps">Frame rate</button>
-			<button id="btn_logo">Logo</button>
-			<button id="btn_freeze">Freeze</button>
-			<button id="btn_fullscr">Fullscreen</button>
+			<button id="btn_bgcolor" data-prop="showBgColor">Background</button>
+			<button id="btn_peaks" data-prop="showPeaks">Peaks</button>
+			<button id="btn_leds" data-prop="showLeds">LEDs</button>
+			<button id="btn_lumi" data-prop="lumiBars">Lumi Bars</button>
+			<button id="btn_scale" data-prop="showScale">Scale</button>
+			<button id="btn_lores" data-prop="loRes">Lo-Res</button>
+			<button id="btn_fps" data-prop="showFPS">Frame rate</button>
+			<button id="btn_logo" data-prop="showLogo">Logo</button>
+			<button id="btn_freeze" data-prop="isOn" data-func="toggleAnalyzer">Freeze</button>
+			<button id="btn_fullscr" data-prop="isFullscreen" data-func="toggleFullscreen">Fullscreen</button>
 		</div>
 
 	</div>
