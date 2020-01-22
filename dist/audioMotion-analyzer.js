@@ -558,7 +558,10 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// compute the effective bar width, considering the selected bar spacing
-		width = this._barWidth - ( this._mode == 0 ? 0 : isLedDisplay ? Math.max( this._ledOptions.spaceH, this._barSpacePx ) : this._barSpacePx );
+		// if led effect is active, ensure at least the spacing defined by the led options
+		width = this._barWidth - ( ! ( this._mode % 10 ) ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
+
+		// if no bar spacing is required, make sure width is integer for pixel accurate calculation
 		if ( this._barSpace == 0 && ! isLedDisplay )
 			width |= 0;
 
