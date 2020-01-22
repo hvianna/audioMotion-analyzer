@@ -57,6 +57,7 @@ Creates a new instance of audioMotion-analyzer. A canvas element will be created
 Available options with default values shown inside parentheses:
 
 options = {<br>
+&emsp;&emsp;[barSpace](#barspace-number): *number* (2),<br>
 &emsp;&emsp;[fftSize](#fftsize-number): *number* (8192),<br>
 &emsp;&emsp;[fillAlpha](#fillalpha-number): *number* (1),<br>
 &emsp;&emsp;[gradient](#gradient-string): *string* ('classic'),<br>
@@ -116,6 +117,19 @@ Canvas element created by audioMotion.
 
 
 ## Properties
+
+### `barSpace` *number*
+
+*Available since v1.3.0*
+
+Customize the spacing between bars in [octave bands modes](#mode-number).
+
+Use an **integer** number for a fixed amount of pixels, or a **fractional** number for a proportion of the bar width.
+For example, `barSpace = 0.5` will make the spacing half the width of the bar, while `barSpace = 1.5` will make it 50% wider than the bars themselves.
+
+`barSpace = 0` will effectively show contiguous bars, unless the [LED effect](#showleds-boolean) is on, in which case a minimum spacing is enforced.
+
+Defaults to **2** for historical reasons, but the proportional mode is encouraged for more consistent results in different resolutions.
 
 ### `dataArray` *[UInt8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) array* *(Read only)*
 
@@ -213,7 +227,7 @@ You can set both values at once using the [`setFreqRange()`](#setfreqrange-minfr
 Current visualization mode.
 
 + **Discrete frequencies** mode provides the highest resolution, allowing you to visualize individual frequencies provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform);
-+ **Octave bands** modes displays wider vertical bars, each one representing the *n*th part of an octave, based on a [24-tone equal tempered scale](https://en.wikipedia.org/wiki/Quarter_tone);
++ **Octave bands** modes display wider vertical bars, each one representing the *n*th part of an octave, based on a [24-tone equal tempered scale](https://en.wikipedia.org/wiki/Quarter_tone);
 + **Area fill** mode uses the discrete frequencies data to draw a filled shape and/or a continuous line (see [fillAlpha](#fillalpha-number) and [lineWidth](#linewidth-number) properties).
 
 Valid values are:
