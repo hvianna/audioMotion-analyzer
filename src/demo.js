@@ -54,6 +54,7 @@ document.getElementById('fft').addEventListener( 'change', e => audioMotion.fftS
 document.getElementById('mode').addEventListener( 'change', e => {
 	audioMotion.mode = e.target.value;
 	document.getElementById('area_options').disabled = ( audioMotion.mode != 10 );
+	document.getElementById('bar_options').disabled = ( audioMotion.mode == 0 || audioMotion.mode == 10 );
 });
 document.getElementById('gradient').addEventListener( 'change', e => audioMotion.gradient = e.target.value );
 document.getElementById('range').addEventListener( 'change', e => {
@@ -63,6 +64,8 @@ document.getElementById('range').addEventListener( 'change', e => {
 document.getElementById('smoothing').addEventListener( 'change', e => audioMotion.smoothing = e.target.value );
 document.getElementById('line_width').addEventListener( 'change', e => audioMotion.lineWidth = e.target.value );
 document.getElementById('fill_alpha').addEventListener( 'change', e => audioMotion.fillAlpha = e.target.value );
+document.getElementById('bar_space').addEventListener( 'change', e => audioMotion.barSpace = e.target.value );
+
 document.getElementById('sensitivity').addEventListener( 'change', e => {
 	switch ( e.target.value ) {
 		case '0':
@@ -172,8 +175,11 @@ function updateUI() {
 	document.getElementById('smoothing').value = audioMotion.smoothing;
 
 	document.getElementById('area_options').disabled = ( audioMotion.mode != 10 );
+	document.getElementById('bar_options').disabled = ( audioMotion.mode == 0 || audioMotion.mode == 10 );
+
 	document.getElementById('line_width').value = audioMotion.lineWidth;
 	document.getElementById('fill_alpha').value = audioMotion.fillAlpha;
+	document.getElementById('bar_space').value = audioMotion.barSpace;
 
 	switch ( audioMotion.minFreq ) {
 		case 20:

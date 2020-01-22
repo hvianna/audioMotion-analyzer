@@ -41,7 +41,6 @@ audioMotion[0].showLogo = true;
 
 audioMotion[1].setOptions({
 	mode: 10,
-	fftSize: 4096,
 	gradient: 'rainbow',
 	minFreq: 30,
 	maxFreq: 16000,
@@ -55,16 +54,17 @@ audioMotion[1].setOptions({
 audioMotion[1].showLogo = false;
 
 audioMotion[2].setOptions({
-	mode: 7,
-	fftSize: 2048,
+	mode: 2,
 	gradient: 'prism',
 	minFreq: 30,
 	maxFreq: 16000,
+	showBgColor: false,
 	showScale: false,
 	showPeaks: false,
-	smoothing: .8,
-	minDecibels: -90,
-	maxDecibels: -30,
+	lumiBars: true,
+	minDecibels: -80,
+	maxDecibels: -20,
+	barSpace: 1,
 	width: 320,
 	height: 145
 });
@@ -105,6 +105,7 @@ document.getElementById('fft').addEventListener( 'change', e => audioMotion[ sel
 document.getElementById('mode').addEventListener( 'change', e => {
 	audioMotion[ selectedAnalyzer ].mode = e.target.value;
 	document.getElementById('area_options').disabled = ( audioMotion[ selectedAnalyzer ].mode != 10 );
+	document.getElementById('bar_options').disabled = ( audioMotion[ selectedAnalyzer ].mode == 0 || audioMotion[ selectedAnalyzer ].mode == 10 );
 });
 
 document.getElementById('gradient').addEventListener( 'change', e => audioMotion[ selectedAnalyzer ].gradient = e.target.value );
@@ -115,6 +116,7 @@ document.getElementById('range').addEventListener( 'change', e => {
 document.getElementById('smoothing').addEventListener( 'change', e => audioMotion[ selectedAnalyzer ].smoothing = e.target.value );
 document.getElementById('line_width').addEventListener( 'change', e => audioMotion[ selectedAnalyzer ].lineWidth = e.target.value );
 document.getElementById('fill_alpha').addEventListener( 'change', e => audioMotion[ selectedAnalyzer ].fillAlpha = e.target.value );
+document.getElementById('bar_space').addEventListener( 'change', e => audioMotion[ selectedAnalyzer ].barSpace = e.target.value );
 
 document.getElementById('sensitivity').addEventListener( 'change', e => {
 	switch ( e.target.value ) {
@@ -210,8 +212,10 @@ function updateUI() {
 	document.getElementById('smoothing').value = audioMotion[ selectedAnalyzer ].smoothing;
 
 	document.getElementById('area_options').disabled = ( audioMotion[ selectedAnalyzer ].mode != 10 );
+	document.getElementById('bar_options').disabled = ( audioMotion[ selectedAnalyzer ].mode == 0 || audioMotion[ selectedAnalyzer ].mode == 10 );
 	document.getElementById('line_width').value = audioMotion[ selectedAnalyzer ].lineWidth;
 	document.getElementById('fill_alpha').value = audioMotion[ selectedAnalyzer ].fillAlpha;
+	document.getElementById('bar_space').value = audioMotion[ selectedAnalyzer ].barSpace;
 
 	switch ( audioMotion[ selectedAnalyzer ].minFreq ) {
 		case 20:
