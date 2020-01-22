@@ -295,6 +295,8 @@ export default class AudioMotionAnalyzer {
 			return document.fullscreenElement === this.canvas;
 		else if ( document.webkitFullscreenElement )
 			return document.webkitFullscreenElement === this.canvas;
+		else
+			return false;
 	}
 	get isOn() {
 		return this._animationReq !== undefined;
