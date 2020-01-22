@@ -123,13 +123,13 @@ Canvas element created by audioMotion.
 *Available since v1.3.0*
 
 Customize the spacing between bars in [octave bands modes](#mode-number).
-
 Use an **integer** number for a fixed amount of pixels, or a **fractional** number for a proportion of the bar width.
-For example, `barSpace = 0.5` will make the spacing half the width of the bar, while `barSpace = 1.5` will make it 50% wider than the bars themselves.
+
+For example, `barSpace = 0.5` will make the spacing half the width of the bar, while `barSpace = 1.5` will result in spacing 50% wider than the bars themselves.
 
 `barSpace = 0` will effectively show contiguous bars, unless the [LED effect](#showleds-boolean) is on, in which case a minimum spacing is enforced.
 
-Defaults to **2** for historical reasons, but the proportional mode is encouraged for more consistent results in different resolutions.
+Defaults to **2** for historical reasons, but fractional values are encouraged for more consistent results.
 
 ### `dataArray` *[UInt8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) array* *(Read only)*
 
@@ -150,7 +150,9 @@ Higher values provide more detail in the frequency domain, but less detail in th
 
 *Available since v1.3.0*
 
-Opacity for the **Area fill** mode. Must be a float between 0 (completely transparent) and 1 (completely opaque). Defaults to **1**.
+Opacity for the **Area fill** mode. Must be a float between 0 (completely transparent) and 1 (completely opaque).
+
+Defaults to **1**.
 
 See also [`lineWidth`](#linewidth-number).
 
@@ -190,9 +192,9 @@ If you want the actual canvas dimensions, use `audioMotion.canvas.width` and `au
 
 *Available since v1.3.0*
 
-Line width for the **Area fill** mode. Defaults to **0**.
+Line width for the **Area fill** mode.
 
-Should be used with [`fillAlpha`](#fillalpha-number) < 1.
+Defaults to **0**. For the line to be distinguishable, set also [`fillAlpha`](#fillalpha-number) < 1.
 
 ### `loRes` *boolean*
 
