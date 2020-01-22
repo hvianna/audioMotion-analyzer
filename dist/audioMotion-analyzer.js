@@ -927,7 +927,7 @@ export default class AudioMotionAnalyzer {
 
 		if ( this._mode > 0 && this._mode < 10 ) {
 			// adds a vertical black line in the mask canvas after the last led column
-			this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - Math.max( this._ledOptions.spaceH / 2, this._barSpacePx / 2 ) + ( this._mode < 5 ? 2 : 1 ), 0, Math.max( this._ledOptions.spaceH, this._barSpacePx ), this.canvas.height );
+			this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - Math.max( this._ledOptions.spaceH / 2, this._barSpacePx / 2 ), 0, Math.max( this._ledOptions.spaceH, this._barSpacePx ), this.canvas.height );
 
 			// adds horizontal black lines in the mask canvas, to separate the LED rows
 			for ( i = this._ledOptions.ledHeight; i < this.canvas.height; i += this._ledOptions.ledHeight + this._ledOptions.spaceV )
