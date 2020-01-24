@@ -24,6 +24,8 @@ export default class AudioMotionAnalyzer {
  */
 	constructor( container, options = {} ) {
 
+		this._initDone = false;
+
 		// Settings defaults
 
 		this._defaults = {
@@ -85,9 +87,12 @@ export default class AudioMotionAnalyzer {
 			},
 		};
 
-		// If container not specified, use document body
+		// Set container and default dimensions
 
 		this._container = container || document.body;
+
+		this._defaults.width  = this._container.clientWidth  || this._defaults.width;
+		this._defaults.height = this._container.clientHeight || this._defaults.height;
 
 		// Create audio context
 
@@ -106,43 +111,12 @@ export default class AudioMotionAnalyzer {
 		this._audioSource = ( options.source ) ? this.connectAudio( options.source ) : undefined;
 		this.analyzer.connect( this.audioCtx.destination );
 
-		// Adjust settings
-
-		this._defaults.width  = this._container.clientWidth  || this._defaults.width;
-		this._defaults.height = this._container.clientHeight || this._defaults.height;
-
-		this.mode        = options.mode        === undefined ? this._defaults.mode        : options.mode;
-		this._minFreq    = options.minFreq     === undefined ? this._defaults.minFreq     : options.minFreq;
-		this._maxFreq    = options.maxFreq     === undefined ? this._defaults.maxFreq     : options.maxFreq;
-		this.gradient    = options.gradient    === undefined ? this._defaults.gradient    : options.gradient;
-		this.showBgColor = options.showBgColor === undefined ? this._defaults.showBgColor : options.showBgColor;
-		this.showLeds    = options.showLeds    === undefined ? this._defaults.showLeds    : options.showLeds;
-		this.showScale   = options.showScale   === undefined ? this._defaults.showScale   : options.showScale;
-		this.showPeaks   = options.showPeaks   === undefined ? this._defaults.showPeaks   : options.showPeaks;
-		this.showFPS     = options.showFPS     === undefined ? this._defaults.showFPS     : options.showFPS;
-		this.lumiBars    = options.lumiBars    === undefined ? this._defaults.lumiBars    : options.lumiBars;
-		this._loRes      = options.loRes       === undefined ? this._defaults.loRes       : options.loRes;
-		this.lineWidth   = options.lineWidth   === undefined ? this._defaults.lineWidth   : options.lineWidth;
-		this.fillAlpha   = options.fillAlpha   === undefined ? this._defaults.fillAlpha   : options.fillAlpha;
-		this.barSpace    = options.barSpace    === undefined ? this._defaults.barSpace    : options.barSpace;
-		this._width      = options.width;
-		this._height     = options.height;
-
-		this.fftSize     = options.fftSize     === undefined ? this._defaults.fftSize     : options.fftSize;
-		this.smoothing   = options.smoothing   === undefined ? this._defaults.smoothing   : options.smoothing;
-		this.minDecibels = options.minDecibels === undefined ? this._defaults.minDecibels : options.minDecibels;
-		this.maxDecibels = options.maxDecibels === undefined ? this._defaults.maxDecibels : options.maxDecibels;
-
-		this.onCanvasDraw = ( typeof options.onCanvasDraw == 'function' ) ? options.onCanvasDraw : undefined;
-		this.onCanvasResize = ( typeof options.onCanvasResize == 'function' ) ? options.onCanvasResize : undefined;
-
 		// Create canvas
 
 		this.canvas = document.createElement('canvas');
 		this.canvas.style = 'max-width: 100%;';
 		this._container.appendChild( this.canvas );
 		this.canvasCtx = this.canvas.getContext( '2d', { alpha: false } );
-		this._setCanvas('create');
 
 		// adjust canvas on window resize
 		window.addEventListener( 'resize', () => {
@@ -153,11 +127,14 @@ export default class AudioMotionAnalyzer {
 		// adjust canvas size on fullscreen change
 		this.canvas.addEventListener( 'fullscreenchange', () => this._setCanvas('fschange') );
 
-		// Start animation
+		// Set configuration options, using defaults for missing properties
 
-		if ( options.start !== false )
-			this.toggleAnalyzer( true );
+		this._setProperties( options, true );
 
+		// Finish canvas setup
+
+		this._initDone = true;
+		this._setCanvas('create');
 	}
 
 	/**
@@ -383,77 +360,7 @@ export default class AudioMotionAnalyzer {
 	 * @param {object} options
 	 */
 	setOptions( options ) {
-
-		if ( options.mode !== undefined )
-			this.mode = options.mode;
-
-		if ( options.minFreq !== undefined )
-			this._minFreq = options.minFreq;
-
-		if ( options.maxFreq !== undefined )
-			this._maxFreq = options.maxFreq;
-
-		if ( options.gradient !== undefined )
-			this.gradient = options.gradient;
-
-		if ( options.showBgColor !== undefined )
-			this.showBgColor = options.showBgColor;
-
-		if ( options.showLeds !== undefined )
-			this.showLeds = options.showLeds;
-
-		if ( options.showScale !== undefined )
-			this.showScale = options.showScale;
-
-		if ( options.lumiBars !== undefined )
-			this.lumiBars = options.lumiBars;
-
-		if ( options.minDecibels !== undefined )
-			this.analyzer.minDecibels = options.minDecibels;
-
-		if ( options.maxDecibels !== undefined )
-			this.analyzer.maxDecibels = options.maxDecibels;
-
-		if ( options.showPeaks !== undefined )
-			this.showPeaks = options.showPeaks;
-
-		if ( options.showFPS !== undefined )
-			this.showFPS = options.showFPS;
-
-		if ( options.loRes !== undefined )
-			this._loRes = options.loRes;
-
-		if ( options.lineWidth !== undefined )
-			this.lineWidth = options.lineWidth;
-
-		if ( options.fillAlpha !== undefined )
-			this.fillAlpha = options.fillAlpha;
-
-		if ( options.barSpace !== undefined )
-			this.barSpace = options.barSpace;
-
-		if ( options.fftSize !== undefined )
-			this.fftSize = options.fftSize;
-
-		if ( options.smoothing !== undefined )
-			this.analyzer.smoothingTimeConstant = options.smoothing;
-
-		if ( typeof options.onCanvasDraw == 'function' )
-			this.onCanvasDraw = options.onCanvasDraw;
-
-		if ( typeof options.onCanvasResize == 'function' )
-			this.onCanvasResize = options.onCanvasResize;
-
-		if ( options.width !== undefined )
-			this._width = options.width;
-
-		if ( options.height !== undefined )
-			this._height = options.height;
-
-		this._setCanvas('user');
-
-		if ( options.start !== undefined )
-			this.toggleAnalyzer( options.start );
+		this._setProperties( options, false );
 	}
 
 	/**
@@ -753,8 +660,7 @@ export default class AudioMotionAnalyzer {
 	 */
 	_precalculateBarPositions() {
 
-		// just exit if the canvas isn't ready yet (called during the constructor initialization)
-		if ( ! this.canvas )
+		if ( ! this._initDone )
 			return;
 
 		var i, freq,
@@ -964,6 +870,9 @@ export default class AudioMotionAnalyzer {
 	 * Internal function to change canvas dimensions on demand
 	 */
 	_setCanvas( reason ) {
+		if ( ! this._initDone )
+			return;
+
 		this._pixelRatio = window.devicePixelRatio; // for Retina / HiDPI devices
 
 		if ( this._loRes )
@@ -1004,6 +913,42 @@ export default class AudioMotionAnalyzer {
 
 		if ( this.onCanvasResize )
 			this.onCanvasResize( reason, this );
+	}
+
+	/**
+	 * Set object properties
+	 */
+	_setProperties( options, useDefaults ) {
+
+		let callbacks = [
+			'onCanvasDraw',
+			'onCanvasResize'
+		];
+
+		// set (or clear) callback functions
+		for ( let prop of callbacks ) {
+			if ( options.hasOwnProperty( prop ) ) {
+				if ( typeof options[ prop ] == 'function' )
+					this[ prop ] = options[ prop ];
+				else
+					this[ prop ] = undefined;
+			}
+		}
+
+		// set most properties here
+		for ( let prop of Object.keys( this._defaults ) ) {
+			if ( options.hasOwnProperty( prop ) )
+				this[ prop ] = options[ prop ];
+			// we don't enforce defaults for width or height, to allow fluid layout
+			else if ( useDefaults && ['height','width'].indexOf( prop ) == -1 )
+				this[ prop ] = this._defaults[ prop ];
+		}
+
+		// start analyzer animation by default
+		if ( options.start !== undefined )
+			this.toggleAnalyzer( options.start );
+		else if ( useDefaults )
+			this.toggleAnalyzer( true );
 	}
 
 }
