@@ -51,6 +51,9 @@ export default class AudioMotionAnalyzer {
 			barSpace    : 2
 		};
 
+		// Key frequencies for the X-axis labels
+		this._freqLabels = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
+
 		// Gradient definitions
 
 		this._gradients = {
@@ -111,12 +114,21 @@ export default class AudioMotionAnalyzer {
 		this._audioSource = ( options.source ) ? this.connectAudio( options.source ) : undefined;
 		this.analyzer.connect( this.audioCtx.destination );
 
-		// Create canvas
+		// Create canvases
 
+		// main spectrum analyzer canvas
 		this.canvas = document.createElement('canvas');
 		this.canvas.style = 'max-width: 100%;';
 		this._container.appendChild( this.canvas );
 		this.canvasCtx = this.canvas.getContext( '2d', { alpha: false } );
+
+		// auxiliary canvas for the LED mask
+		this._ledsMask = document.createElement('canvas');
+		this._ledsCtx = this._ledsMask.getContext('2d');
+
+		// auxiliary canvas for the X-axis scale labels
+		this._labels = document.createElement('canvas');
+		this._labelsCtx = this._labels.getContext('2d');
 
 		// adjust canvas on window resize
 		window.addEventListener( 'resize', () => {
@@ -573,21 +585,8 @@ export default class AudioMotionAnalyzer {
 		else if ( isLedDisplay ) // applies LEDs mask over the canvas
 			this.canvasCtx.drawImage( this._ledsMask, 0, 0 );
 
-		if ( this.showScale ) {
-			size = 5 * this._pixelRatio;
-
-			if ( this.isFullscreen )
-				size *= 2;
-
-			this.canvasCtx.fillStyle = '#000c';
-			this.canvasCtx.fillRect( 0, this.canvas.height - size * 4, this.canvas.width, size * 4 );
-
-			this.canvasCtx.fillStyle = '#fff';
-			this.canvasCtx.font = ( size * 2 ) + 'px sans-serif';
-			this.canvasCtx.textAlign = 'center';
-
-			this._freqLabels.forEach( label => this.canvasCtx.fillText( label.freq, label.posX, this.canvas.height - size ) );
-		}
+		if ( this.showScale )
+			this.canvasCtx.drawImage( this._labels, 0, this.canvas.height - this._labels.height );
 
 		this.frame++;
 		var now = performance.now();
@@ -726,6 +725,7 @@ export default class AudioMotionAnalyzer {
 
 				case 5:
 					groupnotes = 6;
+					// fall through
 				case 4:
 					this._ledOptions = {
 						nLeds: 80,
@@ -843,28 +843,24 @@ export default class AudioMotionAnalyzer {
 				this._ledsCtx.fillRect( 0, i, this.canvas.width, this._ledOptions.spaceV );
 		}
 
-		// calculate the position of the labels (octaves center frequencies) for the X-axis scale
-		this._freqLabels = [
-			{ freq: 16 },
-			{ freq: 31 },
-			{ freq: 63 },
-			{ freq: 125 },
-			{ freq: 250 },
-			{ freq: 500 },
-			{ freq: 1000 },
-			{ freq: 2000 },
-			{ freq: 4000 },
-			{ freq: 8000 },
-			{ freq: 16000 }
-		];
+		// Create the X-axis scale in the auxiliary canvas
 
-		this._freqLabels.forEach( label => {
-			label.posX = bandWidth * ( Math.log10( label.freq ) - minLog );
-			if ( label.freq >= 1000 )
-				label.freq = ( label.freq / 1000 ) + 'k';
-		});
+		this._labels.width |= 0; // clear canvas
+		this._labelsCtx.fillStyle = '#000c';
+		this._labelsCtx.fillRect( 0, 0, this._labels.width, this._labels.height );
+
+		this._labelsCtx.fillStyle = '#fff';
+		this._labelsCtx.font = `${ this._labels.height / 2 }px sans-serif`;
+		this._labelsCtx.textAlign = 'center';
+
+		for ( let freq of this._freqLabels ) {
+			this._labelsCtx.fillText(
+				( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
+				bandWidth * ( Math.log10( freq ) - minLog ),
+				this._labels.height * .75
+			);
+		}
 	}
-
 
 	/**
 	 * Internal function to change canvas dimensions on demand
@@ -904,13 +900,18 @@ export default class AudioMotionAnalyzer {
 		// (re)generate gradients
 		this._generateGradients();
 
-		// create an auxiliary canvas for the LED effect mask
-		this._ledsMask = this.canvas.cloneNode();
-		this._ledsCtx = this._ledsMask.getContext('2d');
-		this._ledsCtx.fillStyle = '#000';
+		// update LED mask canvas dimensions
+		this._ledsMask.width = this.canvas.width;
+		this._ledsMask.height = this.canvas.height;
 
+		// update labels canvas dimensions
+		this._labels.width = this.canvas.width;
+		this._labels.height = this._pixelRatio * ( this.isFullscreen ? 40 : 20 );
+
+		// calculate bar positions and led options
 		this._precalculateBarPositions();
 
+		// call callback function, if defined
 		if ( this.onCanvasResize )
 			this.onCanvasResize( reason, this );
 	}
