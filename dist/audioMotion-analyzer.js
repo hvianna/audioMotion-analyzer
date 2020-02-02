@@ -165,7 +165,7 @@ export default class AudioMotionAnalyzer {
 	set barSpace( value ) {
 		this._barSpace = Number( value );
 		this._calculateBarSpacePx();
-		this._precalculateBarPositions(); // to rebuild the leds mask
+		this._createLedMask();
 	}
 
 	// FFT size
@@ -444,6 +444,98 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Create mask for vintage LED effect on auxiliary canvas
+	 */
+	_createLedMask() {
+		// no need for this if in discrete frequencies or area fill modes
+		if ( this._mode % 10 == 0 )
+			return;
+
+		// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
+
+		let spaceV = Math.min( 6, this.canvas.height / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
+
+		switch ( this._mode ) {
+			case 8:
+				spaceV = Math.min( 16, this.canvas.height / ( 33 * this._pixelRatio ) | 0 );
+				this._ledOptions = {
+					nLeds: 24,
+					spaceH: Math.min( 24, this.canvas.width / ( 40 * this._pixelRatio ) | 0 )
+				};
+				break;
+
+			case 7:
+				spaceV = Math.min( 8, this.canvas.height / ( 67 * this._pixelRatio ) | 0 );
+				this._ledOptions = {
+					nLeds: 48,
+					spaceH: Math.min( 16, this.canvas.width / ( 60 * this._pixelRatio ) | 0 )
+				};
+				break;
+
+			case 6:
+				this._ledOptions = {
+					nLeds: 64,
+					spaceH: Math.min( 10, this.canvas.width / ( 96 * this._pixelRatio ) | 0 )
+				};
+				break;
+
+			case 5:
+				// fall through
+			case 4:
+				this._ledOptions = {
+					nLeds: 80,
+					spaceH: Math.min( 8, this.canvas.width / ( 120 * this._pixelRatio ) | 0 )
+				};
+				break;
+
+			case 3:
+				this._ledOptions = {
+					nLeds: 96,
+					spaceH: Math.min( 6, this.canvas.width / ( 160 * this._pixelRatio ) | 0 )
+				};
+				break;
+
+			case 2:
+				spaceV = Math.min( 4, this.canvas.height / ( 135 * this._pixelRatio ) | 0 );
+				this._ledOptions = {
+					nLeds: 128,
+					spaceH: Math.min( 4, this.canvas.width / ( 240 * this._pixelRatio ) | 0 )
+				};
+				break;
+
+			default:
+				spaceV = Math.min( 3, Math.max( 2, this.canvas.height / ( 180 * this._pixelRatio ) | 0 ) );
+				this._ledOptions = {
+					nLeds: 128,
+					spaceH: Math.min( 4, this.canvas.width / ( 320 * this._pixelRatio ) | 0 )
+				};
+		}
+
+		this._ledOptions.spaceH *= this._pixelRatio;
+		this._ledOptions.spaceV = spaceV * this._pixelRatio;
+		this._ledOptions.nLeds = Math.min( this._ledOptions.nLeds, this.canvas.height / ( this._ledOptions.spaceV * 2 ) | 0 );
+		this._ledOptions.ledHeight = this.canvas.height / this._ledOptions.nLeds - this._ledOptions.spaceV;
+
+		console.log( this._mode, this._ledOptions );
+
+		// use either the LEDs default horizontal space or the user selected bar space, whichever is larger
+		const spacing = Math.max( this._ledOptions.spaceH, this._barSpacePx );
+
+		// clear the auxiliary canvas
+		this._ledsMask.width |= 0;
+
+		// add a vertical black line to the left of each bar to create the LED columns
+		this._analyzerBars.forEach( bar => this._ledsCtx.fillRect( bar.posX - spacing / 2, 0, spacing, this.canvas.height ) );
+
+		// add a vertical black line in the mask canvas after the last led column
+		this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - spacing / 2, 0, spacing, this.canvas.height );
+
+		// add horizontal black lines to create the LED rows
+		for ( let i = this._ledOptions.ledHeight; i < this.canvas.height; i += this._ledOptions.ledHeight + this._ledOptions.spaceV )
+			this._ledsCtx.fillRect( 0, i, this.canvas.width, this._ledOptions.spaceV );
+	}
+
+	/**
 	 * Redraw the canvas
 	 * this is called 60 times per second by requestAnimationFrame()
 	 */
@@ -689,78 +781,22 @@ export default class AudioMotionAnalyzer {
 					this._analyzerBars[ this._analyzerBars.length - 1 ].endIdx = i;
 			}
 		}
-		else { // octave bands modes
+		else {
+		// Octave bands modes
 
-			var spaceV = Math.min( 6, this.canvas.height / ( 90 * this._pixelRatio ) | 0 ), // for modes 3, 4, 5 and 6
-				groupnotes = this._mode; // for modes 1, 2, 3 and 4
+			// how many notes grouped in each band?
+			let groupNotes;
 
-			// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
-
-			switch ( this._mode ) {
-				case 8:
-					groupnotes = 24;
-					spaceV = Math.min( 16, this.canvas.height / ( 33 * this._pixelRatio ) | 0 );
-					this._ledOptions = {
-						nLeds: 24,
-						spaceH: Math.min( 24, this.canvas.width / ( 40 * this._pixelRatio ) | 0 )
-					};
-					break;
-
-				case 7:
-					groupnotes = 12;
-					spaceV = Math.min( 8, this.canvas.height / ( 67 * this._pixelRatio ) | 0 );
-					this._ledOptions = {
-						nLeds: 48,
-						spaceH: Math.min( 16, this.canvas.width / ( 60 * this._pixelRatio ) | 0 )
-					};
-					break;
-
-				case 6:
-					groupnotes = 8;
-					this._ledOptions = {
-						nLeds: 64,
-						spaceH: Math.min( 10, this.canvas.width / ( 96 * this._pixelRatio ) | 0 )
-					};
-					break;
-
-				case 5:
-					groupnotes = 6;
-					// fall through
-				case 4:
-					this._ledOptions = {
-						nLeds: 80,
-						spaceH: Math.min( 8, this.canvas.width / ( 120 * this._pixelRatio ) | 0 )
-					};
-					break;
-
-				case 3:
-					this._ledOptions = {
-						nLeds: 96,
-						spaceH: Math.min( 6, this.canvas.width / ( 160 * this._pixelRatio ) | 0 )
-					};
-					break;
-
-				case 2:
-					spaceV = Math.min( 4, this.canvas.height / ( 135 * this._pixelRatio ) | 0 );
-					this._ledOptions = {
-						nLeds: 128,
-						spaceH: Math.min( 4, this.canvas.width / ( 240 * this._pixelRatio ) | 0 )
-					};
-					break;
-
-				default:
-					this._mode = groupnotes = 1; // convert any invalid mode to mode 1
-					spaceV = Math.min( 3, Math.max( 2, this.canvas.height / ( 180 * this._pixelRatio ) | 0 ) );
-					this._ledOptions = {
-						nLeds: 128,
-						spaceH: Math.min( 4, this.canvas.width / ( 320 * this._pixelRatio ) | 0 )
-					};
-			}
-
-			this._ledOptions.spaceH *= this._pixelRatio;
-			this._ledOptions.spaceV = spaceV * this._pixelRatio;
-			this._ledOptions.nLeds = Math.min( this._ledOptions.nLeds, this.canvas.height / ( this._ledOptions.spaceV * 2 ) | 0 );
-			this._ledOptions.ledHeight = this.canvas.height / this._ledOptions.nLeds - this._ledOptions.spaceV;
+			if ( this._mode == 8 )
+				groupNotes = 24;
+			else if ( this._mode == 7 )
+				groupNotes = 12;
+			else if ( this._mode == 6 )
+				groupNotes = 8;
+			else if ( this._mode == 5 )
+				groupNotes = 6;
+			else
+				groupNotes = this._mode; // for modes 1, 2, 3 and 4
 
 			// generate a table of frequencies based on the equal tempered scale
 			var root24 = 2 ** ( 1 / 24 ); // for 1/24th-octave bands
@@ -777,8 +813,6 @@ export default class AudioMotionAnalyzer {
 			// divide canvas space by the number of frequencies (bars) to display
 			this._barWidth = this.canvas.width / temperedScale.length;
 			this._calculateBarSpacePx();
-
-			this._ledsMask.width |= 0; // clear LEDs mask canvas
 
 			var prevBin = 0,  // last bin included in previous frequency band
 				prevIdx = -1, // previous bar FFT array index
@@ -828,20 +862,10 @@ export default class AudioMotionAnalyzer {
 					accel: 0
 				} );
 
-				// adds a vertical black line to the left of this bar in the mask canvas, to separate the LED columns
-				this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX - Math.max( this._ledOptions.spaceH / 2, this._barSpacePx / 2 ), 0, Math.max( this._ledOptions.spaceH, this._barSpacePx ), this.canvas.height );
-
 			} );
 		}
 
-		if ( this._mode > 0 && this._mode < 10 ) {
-			// adds a vertical black line in the mask canvas after the last led column
-			this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - Math.max( this._ledOptions.spaceH / 2, this._barSpacePx / 2 ), 0, Math.max( this._ledOptions.spaceH, this._barSpacePx ), this.canvas.height );
-
-			// adds horizontal black lines in the mask canvas, to separate the LED rows
-			for ( i = this._ledOptions.ledHeight; i < this.canvas.height; i += this._ledOptions.ledHeight + this._ledOptions.spaceV )
-				this._ledsCtx.fillRect( 0, i, this.canvas.width, this._ledOptions.spaceV );
-		}
+		this._createLedMask();
 
 		// Create the X-axis scale in the auxiliary canvas
 
