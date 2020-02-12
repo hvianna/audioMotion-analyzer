@@ -123,13 +123,15 @@ Canvas element created by audioMotion.
 *Available since v1.3.0*
 
 Customize the spacing between bars in [octave bands modes](#mode-number).
-Use an **integer** number for a fixed amount of pixels, or a **fractional** number for a proportion of the bar width.
 
-For example, `barSpace = 0.5` will make the spacing half the width of the bar, while `barSpace = 1.5` will result in spacing 50% wider than the bars themselves.
+Use a value between 0 and 1 for spacing proportional to the bar width. Values >= 1 will be considered as a literal number of pixels.
 
-`barSpace = 0` will effectively show contiguous bars, unless the [LED effect](#showleds-boolean) is on, in which case a minimum spacing is enforced.
+For example, `barSpace = 0.5` will use half of the bar width for spacing, while `barSpace = 2` will set a fixed spacing of 2 pixels, independent of the width of bars.
+Prefer proportional spacing to obtain consistent results among different resolutions and screen sizes.
 
-Defaults to **2** for historical reasons, but fractional values are encouraged for more consistent results.
+`barSpace = 0` will effectively show contiguous bars, except when the [LED effect](#showleds-boolean) is on, in which case a minimum spacing is enforced.
+
+Defaults to **0.1**.
 
 ### `dataArray` *[UInt8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) array* *(Read only)*
 

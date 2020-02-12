@@ -48,7 +48,7 @@ export default class AudioMotionAnalyzer {
 			height      : 270,
 			lineWidth   : 0,
 			fillAlpha   : 1,
-			barSpace    : 2
+			barSpace    : 0.1
 		};
 
 		// Key frequencies for the X-axis labels
@@ -440,7 +440,7 @@ export default class AudioMotionAnalyzer {
 	 * Calculate bar spacing in pixels
 	 */
 	_calculateBarSpacePx() {
-		this._barSpacePx = Math.min( this._barWidth - 1, Number.isInteger( this._barSpace ) ? this._barSpace : this._barWidth * this._barSpace / 2 );
+		this._barSpacePx = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
 	}
 
 	/**
