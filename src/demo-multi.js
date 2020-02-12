@@ -37,6 +37,7 @@ audioMotion[0].setOptions({
 	mode: 3,
 	showLeds: true,
 	showFPS: true,
+	barSpace: 0.5,
 	width: 640,
 	height: 270
 });
