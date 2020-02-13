@@ -453,70 +453,49 @@ export default class AudioMotionAnalyzer {
 
 		// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
 
-		let spaceV = Math.min( 6, this.canvas.height / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
+		let nLeds,
+			spaceV = Math.min( 6, this.canvas.height / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
 
 		switch ( this._mode ) {
 			case 8:
 				spaceV = Math.min( 16, this.canvas.height / ( 33 * this._pixelRatio ) | 0 );
-				this._ledOptions = {
-					nLeds: 24,
-					spaceH: Math.min( 24, this.canvas.width / ( 40 * this._pixelRatio ) | 0 )
-				};
+				nLeds = 24;
 				break;
-
 			case 7:
 				spaceV = Math.min( 8, this.canvas.height / ( 67 * this._pixelRatio ) | 0 );
-				this._ledOptions = {
-					nLeds: 48,
-					spaceH: Math.min( 16, this.canvas.width / ( 60 * this._pixelRatio ) | 0 )
-				};
+				nLeds = 48;
 				break;
-
 			case 6:
-				this._ledOptions = {
-					nLeds: 64,
-					spaceH: Math.min( 10, this.canvas.width / ( 96 * this._pixelRatio ) | 0 )
-				};
+				nLeds = 64;
 				break;
-
 			case 5:
 				// fall through
 			case 4:
-				this._ledOptions = {
-					nLeds: 80,
-					spaceH: Math.min( 8, this.canvas.width / ( 120 * this._pixelRatio ) | 0 )
-				};
+				nLeds = 80;
 				break;
-
 			case 3:
-				this._ledOptions = {
-					nLeds: 96,
-					spaceH: Math.min( 6, this.canvas.width / ( 160 * this._pixelRatio ) | 0 )
-				};
+				nLeds = 96;
 				break;
-
 			case 2:
 				spaceV = Math.min( 4, this.canvas.height / ( 135 * this._pixelRatio ) | 0 );
-				this._ledOptions = {
-					nLeds: 128,
-					spaceH: Math.min( 4, this.canvas.width / ( 240 * this._pixelRatio ) | 0 )
-				};
+				nLeds = 128;
 				break;
-
-			default:
+			case 1:
 				spaceV = Math.min( 3, Math.max( 2, this.canvas.height / ( 180 * this._pixelRatio ) | 0 ) );
-				this._ledOptions = {
-					nLeds: 128,
-					spaceH: Math.min( 4, this.canvas.width / ( 320 * this._pixelRatio ) | 0 )
-				};
+				nLeds = 128;
 		}
 
-		this._ledOptions.spaceH *= this._pixelRatio;
-		this._ledOptions.spaceV = spaceV * this._pixelRatio;
-		this._ledOptions.nLeds = Math.min( this._ledOptions.nLeds, this.canvas.height / ( this._ledOptions.spaceV * 2 ) | 0 );
-		this._ledOptions.ledHeight = this.canvas.height / this._ledOptions.nLeds - this._ledOptions.spaceV;
+		spaceV *= this._pixelRatio;
+		nLeds = Math.min( nLeds, this.canvas.height / ( spaceV * 2 ) | 0 );
 
-		console.log( this._mode, this._ledOptions );
+		this._ledOptions = {
+			nLeds,
+			spaceH: this._barWidth * ( this._mode == 1 ? .45 : this._mode < 5 ? .225 : .125 ),
+			spaceV,
+			ledHeight: this.canvas.height / nLeds - spaceV
+		};
+
+		console.log( this._mode, this.canvas.height, this._ledOptions );
 
 		// use either the LEDs default horizontal space or the user selected bar space, whichever is larger
 		const spacing = Math.max( this._ledOptions.spaceH, this._barSpacePx );
