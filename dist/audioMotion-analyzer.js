@@ -486,16 +486,14 @@ export default class AudioMotionAnalyzer {
 		}
 
 		spaceV *= this._pixelRatio;
-		nLeds = Math.min( nLeds, this.canvas.height / ( spaceV * 2 ) | 0 );
+		nLeds = Math.min( nLeds, ( this.canvas.height + spaceV ) / ( spaceV * 2 ) | 0 );
 
 		this._ledOptions = {
 			nLeds,
 			spaceH: this._barWidth * ( this._mode == 1 ? .45 : this._mode < 5 ? .225 : .125 ),
 			spaceV,
-			ledHeight: this.canvas.height / nLeds - spaceV
+			ledHeight: ( this.canvas.height + spaceV ) / nLeds - spaceV
 		};
-
-		console.log( this._mode, this.canvas.height, this._ledOptions );
 
 		// use either the LEDs default horizontal space or the user selected bar space, whichever is larger
 		const spacing = Math.max( this._ledOptions.spaceH, this._barSpacePx );
@@ -579,7 +577,7 @@ export default class AudioMotionAnalyzer {
 				this.canvasCtx.globalAlpha = barHeight / 255;
 
 			if ( isLedDisplay ) // normalize barHeight to match one of the "led" elements
-				barHeight = ( barHeight / 255 * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV );
+				barHeight = ( barHeight / 255 * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
 			else
 				barHeight = barHeight / 255 * this.canvas.height | 0;
 
@@ -623,11 +621,18 @@ export default class AudioMotionAnalyzer {
 
 			// Draw peak
 			if ( bar.peak > 0 ) {
-				if ( this.showPeaks && ! isLumiBars )
-					if ( isLedDisplay )
-						this.canvasCtx.fillRect( posX, ( this._ledOptions.nLeds - ( bar.peak / this.canvas.height * this._ledOptions.nLeds | 0 ) ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ), width, this._ledOptions.ledHeight );
+				if ( this.showPeaks && ! isLumiBars ) {
+					if ( isLedDisplay ) {
+						this.canvasCtx.fillRect(
+							posX,
+							( this._ledOptions.nLeds - bar.peak / ( this.canvas.height + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ),
+							width,
+							this._ledOptions.ledHeight
+						);
+					}
 					else
 						this.canvasCtx.fillRect( posX, this.canvas.height - bar.peak, adjWidth, 2 );
+				}
 
 				if ( bar.hold )
 					bar.hold--;
