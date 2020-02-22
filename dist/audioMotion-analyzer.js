@@ -28,7 +28,7 @@ export default class AudioMotionAnalyzer {
 
 		// Settings defaults
 
-		this._defaults = {
+		let defaults = {
 			mode        : 0,
 			fftSize     : 8192,
 			minFreq     : 20,
@@ -44,11 +44,10 @@ export default class AudioMotionAnalyzer {
 			showFPS     : false,
 			lumiBars    : false,
 			loRes       : false,
-			width       : 640,
-			height      : 270,
 			lineWidth   : 0,
 			fillAlpha   : 1,
-			barSpace    : 0.1
+			barSpace    : 0.1,
+			start       : true
 		};
 
 		// Key frequencies for the X-axis labels
@@ -90,12 +89,12 @@ export default class AudioMotionAnalyzer {
 			},
 		};
 
-		// Set container and default dimensions
-
+		// Set container
 		this._container = container || document.body;
 
-		this._defaults.width  = this._container.clientWidth  || this._defaults.width;
-		this._defaults.height = this._container.clientHeight || this._defaults.height;
+		// Make sure we have minimal width and height dimensions in case of an inline container
+		this._defaultWidth  = this._container.clientWidth  || 640;
+		this._defaultHeight = this._container.clientHeight || 270;
 
 		// Create audio context
 
@@ -139,9 +138,9 @@ export default class AudioMotionAnalyzer {
 		// adjust canvas size on fullscreen change
 		this.canvas.addEventListener( 'fullscreenchange', () => this._setCanvas('fschange') );
 
-		// Set configuration options, using defaults for missing properties
+		// Set configuration options, using defaults for any missing properties
 
-		this._setProperties( options, true );
+		this._setProperties( options, defaults );
 
 		// Finish canvas setup
 
@@ -372,7 +371,7 @@ export default class AudioMotionAnalyzer {
 	 * @param {object} options
 	 */
 	setOptions( options ) {
-		this._setProperties( options, false );
+		this._setProperties( options );
 	}
 
 	/**
@@ -892,8 +891,8 @@ export default class AudioMotionAnalyzer {
 			this.canvas.height = this._fsHeight;
 		}
 		else {
-			this.canvas.width = ( this._width || this._container.clientWidth || this._defaults.width ) * this._pixelRatio;
-			this.canvas.height = ( this._height || this._container.clientHeight || this._defaults.height ) * this._pixelRatio;
+			this.canvas.width = ( this._width || this._container.clientWidth || this._defaultWidth ) * this._pixelRatio;
+			this.canvas.height = ( this._height || this._container.clientHeight || this._defaultHeight ) * this._pixelRatio;
 		}
 
 		// workaround for wrong dPR reported on Android TV
@@ -929,37 +928,27 @@ export default class AudioMotionAnalyzer {
 	/**
 	 * Set object properties
 	 */
-	_setProperties( options, useDefaults ) {
+	_setProperties( options, defaults ) {
 
-		let callbacks = [
-			'onCanvasDraw',
-			'onCanvasResize'
-		];
+		let callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
 
-		// set (or clear) callback functions
-		for ( let prop of callbacks ) {
-			if ( options.hasOwnProperty( prop ) ) {
-				if ( typeof options[ prop ] == 'function' )
-					this[ prop ] = options[ prop ];
-				else
-					this[ prop ] = undefined;
+		if ( defaults ) {
+			for ( let prop of Object.keys( defaults ) ) {
+				if ( ! options.hasOwnProperty( prop ) )
+					options[ prop ] = defaults[ prop ];
 			}
 		}
 
-		// set most properties here
-		for ( let prop of Object.keys( this._defaults ) ) {
-			if ( options.hasOwnProperty( prop ) )
+		for ( let prop of Object.keys( options ) ) {
+			// check for invalid callback
+			if ( callbacks.indexOf( prop ) !== -1 && typeof options[ prop ] !== 'function' )
+				this[ prop ] = undefined;
+			else if ( prop !== 'start' ) // we deal with this after all other options are set
 				this[ prop ] = options[ prop ];
-			// we don't enforce defaults for width or height, to allow fluid layout
-			else if ( useDefaults && ['height','width'].indexOf( prop ) == -1 )
-				this[ prop ] = this._defaults[ prop ];
 		}
 
-		// start analyzer animation by default
 		if ( options.start !== undefined )
 			this.toggleAnalyzer( options.start );
-		else if ( useDefaults )
-			this.toggleAnalyzer( true );
 	}
 
 }
