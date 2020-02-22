@@ -389,7 +389,7 @@ export default class AudioMotionAnalyzer {
 	 * @returns {boolean} resulting status after the change
 	 */
 	toggleAnalyzer( value ) {
-		var started = this.isOn;
+		let started = this.isOn;
 		if ( value === undefined )
 			value = ! started;
 
@@ -398,8 +398,8 @@ export default class AudioMotionAnalyzer {
 			this._animationReq = undefined;
 		}
 		else if ( ! started && value ) {
-			this.frame = this._fps = 0;
-			this.time = performance.now();
+			this._frame = this._fps = 0;
+			this._time = performance.now();
 			this._animationReq = requestAnimationFrame( () => this._draw() );
 		}
 
@@ -660,13 +660,15 @@ export default class AudioMotionAnalyzer {
 		if ( this.showScale )
 			this.canvasCtx.drawImage( this._labels, 0, this.canvas.height - this._labels.height );
 
-		this.frame++;
-		var now = performance.now();
-		var elapsed = now - this.time;
+		this._frame++;
+
+		let now = performance.now(),
+			elapsed = now - this._time;
+
 		if ( elapsed >= 1000 ) {
-			this._fps = this.frame / ( elapsed / 1000 );
-			this.frame = 0;
-			this.time = now;
+			this._fps = this._frame / ( elapsed / 1000 );
+			this._frame = 0;
+			this._time = now;
 		}
 		if ( this.showFPS ) {
 			size = 20 * this._pixelRatio;
