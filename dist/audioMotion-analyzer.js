@@ -690,7 +690,7 @@ export default class AudioMotionAnalyzer {
 	 * Generate gradients
 	 */
 	_generateGradients() {
-		var grad, i;
+		let grad;
 
 		Object.keys( this._gradients ).forEach( key => {
 			if ( this._gradients[ key ].dir && this._gradients[ key ].dir == 'h' )
