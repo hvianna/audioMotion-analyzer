@@ -101,7 +101,7 @@ export default class AudioMotionAnalyzer {
 			this.audioCtx = new AudioContext();
 		}
 		catch( err ) {
-			throw 'Could not create audio context. Web Audio API not supported?';
+			throw new AudioMotionError( 'ERR_NO_AUDIO_CONTEXT', 'Could not create audio context. Web Audio API not supported?' );
 		}
 
 		// Create analyzer node, connect audio source (if provided) and connect it to the destination
@@ -175,6 +175,18 @@ export default class AudioMotionAnalyzer {
 		this._precalculateBarPositions();
 	}
 
+	// Gradient
+
+	get gradient() {
+		return this._gradient;
+	}
+	set gradient( value ) {
+		if ( this._gradients.hasOwnProperty( value ) )
+			this._gradient = value;
+		else
+			throw new AudioMotionError( 'ERR_UNKNOWN_GRADIENT', `Unknown gradient '${value}'` );
+	}
+
 	// Canvas size
 
 	get height() {
@@ -204,7 +216,7 @@ export default class AudioMotionAnalyzer {
 			this._precalculateBarPositions();
 		}
 		else
-			throw `Invalid mode: ${mode}`;
+			throw new AudioMotionError( 'ERR_INVALID_MODE', `Invalid mode ${mode}` );
 	}
 
 	// Low-resolution mode
@@ -317,11 +329,14 @@ export default class AudioMotionAnalyzer {
 	 * @param {object} options
 	 */
 	registerGradient( name, options ) {
+		if ( typeof name !== 'string' || name.trim().length == 0 )
+			throw new AudioMotionError( 'ERR_GRADIENT_INVALID_NAME', 'Gradient name must be a non-empty string' );
+
 		if ( typeof options !== 'object' )
-			throw 'Custom gradient options must be an object';
+			throw new AudioMotionError( 'ERR_GRADIENT_NOT_AN_OBJECT', 'Gradient options must be an object' );
 
 		if ( options.colorStops === undefined || options.colorStops.length < 2 )
-			throw 'Custom gradient must define at least two colors!';
+			throw new AudioMotionError( 'ERR_GRADIENT_MISSING_COLOR', 'Gradient must define at least two colors' );
 
 		this._gradients[ name ] = {};
 
@@ -524,7 +539,7 @@ export default class AudioMotionAnalyzer {
 			if ( isLedDisplay )
 				this.canvasCtx.fillStyle = '#111';
 			else
-				this.canvasCtx.fillStyle = this._gradients[ this.gradient ].bgColor; // use background color defined by gradient
+				this.canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor; // use background color defined by gradient
 
 		// clear the canvas
 		this.canvasCtx.fillRect( 0, 0, this.canvas.width, this.canvas.height );
@@ -533,7 +548,7 @@ export default class AudioMotionAnalyzer {
 		this.analyzer.getByteFrequencyData( this._dataArray );
 
 		// set selected gradient
-		this.canvasCtx.fillStyle = this._gradients[ this.gradient ].gradient;
+		this.canvasCtx.fillStyle = this._gradients[ this._gradient ].gradient;
 
 		// if in "area fill" mode, start the drawing path
 		if ( this._mode == 10 ) {
@@ -952,4 +967,14 @@ export default class AudioMotionAnalyzer {
 			this.toggleAnalyzer( options.start );
 	}
 
+}
+
+/* Custom error class */
+
+class AudioMotionError extends Error {
+	constructor( code, message ) {
+		super( message );
+		this.name = 'AudioMotionError';
+		this.code = code;
+	}
 }
