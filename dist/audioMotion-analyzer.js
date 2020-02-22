@@ -50,9 +50,6 @@ export default class AudioMotionAnalyzer {
 			start       : true
 		};
 
-		// Key frequencies for the X-axis labels
-		this._freqLabels = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
-
 		// Gradient definitions
 
 		this._gradients = {
@@ -862,7 +859,9 @@ export default class AudioMotionAnalyzer {
 		this._labelsCtx.font = `${ this._labels.height / 2 }px sans-serif`;
 		this._labelsCtx.textAlign = 'center';
 
-		for ( let freq of this._freqLabels ) {
+		let freqLabels = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
+
+		for ( let freq of freqLabels ) {
 			this._labelsCtx.fillText(
 				( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
 				bandWidth * ( Math.log10( freq ) - minLog ),
