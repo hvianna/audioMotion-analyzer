@@ -120,7 +120,7 @@ Canvas element created by audioMotion.
 
 ### `barSpace` *number*
 
-*Available since v1.3.0*
+*Available since v2.0.0*
 
 Customize the spacing between bars in [octave bands modes](#mode-number).
 
@@ -150,9 +150,9 @@ Higher values provide more detail in the frequency domain, but less detail in th
 
 ### `fillAlpha` *number*
 
-*Available since v1.3.0*
+*Available since v2.0.0*
 
-Opacity for the **Area fill** mode. Must be a float between 0 (completely transparent) and 1 (completely opaque).
+Opacity for the **Line / Area graph** mode. Must be a float between 0 (completely transparent) and 1 (completely opaque).
 
 Defaults to **1**.
 
@@ -192,9 +192,9 @@ If you want the actual canvas dimensions, use `audioMotion.canvas.width` and `au
 
 ### `lineWidth` *number*
 
-*Available since v1.3.0*
+*Available since v2.0.0*
 
-Line width for the **Area fill** mode.
+Line width for the **Line / Area graph** mode.
 
 Defaults to **0**. For the line to be distinguishable, set also [`fillAlpha`](#fillalpha-number) < 1.
 
@@ -232,7 +232,7 @@ Current visualization mode.
 
 + **Discrete frequencies** mode provides the highest resolution, allowing you to visualize individual frequencies provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform);
 + **Octave bands** modes display wider vertical bars, each one representing the *n*th part of an octave, based on a [24-tone equal tempered scale](https://en.wikipedia.org/wiki/Quarter_tone);
-+ **Area fill** mode uses the discrete frequencies data to draw a filled shape and/or a continuous line (see [fillAlpha](#fillalpha-number) and [lineWidth](#linewidth-number) properties).
++ **Line / Area graph** mode uses the discrete frequencies data to draw a filled shape and/or a continuous line (see [fillAlpha](#fillalpha-number) and [lineWidth](#linewidth-number) properties).
 
 Valid values are:
 
@@ -248,26 +248,9 @@ Valid values are:
 | 7 | half octave bands | |
 | 8 | full octave bands | |
 | 9 | *reserved* (not valid) | |
-| 10 | Area fill | v1.1.0 |
+| 10 | Line / Area graph | v1.1.0 |
 
 Defaults to **0**.
-
-### `onCanvasDraw` *function*
-
-Function to be called after audioMotion finishes rendering a frame on the canvas. The audioMotion object will be passed as an argument to the callback function.
-
-### `onCanvasResize` *function*
-
-Function to be called whenever the canvas is resized.
-Two arguments will be passed to the callback function: a string with the reason why the function was called (see below) and the audioMotion object.
-
-Reason | Description
--------|------------
-`'create'` | canvas created by the class constructor
-`'fschange'` | analyzer entered or left fullscreen mode
-`'lores'` | low resolution mode toggled on or off
-`'resize'` | browser window resized (only when [width and/or height](#height-number-width-number) are undefined)
-`'user'` | canvas dimensions changed by the user, via `setCanvasSize()` or `setOptions()` methods
 
 ### `pixelRatio` *number* *(Read only)*
 
@@ -302,6 +285,25 @@ Sets the analyzer's [smoothingTimeConstant](https://developer.mozilla.org/en-US/
 Lower values make the analyzer respond faster to changes. Defaults to **0.5**.
 
 
+## Callback functions
+
+### `onCanvasDraw` *function*
+
+If defined, this function will be called after rendering each frame. The audioMotion object will be passed as an argument to the callback function.
+
+### `onCanvasResize` *function*
+
+If defined, this function will be called whenever the canvas is resized. Two arguments are passed: a string with the reason why the function was called (see below) and the audioMotion object.
+
+Reason | Description
+-------|------------
+`'create'` | canvas created by the class constructor
+`'fschange'` | analyzer entered or left fullscreen mode
+`'lores'` | low resolution mode toggled on or off
+`'resize'` | browser window resized (only when [width and/or height](#height-number-width-number) are undefined)
+`'user'` | canvas dimensions changed by user script, via [height and width](#height-number-width-number) properties, `setCanvasSize()` or `setOptions()` methods
+
+
 ## Methods
 
 ### `connectAudio( element )`
@@ -313,19 +315,23 @@ For connecting other audio sources, like oscillators and streams, use the [`audi
 
 ### `registerGradient( name, options )`
 
-Registers a custom gradient. *name* is a string that will be used for the [`gradient`](#gradient-string) property.
+Registers a custom color gradient.
+
+`name` must be a non-empty *string* that will be used when setting the [`gradient`](#gradient-string) property. `options` must be an object as shown below:
 
 ```
 options = {
 	bgColor: '#111', // background color (required)
 	dir: 'h',        // add this for a horizontal gradient (optional)
-	colorStops: [
-		'#f00',                     // list your gradient colors here (at least 2 colors are required)
-		{ pos: .6, color: '#ff0' }, // use an object to specify the position (0 to 1) of a color
-		'hsl( 120, 100%, 50% )'     // colors may be defined in any HTML valid format
+	colorStops: [    // list your gradient colors in this array (at least 2 entries are required)
+		'red',                      // colors may be defined in any CSS valid format
+		{ pos: .6, color: '#ff0' }, // use an object to adjust the position (0 to 1) of a color
+		'hsl( 120, 100%, 50% )'     // colors may be defined in any CSS valid format
 	]
 }
 ```
+
+Additional information about [gradient color-stops](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop).
 
 ### `setCanvasSize( width, height )`
 
@@ -354,6 +360,22 @@ The analyzer is started by default upon [object construction](#constructor), unl
 
 Toggles fullscreen mode. As per [API specification](https://fullscreen.spec.whatwg.org/), fullscreen requests must be triggered by user activation, so you must call this function from within an event handler or otherwise the request will be denied.
 
+
+## Custom Errors
+
+*Available since v2.0.0*
+
+audioMotion-analyzer uses a custom error object to throw errors for some critical operations.
+
+The `code` property is a string label that can be checked to identify the specific error in a reliable way.
+
+`code` | Error description
+ERR_NO_AUDIO_CONTEXT | Could not create audio context. The user agent may not support the Web Audio API.
+ERR_INVALID_MODE     | User tried to set the visualization [mode](#mode-number) to an invalid value.
+ERR_UNKNOWN_GRADIENT | User tried to select a gradient not previously registered.
+ERR_GRADIENT_INVALID_NAME | The `name` parameter for [registerGradient()](#registergradient-name-options-) must be a non-empty string.
+ERR_GRADIENT_NOT_AN_OBJECT | The `options` parameter for [registerGradient()](#registergradient-name-options-) must be an object.
+ERR_GRADIENT_MISSING_COLOR | The `options` parameter for [registerGradient()](#registergradient-name-options-) must define at least two color-stops.
 
 ## License
 
