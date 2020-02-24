@@ -121,10 +121,10 @@ export default class AudioMotionAnalyzer {
 		// Create canvases
 
 		// main spectrum analyzer canvas
-		this.canvas = document.createElement('canvas');
-		this.canvas.style = 'max-width: 100%;';
-		this._container.appendChild( this.canvas );
-		this.canvasCtx = this.canvas.getContext( '2d', { alpha: false } );
+		this._canvas = document.createElement('canvas');
+		this._canvas.style = 'max-width: 100%;';
+		this._container.appendChild( this._canvas );
+		this._canvasCtx = this._canvas.getContext( '2d', { alpha: false } );
 
 		// auxiliary canvas for the LED mask
 		this._ledsMask = document.createElement('canvas');
@@ -141,7 +141,7 @@ export default class AudioMotionAnalyzer {
 		});
 
 		// adjust canvas size on fullscreen change
-		this.canvas.addEventListener( 'fullscreenchange', () => this._setCanvas('fschange') );
+		this._canvas.addEventListener( 'fullscreenchange', () => this._setCanvas('fschange') );
 
 		// Set configuration options, using defaults for any missing properties
 
@@ -192,7 +192,7 @@ export default class AudioMotionAnalyzer {
 		if ( this._gradients.hasOwnProperty( value ) )
 			this._gradient = value;
 		else
-			throw new AudioMotionError( 'ERR_UNKNOWN_GRADIENT', `Unknown gradient '${value}'` );
+			throw new AudioMotionError( 'ERR_UNKNOWN_GRADIENT', `Unknown gradient: '${value}'` );
 	}
 
 	// Canvas size
@@ -224,7 +224,7 @@ export default class AudioMotionAnalyzer {
 			this._precalculateBarPositions();
 		}
 		else
-			throw new AudioMotionError( 'ERR_INVALID_MODE', `Invalid mode ${mode}` );
+			throw new AudioMotionError( 'ERR_INVALID_MODE', `Invalid mode: ${mode}` );
 	}
 
 	// Low-resolution mode
@@ -289,6 +289,12 @@ export default class AudioMotionAnalyzer {
 	get audioSource() {
 		return this._audioSource;
 	}
+	get canvas() {
+		return this._canvas;
+	}
+	get canvasCtx() {
+		return this._canvasCtx;
+	}
 	get dataArray() {
 		return this._dataArray;
 	}
@@ -303,9 +309,9 @@ export default class AudioMotionAnalyzer {
 	}
 	get isFullscreen() {
 		if ( document.fullscreenElement )
-			return document.fullscreenElement === this.canvas;
+			return document.fullscreenElement === this._canvas;
 		else if ( document.webkitFullscreenElement )
-			return document.webkitFullscreenElement === this.canvas;
+			return document.webkitFullscreenElement === this._canvas;
 		else
 			return false;
 	}
@@ -446,10 +452,10 @@ export default class AudioMotionAnalyzer {
 				document.webkitExitFullscreen();
 		}
 		else {
-			if ( this.canvas.requestFullscreen )
-				this.canvas.requestFullscreen();
-			else if ( this.canvas.webkitRequestFullscreen )
-				this.canvas.webkitRequestFullscreen();
+			if ( this._canvas.requestFullscreen )
+				this._canvas.requestFullscreen();
+			else if ( this._canvas.webkitRequestFullscreen )
+				this._canvas.webkitRequestFullscreen();
 		}
 	}
 
@@ -479,15 +485,15 @@ export default class AudioMotionAnalyzer {
 		// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
 
 		let nLeds,
-			spaceV = Math.min( 6, this.canvas.height / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
+			spaceV = Math.min( 6, this._canvas.height / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
 
 		switch ( this._mode ) {
 			case 8:
-				spaceV = Math.min( 16, this.canvas.height / ( 33 * this._pixelRatio ) | 0 );
+				spaceV = Math.min( 16, this._canvas.height / ( 33 * this._pixelRatio ) | 0 );
 				nLeds = 24;
 				break;
 			case 7:
-				spaceV = Math.min( 8, this.canvas.height / ( 67 * this._pixelRatio ) | 0 );
+				spaceV = Math.min( 8, this._canvas.height / ( 67 * this._pixelRatio ) | 0 );
 				nLeds = 48;
 				break;
 			case 6:
@@ -502,22 +508,22 @@ export default class AudioMotionAnalyzer {
 				nLeds = 96;
 				break;
 			case 2:
-				spaceV = Math.min( 4, this.canvas.height / ( 135 * this._pixelRatio ) | 0 );
+				spaceV = Math.min( 4, this._canvas.height / ( 135 * this._pixelRatio ) | 0 );
 				nLeds = 128;
 				break;
 			case 1:
-				spaceV = Math.min( 3, Math.max( 2, this.canvas.height / ( 180 * this._pixelRatio ) | 0 ) );
+				spaceV = Math.min( 3, Math.max( 2, this._canvas.height / ( 180 * this._pixelRatio ) | 0 ) );
 				nLeds = 128;
 		}
 
 		spaceV *= this._pixelRatio;
-		nLeds = Math.min( nLeds, ( this.canvas.height + spaceV ) / ( spaceV * 2 ) | 0 );
+		nLeds = Math.min( nLeds, ( this._canvas.height + spaceV ) / ( spaceV * 2 ) | 0 );
 
 		this._ledOptions = {
 			nLeds,
 			spaceH: this._barWidth * ( this._mode == 1 ? .45 : this._mode < 5 ? .225 : .125 ),
 			spaceV,
-			ledHeight: ( this.canvas.height + spaceV ) / nLeds - spaceV
+			ledHeight: ( this._canvas.height + spaceV ) / nLeds - spaceV
 		};
 
 		// use either the LEDs default horizontal space or the user selected bar space, whichever is larger
@@ -527,14 +533,14 @@ export default class AudioMotionAnalyzer {
 		this._ledsMask.width |= 0;
 
 		// add a vertical black line to the left of each bar to create the LED columns
-		this._analyzerBars.forEach( bar => this._ledsCtx.fillRect( bar.posX - spacing / 2, 0, spacing, this.canvas.height ) );
+		this._analyzerBars.forEach( bar => this._ledsCtx.fillRect( bar.posX - spacing / 2, 0, spacing, this._canvas.height ) );
 
 		// add a vertical black line in the mask canvas after the last led column
-		this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - spacing / 2, 0, spacing, this.canvas.height );
+		this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - spacing / 2, 0, spacing, this._canvas.height );
 
 		// add horizontal black lines to create the LED rows
-		for ( let i = this._ledOptions.ledHeight; i < this.canvas.height; i += this._ledOptions.ledHeight + this._ledOptions.spaceV )
-			this._ledsCtx.fillRect( 0, i, this.canvas.width, this._ledOptions.spaceV );
+		for ( let i = this._ledOptions.ledHeight; i < this._canvas.height; i += this._ledOptions.ledHeight + this._ledOptions.spaceV )
+			this._ledsCtx.fillRect( 0, i, this._canvas.width, this._ledOptions.spaceV );
 	}
 
 	/**
@@ -548,26 +554,26 @@ export default class AudioMotionAnalyzer {
 			isLumiBars   = ( this.lumiBars && this._mode > 0 && this._mode < 10 );
 
 		if ( ! this.showBgColor )	// use black background
-			this.canvasCtx.fillStyle = '#000';
+			this._canvasCtx.fillStyle = '#000';
 		else
 			if ( isLedDisplay )
-				this.canvasCtx.fillStyle = '#111';
+				this._canvasCtx.fillStyle = '#111';
 			else
-				this.canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor; // use background color defined by gradient
+				this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor; // use background color defined by gradient
 
 		// clear the canvas
-		this.canvasCtx.fillRect( 0, 0, this.canvas.width, this.canvas.height );
+		this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
 
 		// get a new array of data from the FFT
 		this._analyzer.getByteFrequencyData( this._dataArray );
 
 		// set selected gradient
-		this.canvasCtx.fillStyle = this._gradients[ this._gradient ].gradient;
+		this._canvasCtx.fillStyle = this._gradients[ this._gradient ].gradient;
 
 		// if in "area fill" mode, start the drawing path
 		if ( this._mode == 10 ) {
-			this.canvasCtx.beginPath();
-			this.canvasCtx.moveTo( -this.lineWidth, this.canvas.height );
+			this._canvasCtx.beginPath();
+			this._canvasCtx.moveTo( -this.lineWidth, this._canvas.height );
 		}
 
 		// compute the effective bar width, considering the selected bar spacing
@@ -599,12 +605,12 @@ export default class AudioMotionAnalyzer {
 
 			// set opacity for lumi bars before barHeight value is normalized
 			if ( isLumiBars )
-				this.canvasCtx.globalAlpha = barHeight / 255;
+				this._canvasCtx.globalAlpha = barHeight / 255;
 
 			if ( isLedDisplay ) // normalize barHeight to match one of the "led" elements
 				barHeight = ( barHeight / 255 * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
 			else
-				barHeight = barHeight / 255 * this.canvas.height | 0;
+				barHeight = barHeight / 255 * this._canvas.height | 0;
 
 			if ( barHeight >= bar.peak ) {
 				bar.peak = barHeight;
@@ -617,7 +623,7 @@ export default class AudioMotionAnalyzer {
 
 			// Draw line / bar
 			if ( this._mode == 10 ) {
-				this.canvasCtx.lineTo( bar.posX, this.canvas.height - barHeight );
+				this._canvasCtx.lineTo( bar.posX, this._canvas.height - barHeight );
 			}
 			else {
 				if ( this._mode > 0 ) {
@@ -637,26 +643,26 @@ export default class AudioMotionAnalyzer {
 				}
 
 				if ( isLumiBars ) {
-					this.canvasCtx.fillRect( posX, 0, adjWidth, this.canvas.height );
-					this.canvasCtx.globalAlpha = 1;
+					this._canvasCtx.fillRect( posX, 0, adjWidth, this._canvas.height );
+					this._canvasCtx.globalAlpha = 1;
 				}
 				else
-					this.canvasCtx.fillRect( posX, this.canvas.height, adjWidth, -barHeight );
+					this._canvasCtx.fillRect( posX, this._canvas.height, adjWidth, -barHeight );
 			}
 
 			// Draw peak
 			if ( bar.peak > 0 ) {
 				if ( this.showPeaks && ! isLumiBars ) {
 					if ( isLedDisplay ) {
-						this.canvasCtx.fillRect(
+						this._canvasCtx.fillRect(
 							posX,
-							( this._ledOptions.nLeds - bar.peak / ( this.canvas.height + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ),
+							( this._ledOptions.nLeds - bar.peak / ( this._canvas.height + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ),
 							width,
 							this._ledOptions.ledHeight
 						);
 					}
 					else
-						this.canvasCtx.fillRect( posX, this.canvas.height - bar.peak, adjWidth, 2 );
+						this._canvasCtx.fillRect( posX, this._canvas.height - bar.peak, adjWidth, 2 );
 				}
 
 				if ( bar.hold )
@@ -669,25 +675,25 @@ export default class AudioMotionAnalyzer {
 		} // for ( i = 0; i < l; i++ )
 
 		if ( this._mode == 10 ) { // fill area
-			this.canvasCtx.lineTo( bar.posX + this.lineWidth, this.canvas.height );
+			this._canvasCtx.lineTo( bar.posX + this.lineWidth, this._canvas.height );
 
 			if ( this.lineWidth > 0 ) {
-				this.canvasCtx.lineWidth = this.lineWidth;
-				this.canvasCtx.strokeStyle = this.canvasCtx.fillStyle;
-				this.canvasCtx.stroke();
+				this._canvasCtx.lineWidth = this.lineWidth;
+				this._canvasCtx.strokeStyle = this._canvasCtx.fillStyle;
+				this._canvasCtx.stroke();
 			}
 
 			if ( this.fillAlpha > 0 ) {
-				this.canvasCtx.globalAlpha = this.fillAlpha;
-				this.canvasCtx.fill();
-				this.canvasCtx.globalAlpha = 1;
+				this._canvasCtx.globalAlpha = this.fillAlpha;
+				this._canvasCtx.fill();
+				this._canvasCtx.globalAlpha = 1;
 			}
 		}
 		else if ( isLedDisplay ) // applies LEDs mask over the canvas
-			this.canvasCtx.drawImage( this._ledsMask, 0, 0 );
+			this._canvasCtx.drawImage( this._ledsMask, 0, 0 );
 
 		if ( this.showScale )
-			this.canvasCtx.drawImage( this._labels, 0, this.canvas.height - this._labels.height );
+			this._canvasCtx.drawImage( this._labels, 0, this._canvas.height - this._labels.height );
 
 		this._frame++;
 
@@ -701,16 +707,16 @@ export default class AudioMotionAnalyzer {
 		}
 		if ( this.showFPS ) {
 			size = 20 * this._pixelRatio;
-			this.canvasCtx.font = `bold ${size}px sans-serif`;
-			this.canvasCtx.fillStyle = '#0f0';
-			this.canvasCtx.textAlign = 'right';
-			this.canvasCtx.fillText( Math.round( this._fps ), this.canvas.width - size, size * 2 );
+			this._canvasCtx.font = `bold ${size}px sans-serif`;
+			this._canvasCtx.fillStyle = '#0f0';
+			this._canvasCtx.textAlign = 'right';
+			this._canvasCtx.fillText( Math.round( this._fps ), this._canvas.width - size, size * 2 );
 		}
 
 		if ( this.onCanvasDraw ) {
-			this.canvasCtx.save();
+			this._canvasCtx.save();
 			this.onCanvasDraw( this );
-			this.canvasCtx.restore();
+			this._canvasCtx.restore();
 		}
 
 		// schedule next canvas update
@@ -725,9 +731,9 @@ export default class AudioMotionAnalyzer {
 
 		Object.keys( this._gradients ).forEach( key => {
 			if ( this._gradients[ key ].dir && this._gradients[ key ].dir == 'h' )
-				grad = this.canvasCtx.createLinearGradient( 0, 0, this.canvas.width, 0 );
+				grad = this._canvasCtx.createLinearGradient( 0, 0, this._canvas.width, 0 );
 			else
-				grad = this.canvasCtx.createLinearGradient( 0, 0, 0, this.canvas.height );
+				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, this._canvas.height );
 
 			if ( this._gradients[ key ].colorStops ) {
 				this._gradients[ key ].colorStops.forEach( ( colorInfo, index ) => {
@@ -766,7 +772,7 @@ export default class AudioMotionAnalyzer {
 			return;
 
 		const minLog = Math.log10( this._minFreq ),
-			  bandWidth = this.canvas.width / ( Math.log10( this._maxFreq ) - minLog );
+			  bandWidth = this._canvas.width / ( Math.log10( this._maxFreq ) - minLog );
 
 		this._analyzerBars = [];
 
@@ -824,7 +830,7 @@ export default class AudioMotionAnalyzer {
 			}
 
 			// divide canvas space by the number of frequencies (bars) to display
-			this._barWidth = this.canvas.width / temperedScale.length;
+			this._barWidth = this._canvas.width / temperedScale.length;
 			this._calculateBarSpacePx();
 
 			let prevBin = 0,  // last bin included in previous frequency band
@@ -917,12 +923,12 @@ export default class AudioMotionAnalyzer {
 		this._fsHeight = Math.min( window.screen.height, window.screen.width ) * this._pixelRatio;
 
 		if ( this.isFullscreen ) {
-			this.canvas.width = this._fsWidth;
-			this.canvas.height = this._fsHeight;
+			this._canvas.width = this._fsWidth;
+			this._canvas.height = this._fsHeight;
 		}
 		else {
-			this.canvas.width = ( this._width || this._container.clientWidth || this._defaultWidth ) * this._pixelRatio;
-			this.canvas.height = ( this._height || this._container.clientHeight || this._defaultHeight ) * this._pixelRatio;
+			this._canvas.width = ( this._width || this._container.clientWidth || this._defaultWidth ) * this._pixelRatio;
+			this._canvas.height = ( this._height || this._container.clientHeight || this._defaultHeight ) * this._pixelRatio;
 		}
 
 		// workaround for wrong dPR reported on Android TV
@@ -930,21 +936,21 @@ export default class AudioMotionAnalyzer {
 			this._pixelRatio = 1;
 
 		// clear the canvas
-		this.canvasCtx.fillStyle = '#000';
-		this.canvasCtx.fillRect( 0, 0, this.canvas.width, this.canvas.height );
+		this._canvasCtx.fillStyle = '#000';
+		this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
 
 		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
-		this.canvasCtx.lineJoin = 'bevel';
+		this._canvasCtx.lineJoin = 'bevel';
 
 		// (re)generate gradients
 		this._generateGradients();
 
 		// update LED mask canvas dimensions
-		this._ledsMask.width = this.canvas.width;
-		this._ledsMask.height = this.canvas.height;
+		this._ledsMask.width = this._canvas.width;
+		this._ledsMask.height = this._canvas.height;
 
 		// update labels canvas dimensions
-		this._labels.width = this.canvas.width;
+		this._labels.width = this._canvas.width;
 		this._labels.height = this._pixelRatio * ( this.isFullscreen ? 40 : 20 );
 
 		// calculate bar positions and led options
