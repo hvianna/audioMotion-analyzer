@@ -93,22 +93,30 @@ export default class AudioMotionAnalyzer {
 		this._defaultWidth  = this._container.clientWidth  || 640;
 		this._defaultHeight = this._container.clientHeight || 270;
 
-		// Create audio context
+		// Use audio context provided by user, or create a new one
 
-		var AudioContext = window.AudioContext || window.webkitAudioContext;
+		let AudioContext = window.AudioContext || window.webkitAudioContext;
 
-		try {
-			this.audioCtx = new AudioContext();
+		if ( options.hasOwnProperty( 'audioCtx' ) ) {
+			if ( options.audioCtx instanceof AudioContext )
+				this._audioCtx = options.audioCtx;
+			else
+				throw new AudioMotionError( 'ERR_INVALID_AUDIO_CONTEXT', 'Provided audio context is not valid' );
 		}
-		catch( err ) {
-			throw new AudioMotionError( 'ERR_NO_AUDIO_CONTEXT', 'Could not create audio context. Web Audio API not supported?' );
+		else {
+			try {
+				this._audioCtx = new AudioContext();
+			}
+			catch( err ) {
+				throw new AudioMotionError( 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create audio context. Web Audio API not supported?' );
+			}
 		}
 
 		// Create analyzer node, connect audio source (if provided) and connect it to the destination
 
-		this.analyzer = this.audioCtx.createAnalyser();
+		this._analyzer = this._audioCtx.createAnalyser();
 		this._audioSource = ( options.source ) ? this.connectAudio( options.source ) : undefined;
-		this.analyzer.connect( this.audioCtx.destination );
+		this._analyzer.connect( this._audioCtx.destination );
 
 		// Create canvases
 
@@ -167,11 +175,11 @@ export default class AudioMotionAnalyzer {
 	// FFT size
 
 	get fftSize() {
-		return this.analyzer.fftSize;
+		return this._analyzer.fftSize;
 	}
 	set fftSize( value ) {
-		this.analyzer.fftSize = value;
-		this._dataArray = new Uint8Array( this.analyzer.frequencyBinCount );
+		this._analyzer.fftSize = value;
+		this._dataArray = new Uint8Array( this._analyzer.frequencyBinCount );
 		this._precalculateBarPositions();
 	}
 
@@ -249,29 +257,35 @@ export default class AudioMotionAnalyzer {
 	// Analyzer's sensitivity
 
 	get minDecibels() {
-		return this.analyzer.minDecibels;
+		return this._analyzer.minDecibels;
 	}
 	set minDecibels( value ) {
-		this.analyzer.minDecibels = value;
+		this._analyzer.minDecibels = value;
 	}
 	get maxDecibels() {
-		return this.analyzer.maxDecibels;
+		return this._analyzer.maxDecibels;
 	}
 	set maxDecibels( value ) {
-		this.analyzer.maxDecibels = value;
+		this._analyzer.maxDecibels = value;
 	}
 
 	// Analyzer's smoothing time constant
 
 	get smoothing() {
-		return this.analyzer.smoothingTimeConstant;
+		return this._analyzer.smoothingTimeConstant;
 	}
 	set smoothing( value ) {
-		this.analyzer.smoothingTimeConstant = value;
+		this._analyzer.smoothingTimeConstant = value;
 	}
 
 	// Read only properties
 
+	get analyzer() {
+		return this._analyzer;
+	}
+	get audioCtx() {
+		return this._audioCtx;
+	}
 	get audioSource() {
 		return this._audioSource;
 	}
@@ -317,8 +331,8 @@ export default class AudioMotionAnalyzer {
 	 * @returns {object} a MediaElementAudioSourceNode object
 	 */
 	connectAudio( element ) {
-		var audioSource = this.audioCtx.createMediaElementSource( element );
-		audioSource.connect( this.analyzer );
+		var audioSource = this._audioCtx.createMediaElementSource( element );
+		audioSource.connect( this._analyzer );
 		return audioSource;
 	}
 
@@ -393,8 +407,8 @@ export default class AudioMotionAnalyzer {
 	 * @param {number} max maximum decibels value
 	 */
 	setSensitivity( min, max ) {
-		this.analyzer.minDecibels = Math.min( min, max );
-		this.analyzer.maxDecibels = Math.max( min, max );
+		this._analyzer.minDecibels = Math.min( min, max );
+		this._analyzer.maxDecibels = Math.max( min, max );
 	}
 
 	/**
@@ -545,7 +559,7 @@ export default class AudioMotionAnalyzer {
 		this.canvasCtx.fillRect( 0, 0, this.canvas.width, this.canvas.height );
 
 		// get a new array of data from the FFT
-		this.analyzer.getByteFrequencyData( this._dataArray );
+		this._analyzer.getByteFrequencyData( this._dataArray );
 
 		// set selected gradient
 		this.canvasCtx.fillStyle = this._gradients[ this._gradient ].gradient;
@@ -760,13 +774,13 @@ export default class AudioMotionAnalyzer {
 		// Discrete frequencies or area fill modes
 			this._barWidth = 1;
 
-			const minIndex = Math.floor( this._minFreq * this.analyzer.fftSize / this.audioCtx.sampleRate ),
-			      maxIndex = Math.min( Math.round( this._maxFreq * this.analyzer.fftSize / this.audioCtx.sampleRate ), this.analyzer.frequencyBinCount - 1 );
+			const minIndex = Math.floor( this._minFreq * this._analyzer.fftSize / this._audioCtx.sampleRate ),
+			      maxIndex = Math.min( Math.round( this._maxFreq * this._analyzer.fftSize / this._audioCtx.sampleRate ), this._analyzer.frequencyBinCount - 1 );
 
 	 		let lastPos = -999;
 
 			for ( let i = minIndex; i <= maxIndex; i++ ) {
-				let freq = i * this.audioCtx.sampleRate / this.analyzer.fftSize; // frequency represented in this bin
+				let freq = i * this._audioCtx.sampleRate / this._analyzer.fftSize; // frequency represented in this bin
 				let pos = Math.round( bandWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
@@ -819,7 +833,7 @@ export default class AudioMotionAnalyzer {
 
 			temperedScale.forEach( ( freq, index ) => {
 				// which FFT bin represents this frequency?
-				let bin = Math.round( freq * this.analyzer.fftSize / this.audioCtx.sampleRate );
+				let bin = Math.round( freq * this._analyzer.fftSize / this._audioCtx.sampleRate );
 
 				let idx, nextBin;
 				// start from the last used FFT bin
@@ -845,7 +859,7 @@ export default class AudioMotionAnalyzer {
 				prevBin = nextBin = bin;
 				// check if there's another band after this one
 				if ( temperedScale[ index + 1 ] !== undefined ) {
-					nextBin = Math.round( temperedScale[ index + 1 ] * this.analyzer.fftSize / this.audioCtx.sampleRate );
+					nextBin = Math.round( temperedScale[ index + 1 ] * this._analyzer.fftSize / this._audioCtx.sampleRate );
 					// and use half the bins in between for this band
 					if ( nextBin - bin > 1 )
 						prevBin += Math.round( ( nextBin - bin ) / 2 );
@@ -946,7 +960,9 @@ export default class AudioMotionAnalyzer {
 	 */
 	_setProperties( options, defaults ) {
 
-		let callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
+		let callbacks = [ 'onCanvasDraw', 'onCanvasResize' ],
+			// audioCtx is set only at initialization; we handle 'start' after setting all other properties
+			ignore = [ 'audioCtx', 'start' ];
 
 		if ( defaults ) {
 			for ( let prop of Object.keys( defaults ) ) {
@@ -956,10 +972,9 @@ export default class AudioMotionAnalyzer {
 		}
 
 		for ( let prop of Object.keys( options ) ) {
-			// check for invalid callback
-			if ( callbacks.indexOf( prop ) !== -1 && typeof options[ prop ] !== 'function' )
+			if ( callbacks.indexOf( prop ) !== -1 && typeof options[ prop ] !== 'function' ) // check invalid callback
 				this[ prop ] = undefined;
-			else if ( prop !== 'start' ) // we deal with this after all other options are set
+			else if ( ignore.indexOf( prop ) === -1 ) // skip ignored properties
 				this[ prop ] = options[ prop ];
 		}
 
