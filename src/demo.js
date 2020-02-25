@@ -6,14 +6,16 @@
 
 import AudioMotionAnalyzer from '../dist/audioMotion-analyzer.js';
 
-var mindB = [ -70, -80, -85, -90, -100 ], // for sensitivity presets
-	maxdB = [ -10, -20, -25, -30, -40 ],
-	audioEl = document.getElementById('audio');
+const mindB = [ -70, -80, -85, -90, -100 ], // for sensitivity presets
+	  maxdB = [ -10, -20, -25, -30, -40 ],
+	  audioEl = document.getElementById('audio');
+
+var audioMotion;
 
 // Create audioMotion-analyzer object
 
 try {
-	var audioMotion = new AudioMotionAnalyzer(
+	audioMotion = new AudioMotionAnalyzer(
 		document.getElementById('container'),
 		{
 			source: audioEl, // main source is the HTML audio element
@@ -37,9 +39,9 @@ audioMotion.showLogo = true;
 
 // Create oscillator and gain nodes, and connect them to the analyzer
 
-var audioCtx = audioMotion.audioCtx,
-	oscillator = audioCtx.createOscillator(),
-	gainNode = audioCtx.createGain();
+const audioCtx = audioMotion.audioCtx,
+	  oscillator = audioCtx.createOscillator(),
+	  gainNode = audioCtx.createGain();
 
 oscillator.frequency.setValueAtTime( 0, audioCtx.currentTime );
 oscillator.connect( gainNode );
@@ -120,12 +122,12 @@ function displayCanvasMsg() {
 	if ( ! audioMotion.showLogo )
 		return;
 
-	var size = 20 * audioMotion.pixelRatio;
+	let size = 20 * audioMotion.pixelRatio;
 	if ( audioMotion.isFullscreen )
 		size *= 2;
 
 	// find the data array index for 140Hz
-	var idx = Math.round( 140 * audioMotion.analyzer.fftSize / audioMotion.audioCtx.sampleRate );
+	let idx = Math.round( 140 * audioMotion.analyzer.fftSize / audioMotion.audioCtx.sampleRate );
 
 	// use the 140Hz amplitude to increase the font size and make the logo pulse to the beat
 	audioMotion.canvasCtx.font = `${size + audioMotion.dataArray[ idx ] / 16 * audioMotion.pixelRatio}px Orbitron,sans-serif`;
@@ -138,7 +140,7 @@ function displayCanvasMsg() {
 // Load song from user's computer
 
 function loadSong( el ) {
-	var reader = new FileReader();
+	let reader = new FileReader();
 
 	reader.readAsDataURL( el.files[0] );
 	reader.onload = () => {

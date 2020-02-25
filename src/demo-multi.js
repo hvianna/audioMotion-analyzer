@@ -6,24 +6,40 @@
 
 import AudioMotionAnalyzer from '../dist/audioMotion-analyzer.js';
 
-var mindB = [ -70, -80, -85, -90, -100 ], // for sensitivity presets
-	maxdB = [ -10, -20, -25, -30, -40 ],
-	audioMotion = [],
+// for the demo's sensitivity presets
+const mindB = [ -70, -80, -85, -90, -100 ],
+	  maxdB = [ -10, -20, -25, -30, -40 ];
+
+const audioEl = document.getElementById('audio');
+
+var audioMotion = [],
 	selectedAnalyzer = 0,
-	audioEl = document.getElementById('audio');
+	audioCtx,
+	audioSource;
 
 // Create three audioMotion-analyzer instances and connect them to the audio element
 
 try {
+	// create the audio context that will be shared by all instances
+	let AudioContext = window.AudioContext || window.webkitAudioContext;
+	audioCtx = new AudioContext();
+
 	for ( let i = 0; i < 3; i++ ) {
 		audioMotion[ i ] = new AudioMotionAnalyzer(
 			document.getElementById( `container${i}` ),
 			{
-				source: audioEl,
+				audioCtx,
 				onCanvasDraw: displayCanvasMsg,
 				onCanvasResize: ( reason, instance ) => { if ( reason == 'fschange' ) updateUI(); }
 			}
 		);
+
+		// after creating the first instance, we connect the audio element and get the audioSource reference
+		// we then connect the audioSource to the other instances' analyzers
+		if ( i == 0 )
+			audioSource = audioMotion[0].connectAudio( audioEl );
+		else
+			audioSource.connect( audioMotion[ i ].analyzer );
 	}
 }
 catch( err ) {
@@ -31,7 +47,7 @@ catch( err ) {
 }
 
 // Set options for each instance
-// custom property 'showLogo' is added to store the logo display preference for each instance
+// a custom property 'showLogo' is added to each instance, to store the logo display preference
 
 audioMotion[0].setOptions({
 	mode: 3,
@@ -68,7 +84,6 @@ audioMotion[2].setOptions({
 	lumiBars: true,
 	minDecibels: -80,
 	maxDecibels: -20,
-	barSpace: 1,
 	width: 320,
 	height: 145
 });
@@ -148,12 +163,12 @@ function displayCanvasMsg( instance ) {
 	if ( ! instance.showLogo )
 		return;
 
-	var size = 20 * instance.pixelRatio;
+	let size = 20 * instance.pixelRatio;
 	if ( instance.isFullscreen )
 		size *= 2;
 
 	// find the data array index for 140Hz
-	var idx = Math.round( 140 * instance.analyzer.fftSize / instance.audioCtx.sampleRate );
+	let idx = Math.round( 140 * instance.analyzer.fftSize / instance.audioCtx.sampleRate );
 
 	// use the 140Hz amplitude to increase the font size and make the logo pulse to the beat
 	instance.canvasCtx.font = `${size + instance.dataArray[ idx ] / 16 * instance.pixelRatio}px Orbitron,sans-serif`;
@@ -166,7 +181,7 @@ function displayCanvasMsg( instance ) {
 // Load song from user's computer
 
 function loadSong( el ) {
-	var reader = new FileReader();
+	let reader = new FileReader();
 
 	reader.readAsDataURL( el.files[0] );
 	reader.onload = () => {

@@ -38,6 +38,14 @@ fieldset:disabled {
 	display: none;
 }
 
+header {
+	position: relative;
+}
+
+img {
+	max-width: 100%;
+}
+
 input[type="range"] {
 	width: 90px;
 }
@@ -46,6 +54,10 @@ input[type="text"],
 select {
 	margin: 6px 0;
 	padding: 6px;
+}
+
+.big {
+	font-size: 120%;
 }
 
 .box {
@@ -87,6 +99,20 @@ select {
 	text-align: center;
 }
 
+.header-nav {
+	position: absolute;
+	right: 0;
+	top: 0;
+}
+.header-nav li {
+	display: inline;
+	margin-right: .5em;
+}
+.header-nav li:not(:last-child)::after {
+	content: ' |';
+	margin-left: .5em;
+}
+
 /* fluid full-width analyzer (single instance demo) */
 #container {
 	height: 45vh;
@@ -95,11 +121,6 @@ select {
 
 #container1 {
 	margin-bottom: 15px;
-}
-
-.header-link {
-	float: right;
-	font-size: 12px;
 }
 
 .center {
