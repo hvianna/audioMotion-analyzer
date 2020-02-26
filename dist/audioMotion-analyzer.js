@@ -28,7 +28,7 @@ export default class AudioMotionAnalyzer {
 
 		// Settings defaults
 
-		let defaults = {
+		const defaults = {
 			mode        : 0,
 			fftSize     : 8192,
 			minFreq     : 20,
@@ -95,7 +95,7 @@ export default class AudioMotionAnalyzer {
 
 		// Use audio context provided by user, or create a new one
 
-		let AudioContext = window.AudioContext || window.webkitAudioContext;
+		const AudioContext = window.AudioContext || window.webkitAudioContext;
 
 		if ( options.hasOwnProperty( 'audioCtx' ) ) {
 			if ( options.audioCtx instanceof AudioContext )
@@ -218,7 +218,7 @@ export default class AudioMotionAnalyzer {
 		return this._mode;
 	}
 	set mode( value ) {
-		let mode = Number( value );
+		const mode = Number( value );
 		if ( mode >= 0 && mode <= 10 && mode != 9 ) {
 			this._mode = mode;
 			this._precalculateBarPositions();
@@ -337,7 +337,7 @@ export default class AudioMotionAnalyzer {
 	 * @returns {object} a MediaElementAudioSourceNode object
 	 */
 	connectAudio( element ) {
-		var audioSource = this._audioCtx.createMediaElementSource( element );
+		const audioSource = this._audioCtx.createMediaElementSource( element );
 		audioSource.connect( this._analyzer );
 		return audioSource;
 	}
@@ -424,7 +424,8 @@ export default class AudioMotionAnalyzer {
 	 * @returns {boolean} resulting status after the change
 	 */
 	toggleAnalyzer( value ) {
-		let started = this.isOn;
+		const started = this.isOn;
+
 		if ( value === undefined )
 			value = ! started;
 
@@ -484,8 +485,8 @@ export default class AudioMotionAnalyzer {
 
 		// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
 
-		let nLeds,
-			spaceV = Math.min( 6, this._canvas.height / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
+		let spaceV = Math.min( 6, this._canvas.height / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
+		let nLeds;
 
 		switch ( this._mode ) {
 			case 8:
@@ -549,9 +550,8 @@ export default class AudioMotionAnalyzer {
 	 */
 	_draw() {
 
-		var i, j, l, bar, barHeight, size, posX, width,
-			isLedDisplay = ( this.showLeds && this._mode > 0 && this._mode < 10 ),
-			isLumiBars   = ( this.lumiBars && this._mode > 0 && this._mode < 10 );
+		const isLedDisplay = ( this.showLeds && this._mode > 0 && this._mode < 10 ),
+			  isLumiBars   = ( this.lumiBars && this._mode > 0 && this._mode < 10 );
 
 		if ( ! this.showBgColor )	// use black background
 			this._canvasCtx.fillStyle = '#000';
@@ -578,15 +578,18 @@ export default class AudioMotionAnalyzer {
 
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing defined by the led options
-		width = this._barWidth - ( ! ( this._mode % 10 ) ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
+		let width = this._barWidth - ( ! ( this._mode % 10 ) ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
 
 		// if no bar spacing is required, make sure width is integer for pixel accurate calculation
 		if ( this._barSpace == 0 && ! isLedDisplay )
 			width |= 0;
 
 		// draw bars / lines
-		l = this._analyzerBars.length;
-		for ( i = 0; i < l; i++ ) {
+
+		let bar, barHeight;
+		const l = this._analyzerBars.length;
+
+		for ( let i = 0; i < l; i++ ) {
 
 			bar = this._analyzerBars[ i ];
 
@@ -599,7 +602,7 @@ export default class AudioMotionAnalyzer {
 			else { 					// range of bins
 				barHeight = 0;
 				// use the highest value in the range
-				for ( j = bar.dataIdx; j <= bar.endIdx; j++ )
+				for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
 					barHeight = Math.max( barHeight, this._dataArray[ j ] );
 			}
 
@@ -618,7 +621,7 @@ export default class AudioMotionAnalyzer {
 				bar.accel = 0;
 			}
 
-			posX = bar.posX;
+			let posX = bar.posX;
 			let adjWidth = width; // bar width may need small adjustments for some bars, when barSpace == 0
 
 			// Draw line / bar
@@ -672,7 +675,7 @@ export default class AudioMotionAnalyzer {
 					bar.peak -= bar.accel;
 				}
 			}
-		} // for ( i = 0; i < l; i++ )
+		} // for ( let i = 0; i < l; i++ )
 
 		if ( this._mode == 10 ) { // fill area
 			this._canvasCtx.lineTo( bar.posX + this.lineWidth, this._canvas.height );
@@ -697,8 +700,8 @@ export default class AudioMotionAnalyzer {
 
 		this._frame++;
 
-		let now = performance.now(),
-			elapsed = now - this._time;
+		const now = performance.now();
+		const elapsed = now - this._time;
 
 		if ( elapsed >= 1000 ) {
 			this._fps = this._frame / ( elapsed / 1000 );
@@ -706,7 +709,7 @@ export default class AudioMotionAnalyzer {
 			this._time = now;
 		}
 		if ( this.showFPS ) {
-			size = 20 * this._pixelRatio;
+			const size = 20 * this._pixelRatio;
 			this._canvasCtx.font = `bold ${size}px sans-serif`;
 			this._canvasCtx.fillStyle = '#0f0';
 			this._canvasCtx.textAlign = 'right';
@@ -771,8 +774,8 @@ export default class AudioMotionAnalyzer {
 		if ( ! this._initDone )
 			return;
 
-		const minLog = Math.log10( this._minFreq ),
-			  bandWidth = this._canvas.width / ( Math.log10( this._maxFreq ) - minLog );
+		const minLog = Math.log10( this._minFreq );
+		const bandWidth = this._canvas.width / ( Math.log10( this._maxFreq ) - minLog );
 
 		this._analyzerBars = [];
 
@@ -780,8 +783,8 @@ export default class AudioMotionAnalyzer {
 		// Discrete frequencies or area fill modes
 			this._barWidth = 1;
 
-			const minIndex = Math.floor( this._minFreq * this._analyzer.fftSize / this._audioCtx.sampleRate ),
-			      maxIndex = Math.min( Math.round( this._maxFreq * this._analyzer.fftSize / this._audioCtx.sampleRate ), this._analyzer.frequencyBinCount - 1 );
+			const minIndex = Math.floor( this._minFreq * this._analyzer.fftSize / this._audioCtx.sampleRate );
+			const maxIndex = Math.min( Math.round( this._maxFreq * this._analyzer.fftSize / this._audioCtx.sampleRate ), this._analyzer.frequencyBinCount - 1 );
 
 	 		let lastPos = -999;
 
@@ -816,12 +819,13 @@ export default class AudioMotionAnalyzer {
 				groupNotes = this._mode; // for modes 1, 2, 3 and 4
 
 			// generate a table of frequencies based on the equal tempered scale
-			const root24 = 2 ** ( 1 / 24 ),
-				  c0 = 440 * root24 ** -114;
 
-			let temperedScale = [],
-				i = 0,
-				freq;
+			const root24 = 2 ** ( 1 / 24 );
+			const c0 = 440 * root24 ** -114;
+
+			let temperedScale = [];
+			let i = 0;
+			let freq;
 
 			while ( ( freq = c0 * root24 ** i ) <= this._maxFreq ) {
 				if ( freq >= this._minFreq && i % groupNotes == 0 )
@@ -833,9 +837,9 @@ export default class AudioMotionAnalyzer {
 			this._barWidth = this._canvas.width / temperedScale.length;
 			this._calculateBarSpacePx();
 
-			let prevBin = 0,  // last bin included in previous frequency band
-				prevIdx = -1, // previous bar FFT array index
-				nBars   = 0;  // count of bars with the same index
+			let prevBin = 0;  // last bin included in previous frequency band
+			let prevIdx = -1; // previous bar FFT array index
+			let nBars   = 0;  // count of bars with the same index
 
 			temperedScale.forEach( ( freq, index ) => {
 				// which FFT bin represents this frequency?
@@ -896,7 +900,7 @@ export default class AudioMotionAnalyzer {
 		this._labelsCtx.font = `${ this._labels.height / 2 }px sans-serif`;
 		this._labelsCtx.textAlign = 'center';
 
-		let freqLabels = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
+		const freqLabels = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
 
 		for ( let freq of freqLabels ) {
 			this._labelsCtx.fillText(
@@ -966,9 +970,10 @@ export default class AudioMotionAnalyzer {
 	 */
 	_setProperties( options, defaults ) {
 
-		let callbacks = [ 'onCanvasDraw', 'onCanvasResize' ],
-			// audioCtx is set only at initialization; we handle 'start' after setting all other properties
-			ignore = [ 'audioCtx', 'start' ];
+		const callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
+
+		// audioCtx is set only at initialization; we handle 'start' after setting all other properties
+		const ignore = [ 'audioCtx', 'start' ];
 
 		if ( defaults ) {
 			for ( let prop of Object.keys( defaults ) ) {
