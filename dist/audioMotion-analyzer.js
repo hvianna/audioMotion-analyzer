@@ -1022,12 +1022,8 @@ export default class AudioMotionAnalyzer {
 		// audioCtx is set only at initialization; we handle 'start' after setting all other properties
 		const ignore = [ 'audioCtx', 'start' ];
 
-		if ( defaults ) {
-			for ( let prop of Object.keys( defaults ) ) {
-				if ( ! options.hasOwnProperty( prop ) )
-					options[ prop ] = defaults[ prop ];
-			}
-		}
+		if ( defaults )
+			options = Object.assign( defaults, options );
 
 		for ( let prop of Object.keys( options ) ) {
 			if ( callbacks.indexOf( prop ) !== -1 && typeof options[ prop ] !== 'function' ) // check invalid callback
