@@ -243,15 +243,23 @@ export default class AudioMotionAnalyzer {
 		return this._minFreq;
 	}
 	set minFreq( value ) {
-		this._minFreq = value;
-		this._precalculateBarPositions();
+		if ( value < 1 )
+			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
+		else {
+			this._minFreq = value;
+			this._precalculateBarPositions();
+		}
 	}
 	get maxFreq() {
 		return this._maxFreq;
 	}
 	set maxFreq( value ) {
-		this._maxFreq = value;
-		this._precalculateBarPositions();
+		if ( value < 1 )
+			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
+		else {
+			this._maxFreq = value;
+			this._precalculateBarPositions();
+		}
 	}
 
 	// Analyzer's sensitivity
@@ -392,9 +400,13 @@ export default class AudioMotionAnalyzer {
 	 * @param {number} max highest frequency represented in the x-axis
 	 */
 	setFreqRange( min, max ) {
-		this._minFreq = Math.min( min, max );
-		this._maxFreq = Math.max( min, max );
-		this._precalculateBarPositions();
+		if ( min < 1 || max < 1 )
+			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
+		else {
+			this._minFreq = Math.min( min, max );
+			this._maxFreq = Math.max( min, max );
+			this._precalculateBarPositions();
+		}
 	}
 
 	/**
