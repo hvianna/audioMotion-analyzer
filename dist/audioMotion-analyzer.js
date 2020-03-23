@@ -492,7 +492,7 @@ export default class AudioMotionAnalyzer {
 	 */
 	_createLedMask() {
 		// no need for this if in discrete frequencies or area fill modes
-		if ( this._mode % 10 == 0 )
+		if ( this._mode % 10 == 0 || ! this._initDone )
 			return;
 
 		// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
