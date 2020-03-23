@@ -727,6 +727,32 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Find the FFT bin which represents a given frequency
+	 *
+	 * @param {number} freq   Frequency in hertz
+	 * @param {string} [func] Rounding function: 'floor', 'round' (default) or 'ceil'
+	 * @returns {number}      FFT data array index which closely represents the given frequency
+	 */
+	_findFrequencyBin( freq, func ) {
+		let bin = freq * this._analyzer.fftSize / this._audioCtx.sampleRate;
+
+		if ( ! ['floor','ceil'].includes( func ) )
+			func = 'round';
+
+		return Math[ func ]( bin );
+	}
+
+	/**
+	 * Find the frequency represented by a given FFT bin
+	 *
+	 * @param {number} bin FFT data array index
+	 * @returns {number}   Frequency in hertz represented by the given FFT bin
+	 */
+	_findBinFrequency( bin ) {
+		return bin * this._audioCtx.sampleRate / this._analyzer.fftSize;
+	}
+
+	/**
 	 * Generate gradients
 	 */
 	_generateGradients() {
