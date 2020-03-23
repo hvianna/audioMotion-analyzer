@@ -587,9 +587,9 @@ export default class AudioMotionAnalyzer {
 		// draw bars / lines
 
 		let bar, barHeight;
-		const l = this._analyzerBars.length;
+		const nBars = this._analyzerBars.length;
 
-		for ( let i = 0; i < l; i++ ) {
+		for ( let i = 0; i < nBars; i++ ) {
 
 			bar = this._analyzerBars[ i ];
 
@@ -800,8 +800,7 @@ export default class AudioMotionAnalyzer {
 		if ( ! this._initDone )
 			return;
 
-		const minLog = Math.log10( this._minFreq );
-		const bandWidth = this._canvas.width / ( Math.log10( this._maxFreq ) - minLog );
+		let minLog, bandWidth;
 
 		this._analyzerBars = [];
 
@@ -809,13 +808,16 @@ export default class AudioMotionAnalyzer {
 		// Discrete frequencies or area fill modes
 			this._barWidth = 1;
 
-			const minIndex = Math.floor( this._minFreq * this._analyzer.fftSize / this._audioCtx.sampleRate );
-			const maxIndex = Math.min( Math.round( this._maxFreq * this._analyzer.fftSize / this._audioCtx.sampleRate ), this._analyzer.frequencyBinCount - 1 );
+			minLog = Math.log10( this._minFreq );
+			bandWidth = this._canvas.width / ( Math.log10( this._maxFreq ) - minLog );
+
+			const minIndex = this._findFrequencyBin( this._minFreq, 'floor' );
+			const maxIndex = Math.min( this._findFrequencyBin( this._maxFreq ), this._analyzer.frequencyBinCount - 1 );
 
 	 		let lastPos = -999;
 
 			for ( let i = minIndex; i <= maxIndex; i++ ) {
-				let freq = i * this._audioCtx.sampleRate / this._analyzer.fftSize; // frequency represented in this bin
+				let freq = this._findBinFrequency( i ); // frequency represented in this bin
 				let pos = Math.round( bandWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
@@ -847,7 +849,7 @@ export default class AudioMotionAnalyzer {
 			// generate a table of frequencies based on the equal tempered scale
 
 			const root24 = 2 ** ( 1 / 24 );
-			const c0 = 440 * root24 ** -114;
+			const c0 = 440 * root24 ** -114; // ~16.35 Hz
 
 			let temperedScale = [];
 			let i = 0;
@@ -859,6 +861,9 @@ export default class AudioMotionAnalyzer {
 				i++;
 			}
 
+			minLog = Math.log10( temperedScale[0] );
+			bandWidth = this._canvas.width / ( Math.log10( temperedScale[ temperedScale.length - 1 ] ) - minLog );
+
 			// divide canvas space by the number of frequencies (bars) to display
 			this._barWidth = this._canvas.width / temperedScale.length;
 			this._calculateBarSpacePx();
@@ -869,7 +874,7 @@ export default class AudioMotionAnalyzer {
 
 			temperedScale.forEach( ( freq, index ) => {
 				// which FFT bin represents this frequency?
-				let bin = Math.round( freq * this._analyzer.fftSize / this._audioCtx.sampleRate );
+				const bin = this._findFrequencyBin( freq );
 
 				let idx, nextBin;
 				// start from the last used FFT bin
@@ -895,16 +900,20 @@ export default class AudioMotionAnalyzer {
 				prevBin = nextBin = bin;
 				// check if there's another band after this one
 				if ( temperedScale[ index + 1 ] !== undefined ) {
-					nextBin = Math.round( temperedScale[ index + 1 ] * this._analyzer.fftSize / this._audioCtx.sampleRate );
+					nextBin = this._findFrequencyBin( temperedScale[ index + 1 ] );
 					// and use half the bins in between for this band
 					if ( nextBin - bin > 1 )
 						prevBin += Math.round( ( nextBin - bin ) / 2 );
 				}
 
+				const endIdx = prevBin - idx > 0 ? prevBin : 0;
+
 				this._analyzerBars.push( {
 					posX: index * this._barWidth,
 					dataIdx: idx,
-					endIdx: prevBin - idx > 0 ? prevBin : 0,
+					endIdx,
+//					freq, // nominal frequency for this band
+//					range: [ this._findBinFrequency( idx ), this._findBinFrequency( endIdx || idx ) ], // actual range of frequencies
 					factor: 0,
 					peak: 0,
 					hold: 0,
@@ -928,7 +937,7 @@ export default class AudioMotionAnalyzer {
 
 		const freqLabels = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
 
-		for ( let freq of freqLabels ) {
+		for ( const freq of freqLabels ) {
 			this._labelsCtx.fillText(
 				( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
 				bandWidth * ( Math.log10( freq ) - minLog ),
