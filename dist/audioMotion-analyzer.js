@@ -11,13 +11,6 @@ const _VERSION = '2.0.0';
 
 export default class AudioMotionAnalyzer {
 
-/*
-	TO DO:
-
-	use public and private class fields and methods when they become standard?
-	https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Class_fields
-*/
-
 /**
  * CONSTRUCTOR
  *
@@ -752,7 +745,7 @@ export default class AudioMotionAnalyzer {
 	 * @returns {number}      FFT data array index which closely represents the given frequency
 	 */
 	_findFrequencyBin( freq, func ) {
-		let bin = freq * this._analyzer.fftSize / this._audioCtx.sampleRate;
+		const bin = freq * this._analyzer.fftSize / this._audioCtx.sampleRate;
 
 		if ( ! ['floor','ceil'].includes( func ) )
 			func = 'round';
@@ -1031,7 +1024,7 @@ export default class AudioMotionAnalyzer {
 		if ( defaults )
 			options = Object.assign( defaults, options );
 
-		for ( let prop of Object.keys( options ) ) {
+		for ( const prop of Object.keys( options ) ) {
 			if ( callbacks.indexOf( prop ) !== -1 && typeof options[ prop ] !== 'function' ) // check invalid callback
 				this[ prop ] = undefined;
 			else if ( ignore.indexOf( prop ) === -1 ) // skip ignored properties
