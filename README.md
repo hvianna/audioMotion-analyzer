@@ -244,7 +244,9 @@ This will prevent the canvas size from changing, when switching the low resoluti
 ### `maxDecibels` *number*
 ### `minDecibels` *number*
 
-Highest and lowest decibel values represented in the Y-axis of the analyzer. The loudest volume possible is **0**. *maxDecibels* defaults to **-25** and *minDecibels* defaults to **-85**.
+Highest and lowest decibel values represented in the Y-axis of the analyzer. The loudest volume possible is **0**.
+
+*maxDecibels* defaults to **-25** and *minDecibels* defaults to **-85**.
 
 You can set both values at once using the [`setSensitivity()`](#setsensitivity-mindecibels-maxdecibels-) method.
 
@@ -267,7 +269,7 @@ Current visualization mode.
 
 + **Discrete frequencies** mode provides the highest resolution, allowing you to visualize individual frequencies provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform);
 + **Octave bands** modes display wider vertical bars, each one representing the *n*th part of an octave, based on a [24-tone equal tempered scale](https://en.wikipedia.org/wiki/Quarter_tone);
-+ **Line / Area graph** mode uses the discrete frequencies data to draw a filled shape and/or a continuous line (see [fillAlpha](#fillalpha-number) and [lineWidth](#linewidth-number) properties).
++ **Line / Area graph** mode uses the discrete frequencies data to draw a filled shape and/or a continuous line (see [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number) properties).
 
 Valid values are:
 
@@ -290,7 +292,10 @@ Defaults to **0**.
 ### `pixelRatio` *number* *(Read only)*
 
 Current [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio).
-This is usually **1** for standard displays and **2** for retina / Hi-DPI screens. You can refer to this value to adjust any additional drawings done in the canvas.
+This is usually **1** for standard displays and **2** for retina / Hi-DPI screens.
+
+You can refer to this value to adjust any additional drawings done in the canvas (via [callback function](#oncanvasdraw-function)).
+
 When [low-resolution mode](#lores-boolean) is active *pixelRatio* is halved, i.e. **0.5** for standard displays and **1** for retina / Hi-DPI.
 
 ### `showBgColor` *boolean*
@@ -330,7 +335,9 @@ Returns the current version of audioMotion-analyzer.
 
 ### `onCanvasDraw` *function*
 
-If defined, this function will be called after rendering each frame. The audioMotion object will be passed as an argument to the callback function.
+If defined, this function will be called after rendering each frame.
+
+The audioMotion object will be passed as an argument to the callback function.
 
 Example usage:
 
@@ -362,7 +369,9 @@ function displayCanvasMsg( instance ) {
 
 ### `onCanvasResize` *function*
 
-If defined, this function will be called whenever the canvas is resized. Two arguments are passed: a string with the reason why the function was called (see below) and the audioMotion object.
+If defined, this function will be called whenever the canvas is resized.
+
+Two arguments are passed: a string with the reason why the function was called (see below) and the audioMotion object.
 
 Reason | Description
 -------|------------
