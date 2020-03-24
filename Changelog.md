@@ -1,6 +1,40 @@
 Changelog
 =========
 
+## version 2.0.0 - released 2020-03-24 :mask:
+
+### Added:
+
++ New [`lineWidth`](README.md#linewidth-number) and [`fillAlpha`](README.md#fillalpha-number) properties
+for [mode 10](README.md#mode-number) customization, so it can now work as an area graph (default), a line graph or a combination of both;
++ New [`barSpace`](README.md#barspace-number) property for customizable bar spacing in octave bands modes;
++ You can now provide an external AudioContext via `audioCtx` property in the [constructor's `options`](README.md#constructor), allowing you to share the same context among different instances;
++ Custom [error codes](README.md#custom-errors);
++ New [`version`](README.md#version-string-read-only) property;
+
+### Changed:
+
++ Increased default spacing between bars in octave bands modes - to get the previous look, set [`barSpace`](README.md#barspace-number) to **1**;
++ Improved accuracy when positioning the X-axis scale labels in octave bands modes;
++ Slightly improved vertical usage of canvas when the LED effect is active (removed the black line at the bottom of the screen);
++ Canvas context is now saved before calling the user callback function and restored afterwards, to avoid undesirable changes;
++ Several functions were refactored for improved legibility, memory usage and performance;
++ Improved documentation and demos;
+
+### Fixed:
+
++ The multi-instance demo should now work on browsers other than Firefox (it now uses a shared audio context);
++ `isFullscreen` property now correctly reads `false` (instead of `undefined`) when the analyzer is not in fullscreen (*potentially breaking change*);
++ Setting one of the callback functions to `undefined` with `setOptions()` now properly unregisters the callback (*potentially breaking change*);
+
+### API breaking changes:
+
++ `audioCtx`, `analyzer`, `canvas` and `canvasCtx` objects are now read-only (`canvasCtx` properties may be safely modified while inside the callback for `onCanvasDraw`);
++ `frame` and `time` properties are not exposed anymore, as they are intended for internal use only;
++ `registerGradient()` method now enforces the `name` argument being a non-empty `string` (throws an [error](README.md#custom-errors) otherwise);
++ Errors now return a custom object and some error messages have changed - use the new [`code` property](README.md#custom-errors) to identify errors in a reliable way.
+
+
 ## version 1.2.0 - released 2019-12-19
 
 + Improves the look of bars at lower frequencies in octave bands modes (especially 1/12th and 1/24th);

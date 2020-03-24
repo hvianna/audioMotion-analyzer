@@ -9,9 +9,17 @@ a {
 	color: #090;
 }
 
-button, select {
+button {
 	margin: 6px;
 	padding: 6px;
+	vertical-align: bottom;
+}
+button.active {
+	background: #444;
+	border: none;
+	box-shadow: inset 1px 1px 0 #000;
+	color: #eee;
+	padding: 8px;
 }
 
 canvas {
@@ -19,12 +27,90 @@ canvas {
 	width: 100%;
 }
 
+fieldset {
+	border: none;
+	display: inline-block;
+	margin: 0;
+	padding: 0;
+	vertical-align: top;
+}
+fieldset:disabled {
+	display: none;
+}
+
+header {
+	position: relative;
+}
+
+img {
+	max-width: 100%;
+}
+
 input[type="range"] {
-	width: 100px;
+	width: 90px;
+}
+
+input[type="text"],
+select {
+	margin: 6px 0;
+	padding: 6px;
+}
+
+.big {
+	font-size: 120%;
+}
+
+.box {
+	margin-top: 10px;
+}
+.box .title {
+	font-weight: bold;
+	line-height: 2;
+	margin-right: 1em;
+}
+
+.label {
+	display: inline-block;
+	font-size: 11px;
+	margin: 0 6px;
+	text-transform: uppercase;
+	vertical-align: top;
+}
+.label input,
+.label select {
+	display: block;
 }
 
 #audio {
 	width: 100%;
+}
+
+.analyzer-configuration {
+	background: #f5f5f5;
+	border: 1px solid #ccc;
+	margin-bottom: 20px;
+	padding: 10px 0;
+}
+
+.credits {
+	color: #030;
+	font-size: 12px;
+	margin: 40px 0;
+	text-align: center;
+}
+
+.header-nav {
+	position: absolute;
+	right: 0;
+	top: 0;
+}
+.header-nav li {
+	display: inline;
+	margin-right: .5em;
+}
+.header-nav li:not(:last-child)::after {
+	content: ' |';
+	margin-left: .5em;
 }
 
 /* fluid full-width analyzer (single instance demo) */
@@ -35,11 +121,6 @@ input[type="range"] {
 
 #container1 {
 	margin-bottom: 15px;
-}
-
-.header-link {
-	float: right;
-	font-size: 12px;
 }
 
 .center {
@@ -58,27 +139,10 @@ input[type="range"] {
 	width: 320px;
 }
 
+.selector {
+	margin-bottom: 20px;
+}
+
 .selected {
 	outline: 3px solid #c00;
-}
-
-.analyzer-configuration {
-	background: #f5f5f5;
-	border: 1px solid #ccc;
-	padding: 10px 20px;
-}
-
-.slider {
-	display: inline-block;
-	font-size: 11px;
-	margin: 0 10px;
-	text-transform: uppercase;
-	vertical-align: top;
-}
-
-.credits {
-	color: #030;
-	font-size: 12px;
-	margin: 40px 0;
-	text-align: center;
 }

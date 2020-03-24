@@ -2,18 +2,14 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
+ * @version 2.0.0
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
+const _VERSION = '2.0.0';
+
 export default class AudioMotionAnalyzer {
-
-/*
-	TO DO:
-
-	use public and private class fields and methods when they become standard?
-	https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Class_fields
-*/
 
 /**
  * CONSTRUCTOR
@@ -24,9 +20,11 @@ export default class AudioMotionAnalyzer {
  */
 	constructor( container, options = {} ) {
 
+		this._initDone = false;
+
 		// Settings defaults
 
-		this._defaults = {
+		const defaults = {
 			mode        : 0,
 			fftSize     : 8192,
 			minFreq     : 20,
@@ -42,8 +40,10 @@ export default class AudioMotionAnalyzer {
 			showFPS     : false,
 			lumiBars    : false,
 			loRes       : false,
-			width       : 640,
-			height      : 270
+			lineWidth   : 0,
+			fillAlpha   : 1,
+			barSpace    : 0.1,
+			start       : true
 		};
 
 		// Gradient definitions
@@ -82,63 +82,53 @@ export default class AudioMotionAnalyzer {
 			},
 		};
 
-		// If container not specified, use document body
-
+		// Set container
 		this._container = container || document.body;
 
-		// Create audio context
+		// Make sure we have minimal width and height dimensions in case of an inline container
+		this._defaultWidth  = this._container.clientWidth  || 640;
+		this._defaultHeight = this._container.clientHeight || 270;
 
-		var AudioContext = window.AudioContext || window.webkitAudioContext;
+		// Use audio context provided by user, or create a new one
 
-		try {
-			this.audioCtx = new AudioContext();
+		const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+		if ( options.hasOwnProperty( 'audioCtx' ) ) {
+			if ( options.audioCtx instanceof AudioContext )
+				this._audioCtx = options.audioCtx;
+			else
+				throw new AudioMotionError( 'ERR_INVALID_AUDIO_CONTEXT', 'Provided audio context is not valid' );
 		}
-		catch( err ) {
-			throw 'Could not create audio context. Web Audio API not supported?';
+		else {
+			try {
+				this._audioCtx = new AudioContext();
+			}
+			catch( err ) {
+				throw new AudioMotionError( 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create audio context. Web Audio API not supported?' );
+			}
 		}
 
 		// Create analyzer node, connect audio source (if provided) and connect it to the destination
 
-		this.analyzer = this.audioCtx.createAnalyser();
+		this._analyzer = this._audioCtx.createAnalyser();
 		this._audioSource = ( options.source ) ? this.connectAudio( options.source ) : undefined;
-		this.analyzer.connect( this.audioCtx.destination );
+		this._analyzer.connect( this._audioCtx.destination );
 
-		// Adjust settings
+		// Create canvases
 
-		this._defaults.width  = this._container.clientWidth  || this._defaults.width;
-		this._defaults.height = this._container.clientHeight || this._defaults.height;
+		// main spectrum analyzer canvas
+		this._canvas = document.createElement('canvas');
+		this._canvas.style = 'max-width: 100%;';
+		this._container.appendChild( this._canvas );
+		this._canvasCtx = this._canvas.getContext( '2d', { alpha: false } );
 
-		this.mode        = options.mode        === undefined ? this._defaults.mode        : options.mode;
-		this._minFreq    = options.minFreq     === undefined ? this._defaults.minFreq     : options.minFreq;
-		this._maxFreq    = options.maxFreq     === undefined ? this._defaults.maxFreq     : options.maxFreq;
-		this.gradient    = options.gradient    === undefined ? this._defaults.gradient    : options.gradient;
-		this.showBgColor = options.showBgColor === undefined ? this._defaults.showBgColor : options.showBgColor;
-		this.showLeds    = options.showLeds    === undefined ? this._defaults.showLeds    : options.showLeds;
-		this.showScale   = options.showScale   === undefined ? this._defaults.showScale   : options.showScale;
-		this.showPeaks   = options.showPeaks   === undefined ? this._defaults.showPeaks   : options.showPeaks;
-		this.showFPS     = options.showFPS     === undefined ? this._defaults.showFPS     : options.showFPS;
-		this.lumiBars    = options.lumiBars    === undefined ? this._defaults.lumiBars    : options.lumiBars;
-		this._loRes      = options.loRes       === undefined ? this._defaults.loRes       : options.loRes;
-		this._width      = options.width;
-		this._height     = options.height;
+		// auxiliary canvas for the LED mask
+		this._ledsMask = document.createElement('canvas');
+		this._ledsCtx = this._ledsMask.getContext('2d');
 
-		this.analyzer.fftSize               = options.fftSize     === undefined ? this._defaults.fftSize     : options.fftSize;
-		this.analyzer.smoothingTimeConstant = options.smoothing   === undefined ? this._defaults.smoothing   : options.smoothing;
-		this.analyzer.minDecibels           = options.minDecibels === undefined ? this._defaults.minDecibels : options.minDecibels;
-		this.analyzer.maxDecibels           = options.maxDecibels === undefined ? this._defaults.maxDecibels : options.maxDecibels;
-
-		this._dataArray = new Uint8Array( this.analyzer.frequencyBinCount );
-
-		this.onCanvasDraw = ( typeof options.onCanvasDraw == 'function' ) ? options.onCanvasDraw : undefined;
-		this.onCanvasResize = ( typeof options.onCanvasResize == 'function' ) ? options.onCanvasResize : undefined;
-
-		// Create canvas
-
-		this.canvas = document.createElement('canvas');
-		this.canvas.style = 'max-width: 100%;';
-		this._container.appendChild( this.canvas );
-		this.canvasCtx = this.canvas.getContext( '2d', { alpha: false } );
-		this._setCanvas('create');
+		// auxiliary canvas for the X-axis scale labels
+		this._labels = document.createElement('canvas');
+		this._labelsCtx = this._labels.getContext('2d');
 
 		// adjust canvas on window resize
 		window.addEventListener( 'resize', () => {
@@ -147,13 +137,16 @@ export default class AudioMotionAnalyzer {
 		});
 
 		// adjust canvas size on fullscreen change
-		this.canvas.addEventListener( 'fullscreenchange', () => this._setCanvas('fschange') );
+		this._canvas.addEventListener( 'fullscreenchange', () => this._setCanvas('fschange') );
 
-		// Start animation
+		// Set configuration options, using defaults for any missing properties
 
-		if ( options.start !== false )
-			this.toggleAnalyzer( true );
+		this._setProperties( options, defaults );
 
+		// Finish canvas setup
+
+		this._initDone = true;
+		this._setCanvas('create');
 	}
 
 	/**
@@ -164,15 +157,38 @@ export default class AudioMotionAnalyzer {
 	 * ==========================================================================
 	 */
 
+	// Bar spacing (for octave bands modes)
+
+	get barSpace() {
+		return this._barSpace;
+	}
+	set barSpace( value ) {
+		this._barSpace = Number( value );
+		this._calculateBarSpacePx();
+		this._createLedMask();
+	}
+
 	// FFT size
 
 	get fftSize() {
-		return this.analyzer.fftSize;
+		return this._analyzer.fftSize;
 	}
 	set fftSize( value ) {
-		this.analyzer.fftSize = value;
-		this._dataArray = new Uint8Array( this.analyzer.frequencyBinCount );
+		this._analyzer.fftSize = value;
+		this._dataArray = new Uint8Array( this._analyzer.frequencyBinCount );
 		this._precalculateBarPositions();
+	}
+
+	// Gradient
+
+	get gradient() {
+		return this._gradient;
+	}
+	set gradient( value ) {
+		if ( this._gradients.hasOwnProperty( value ) )
+			this._gradient = value;
+		else
+			throw new AudioMotionError( 'ERR_UNKNOWN_GRADIENT', `Unknown gradient: '${value}'` );
 	}
 
 	// Canvas size
@@ -198,13 +214,13 @@ export default class AudioMotionAnalyzer {
 		return this._mode;
 	}
 	set mode( value ) {
-		let mode = Number( value );
+		const mode = Number( value );
 		if ( mode >= 0 && mode <= 10 && mode != 9 ) {
 			this._mode = mode;
 			this._precalculateBarPositions();
 		}
 		else
-			throw `Invalid mode: ${mode}`;
+			throw new AudioMotionError( 'ERR_INVALID_MODE', `Invalid mode: ${mode}` );
 	}
 
 	// Low-resolution mode
@@ -223,45 +239,65 @@ export default class AudioMotionAnalyzer {
 		return this._minFreq;
 	}
 	set minFreq( value ) {
-		this._minFreq = value;
-		this._precalculateBarPositions();
+		if ( value < 1 )
+			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
+		else {
+			this._minFreq = value;
+			this._precalculateBarPositions();
+		}
 	}
 	get maxFreq() {
 		return this._maxFreq;
 	}
 	set maxFreq( value ) {
-		this._maxFreq = value;
-		this._precalculateBarPositions();
+		if ( value < 1 )
+			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
+		else {
+			this._maxFreq = value;
+			this._precalculateBarPositions();
+		}
 	}
 
 	// Analyzer's sensitivity
 
 	get minDecibels() {
-		return this.analyzer.minDecibels;
+		return this._analyzer.minDecibels;
 	}
 	set minDecibels( value ) {
-		this.analyzer.minDecibels = value;
+		this._analyzer.minDecibels = value;
 	}
 	get maxDecibels() {
-		return this.analyzer.maxDecibels;
+		return this._analyzer.maxDecibels;
 	}
 	set maxDecibels( value ) {
-		this.analyzer.maxDecibels = value;
+		this._analyzer.maxDecibels = value;
 	}
 
 	// Analyzer's smoothing time constant
 
 	get smoothing() {
-		return this.analyzer.smoothingTimeConstant;
+		return this._analyzer.smoothingTimeConstant;
 	}
 	set smoothing( value ) {
-		this.analyzer.smoothingTimeConstant = value;
+		this._analyzer.smoothingTimeConstant = value;
 	}
 
 	// Read only properties
 
+	get analyzer() {
+		return this._analyzer;
+	}
+	get audioCtx() {
+		return this._audioCtx;
+	}
 	get audioSource() {
 		return this._audioSource;
+	}
+	get canvas() {
+		return this._canvas;
+	}
+	get canvasCtx() {
+		return this._canvasCtx;
 	}
 	get dataArray() {
 		return this._dataArray;
@@ -277,15 +313,20 @@ export default class AudioMotionAnalyzer {
 	}
 	get isFullscreen() {
 		if ( document.fullscreenElement )
-			return document.fullscreenElement === this.canvas;
+			return document.fullscreenElement === this._canvas;
 		else if ( document.webkitFullscreenElement )
-			return document.webkitFullscreenElement === this.canvas;
+			return document.webkitFullscreenElement === this._canvas;
+		else
+			return false;
 	}
 	get isOn() {
 		return this._animationReq !== undefined;
 	}
 	get pixelRatio() {
 		return this._pixelRatio;
+	}
+	get version() {
+		return _VERSION;
 	}
 
 	/**
@@ -303,8 +344,8 @@ export default class AudioMotionAnalyzer {
 	 * @returns {object} a MediaElementAudioSourceNode object
 	 */
 	connectAudio( element ) {
-		var audioSource = this.audioCtx.createMediaElementSource( element );
-		audioSource.connect( this.analyzer );
+		const audioSource = this._audioCtx.createMediaElementSource( element );
+		audioSource.connect( this._analyzer );
 		return audioSource;
 	}
 
@@ -315,11 +356,14 @@ export default class AudioMotionAnalyzer {
 	 * @param {object} options
 	 */
 	registerGradient( name, options ) {
+		if ( typeof name !== 'string' || name.trim().length == 0 )
+			throw new AudioMotionError( 'ERR_GRADIENT_INVALID_NAME', 'Gradient name must be a non-empty string' );
+
 		if ( typeof options !== 'object' )
-			throw 'Custom gradient options must be an object';
+			throw new AudioMotionError( 'ERR_GRADIENT_NOT_AN_OBJECT', 'Gradient options must be an object' );
 
 		if ( options.colorStops === undefined || options.colorStops.length < 2 )
-			throw 'Custom gradient must define at least two colors!';
+			throw new AudioMotionError( 'ERR_GRADIENT_MISSING_COLOR', 'Gradient must define at least two colors' );
 
 		this._gradients[ name ] = {};
 
@@ -355,9 +399,13 @@ export default class AudioMotionAnalyzer {
 	 * @param {number} max highest frequency represented in the x-axis
 	 */
 	setFreqRange( min, max ) {
-		this._minFreq = Math.min( min, max );
-		this._maxFreq = Math.max( min, max );
-		this._precalculateBarPositions();
+		if ( min < 1 || max < 1 )
+			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
+		else {
+			this._minFreq = Math.min( min, max );
+			this._maxFreq = Math.max( min, max );
+			this._precalculateBarPositions();
+		}
 	}
 
 	/**
@@ -366,70 +414,7 @@ export default class AudioMotionAnalyzer {
 	 * @param {object} options
 	 */
 	setOptions( options ) {
-
-		if ( options.mode !== undefined )
-			this.mode = options.mode;
-
-		if ( options.minFreq !== undefined )
-			this._minFreq = options.minFreq;
-
-		if ( options.maxFreq !== undefined )
-			this._maxFreq = options.maxFreq;
-
-		if ( options.gradient !== undefined )
-			this.gradient = options.gradient;
-
-		if ( options.showBgColor !== undefined )
-			this.showBgColor = options.showBgColor;
-
-		if ( options.showLeds !== undefined )
-			this.showLeds = options.showLeds;
-
-		if ( options.showScale !== undefined )
-			this.showScale = options.showScale;
-
-		if ( options.lumiBars !== undefined )
-			this.lumiBars = options.lumiBars;
-
-		if ( options.minDecibels !== undefined )
-			this.analyzer.minDecibels = options.minDecibels;
-
-		if ( options.maxDecibels !== undefined )
-			this.analyzer.maxDecibels = options.maxDecibels;
-
-		if ( options.showPeaks !== undefined )
-			this.showPeaks = options.showPeaks;
-
-		if ( options.showFPS !== undefined )
-			this.showFPS = options.showFPS;
-
-		if ( options.loRes !== undefined )
-			this._loRes = options.loRes;
-
-		if ( options.fftSize !== undefined )
-			this.analyzer.fftSize = options.fftSize;
-
-		if ( options.smoothing !== undefined )
-			this.analyzer.smoothingTimeConstant = options.smoothing;
-
-		if ( typeof options.onCanvasDraw == 'function' )
-			this.onCanvasDraw = options.onCanvasDraw;
-
-		if ( typeof options.onCanvasResize == 'function' )
-			this.onCanvasResize = options.onCanvasResize;
-
-		if ( options.width !== undefined )
-			this._width = options.width;
-
-		if ( options.height !== undefined )
-			this._height = options.height;
-
-		this._dataArray = new Uint8Array( this.analyzer.frequencyBinCount );
-
-		this._setCanvas('user');
-
-		if ( options.start !== undefined )
-			this.toggleAnalyzer( options.start );
+		this._setProperties( options );
 	}
 
 	/**
@@ -439,8 +424,8 @@ export default class AudioMotionAnalyzer {
 	 * @param {number} max maximum decibels value
 	 */
 	setSensitivity( min, max ) {
-		this.analyzer.minDecibels = Math.min( min, max );
-		this.analyzer.maxDecibels = Math.max( min, max );
+		this._analyzer.minDecibels = Math.min( min, max );
+		this._analyzer.maxDecibels = Math.max( min, max );
 	}
 
 	/**
@@ -450,7 +435,8 @@ export default class AudioMotionAnalyzer {
 	 * @returns {boolean} resulting status after the change
 	 */
 	toggleAnalyzer( value ) {
-		var started = this.isOn;
+		const started = this.isOn;
+
 		if ( value === undefined )
 			value = ! started;
 
@@ -459,8 +445,8 @@ export default class AudioMotionAnalyzer {
 			this._animationReq = undefined;
 		}
 		else if ( ! started && value ) {
-			this.frame = this._fps = 0;
-			this.time = performance.now();
+			this._frame = this._fps = 0;
+			this._time = performance.now();
 			this._animationReq = requestAnimationFrame( () => this._draw() );
 		}
 
@@ -478,10 +464,10 @@ export default class AudioMotionAnalyzer {
 				document.webkitExitFullscreen();
 		}
 		else {
-			if ( this.canvas.requestFullscreen )
-				this.canvas.requestFullscreen();
-			else if ( this.canvas.webkitRequestFullscreen )
-				this.canvas.webkitRequestFullscreen();
+			if ( this._canvas.requestFullscreen )
+				this._canvas.requestFullscreen();
+			else if ( this._canvas.webkitRequestFullscreen )
+				this._canvas.webkitRequestFullscreen();
 		}
 	}
 
@@ -494,41 +480,127 @@ export default class AudioMotionAnalyzer {
 	 */
 
 	/**
+	 * Calculate bar spacing in pixels
+	 */
+	_calculateBarSpacePx() {
+		this._barSpacePx = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
+	}
+
+	/**
+	 * Create mask for vintage LED effect on auxiliary canvas
+	 */
+	_createLedMask() {
+		// no need for this if in discrete frequencies or area fill modes
+		if ( this._mode % 10 == 0 || ! this._initDone )
+			return;
+
+		// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
+
+		let spaceV = Math.min( 6, this._canvas.height / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
+		let nLeds;
+
+		switch ( this._mode ) {
+			case 8:
+				spaceV = Math.min( 16, this._canvas.height / ( 33 * this._pixelRatio ) | 0 );
+				nLeds = 24;
+				break;
+			case 7:
+				spaceV = Math.min( 8, this._canvas.height / ( 67 * this._pixelRatio ) | 0 );
+				nLeds = 48;
+				break;
+			case 6:
+				nLeds = 64;
+				break;
+			case 5:
+				// fall through
+			case 4:
+				nLeds = 80;
+				break;
+			case 3:
+				nLeds = 96;
+				break;
+			case 2:
+				spaceV = Math.min( 4, this._canvas.height / ( 135 * this._pixelRatio ) | 0 );
+				nLeds = 128;
+				break;
+			case 1:
+				spaceV = Math.min( 3, Math.max( 2, this._canvas.height / ( 180 * this._pixelRatio ) | 0 ) );
+				nLeds = 128;
+		}
+
+		spaceV *= this._pixelRatio;
+		nLeds = Math.min( nLeds, ( this._canvas.height + spaceV ) / ( spaceV * 2 ) | 0 );
+
+		this._ledOptions = {
+			nLeds,
+			spaceH: this._barWidth * ( this._mode == 1 ? .45 : this._mode < 5 ? .225 : .125 ),
+			spaceV,
+			ledHeight: ( this._canvas.height + spaceV ) / nLeds - spaceV
+		};
+
+		// use either the LEDs default horizontal space or the user selected bar space, whichever is larger
+		const spacing = Math.max( this._ledOptions.spaceH, this._barSpacePx );
+
+		// clear the auxiliary canvas
+		this._ledsMask.width |= 0;
+
+		// add a vertical black line to the left of each bar to create the LED columns
+		this._analyzerBars.forEach( bar => this._ledsCtx.fillRect( bar.posX - spacing / 2, 0, spacing, this._canvas.height ) );
+
+		// add a vertical black line in the mask canvas after the last led column
+		this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - spacing / 2, 0, spacing, this._canvas.height );
+
+		// add horizontal black lines to create the LED rows
+		for ( let i = this._ledOptions.ledHeight; i < this._canvas.height; i += this._ledOptions.ledHeight + this._ledOptions.spaceV )
+			this._ledsCtx.fillRect( 0, i, this._canvas.width, this._ledOptions.spaceV );
+	}
+
+	/**
 	 * Redraw the canvas
 	 * this is called 60 times per second by requestAnimationFrame()
 	 */
 	_draw() {
 
-		var i, j, l, bar, barHeight, size,
-			isLedDisplay = ( this.showLeds && this._mode > 0 && this._mode < 10 ),
-			isLumiBars   = ( this.lumiBars && this._mode > 0 && this._mode < 10 );
+		const isLedDisplay = ( this.showLeds && this._mode > 0 && this._mode < 10 ),
+			  isLumiBars   = ( this.lumiBars && this._mode > 0 && this._mode < 10 );
 
 		if ( ! this.showBgColor )	// use black background
-			this.canvasCtx.fillStyle = '#000';
+			this._canvasCtx.fillStyle = '#000';
 		else
 			if ( isLedDisplay )
-				this.canvasCtx.fillStyle = '#111';
+				this._canvasCtx.fillStyle = '#111';
 			else
-				this.canvasCtx.fillStyle = this._gradients[ this.gradient ].bgColor; // use background color defined by gradient
+				this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor; // use background color defined by gradient
 
 		// clear the canvas
-		this.canvasCtx.fillRect( 0, 0, this.canvas.width, this.canvas.height );
+		this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
 
 		// get a new array of data from the FFT
-		this.analyzer.getByteFrequencyData( this._dataArray );
+		this._analyzer.getByteFrequencyData( this._dataArray );
 
 		// set selected gradient
-		this.canvasCtx.fillStyle = this._gradients[ this.gradient ].gradient;
+		this._canvasCtx.fillStyle = this._gradients[ this._gradient ].gradient;
 
 		// if in "area fill" mode, start the drawing path
 		if ( this._mode == 10 ) {
-			this.canvasCtx.beginPath();
-			this.canvasCtx.moveTo( 0, this.canvas.height );
+			this._canvasCtx.beginPath();
+			this._canvasCtx.moveTo( -this.lineWidth, this._canvas.height );
 		}
 
+		// compute the effective bar width, considering the selected bar spacing
+		// if led effect is active, ensure at least the spacing defined by the led options
+		let width = this._barWidth - ( ! ( this._mode % 10 ) ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
+
+		// if no bar spacing is required, make sure width is integer for pixel accurate calculation
+		if ( this._barSpace == 0 && ! isLedDisplay )
+			width |= 0;
+
 		// draw bars / lines
-		l = this._analyzerBars.length;
-		for ( i = 0; i < l; i++ ) {
+
+		let bar, barHeight;
+		const nBars = this._analyzerBars.length;
+
+		for ( let i = 0; i < nBars; i++ ) {
 
 			bar = this._analyzerBars[ i ];
 
@@ -541,17 +613,18 @@ export default class AudioMotionAnalyzer {
 			else { 					// range of bins
 				barHeight = 0;
 				// use the highest value in the range
-				for ( j = bar.dataIdx; j <= bar.endIdx; j++ )
+				for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
 					barHeight = Math.max( barHeight, this._dataArray[ j ] );
 			}
 
+			// set opacity for lumi bars before barHeight value is normalized
 			if ( isLumiBars )
-				this.canvasCtx.globalAlpha = barHeight / 255;
+				this._canvasCtx.globalAlpha = barHeight / 255;
 
 			if ( isLedDisplay ) // normalize barHeight to match one of the "led" elements
-				barHeight = ( barHeight / 255 * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV );
+				barHeight = ( barHeight / 255 * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
 			else
-				barHeight = barHeight / 255 * this.canvas.height | 0;
+				barHeight = barHeight / 255 * this._canvas.height | 0;
 
 			if ( barHeight >= bar.peak ) {
 				bar.peak = barHeight;
@@ -559,23 +632,52 @@ export default class AudioMotionAnalyzer {
 				bar.accel = 0;
 			}
 
-			if ( this._mode == 10 )
-				this.canvasCtx.lineTo( bar.posX, this.canvas.height - barHeight );
-			else if ( isLumiBars ) {
-				this.canvasCtx.fillRect( bar.posX, 0, this._barWidth, this.canvas.height );
-				this.canvasCtx.globalAlpha = 1;
-			}
-			else if ( isLedDisplay )
-				this.canvasCtx.fillRect( bar.posX + this._ledOptions.spaceH / 2, this.canvas.height, this._barWidth, -barHeight );
-			else
-				this.canvasCtx.fillRect( bar.posX, this.canvas.height, this._barWidth, -barHeight );
+			let posX = bar.posX;
+			let adjWidth = width; // bar width may need small adjustments for some bars, when barSpace == 0
 
-			if ( bar.peak > 0 ) {
-				if ( this.showPeaks && ! isLumiBars )
+			// Draw line / bar
+			if ( this._mode == 10 ) {
+				this._canvasCtx.lineTo( bar.posX, this._canvas.height - barHeight );
+			}
+			else {
+				if ( this._mode > 0 ) {
 					if ( isLedDisplay )
-						this.canvasCtx.fillRect( bar.posX + this._ledOptions.spaceH / 2, ( this._ledOptions.nLeds - ( bar.peak / this.canvas.height * this._ledOptions.nLeds | 0 ) ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ), this._barWidth, this._ledOptions.ledHeight );
+						posX += Math.max( this._ledOptions.spaceH / 2, this._barSpacePx / 2 );
+					else {
+						if ( this._barSpace == 0 ) {
+							posX |= 0;
+							if ( i > 0 && posX > this._analyzerBars[ i - 1 ].posX + width ) {
+								posX--;
+								adjWidth++;
+							}
+						}
+						else
+							posX += this._barSpacePx / 2;
+					}
+				}
+
+				if ( isLumiBars ) {
+					this._canvasCtx.fillRect( posX, 0, adjWidth, this._canvas.height );
+					this._canvasCtx.globalAlpha = 1;
+				}
+				else
+					this._canvasCtx.fillRect( posX, this._canvas.height, adjWidth, -barHeight );
+			}
+
+			// Draw peak
+			if ( bar.peak > 0 ) {
+				if ( this.showPeaks && ! isLumiBars ) {
+					if ( isLedDisplay ) {
+						this._canvasCtx.fillRect(
+							posX,
+							( this._ledOptions.nLeds - bar.peak / ( this._canvas.height + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ),
+							width,
+							this._ledOptions.ledHeight
+						);
+					}
 					else
-						this.canvasCtx.fillRect( bar.posX, this.canvas.height - bar.peak, this._barWidth, 2 );
+						this._canvasCtx.fillRect( posX, this._canvas.height - bar.peak, adjWidth, 2 );
+				}
 
 				if ( bar.hold )
 					bar.hold--;
@@ -584,65 +686,94 @@ export default class AudioMotionAnalyzer {
 					bar.peak -= bar.accel;
 				}
 			}
-		} // for ( i = 0; i < l; i++ )
+		} // for ( let i = 0; i < l; i++ )
 
 		if ( this._mode == 10 ) { // fill area
-			this.canvasCtx.lineTo( bar.posX, this.canvas.height );
-			this.canvasCtx.fill();
+			this._canvasCtx.lineTo( bar.posX + this.lineWidth, this._canvas.height );
+
+			if ( this.lineWidth > 0 ) {
+				this._canvasCtx.lineWidth = this.lineWidth;
+				this._canvasCtx.strokeStyle = this._canvasCtx.fillStyle;
+				this._canvasCtx.stroke();
+			}
+
+			if ( this.fillAlpha > 0 ) {
+				this._canvasCtx.globalAlpha = this.fillAlpha;
+				this._canvasCtx.fill();
+				this._canvasCtx.globalAlpha = 1;
+			}
 		}
 		else if ( isLedDisplay ) // applies LEDs mask over the canvas
-			this.canvasCtx.drawImage( this._ledsMask, 0, 0 );
+			this._canvasCtx.drawImage( this._ledsMask, 0, 0 );
 
-		if ( this.showScale ) {
-			size = 5 * this._pixelRatio;
+		if ( this.showScale )
+			this._canvasCtx.drawImage( this._labels, 0, this._canvas.height - this._labels.height );
 
-			if ( this.isFullscreen )
-				size *= 2;
+		this._frame++;
 
-			this.canvasCtx.fillStyle = '#000c';
-			this.canvasCtx.fillRect( 0, this.canvas.height - size * 4, this.canvas.width, size * 4 );
+		const now = performance.now();
+		const elapsed = now - this._time;
 
-			this.canvasCtx.fillStyle = '#fff';
-			this.canvasCtx.font = ( size * 2 ) + 'px sans-serif';
-			this.canvasCtx.textAlign = 'center';
-
-			this._freqLabels.forEach( label => this.canvasCtx.fillText( label.freq, label.posX, this.canvas.height - size ) );
-		}
-
-		this.frame++;
-		var now = performance.now();
-		var elapsed = now - this.time;
 		if ( elapsed >= 1000 ) {
-			this._fps = this.frame / ( elapsed / 1000 );
-			this.frame = 0;
-			this.time = now;
+			this._fps = this._frame / ( elapsed / 1000 );
+			this._frame = 0;
+			this._time = now;
 		}
 		if ( this.showFPS ) {
-			size = 20 * this._pixelRatio;
-			this.canvasCtx.font = `bold ${size}px sans-serif`;
-			this.canvasCtx.fillStyle = '#0f0';
-			this.canvasCtx.textAlign = 'right';
-			this.canvasCtx.fillText( Math.round( this._fps ), this.canvas.width - size, size * 2 );
+			const size = 20 * this._pixelRatio;
+			this._canvasCtx.font = `bold ${size}px sans-serif`;
+			this._canvasCtx.fillStyle = '#0f0';
+			this._canvasCtx.textAlign = 'right';
+			this._canvasCtx.fillText( Math.round( this._fps ), this._canvas.width - size, size * 2 );
 		}
 
-		if ( this.onCanvasDraw )
+		if ( this.onCanvasDraw ) {
+			this._canvasCtx.save();
 			this.onCanvasDraw( this );
+			this._canvasCtx.restore();
+		}
 
 		// schedule next canvas update
 		this._animationReq = requestAnimationFrame( () => this._draw() );
 	}
 
 	/**
+	 * Find the FFT bin which represents a given frequency
+	 *
+	 * @param {number} freq   Frequency in hertz
+	 * @param {string} [func] Rounding function: 'floor', 'round' (default) or 'ceil'
+	 * @returns {number}      FFT data array index which closely represents the given frequency
+	 */
+	_findFrequencyBin( freq, func ) {
+		const bin = freq * this._analyzer.fftSize / this._audioCtx.sampleRate;
+
+		if ( ! ['floor','ceil'].includes( func ) )
+			func = 'round';
+
+		return Math[ func ]( bin );
+	}
+
+	/**
+	 * Find the frequency represented by a given FFT bin
+	 *
+	 * @param {number} bin FFT data array index
+	 * @returns {number}   Frequency in hertz represented by the given FFT bin
+	 */
+	_findBinFrequency( bin ) {
+		return bin * this._audioCtx.sampleRate / this._analyzer.fftSize;
+	}
+
+	/**
 	 * Generate gradients
 	 */
 	_generateGradients() {
-		var grad, i;
+		let grad;
 
 		Object.keys( this._gradients ).forEach( key => {
 			if ( this._gradients[ key ].dir && this._gradients[ key ].dir == 'h' )
-				grad = this.canvasCtx.createLinearGradient( 0, 0, this.canvas.width, 0 );
+				grad = this._canvasCtx.createLinearGradient( 0, 0, this._canvas.width, 0 );
 			else
-				grad = this.canvasCtx.createLinearGradient( 0, 0, 0, this.canvas.height );
+				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, this._canvas.height );
 
 			if ( this._gradients[ key ].colorStops ) {
 				this._gradients[ key ].colorStops.forEach( ( colorInfo, index ) => {
@@ -677,28 +808,28 @@ export default class AudioMotionAnalyzer {
 	 */
 	_precalculateBarPositions() {
 
-		// if this function is called during the constructor initialization (by a property setter)
-		// the canvas isn't ready yet, so we just exit without doing anything
-		if ( ! this.canvas )
+		if ( ! this._initDone )
 			return;
 
-		var i, freq,
-			minLog = Math.log10( this._minFreq ),
-			bandWidth = this.canvas.width / ( Math.log10( this._maxFreq ) - minLog );
+		let minLog, bandWidth;
 
 		this._analyzerBars = [];
 
-		if ( this._mode == 0 || this._mode == 10 ) { // discrete frequencies or area fill modes
+		if ( this._mode % 10 == 0 ) {
+		// Discrete frequencies or area fill modes
 			this._barWidth = 1;
 
-	 		var pos,
-	 			lastPos = -999,
-				minIndex = Math.floor( this._minFreq * this.analyzer.fftSize / this.audioCtx.sampleRate ),
-			    maxIndex = Math.min( Math.round( this._maxFreq * this.analyzer.fftSize / this.audioCtx.sampleRate ), this.analyzer.frequencyBinCount - 1 );
+			minLog = Math.log10( this._minFreq );
+			bandWidth = this._canvas.width / ( Math.log10( this._maxFreq ) - minLog );
 
-			for ( i = minIndex; i <= maxIndex; i++ ) {
-				freq = i * this.audioCtx.sampleRate / this.analyzer.fftSize; // frequency represented in this bin
-				pos = Math.round( bandWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
+			const minIndex = this._findFrequencyBin( this._minFreq, 'floor' );
+			const maxIndex = Math.min( this._findFrequencyBin( this._maxFreq ), this._analyzer.frequencyBinCount - 1 );
+
+	 		let lastPos = -999;
+
+			for ( let i = minIndex; i <= maxIndex; i++ ) {
+				let freq = this._findBinFrequency( i ); // frequency represented in this bin
+				let pos = Math.round( bandWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
 				if ( pos > lastPos ) {
@@ -709,107 +840,54 @@ export default class AudioMotionAnalyzer {
 					this._analyzerBars[ this._analyzerBars.length - 1 ].endIdx = i;
 			}
 		}
-		else { // octave bands modes
+		else {
+		// Octave bands modes
 
-			var spaceV = Math.min( 6, this.canvas.height / ( 90 * this._pixelRatio ) | 0 ), // for modes 3, 4, 5 and 6
-				groupnotes = this._mode; // for modes 1, 2, 3 and 4
+			// how many notes grouped in each band?
+			let groupNotes;
 
-			// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
-
-			switch ( this._mode ) {
-				case 8:
-					groupnotes = 24;
-					spaceV = Math.min( 16, this.canvas.height / ( 33 * this._pixelRatio ) | 0 );
-					this._ledOptions = {
-						nLeds: 24,
-						spaceH: Math.min( 24, this.canvas.width / ( 40 * this._pixelRatio ) | 0 )
-					};
-					break;
-
-				case 7:
-					groupnotes = 12;
-					spaceV = Math.min( 8, this.canvas.height / ( 67 * this._pixelRatio ) | 0 );
-					this._ledOptions = {
-						nLeds: 48,
-						spaceH: Math.min( 16, this.canvas.width / ( 60 * this._pixelRatio ) | 0 )
-					};
-					break;
-
-				case 6:
-					groupnotes = 8;
-					this._ledOptions = {
-						nLeds: 64,
-						spaceH: Math.min( 10, this.canvas.width / ( 96 * this._pixelRatio ) | 0 )
-					};
-					break;
-
-				case 5:
-					groupnotes = 6;
-				case 4:
-					this._ledOptions = {
-						nLeds: 80,
-						spaceH: Math.min( 8, this.canvas.width / ( 120 * this._pixelRatio ) | 0 )
-					};
-					break;
-
-				case 3:
-					this._ledOptions = {
-						nLeds: 96,
-						spaceH: Math.min( 6, this.canvas.width / ( 160 * this._pixelRatio ) | 0 )
-					};
-					break;
-
-				case 2:
-					spaceV = Math.min( 4, this.canvas.height / ( 135 * this._pixelRatio ) | 0 );
-					this._ledOptions = {
-						nLeds: 128,
-						spaceH: Math.min( 4, this.canvas.width / ( 240 * this._pixelRatio ) | 0 )
-					};
-					break;
-
-				default:
-					this._mode = groupnotes = 1; // convert any invalid mode to mode 1
-					spaceV = Math.min( 3, Math.max( 2, this.canvas.height / ( 180 * this._pixelRatio ) | 0 ) );
-					this._ledOptions = {
-						nLeds: 128,
-						spaceH: Math.min( 4, this.canvas.width / ( 320 * this._pixelRatio ) | 0 )
-					};
-			}
-
-			this._ledOptions.spaceH *= this._pixelRatio;
-			this._ledOptions.spaceV = spaceV * this._pixelRatio;
-			this._ledOptions.nLeds = Math.min( this._ledOptions.nLeds, this.canvas.height / ( this._ledOptions.spaceV * 2 ) | 0 );
-			this._ledOptions.ledHeight = this.canvas.height / this._ledOptions.nLeds - this._ledOptions.spaceV;
+			if ( this._mode == 8 )
+				groupNotes = 24;
+			else if ( this._mode == 7 )
+				groupNotes = 12;
+			else if ( this._mode == 6 )
+				groupNotes = 8;
+			else if ( this._mode == 5 )
+				groupNotes = 6;
+			else
+				groupNotes = this._mode; // for modes 1, 2, 3 and 4
 
 			// generate a table of frequencies based on the equal tempered scale
-			var root24 = 2 ** ( 1 / 24 ); // for 1/24th-octave bands
-			var c0 = 440 * root24 ** -114;
-			var temperedScale = [];
 
-			i = 0;
+			const root24 = 2 ** ( 1 / 24 );
+			const c0 = 440 * root24 ** -114; // ~16.35 Hz
+
+			let temperedScale = [];
+			let i = 0;
+			let freq;
+
 			while ( ( freq = c0 * root24 ** i ) <= this._maxFreq ) {
-				if ( freq >= this._minFreq && i % groupnotes == 0 )
+				if ( freq >= this._minFreq && i % groupNotes == 0 )
 					temperedScale.push( freq );
 				i++;
 			}
 
-			// divide canvas space by the number of frequencies to display, allowing at least one pixel between bars
-			this._barWidth = Math.floor( this.canvas.width / temperedScale.length ) - 1;
+			minLog = Math.log10( temperedScale[0] );
+			bandWidth = this._canvas.width / ( Math.log10( temperedScale[ temperedScale.length - 1 ] ) - minLog );
 
-			// the space remaining from the integer division is split equally among the bars as separator
-			var barSpace = ( this.canvas.width - this._barWidth * temperedScale.length ) / ( temperedScale.length - 1 );
+			// divide canvas space by the number of frequencies (bars) to display
+			this._barWidth = this._canvas.width / temperedScale.length;
+			this._calculateBarSpacePx();
 
-			this._ledsMask.width |= 0; // clear LEDs mask canvas
-
-			var prevBin = 0,  // last bin included in previous frequency band
-				prevIdx = -1, // previous bar FFT array index
-				nBars   = 0;  // count of bars with the same index
+			let prevBin = 0;  // last bin included in previous frequency band
+			let prevIdx = -1; // previous bar FFT array index
+			let nBars   = 0;  // count of bars with the same index
 
 			temperedScale.forEach( ( freq, index ) => {
 				// which FFT bin represents this frequency?
-				var bin = Math.round( freq * this.analyzer.fftSize / this.audioCtx.sampleRate );
+				const bin = this._findFrequencyBin( freq );
 
-				var idx, nextBin;
+				let idx, nextBin;
 				// start from the last used FFT bin
 				if ( prevBin > 0 && prevBin + 1 <= bin )
 					idx = prevBin + 1;
@@ -833,64 +911,59 @@ export default class AudioMotionAnalyzer {
 				prevBin = nextBin = bin;
 				// check if there's another band after this one
 				if ( temperedScale[ index + 1 ] !== undefined ) {
-					nextBin = Math.round( temperedScale[ index + 1 ] * this.analyzer.fftSize / this.audioCtx.sampleRate );
+					nextBin = this._findFrequencyBin( temperedScale[ index + 1 ] );
 					// and use half the bins in between for this band
 					if ( nextBin - bin > 1 )
 						prevBin += Math.round( ( nextBin - bin ) / 2 );
 				}
 
+				const endIdx = prevBin - idx > 0 ? prevBin : 0;
+
 				this._analyzerBars.push( {
-					posX: index * ( this._barWidth + barSpace ),
+					posX: index * this._barWidth,
 					dataIdx: idx,
-					endIdx: prevBin - idx > 0 ? prevBin : 0,
+					endIdx,
+//					freq, // nominal frequency for this band
+//					range: [ this._findBinFrequency( idx ), this._findBinFrequency( endIdx || idx ) ], // actual range of frequencies
 					factor: 0,
 					peak: 0,
 					hold: 0,
 					accel: 0
 				} );
 
-				// adds a vertical black line to the left of this bar in the mask canvas, to separate the LED columns
-				this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX - this._ledOptions.spaceH / 2, 0, this._ledOptions.spaceH, this.canvas.height );
-
 			} );
 		}
 
-		if ( this._mode > 0 && this._mode < 10 ) {
-			// adds a vertical black line in the mask canvas after the last led column
-			this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - this._ledOptions.spaceH / 2 + ( this._mode < 5 ? 2 : 1 ), 0, this._ledOptions.spaceH, this.canvas.height );
+		this._createLedMask();
 
-			// adds horizontal black lines in the mask canvas, to separate the LED rows
-			for ( i = this._ledOptions.ledHeight; i < this.canvas.height; i += this._ledOptions.ledHeight + this._ledOptions.spaceV )
-				this._ledsCtx.fillRect( 0, i, this.canvas.width, this._ledOptions.spaceV );
+		// Create the X-axis scale in the auxiliary canvas
+
+		this._labels.width |= 0; // clear canvas
+		this._labelsCtx.fillStyle = '#000c';
+		this._labelsCtx.fillRect( 0, 0, this._labels.width, this._labels.height );
+
+		this._labelsCtx.fillStyle = '#fff';
+		this._labelsCtx.font = `${ this._labels.height / 2 }px sans-serif`;
+		this._labelsCtx.textAlign = 'center';
+
+		const freqLabels = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
+
+		for ( const freq of freqLabels ) {
+			this._labelsCtx.fillText(
+				( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
+				bandWidth * ( Math.log10( freq ) - minLog ),
+				this._labels.height * .75
+			);
 		}
-
-		// calculate the position of the labels (octaves center frequencies) for the X-axis scale
-		this._freqLabels = [
-			{ freq: 16 },
-			{ freq: 31 },
-			{ freq: 63 },
-			{ freq: 125 },
-			{ freq: 250 },
-			{ freq: 500 },
-			{ freq: 1000 },
-			{ freq: 2000 },
-			{ freq: 4000 },
-			{ freq: 8000 },
-			{ freq: 16000 }
-		];
-
-		this._freqLabels.forEach( label => {
-			label.posX = bandWidth * ( Math.log10( label.freq ) - minLog );
-			if ( label.freq >= 1000 )
-				label.freq = ( label.freq / 1000 ) + 'k';
-		});
 	}
-
 
 	/**
 	 * Internal function to change canvas dimensions on demand
 	 */
 	_setCanvas( reason ) {
+		if ( ! this._initDone )
+			return;
+
 		this._pixelRatio = window.devicePixelRatio; // for Retina / HiDPI devices
 
 		if ( this._loRes )
@@ -900,12 +973,12 @@ export default class AudioMotionAnalyzer {
 		this._fsHeight = Math.min( window.screen.height, window.screen.width ) * this._pixelRatio;
 
 		if ( this.isFullscreen ) {
-			this.canvas.width = this._fsWidth;
-			this.canvas.height = this._fsHeight;
+			this._canvas.width = this._fsWidth;
+			this._canvas.height = this._fsHeight;
 		}
 		else {
-			this.canvas.width = ( this._width || this._container.clientWidth || this._defaults.width ) * this._pixelRatio;
-			this.canvas.height = ( this._height || this._container.clientHeight || this._defaults.height ) * this._pixelRatio;
+			this._canvas.width = ( this._width || this._container.clientWidth || this._defaultWidth ) * this._pixelRatio;
+			this._canvas.height = ( this._height || this._container.clientHeight || this._defaultHeight ) * this._pixelRatio;
 		}
 
 		// workaround for wrong dPR reported on Android TV
@@ -913,21 +986,63 @@ export default class AudioMotionAnalyzer {
 			this._pixelRatio = 1;
 
 		// clear the canvas
-		this.canvasCtx.fillStyle = '#000';
-		this.canvasCtx.fillRect( 0, 0, this.canvas.width, this.canvas.height );
+		this._canvasCtx.fillStyle = '#000';
+		this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
+
+		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
+		this._canvasCtx.lineJoin = 'bevel';
 
 		// (re)generate gradients
 		this._generateGradients();
 
-		// create an auxiliary canvas for the LED effect mask
-		this._ledsMask = this.canvas.cloneNode();
-		this._ledsCtx = this._ledsMask.getContext('2d');
-		this._ledsCtx.fillStyle = '#000';
+		// update LED mask canvas dimensions
+		this._ledsMask.width = this._canvas.width;
+		this._ledsMask.height = this._canvas.height;
 
+		// update labels canvas dimensions
+		this._labels.width = this._canvas.width;
+		this._labels.height = this._pixelRatio * ( this.isFullscreen ? 40 : 20 );
+
+		// calculate bar positions and led options
 		this._precalculateBarPositions();
 
+		// call callback function, if defined
 		if ( this.onCanvasResize )
 			this.onCanvasResize( reason, this );
 	}
 
+	/**
+	 * Set object properties
+	 */
+	_setProperties( options, defaults ) {
+
+		const callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
+
+		// audioCtx is set only at initialization; we handle 'start' after setting all other properties
+		const ignore = [ 'audioCtx', 'start' ];
+
+		if ( defaults )
+			options = Object.assign( defaults, options );
+
+		for ( const prop of Object.keys( options ) ) {
+			if ( callbacks.indexOf( prop ) !== -1 && typeof options[ prop ] !== 'function' ) // check invalid callback
+				this[ prop ] = undefined;
+			else if ( ignore.indexOf( prop ) === -1 ) // skip ignored properties
+				this[ prop ] = options[ prop ];
+		}
+
+		if ( options.start !== undefined )
+			this.toggleAnalyzer( options.start );
+	}
+
+}
+
+/* Custom error class */
+
+class AudioMotionError extends Error {
+	constructor( code, message ) {
+		super( message );
+		this.name = 'AudioMotionError';
+		this.code = code;
+	}
 }
