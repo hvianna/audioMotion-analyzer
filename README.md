@@ -52,7 +52,7 @@ This will insert the analyzer canvas inside the *#container* element and start t
 
 `new AudioMotionAnalyzer( [container], [{options}] )`
 
-Creates a new instance of audioMotion-analyzer. A canvas element will be created and inserted into the *container* element. If *container* is undefined, the canvas is appended to the document's body.
+Creates a new instance of audioMotion-analyzer. A canvas element will be created and inserted into the `container` element. If `container` is undefined, the canvas is appended to the document's body.
 
 Available options with default values shown inside parentheses:
 
@@ -62,14 +62,14 @@ options = {<br>
 &emsp;&emsp;[fftSize](#fftsize-number): *number* (8192),<br>
 &emsp;&emsp;[fillAlpha](#fillalpha-number): *number* (1),<br>
 &emsp;&emsp;[gradient](#gradient-string): *string* ('classic'),<br>
-&emsp;&emsp;[height](#height-number-width-number): *number*,<br>
+&emsp;&emsp;[height](#height-number): *number*,<br>
 &emsp;&emsp;[lineWidth](#linewidth-number): *number* (0),<br>
 &emsp;&emsp;[loRes](#lores-boolean): *boolean* (false),<br>
 &emsp;&emsp;[lumiBars](#lumibars-boolean): *boolean* (false),<br>
-&emsp;&emsp;[maxDecibels](#maxdecibels-number-mindecibels-number): *number* (-25),<br>
-&emsp;&emsp;[maxFreq](#maxfreq-number-minfreq-number): *number* (22000),<br>
-&emsp;&emsp;[minDecibels](#maxdecibels-number-mindecibels-number): *number* (-85),<br>
-&emsp;&emsp;[minFreq](#maxfreq-number-minfreq-number): *number* (20),<br>
+&emsp;&emsp;[maxDecibels](#maxdecibels-number): *number* (-25),<br>
+&emsp;&emsp;[maxFreq](#maxfreq-number): *number* (22000),<br>
+&emsp;&emsp;[minDecibels](#mindecibels-number): *number* (-85),<br>
+&emsp;&emsp;[minFreq](#minfreq-number): *number* (20),<br>
 &emsp;&emsp;[mode](#mode-number): *number* (0),<br>
 &emsp;&emsp;[onCanvasDraw](#oncanvasdraw-function): *function*,<br>
 &emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *function*,<br>
@@ -81,12 +81,12 @@ options = {<br>
 &emsp;&emsp;[smoothing](#smoothing-number): *number* (0.5),<br>
 &emsp;&emsp;**source**: *HTMLMediaElement*,<br>
 &emsp;&emsp;**start**: *boolean* (true),<br>
-&emsp;&emsp;[width](#height-number-width-number): *number*<br>
+&emsp;&emsp;[width](#width-number): *number*<br>
 }
 
 `audioCtx` allows you to provide an external AudioContext object, but you usually don't need to specify this, as audioMotion-analyzer will create its own.
 
-If `source` is specified, the provided media element will be connected to the analyzer. You can later disconnect it by referring to the [audioSource](#audiosource-mediaelementaudiosourcenode-object) object.
+If `source` is specified, the provided media element will be connected to the analyzer. You can later disconnect it by referring to the [`audioSource`](#audiosource-mediaelementaudiosourcenode-object) object.
 
 At least one audio source is required for the analyzer to work. You can also connect audio sources with the [`connectAudio()`](#connectaudio-element-) method.
 
@@ -94,8 +94,6 @@ If `start: false` is specified, the analyzer will be created stopped. You can th
 
 
 ## Interface objects
-
-See the [demo folder](demo/) for code examples of interaction with the objects below.
 
 ### `analyzer` *[AnalyserNode](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode) object*
 
@@ -183,7 +181,8 @@ See also [`lineWidth`](#linewidth-number).
 
 Current frame rate.
 
-### `fsHeight` *number* *(Read only)*, `fsWidth` *number* *(Read only)*
+### `fsHeight` *number* *(Read only)*
+### `fsWidth` *number* *(Read only)*
 
 Canvas dimensions used during fullscreen mode. These take the current pixel ratio into account and will change accordingly when [low-resolution mode](#lores-boolean) is set.
 
@@ -191,7 +190,8 @@ Canvas dimensions used during fullscreen mode. These take the current pixel rati
 
 Currently selected gradient. *gradient* must be the name of a built-in or [registered](#registergradient-name-options-) gradient. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*. Defaults to **'classic'**.
 
-### `height` *number*, `width` *number*
+### `height` *number*
+### `width` *number*
 
 Nominal dimensions of the analyzer.
 
@@ -241,7 +241,8 @@ This will prevent the canvas size from changing, when switching the low resoluti
 
 *true* to always display full-height bars and vary their luminance instead. Only effective for [visualization modes](#mode-number) 1 to 8 (octave bands). Defaults to **false**.
 
-### `maxDecibels` *number*, `minDecibels` *number*
+### `maxDecibels` *number*
+### `minDecibels` *number*
 
 Highest and lowest decibel values represented in the Y-axis of the analyzer. The loudest volume possible is **0**. *maxDecibels* defaults to **-25** and *minDecibels* defaults to **-85**.
 
@@ -249,13 +250,14 @@ You can set both values at once using the [`setSensitivity()`](#setsensitivity-m
 
 For more info, see [AnalyserNode.minDecibels](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels).
 
-### `maxFreq` *number*, `minFreq` *number*
+### `maxFreq` *number*
+### `minFreq` *number*
 
 Highest and lowest frequencies represented in the X-axis of the analyzer. Values in Hertz. *maxFreq* defaults to **22000** and *minFreq* defaults to **20**.
 
 The minimum allowed value is **1**. Trying to set a lower value will throw an [error](#custom-errors).
 
-The maximum practical value is half the sampling rate (`audioMotion.audioCtx.sampleRate`), although this is not enforced by audioMotion-analyzer.
+The maximum practical value is half the sampling rate ([`audioCtx.sampleRate`](#audioctx-audiocontext-object)), although this is not enforced by audioMotion-analyzer.
 
 It is preferable to use the [`setFreqRange()`](#setfreqrange-minfreq-maxfreq-) method and set both values at once, to prevent `minFreq` being higher than the current `maxFreq` or vice-versa at a given moment.
 
@@ -367,8 +369,8 @@ Reason | Description
 `'create'` | canvas created by the class constructor
 `'fschange'` | analyzer entered or left fullscreen mode
 `'lores'` | low resolution mode toggled on or off
-`'resize'` | browser window resized (only when [width and/or height](#height-number-width-number) are undefined)
-`'user'` | canvas dimensions changed by user script, via [height and width](#height-number-width-number) properties, `setCanvasSize()` or `setOptions()` methods
+`'resize'` | browser window resized (only when [`width`](#width-number) and/or [`height`](#height-number) are undefined)
+`'user'` | canvas dimensions changed by user script, via [`height`](#height-number) and [`width`](#width-number) properties, [`setCanvasSize()`](#setcanvassize-width-height-) or [`setOptions()`](#setoptions-options-) methods
 
 Example usage:
 
@@ -389,6 +391,7 @@ const audioMotion = new AudioMotionAnalyzer(
 ### `connectAudio( element )`
 
 Connects an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) (`<audio>` or `<video>` HTML element) to the analyzer.
+
 Returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) which can be used for later disconnection.
 
 For connecting other audio sources, like oscillators and streams, use the [`audioCtx`](#audioctx-audiocontext-object) and [`analyzer`](#analyzer-analysernode-object) objects.
@@ -417,7 +420,7 @@ Additional information about [gradient color-stops](https://developer.mozilla.or
 
 ### `setCanvasSize( width, height )`
 
-Sets the analyzer nominal dimensions in pixels. See [height and width](#height-number-width-number) properties for details.
+Sets the analyzer nominal dimensions in pixels. See [`height`](#height-number) and [`width`](#width-number) properties for details.
 
 ### `setFreqRange( minFreq, maxFreq )`
 
@@ -431,7 +434,7 @@ Shorthand method for setting several options at once.
 
 ### `setSensitivity( minDecibels, maxDecibels )`
 
-Adjust the analyzer's sensitivity. See [maxDecibels and minDecibels](#maxdecibels-number-mindecibels-number) properties.
+Adjust the analyzer's sensitivity. See [`maxDecibels`](#maxdecibels-number) and [`minDecibels`](#mindecibels-number) properties.
 
 ### `toggleAnalyzer( [boolean] )`
 
@@ -451,15 +454,16 @@ audioMotion-analyzer uses a custom error object to throw errors for some critica
 
 The `code` property is a string label that can be checked to identify the specific error in a reliable way.
 
-`code` | Error description
-ERR_AUDIO_CONTEXT_FAIL | Could not create audio context. The user agent may lack support for the Web Audio API.
-ERR_INVALID_AUDIO_CONTEXT | [Audio context](#audioctx-audiocontext-object) provided by user is not valid.
-ERR_INVALID_MODE     | User tried to set the visualization [`mode`](#mode-number) to an invalid value.
-ERR_FREQUENCY_TOO_LOW | User tried to set the [`minFreq`](#maxfreq-number-minfreq-number) or [`maxFreq`](#maxfreq-number-minfreq-number) properties to a value lower than 1.
-ERR_GRADIENT_INVALID_NAME | The `name` parameter for [`registerGradient()`](#registergradient-name-options-) must be a non-empty string.
+`code`                     | Error description
+---------------------------|--------------------
+ERR_AUDIO_CONTEXT_FAIL     | Could not create audio context. The user agent may lack support for the Web Audio API.
+ERR_INVALID_AUDIO_CONTEXT  | [Audio context](#audioctx-audiocontext-object) provided by user is not valid.
+ERR_INVALID_MODE           | User tried to set the visualization [`mode`](#mode-number) to an invalid value.
+ERR_FREQUENCY_TOO_LOW      | User tried to set the [`minFreq`](#minfreq-number) or [`maxFreq`](#maxfreq-number) properties to a value lower than 1.
+ERR_GRADIENT_INVALID_NAME  | The `name` parameter for [`registerGradient()`](#registergradient-name-options-) must be a non-empty string.
 ERR_GRADIENT_NOT_AN_OBJECT | The `options` parameter for [`registerGradient()`](#registergradient-name-options-) must be an object.
 ERR_GRADIENT_MISSING_COLOR | The `options` parameter for [`registerGradient()`](#registergradient-name-options-) must define at least two color-stops.
-ERR_UNKNOWN_GRADIENT | User tried to [select a gradient](#gradient-string) not previously registered.
+ERR_UNKNOWN_GRADIENT       | User tried to [select a gradient](#gradient-string) not previously registered.
 
 ## License
 
