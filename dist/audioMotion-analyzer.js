@@ -2,9 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
+ * @version 2.0.0
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
+
+const _VERSION = '2.0.0';
 
 export default class AudioMotionAnalyzer {
 
@@ -328,6 +331,9 @@ export default class AudioMotionAnalyzer {
 	}
 	get pixelRatio() {
 		return this._pixelRatio;
+	}
+	get version() {
+		return _VERSION;
 	}
 
 	/**
