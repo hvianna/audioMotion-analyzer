@@ -9,7 +9,9 @@ This is the graphic spectrum analyzer I originally wrote for [audioMotion](https
 
 [▶ audioMotion.dev/demo](https://audiomotion.dev/demo/)
 
-![demo-animation](demo/demo.gif)
+<video autoplay loop muted>
+    <source src="demo/demo.mp4" type="video/mp4">
+</video>
 
 ## Features
 
