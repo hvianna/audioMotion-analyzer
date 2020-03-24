@@ -42,8 +42,7 @@ header {
 	position: relative;
 }
 
-img,
-video {
+img {
 	max-width: 100%;
 }
 
