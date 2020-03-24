@@ -25,20 +25,20 @@ This is the graphic spectrum analyzer I originally wrote for [audioMotion](https
 
 Install with npm:
 
-```
-npm install audiomotion-analyzer
+```console
+$ npm install audiomotion-analyzer
 ```
 
 ES6 import:
 
-```
+```js
 import AudioMotionAnalyzer from 'audiomotion-analyzer';
 ```
 
 Minimal constructor:
 
-```
-var audioMotion = new AudioMotionAnalyzer(
+```js
+const audioMotion = new AudioMotionAnalyzer(
 	document.getElementById('container'),
 	{
 		source: document.getElementById('audio')
@@ -57,6 +57,7 @@ Creates a new instance of audioMotion-analyzer. A canvas element will be created
 Available options with default values shown inside parentheses:
 
 options = {<br>
+&emsp;&emsp;[audioCtx](#audioctx-audiocontext-object): *AudioContext object*,<br>
 &emsp;&emsp;[barSpace](#barspace-number): *number* (2),<br>
 &emsp;&emsp;[fftSize](#fftsize-number): *number* (8192),<br>
 &emsp;&emsp;[fillAlpha](#fillalpha-number): *number* (1),<br>
@@ -83,12 +84,13 @@ options = {<br>
 &emsp;&emsp;[width](#height-number-width-number): *number*<br>
 }
 
+`audioCtx` allows you to provide an external AudioContext object, but you usually don't need to specify this, as audioMotion-analyzer will create its own.
 
 If `source` is specified, the provided media element will be connected to the analyzer. You can later disconnect it by referring to the [audioSource](#audiosource-mediaelementaudiosourcenode-object) object.
 
-You can also connect audio sources later with the [connectAudio()](#connectaudio-element-) method.
+At least one audio source is required for the analyzer to work. You can also connect audio sources with the [`connectAudio()`](#connectaudio-element-) method.
 
-If `start: false` is specified, the analyzer will be created stopped. You can then start it with the [toggleAnalyzer()](#toggleanalyzer-boolean-) method.
+If `start: false` is specified, the analyzer will be created stopped. You can then start it with the [`toggleAnalyzer()`](#toggleanalyzer-boolean-) method.
 
 
 ## Interface objects
@@ -101,11 +103,30 @@ Connect any additional audio sources to this object, so their output is displaye
 
 ### `audioCtx` *[AudioContext](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) object*
 
+AudioContext object created by audioMotion-analyzer or provided by the user in the [constructor](#constructor) options.
+
 Use this object to create additional audio sources to be connected to the analyzer, like oscillator nodes, gain nodes and media streams.
+
+The code fragment below creates an oscillator and a gain node using audioMotion's audioContext, and then connects them to the analyzer:
+
+```js
+const audioMotion = new AudioMotionAnalyzer( document.getElementById('container') ),
+      audioCtx    = audioMotion.audioCtx,
+      oscillator  = audioCtx.createOscillator(),
+      gainNode    = audioCtx.createGain();
+
+oscillator.frequency.setValueAtTime( 440, audioCtx.currentTime ); // play 440Hz tone
+oscillator.connect( gainNode );
+
+gainNode.gain.setValueAtTime( .5, audioCtx.currentTime );
+gainNode.connect( audioMotion.analyzer );
+
+oscillator.start();
+```
 
 ### `audioSource` *[MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) object*
 
-Object representing the HTML media element connected using the `source` option of the class [constructor](#constructor). See also the [`connectAudio()`](#connectaudio-element-) method.
+Object representing the HTML media element connected using the `source` property in the class [constructor](#constructor) options. See also the [`connectAudio()`](#connectaudio-element-) method.
 
 ### `canvas` *HTMLCanvasElement object*
 
@@ -178,7 +199,7 @@ If one or both of these are `undefined`, the analyzer will try to adjust to the 
 If the container's width and/or height are 0 (inline elements), a reference size of **640 x 270 pixels** will be used to replace the missing dimension(s).
 This should be considered the minimum dimensions for proper visualization of all available modes with the LED effect on.
 
-You can set both values at once using the [setCanvasSize()](#setcanvassize-width-height-) method.
+You can set both values at once using the [`setCanvasSize()`](#setcanvassize-width-height-) method.
 
 If you want the actual canvas dimensions, use `audioMotion.canvas.width` and `audioMotion.canvas.height`.
 
@@ -204,7 +225,15 @@ Defaults to **0**. For the line to be distinguishable, set also [`fillAlpha`](#f
 
 Low resolution mode halves the effective pixel ratio, resulting in four times less pixels to render. This may improve performance significantly, especially in 4K+ monitors.
 
-See [this note](demo/README.md#additional-notes) on using this feature interactively.
+If you plan on allowing users to interactively toggle low resolution mode, you may need to set a fixed size for the canvas via CSS, like so:
+
+```css
+#container canvas {
+    width: 100%;
+}
+```
+
+This will prevent the canvas size from changing, when switching the low resolution mode on and off.
 
 ### `lumiBars` *boolean*
 
@@ -224,7 +253,11 @@ For more info, see [AnalyserNode.minDecibels](https://developer.mozilla.org/en-U
 
 Highest and lowest frequencies represented in the X-axis of the analyzer. Values in Hertz. *maxFreq* defaults to **22000** and *minFreq* defaults to **20**.
 
-You can set both values at once using the [`setFreqRange()`](#setfreqrange-minfreq-maxfreq-) method.
+The minimum allowed value is **1**. Trying to set a lower value will throw an [error](#custom-errors).
+
+The maximum practical value is half the sampling rate (`audioMotion.audioCtx.sampleRate`), although this is not enforced by audioMotion-analyzer.
+
+It is preferable to use the [`setFreqRange()`](#setfreqrange-minfreq-maxfreq-) method and set both values at once, to prevent `minFreq` being higher than the current `maxFreq` or vice-versa at a given moment.
 
 ### `mode` *number*
 
@@ -284,12 +317,46 @@ Sets the analyzer's [smoothingTimeConstant](https://developer.mozilla.org/en-US/
 
 Lower values make the analyzer respond faster to changes. Defaults to **0.5**.
 
+### `version` *string* *(Read only)*
+
+*Available since v2.0.0*
+
+Returns the current version of audioMotion-analyzer.
+
 
 ## Callback functions
 
 ### `onCanvasDraw` *function*
 
 If defined, this function will be called after rendering each frame. The audioMotion object will be passed as an argument to the callback function.
+
+Example usage:
+
+```js
+const audioMotion = new AudioMotionAnalyzer(
+    document.getElementById('container'),
+    {
+        source: document.getElementById('audio'),
+        onCanvasDraw: displayCanvasMsg
+    }
+);
+
+function displayCanvasMsg( instance ) {
+    let size = 20 * instance.pixelRatio;
+    if ( instance.isFullscreen )
+        size *= 2;
+
+    // find the data array index for 140Hz
+    const idx = Math.round( 140 * instance.analyzer.fftSize / instance.audioCtx.sampleRate );
+
+    // use the 140Hz amplitude to increase the font size and make the logo pulse to the beat
+    instance.canvasCtx.font = `${size + instance.dataArray[ idx ] / 16 * instance.pixelRatio}px Orbitron,sans-serif`;
+
+    instance.canvasCtx.fillStyle = '#fff8';
+    instance.canvasCtx.textAlign = 'center';
+    instance.canvasCtx.fillText( 'audioMotion', instance.canvas.width - size * 8, size * 2 );
+}
+```
 
 ### `onCanvasResize` *function*
 
@@ -303,6 +370,19 @@ Reason | Description
 `'resize'` | browser window resized (only when [width and/or height](#height-number-width-number) are undefined)
 `'user'` | canvas dimensions changed by user script, via [height and width](#height-number-width-number) properties, `setCanvasSize()` or `setOptions()` methods
 
+Example usage:
+
+```js
+const audioMotion = new AudioMotionAnalyzer(
+    document.getElementById('container'),
+    {
+        source: document.getElementById('audio'),
+        onCanvasResize: ( reason, instance ) => {
+            console.log( `[${reason}] set: ${instance.width} x ${instance.height} | actual: ${instance.canvas.width} x ${instance.canvas.height}` );
+        }
+    }
+);
+````
 
 ## Methods
 
@@ -311,7 +391,7 @@ Reason | Description
 Connects an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) (`<audio>` or `<video>` HTML element) to the analyzer.
 Returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) which can be used for later disconnection.
 
-For connecting other audio sources, like oscillators and streams, use the [`audioCtx`](#audioctx-audiocontext-object) and [`analyzer`](#analyzer-analysernode-object) objects. See [this example](demo/README.md#connecting-additional-audio-nodes).
+For connecting other audio sources, like oscillators and streams, use the [`audioCtx`](#audioctx-audiocontext-object) and [`analyzer`](#analyzer-analysernode-object) objects.
 
 ### `registerGradient( name, options )`
 
@@ -319,16 +399,18 @@ Registers a custom color gradient.
 
 `name` must be a non-empty *string* that will be used when setting the [`gradient`](#gradient-string) property. `options` must be an object as shown below:
 
-```
-options = {
-	bgColor: '#111', // background color (required)
-	dir: 'h',        // add this for a horizontal gradient (optional)
-	colorStops: [    // list your gradient colors in this array (at least 2 entries are required)
-		'red',                      // colors may be defined in any CSS valid format
-		{ pos: .6, color: '#ff0' }, // use an object to adjust the position (0 to 1) of a color
-		'hsl( 120, 100%, 50% )'     // colors may be defined in any CSS valid format
-	]
+```js
+const options = {
+    bgColor: '#111', // background color (required)
+    dir: 'h',        // add this to create a horizontal gradient (optional)
+    colorStops: [    // list your gradient colors in this array (at least 2 entries are required)
+        'red',                      // colors may be defined in any CSS valid format
+        { pos: .6, color: '#ff0' }, // use an object to adjust the position (0 to 1) of a color
+        'hsl( 120, 100%, 50% )'     // colors may be defined in any CSS valid format
+    ]
 }
+
+audioMotion.registerGradient( 'my-grad', options );
 ```
 
 Additional information about [gradient color-stops](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop).
@@ -345,7 +427,7 @@ Sets the desired frequency range. Values are expressed in Hz (Hertz).
 
 Shorthand method for setting several options at once.
 
-`options` is an object with the same structure used in the class [constructor](#constructor), except for the `source` option which is only available at construction time.
+`options` is an object with the same structure used in the class [constructor](#constructor), except for the `audioCtx` and `source` options which are only available at construction time.
 
 ### `setSensitivity( minDecibels, maxDecibels )`
 
@@ -370,12 +452,14 @@ audioMotion-analyzer uses a custom error object to throw errors for some critica
 The `code` property is a string label that can be checked to identify the specific error in a reliable way.
 
 `code` | Error description
-ERR_NO_AUDIO_CONTEXT | Could not create audio context. The user agent may not support the Web Audio API.
-ERR_INVALID_MODE     | User tried to set the visualization [mode](#mode-number) to an invalid value.
-ERR_UNKNOWN_GRADIENT | User tried to select a gradient not previously registered.
-ERR_GRADIENT_INVALID_NAME | The `name` parameter for [registerGradient()](#registergradient-name-options-) must be a non-empty string.
-ERR_GRADIENT_NOT_AN_OBJECT | The `options` parameter for [registerGradient()](#registergradient-name-options-) must be an object.
-ERR_GRADIENT_MISSING_COLOR | The `options` parameter for [registerGradient()](#registergradient-name-options-) must define at least two color-stops.
+ERR_AUDIO_CONTEXT_FAIL | Could not create audio context. The user agent may lack support for the Web Audio API.
+ERR_INVALID_AUDIO_CONTEXT | [Audio context](#audioctx-audiocontext-object) provided by user is not valid.
+ERR_INVALID_MODE     | User tried to set the visualization [`mode`](#mode-number) to an invalid value.
+ERR_FREQUENCY_TOO_LOW | User tried to set the [`minFreq`](#maxfreq-number-minfreq-number) or [`maxFreq`](#maxfreq-number-minfreq-number) properties to a value lower than 1.
+ERR_GRADIENT_INVALID_NAME | The `name` parameter for [`registerGradient()`](#registergradient-name-options-) must be a non-empty string.
+ERR_GRADIENT_NOT_AN_OBJECT | The `options` parameter for [`registerGradient()`](#registergradient-name-options-) must be an object.
+ERR_GRADIENT_MISSING_COLOR | The `options` parameter for [`registerGradient()`](#registergradient-name-options-) must define at least two color-stops.
+ERR_UNKNOWN_GRADIENT | User tried to [select a gradient](#gradient-string) not previously registered.
 
 ## License
 
