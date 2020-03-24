@@ -33,6 +33,9 @@ catch( err ) {
 	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
 }
 
+// display package version in the footer
+document.getElementById('version').innerText = audioMotion.version;
+
 // Add a custom property to store the logo display preference
 // this is a feature added by this demo, not part of audioMotion-analyzer
 audioMotion.showLogo = true;

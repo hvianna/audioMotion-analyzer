@@ -46,6 +46,9 @@ catch( err ) {
 	document.getElementById('container0').innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
 }
 
+// display package version in the footer
+document.getElementById('version').innerText = audioMotion[0].version;
+
 // Set options for each instance
 // a custom property 'showLogo' is added to each instance, to store the logo display preference
 
