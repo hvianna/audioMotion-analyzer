@@ -45,12 +45,12 @@
 			</label>
 
 			<fieldset id="area_options">
-				<label class="label">Line width
+				<label class="label">lineWidth
 					<input type="range" id="line_width" min="0" max="9" step="1" data-setting="lineWidth">
 					<div class="value"></div>
 				</label>
 
-				<label class="label">Fill opacity
+				<label class="label">fillAlpha
 					<input type="range" id="fill_alpha" min="0" max="1" step=".1" data-setting="fillAlpha">
 					<div class="value"></div>
 				</label>
@@ -81,6 +81,16 @@
 				</select>
 			</label>
 
+			<label class="label">reflexRatio
+				<input type="range" id="reflex_ratio" min="0" max=".9" step=".1" data-setting="reflexRatio">
+				<div class="value"></div>
+			</label>
+
+			<label class="label">reflexAlpha
+				<input type="range" id="reflex_alpha" min="0" max="1" step=".05" data-setting="reflexAlpha">
+				<div class="value"></div>
+			</label>
+
 			<label class="label">FFT size
 				<select id="fft" data-setting="fftSize">
 					<option value="1024">1024</option>
@@ -100,26 +110,26 @@
 				</select>
 			</label>
 
-			<label class="label">Sensitivity
+			<label class="label">sensitivity
 				<input type="range" id="sensitivity" min="0" max="4">
 				<div class="value"></div>
 			</label>
 
-			<label class="label">Smoothing
+			<label class="label">smoothing
 				<input type="range" id="smoothing" min="0" max=".9" step=".1" data-setting="smoothing">
 				<div class="value"></div>
 			</label>
 		</div>
 
 		<div class="box center">
-			<button id="btn_bgcolor" data-prop="showBgColor">Background</button>
-			<button id="btn_peaks" data-prop="showPeaks">Peaks</button>
-			<button id="btn_leds" data-prop="showLeds">LEDs</button>
-			<button id="btn_lumi" data-prop="lumiBars">Lumi Bars</button>
-			<button id="btn_reflex" data-prop="reflex">Reflex</button>
-			<button id="btn_scale" data-prop="showScale">Scale</button>
-			<button id="btn_lores" data-prop="loRes">Lo-Res</button>
-			<button id="btn_fps" data-prop="showFPS">Frame rate</button>
+			<button id="btn_bgcolor" data-prop="showBgColor">showBgColor</button>
+			<button id="btn_peaks" data-prop="showPeaks">showPeaks</button>
+			<button id="btn_leds" data-prop="showLeds">showLeds</button>
+			<button id="btn_lumi" data-prop="lumiBars">lumiBars</button>
+			<button id="btn_reflex" data-prop="reflexFit">reflexFit</button>
+			<button id="btn_scale" data-prop="showScale">showScale</button>
+			<button id="btn_lores" data-prop="loRes">loRes</button>
+			<button id="btn_fps" data-prop="showFPS">showFPS</button>
 			<button id="btn_logo" data-prop="showLogo">Logo</button>
 			<button id="btn_freeze" data-prop="isOn" data-func="toggleAnalyzer">Freeze</button>
 			<button id="btn_fullscr" data-prop="isFullscreen" data-func="toggleFullscreen">Fullscreen</button>
