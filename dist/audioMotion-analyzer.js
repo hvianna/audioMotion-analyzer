@@ -40,7 +40,9 @@ export default class AudioMotionAnalyzer {
 			showFPS     : false,
 			lumiBars    : false,
 			loRes       : false,
-			reflex      : false,
+			reflexRatio : 0,
+			reflexAlpha : 0.15,
+			reflexFit   : false,
 			lineWidth   : 0,
 			fillAlpha   : 1,
 			barSpace    : 0.1,
@@ -236,13 +238,18 @@ export default class AudioMotionAnalyzer {
 
 	// Reflex
 
-	get reflex() {
-		return this._reflex;
+	get reflexRatio() {
+		return this._reflexRatio;
 	}
-	set reflex( value ) {
-		this._reflex = Boolean( value );
-		this._generateGradients();
-		this._createLedMask();
+	set reflexRatio( value ) {
+		value = Number( value );
+		if ( value < 0 || value >= 1 )
+			throw new AudioMotionError( 'ERR_REFLEX_OUT_OF_RANGE', `Reflex ratio must be >= 0 and < 1` );
+		else {
+			this._reflexRatio = value;
+			this._generateGradients();
+			this._createLedMask();
+		}
 	}
 
 	// Current frequency range
@@ -506,7 +513,7 @@ export default class AudioMotionAnalyzer {
 		if ( this._mode % 10 == 0 || ! this._initDone )
 			return;
 
-		const analyzerHeight = this._canvas.height * ( this._reflex ? .6 : 1 ) | 0;
+		const analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0;
 
 		// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
 
@@ -577,7 +584,7 @@ export default class AudioMotionAnalyzer {
 
 		const isLedDisplay   = ( this.showLeds && this._mode > 0 && this._mode < 10 ),
 			  isLumiBars     = ( this.lumiBars && this._mode > 0 && this._mode < 10 ),
-			  analyzerHeight = this._canvas.height * ( this._reflex ? .6 : 1 ) | 0;
+			  analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0;
 
 		if ( ! this.showBgColor )	// use black background
 			this._canvasCtx.fillStyle = '#000';
@@ -722,14 +729,22 @@ export default class AudioMotionAnalyzer {
 			this._canvasCtx.drawImage( this._ledsMask, 0, 0 );
 
 		// Reflex effect
-		if ( this._reflex ) {
+		if ( this._reflexRatio > 0 ) {
+			let posY, height;
+			if ( this.reflexFit ) {
+				posY   = 0;
+				height = this._canvas.height - analyzerHeight;
+			}
+			else {
+				posY   = this._canvas.height - analyzerHeight * 2;
+				height = analyzerHeight;
+			}
+
 			this._canvasCtx.fillStyle = '#000';
 			this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
-			this._canvasCtx.globalAlpha = .15;
+			this._canvasCtx.globalAlpha = this.reflexAlpha;
 			this._canvasCtx.setTransform( 1, 0, 0, -1, 0, this._canvas.height );
-// distortion version:
-//			this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, 0, this._canvas.width, this._canvas.height - analyzerHeight );
-			this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, this._canvas.height - analyzerHeight * 2, this._canvas.width, analyzerHeight );
+			this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, posY, this._canvas.width, height );
 			this._canvasCtx.globalAlpha = 1;
 			this._canvasCtx.setTransform();
 		}
@@ -800,7 +815,7 @@ export default class AudioMotionAnalyzer {
 			if ( this._gradients[ key ].dir && this._gradients[ key ].dir == 'h' )
 				grad = this._canvasCtx.createLinearGradient( 0, 0, this._canvas.width, 0 );
 			else
-				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, this._canvas.height * ( this._reflex ? .6 : 1 ) | 0 );
+				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, this._canvas.height * ( 1 - this._reflexRatio ) | 0 );
 
 			if ( this._gradients[ key ].colorStops ) {
 				this._gradients[ key ].colorStops.forEach( ( colorInfo, index ) => {
