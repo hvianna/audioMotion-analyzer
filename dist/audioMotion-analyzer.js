@@ -447,7 +447,7 @@ export default class AudioMotionAnalyzer {
 		else if ( ! started && value ) {
 			this._frame = this._fps = 0;
 			this._time = performance.now();
-			this._animationReq = requestAnimationFrame( () => this._draw() );
+			this._animationReq = requestAnimationFrame( timestamp => this._draw( timestamp ) );
 		}
 
 		return this.isOn;
@@ -559,7 +559,7 @@ export default class AudioMotionAnalyzer {
 	 * Redraw the canvas
 	 * this is called 60 times per second by requestAnimationFrame()
 	 */
-	_draw() {
+	_draw( timestamp ) {
 
 		const isLedDisplay = ( this.showLeds && this._mode > 0 && this._mode < 10 ),
 			  isLumiBars   = ( this.lumiBars && this._mode > 0 && this._mode < 10 );
@@ -711,13 +711,12 @@ export default class AudioMotionAnalyzer {
 
 		this._frame++;
 
-		const now = performance.now();
-		const elapsed = now - this._time;
+		const elapsed = timestamp - this._time;
 
 		if ( elapsed >= 1000 ) {
 			this._fps = this._frame / ( elapsed / 1000 );
 			this._frame = 0;
-			this._time = now;
+			this._time = timestamp;
 		}
 		if ( this.showFPS ) {
 			const size = 20 * this._pixelRatio;
@@ -734,7 +733,7 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// schedule next canvas update
-		this._animationReq = requestAnimationFrame( () => this._draw() );
+		this._animationReq = requestAnimationFrame( timestamp => this._draw( timestamp ) );
 	}
 
 	/**
