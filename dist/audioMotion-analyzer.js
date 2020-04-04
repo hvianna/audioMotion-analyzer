@@ -221,6 +221,8 @@ export default class AudioMotionAnalyzer {
 		if ( mode >= 0 && mode <= 10 && mode != 9 ) {
 			this._mode = mode;
 			this._precalculateBarPositions();
+			if ( this._reflexRatio > 0 )
+				this._generateGradients();
 		}
 		else
 			throw new AudioMotionError( 'ERR_INVALID_MODE', `Invalid mode: ${mode}` );
@@ -234,6 +236,17 @@ export default class AudioMotionAnalyzer {
 	set loRes( value ) {
 		this._loRes = Boolean( value );
 		this._setCanvas('lores');
+	}
+
+	get lumiBars() {
+		return this._lumiBars;
+	}
+	set lumiBars( value ) {
+		this._lumiBars = Boolean( value );
+		if ( this._reflexRatio > 0 ) {
+			this._generateGradients();
+			this._createLedMask();
+		}
 	}
 
 	// Reflex
@@ -513,7 +526,7 @@ export default class AudioMotionAnalyzer {
 		if ( this._mode % 10 == 0 || ! this._initDone )
 			return;
 
-		const analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0;
+		const analyzerHeight = this._lumiBars ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio ) | 0;
 
 		// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
 
@@ -582,8 +595,9 @@ export default class AudioMotionAnalyzer {
 	 */
 	_draw( timestamp ) {
 
-		const isLedDisplay   = ( this.showLeds && this._mode > 0 && this._mode < 10 ),
-			  isLumiBars     = ( this.lumiBars && this._mode > 0 && this._mode < 10 ),
+		const isOctaveBands  = ( this._mode % 10 != 0 ), // mode > 0 && mode < 10
+			  isLedDisplay   = ( this.showLeds  && isOctaveBands ),
+			  isLumiBars     = ( this._lumiBars && isOctaveBands ),
 			  analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0;
 
 		if ( ! this.showBgColor )	// use black background
@@ -611,7 +625,7 @@ export default class AudioMotionAnalyzer {
 
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing defined by the led options
-		let width = this._barWidth - ( ! ( this._mode % 10 ) ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
+		let width = this._barWidth - ( ! isOctaveBands ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
 
 		// if no bar spacing is required, make sure width is integer for pixel accurate calculation
 		if ( this._barSpace == 0 && ! isLedDisplay )
@@ -679,7 +693,7 @@ export default class AudioMotionAnalyzer {
 				}
 
 				if ( isLumiBars ) {
-					this._canvasCtx.fillRect( posX, 0, adjWidth, analyzerHeight );
+					this._canvasCtx.fillRect( posX, 0, adjWidth, this._canvas.height );
 					this._canvasCtx.globalAlpha = 1;
 				}
 				else
@@ -729,7 +743,7 @@ export default class AudioMotionAnalyzer {
 			this._canvasCtx.drawImage( this._ledsMask, 0, 0 );
 
 		// Reflex effect
-		if ( this._reflexRatio > 0 ) {
+		if ( this._reflexRatio > 0 && ! isLumiBars ) {
 			let posY, height;
 			if ( this.reflexFit ) {
 				posY   = 0;
@@ -811,11 +825,13 @@ export default class AudioMotionAnalyzer {
 	_generateGradients() {
 		let grad;
 
+		const analyzerHeight = ( this._lumiBars && this._mode % 10 ) ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio ) | 0;
+
 		Object.keys( this._gradients ).forEach( key => {
 			if ( this._gradients[ key ].dir && this._gradients[ key ].dir == 'h' )
 				grad = this._canvasCtx.createLinearGradient( 0, 0, this._canvas.width, 0 );
 			else
-				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, this._canvas.height * ( 1 - this._reflexRatio ) | 0 );
+				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, analyzerHeight );
 
 			if ( this._gradients[ key ].colorStops ) {
 				this._gradients[ key ].colorStops.forEach( ( colorInfo, index ) => {
