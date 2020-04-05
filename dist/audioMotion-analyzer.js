@@ -42,7 +42,7 @@ export default class AudioMotionAnalyzer {
 			loRes       : false,
 			reflexRatio : 0,
 			reflexAlpha : 0.15,
-			reflexFit   : false,
+			reflexFit   : true,
 			lineWidth   : 0,
 			fillAlpha   : 1,
 			barSpace    : 0.1,
