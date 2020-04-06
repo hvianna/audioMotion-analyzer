@@ -73,6 +73,9 @@ options = {<br>
 &emsp;&emsp;[mode](#mode-number): *number* (0),<br>
 &emsp;&emsp;[onCanvasDraw](#oncanvasdraw-function): *function*,<br>
 &emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *function*,<br>
+&emsp;&emsp;[reflexAlpha](#reflexalpha-number): *number* (0.15),<br>
+&emsp;&emsp;[reflexFit](#reflexfit-boolean): *boolean* (true),<br>
+&emsp;&emsp;[reflexRatio](#reflexratio-number): *number* (0),<br>
 &emsp;&emsp;[showBgColor](#showbgcolor-boolean): *boolean* (true),<br>
 &emsp;&emsp;[showFPS](#showfps-boolean): *boolean* (false),<br>
 &emsp;&emsp;[showLeds](#showleds-boolean): *boolean* (false),<br>
@@ -257,7 +260,7 @@ For more info, see [AnalyserNode.minDecibels](https://developer.mozilla.org/en-U
 
 Highest and lowest frequencies represented in the X-axis of the analyzer. Values in Hertz. *maxFreq* defaults to **22000** and *minFreq* defaults to **20**.
 
-The minimum allowed value is **1**. Trying to set a lower value will throw an [error](#custom-errors).
+The minimum allowed value is **1**. Trying to set a lower value will throw an `ERR_FREQUENCY_TOO_LOW` [error](#custom-errors).
 
 The maximum practical value is half the sampling rate ([`audioCtx.sampleRate`](#audioctx-audiocontext-object)), although this is not enforced by audioMotion-analyzer.
 
@@ -297,6 +300,36 @@ This is usually **1** for standard displays and **2** for retina / Hi-DPI screen
 You can refer to this value to adjust any additional drawings done in the canvas (via [callback function](#oncanvasdraw-function)).
 
 When [low-resolution mode](#lores-boolean) is active *pixelRatio* is halved, i.e. **0.5** for standard displays and **1** for retina / Hi-DPI.
+
+### `reflexAlpha` *number*
+
+*Available since v2.1.0*
+
+Reflection opacity (when [`reflexRatio`](#reflexratio-number) > 0).
+
+Must be a float between 0 (completely transparent) and 1 (completely opaque).
+
+Defaults to **0.15**.
+
+### `reflexFit` *boolean*
+
+*Available since v2.1.0*
+
+When *true* the reflection will be adjusted (stretched or shrinked) to fit the canvas. If set to *false* the reflected image may be cut at the bottom (when [`reflexRatio`](#reflexratio-number) < 0.5) or not fill the entire canvas (when [`reflexRatio`](#reflexratio-number) > 0.5).
+
+Defaults to **true**.
+
+### `reflexRatio` *number*
+
+*Available since v2.1.0*
+
+Percentage of canvas height used for reflection. Must be a float greater than or equal to 0, and less than 1. Trying to set a value out of this range will throw an `ERR_REFLEX_OUT_OF_RANGE` [error](#custom-errors).
+
+For a perfect mirrored effect, set `reflexRatio` to 0.5 and [`reflexAlpha`](#reflexalpha-number) to 1.
+
+This has no effect when [`lumiBars`](#lumibars-boolean) is active.
+
+Defaults to **0** (no reflection).
 
 ### `showBgColor` *boolean*
 
@@ -472,6 +505,7 @@ ERR_FREQUENCY_TOO_LOW      | User tried to set the [`minFreq`](#minfreq-number) 
 ERR_GRADIENT_INVALID_NAME  | The `name` parameter for [`registerGradient()`](#registergradient-name-options-) must be a non-empty string.
 ERR_GRADIENT_NOT_AN_OBJECT | The `options` parameter for [`registerGradient()`](#registergradient-name-options-) must be an object.
 ERR_GRADIENT_MISSING_COLOR | The `options` parameter for [`registerGradient()`](#registergradient-name-options-) must define at least two color-stops.
+ERR_REFLEX_OUT_OF_RANGE    | Tried to assign a value < 0 or >= 1 to [`reflexRatio`](#reflexratio-number) property.
 ERR_UNKNOWN_GRADIENT       | User tried to [select a gradient](#gradient-string) not previously registered.
 
 ## License
