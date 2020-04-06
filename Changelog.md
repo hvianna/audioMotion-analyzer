@@ -1,12 +1,18 @@
 Changelog
 =========
 
+## version 2.1.0 - released 2020-04-06 :mask:
+
+### Added:
+
++ Customizable Reflex effect - see [`reflexRatio`](README.md#reflexratio-number) and try it in the [demo](https://audiomotion.dev/demo/fluid.html).
+
+
 ## version 2.0.0 - released 2020-03-24 :mask:
 
 ### Added:
 
-+ New [`lineWidth`](README.md#linewidth-number) and [`fillAlpha`](README.md#fillalpha-number) properties
-for [mode 10](README.md#mode-number) customization, so it can now work as an area graph (default), a line graph or a combination of both;
++ New [`lineWidth`](README.md#linewidth-number) and [`fillAlpha`](README.md#fillalpha-number) properties for [mode 10](README.md#mode-number) customization, so it can now work as an area graph (default), a line graph or a combination of both;
 + New [`barSpace`](README.md#barspace-number) property for customizable bar spacing in octave bands modes;
 + You can now provide an external AudioContext via `audioCtx` property in the [constructor's `options`](README.md#constructor), allowing you to share the same context among different instances;
 + Custom [error codes](README.md#custom-errors);

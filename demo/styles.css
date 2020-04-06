@@ -47,7 +47,7 @@ img {
 }
 
 input[type="range"] {
-	width: 90px;
+	width: 60px;
 }
 
 input[type="text"],
@@ -71,9 +71,8 @@ select {
 
 .label {
 	display: inline-block;
-	font-size: 11px;
+	font-size: 12px;
 	margin: 0 6px;
-	text-transform: uppercase;
 	vertical-align: top;
 }
 .label input,

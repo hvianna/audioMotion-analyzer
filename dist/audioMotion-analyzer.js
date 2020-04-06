@@ -1,13 +1,13 @@
-/**
+/*!
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 2.0.0
+ * @version 2.1.0
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const _VERSION = '2.0.0';
+const _VERSION = '2.1.0';
 
 export default class AudioMotionAnalyzer {
 
@@ -40,6 +40,9 @@ export default class AudioMotionAnalyzer {
 			showFPS     : false,
 			lumiBars    : false,
 			loRes       : false,
+			reflexRatio : 0,
+			reflexAlpha : 0.15,
+			reflexFit   : true,
 			lineWidth   : 0,
 			fillAlpha   : 1,
 			barSpace    : 0.1,
@@ -218,6 +221,8 @@ export default class AudioMotionAnalyzer {
 		if ( mode >= 0 && mode <= 10 && mode != 9 ) {
 			this._mode = mode;
 			this._precalculateBarPositions();
+			if ( this._reflexRatio > 0 )
+				this._generateGradients();
 		}
 		else
 			throw new AudioMotionError( 'ERR_INVALID_MODE', `Invalid mode: ${mode}` );
@@ -231,6 +236,33 @@ export default class AudioMotionAnalyzer {
 	set loRes( value ) {
 		this._loRes = Boolean( value );
 		this._setCanvas('lores');
+	}
+
+	get lumiBars() {
+		return this._lumiBars;
+	}
+	set lumiBars( value ) {
+		this._lumiBars = Boolean( value );
+		if ( this._reflexRatio > 0 ) {
+			this._generateGradients();
+			this._createLedMask();
+		}
+	}
+
+	// Reflex
+
+	get reflexRatio() {
+		return this._reflexRatio;
+	}
+	set reflexRatio( value ) {
+		value = Number( value );
+		if ( value < 0 || value >= 1 )
+			throw new AudioMotionError( 'ERR_REFLEX_OUT_OF_RANGE', `Reflex ratio must be >= 0 and < 1` );
+		else {
+			this._reflexRatio = value;
+			this._generateGradients();
+			this._createLedMask();
+		}
 	}
 
 	// Current frequency range
@@ -447,7 +479,7 @@ export default class AudioMotionAnalyzer {
 		else if ( ! started && value ) {
 			this._frame = this._fps = 0;
 			this._time = performance.now();
-			this._animationReq = requestAnimationFrame( () => this._draw() );
+			this._animationReq = requestAnimationFrame( timestamp => this._draw( timestamp ) );
 		}
 
 		return this.isOn;
@@ -494,18 +526,20 @@ export default class AudioMotionAnalyzer {
 		if ( this._mode % 10 == 0 || ! this._initDone )
 			return;
 
+		const analyzerHeight = this._lumiBars ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio ) | 0;
+
 		// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
 
-		let spaceV = Math.min( 6, this._canvas.height / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
+		let spaceV = Math.min( 6, analyzerHeight / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
 		let nLeds;
 
 		switch ( this._mode ) {
 			case 8:
-				spaceV = Math.min( 16, this._canvas.height / ( 33 * this._pixelRatio ) | 0 );
+				spaceV = Math.min( 16, analyzerHeight / ( 33 * this._pixelRatio ) | 0 );
 				nLeds = 24;
 				break;
 			case 7:
-				spaceV = Math.min( 8, this._canvas.height / ( 67 * this._pixelRatio ) | 0 );
+				spaceV = Math.min( 8, analyzerHeight / ( 67 * this._pixelRatio ) | 0 );
 				nLeds = 48;
 				break;
 			case 6:
@@ -520,22 +554,22 @@ export default class AudioMotionAnalyzer {
 				nLeds = 96;
 				break;
 			case 2:
-				spaceV = Math.min( 4, this._canvas.height / ( 135 * this._pixelRatio ) | 0 );
+				spaceV = Math.min( 4, analyzerHeight / ( 135 * this._pixelRatio ) | 0 );
 				nLeds = 128;
 				break;
 			case 1:
-				spaceV = Math.min( 3, Math.max( 2, this._canvas.height / ( 180 * this._pixelRatio ) | 0 ) );
+				spaceV = Math.min( 3, Math.max( 2, analyzerHeight / ( 180 * this._pixelRatio ) | 0 ) );
 				nLeds = 128;
 		}
 
 		spaceV *= this._pixelRatio;
-		nLeds = Math.min( nLeds, ( this._canvas.height + spaceV ) / ( spaceV * 2 ) | 0 );
+		nLeds = Math.min( nLeds, ( analyzerHeight + spaceV ) / ( spaceV * 2 ) | 0 );
 
 		this._ledOptions = {
 			nLeds,
 			spaceH: this._barWidth * ( this._mode == 1 ? .45 : this._mode < 5 ? .225 : .125 ),
 			spaceV,
-			ledHeight: ( this._canvas.height + spaceV ) / nLeds - spaceV
+			ledHeight: ( analyzerHeight + spaceV ) / nLeds - spaceV
 		};
 
 		// use either the LEDs default horizontal space or the user selected bar space, whichever is larger
@@ -545,13 +579,13 @@ export default class AudioMotionAnalyzer {
 		this._ledsMask.width |= 0;
 
 		// add a vertical black line to the left of each bar to create the LED columns
-		this._analyzerBars.forEach( bar => this._ledsCtx.fillRect( bar.posX - spacing / 2, 0, spacing, this._canvas.height ) );
+		this._analyzerBars.forEach( bar => this._ledsCtx.fillRect( bar.posX - spacing / 2, 0, spacing, analyzerHeight ) );
 
 		// add a vertical black line in the mask canvas after the last led column
-		this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - spacing / 2, 0, spacing, this._canvas.height );
+		this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - spacing / 2, 0, spacing, analyzerHeight );
 
 		// add horizontal black lines to create the LED rows
-		for ( let i = this._ledOptions.ledHeight; i < this._canvas.height; i += this._ledOptions.ledHeight + this._ledOptions.spaceV )
+		for ( let i = this._ledOptions.ledHeight; i < analyzerHeight; i += this._ledOptions.ledHeight + this._ledOptions.spaceV )
 			this._ledsCtx.fillRect( 0, i, this._canvas.width, this._ledOptions.spaceV );
 	}
 
@@ -559,10 +593,12 @@ export default class AudioMotionAnalyzer {
 	 * Redraw the canvas
 	 * this is called 60 times per second by requestAnimationFrame()
 	 */
-	_draw() {
+	_draw( timestamp ) {
 
-		const isLedDisplay = ( this.showLeds && this._mode > 0 && this._mode < 10 ),
-			  isLumiBars   = ( this.lumiBars && this._mode > 0 && this._mode < 10 );
+		const isOctaveBands  = ( this._mode % 10 != 0 ), // mode > 0 && mode < 10
+			  isLedDisplay   = ( this.showLeds  && isOctaveBands ),
+			  isLumiBars     = ( this._lumiBars && isOctaveBands ),
+			  analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0;
 
 		if ( ! this.showBgColor )	// use black background
 			this._canvasCtx.fillStyle = '#000';
@@ -584,12 +620,12 @@ export default class AudioMotionAnalyzer {
 		// if in "area fill" mode, start the drawing path
 		if ( this._mode == 10 ) {
 			this._canvasCtx.beginPath();
-			this._canvasCtx.moveTo( -this.lineWidth, this._canvas.height );
+			this._canvasCtx.moveTo( -this.lineWidth, analyzerHeight );
 		}
 
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing defined by the led options
-		let width = this._barWidth - ( ! ( this._mode % 10 ) ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
+		let width = this._barWidth - ( ! isOctaveBands ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
 
 		// if no bar spacing is required, make sure width is integer for pixel accurate calculation
 		if ( this._barSpace == 0 && ! isLedDisplay )
@@ -624,7 +660,7 @@ export default class AudioMotionAnalyzer {
 			if ( isLedDisplay ) // normalize barHeight to match one of the "led" elements
 				barHeight = ( barHeight / 255 * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
 			else
-				barHeight = barHeight / 255 * this._canvas.height | 0;
+				barHeight = barHeight / 255 * analyzerHeight | 0;
 
 			if ( barHeight >= bar.peak ) {
 				bar.peak = barHeight;
@@ -637,7 +673,7 @@ export default class AudioMotionAnalyzer {
 
 			// Draw line / bar
 			if ( this._mode == 10 ) {
-				this._canvasCtx.lineTo( bar.posX, this._canvas.height - barHeight );
+				this._canvasCtx.lineTo( bar.posX, analyzerHeight - barHeight );
 			}
 			else {
 				if ( this._mode > 0 ) {
@@ -661,7 +697,7 @@ export default class AudioMotionAnalyzer {
 					this._canvasCtx.globalAlpha = 1;
 				}
 				else
-					this._canvasCtx.fillRect( posX, this._canvas.height, adjWidth, -barHeight );
+					this._canvasCtx.fillRect( posX, analyzerHeight, adjWidth, -barHeight );
 			}
 
 			// Draw peak
@@ -670,13 +706,13 @@ export default class AudioMotionAnalyzer {
 					if ( isLedDisplay ) {
 						this._canvasCtx.fillRect(
 							posX,
-							( this._ledOptions.nLeds - bar.peak / ( this._canvas.height + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ),
+							( this._ledOptions.nLeds - bar.peak / ( analyzerHeight + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ),
 							width,
 							this._ledOptions.ledHeight
 						);
 					}
 					else
-						this._canvasCtx.fillRect( posX, this._canvas.height - bar.peak, adjWidth, 2 );
+						this._canvasCtx.fillRect( posX, analyzerHeight - bar.peak, adjWidth, 2 );
 				}
 
 				if ( bar.hold )
@@ -689,7 +725,7 @@ export default class AudioMotionAnalyzer {
 		} // for ( let i = 0; i < l; i++ )
 
 		if ( this._mode == 10 ) { // fill area
-			this._canvasCtx.lineTo( bar.posX + this.lineWidth, this._canvas.height );
+			this._canvasCtx.lineTo( bar.posX + this.lineWidth, analyzerHeight );
 
 			if ( this.lineWidth > 0 ) {
 				this._canvasCtx.lineWidth = this.lineWidth;
@@ -706,18 +742,38 @@ export default class AudioMotionAnalyzer {
 		else if ( isLedDisplay ) // applies LEDs mask over the canvas
 			this._canvasCtx.drawImage( this._ledsMask, 0, 0 );
 
+		// Reflex effect
+		if ( this._reflexRatio > 0 && ! isLumiBars ) {
+			let posY, height;
+			if ( this.reflexFit ) {
+				posY   = 0;
+				height = this._canvas.height - analyzerHeight;
+			}
+			else {
+				posY   = this._canvas.height - analyzerHeight * 2;
+				height = analyzerHeight;
+			}
+
+			this._canvasCtx.fillStyle = '#000';
+			this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
+			this._canvasCtx.globalAlpha = this.reflexAlpha;
+			this._canvasCtx.setTransform( 1, 0, 0, -1, 0, this._canvas.height );
+			this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, posY, this._canvas.width, height );
+			this._canvasCtx.globalAlpha = 1;
+			this._canvasCtx.setTransform();
+		}
+
 		if ( this.showScale )
 			this._canvasCtx.drawImage( this._labels, 0, this._canvas.height - this._labels.height );
 
 		this._frame++;
 
-		const now = performance.now();
-		const elapsed = now - this._time;
+		const elapsed = timestamp - this._time;
 
 		if ( elapsed >= 1000 ) {
 			this._fps = this._frame / ( elapsed / 1000 );
 			this._frame = 0;
-			this._time = now;
+			this._time = timestamp;
 		}
 		if ( this.showFPS ) {
 			const size = 20 * this._pixelRatio;
@@ -734,7 +790,7 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// schedule next canvas update
-		this._animationReq = requestAnimationFrame( () => this._draw() );
+		this._animationReq = requestAnimationFrame( timestamp => this._draw( timestamp ) );
 	}
 
 	/**
@@ -769,11 +825,13 @@ export default class AudioMotionAnalyzer {
 	_generateGradients() {
 		let grad;
 
+		const analyzerHeight = ( this._lumiBars && this._mode % 10 ) ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio ) | 0;
+
 		Object.keys( this._gradients ).forEach( key => {
 			if ( this._gradients[ key ].dir && this._gradients[ key ].dir == 'h' )
 				grad = this._canvasCtx.createLinearGradient( 0, 0, this._canvas.width, 0 );
 			else
-				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, this._canvas.height );
+				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, analyzerHeight );
 
 			if ( this._gradients[ key ].colorStops ) {
 				this._gradients[ key ].colorStops.forEach( ( colorInfo, index ) => {
