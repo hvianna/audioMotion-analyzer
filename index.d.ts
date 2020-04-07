@@ -31,6 +31,7 @@ interface Options {
     source?: HTMLMediaElement;
     start?: boolean;
     width?: number;
+    useAlpha?: boolean;
 }
 
 type GradientColorStop = string | { pos: number; color: string};
@@ -119,6 +120,8 @@ declare class AudioMotionAnalyzer {
     set smoothing(value: number);
 
     get version(): string;
+
+    public useAlpha: boolean;
 
     public onCanvasDraw: OnCanvasDrawFunction;
     public onCanvasResize: OnCanvasResizeFunction;

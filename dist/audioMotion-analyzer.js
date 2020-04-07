@@ -46,7 +46,8 @@ export default class AudioMotionAnalyzer {
 			lineWidth   : 0,
 			fillAlpha   : 1,
 			barSpace    : 0.1,
-			start       : true
+			start       : true,
+			useAlpha    : false
 		};
 
 		// Gradient definitions
@@ -123,9 +124,8 @@ export default class AudioMotionAnalyzer {
 		this._canvas = document.createElement('canvas');
 		this._canvas.style = 'max-width: 100%;';
 		this._container.appendChild( this._canvas );
-		// TODO: handle this
-		// this._canvasCtx = this._canvas.getContext( '2d', { alpha: false } );
-		this._canvasCtx = this._canvas.getContext( '2d', { alpha: true } );
+		const useAlpha = (typeof options.useAlpha === "boolean") ? options.useAlpha : defaults.useAlpha;
+		this._canvasCtx = this._canvas.getContext( '2d', { alpha: useAlpha } );
 
 		// auxiliary canvas for the LED mask
 		this._ledsMask = document.createElement('canvas');
@@ -602,27 +602,20 @@ export default class AudioMotionAnalyzer {
 			  isLumiBars     = ( this._lumiBars && isOctaveBands ),
 			  analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0;
 
-		// if ( ! this.showBgColor )	// use black background
-		// 	this._canvasCtx.fillStyle = '#000';
-		// else
-		// 	if ( isLedDisplay )
-		// 		this._canvasCtx.fillStyle = '#111';
-		// 	else
-		// 		this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor; // use background color defined by gradient
+		if ( ! this.showBgColor )	// use black or clear background background
+			this._canvasCtx.fillStyle = (this.useAlpha) ? 'rgba(0, 0, 0, 0)' : '#000';
+		else
+			if ( isLedDisplay )
+				this._canvasCtx.fillStyle = (this.useAlpha) ? 'rgba(1, 1, 1, 0)' : '#111';
+			else
+				this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor; // use background color defined by gradient
+
+		// TODO: remove this stuff
+		// this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
+		// this._canvasCtx.fillStyle = "rgba(0, 0, 0, 0)"; 
 
 		// clear the canvas
-		// this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
-
-		// Force transparent background (for now)
-		this._canvasCtx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-		// this._canvasCtx.globalAlpha = 0;
-		this._canvasCtx.fillStyle = "rgba(0, 0, 0, 0)";
 		this._canvasCtx.fillRect(0, 0, this._canvas.width, this._canvas.height);
-		// this._canvasCtx.globalAlpha = 1;
-
-		// // Setting this to anything other than the transparent color fixes the transparent background issue??
-		// // Source: http://marcuscobden.co.uk/stuff/2008-10/webkit-canvas-fillstyle/
-		// this._canvasCtx.fillStyle = "red";
 
 		// get a new array of data from the FFT
 		this._analyzer.getByteFrequencyData( this._dataArray );
@@ -1055,10 +1048,12 @@ export default class AudioMotionAnalyzer {
 		if ( this._pixelRatio == 2 && window.screen.height <= 540 )
 			this._pixelRatio = 1;
 
-		// clear the canvas
+		// TODO: remove this stuff
 		// this._canvasCtx.fillStyle = '#000';
-		this._canvasCtx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-		this._canvasCtx.fillStyle = 'rgba(0, 0, 0, 0)';
+		// this._canvasCtx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+
+		// clear the canvas
+		this._canvasCtx.fillStyle = (this.useAlpha) ? 'rgba(0, 0, 0, 0)' : '#000';
 		this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
 
 		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
