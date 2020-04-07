@@ -600,9 +600,6 @@ export default class AudioMotionAnalyzer {
 			  isLumiBars     = ( this._lumiBars && isOctaveBands ),
 			  analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0;
 
-		// Wipe the entire canvas (this allows for transparent backgrounds)
-		this._canvasCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
 		if ( ! this.showBgColor )	// use black background
 			this._canvasCtx.fillStyle = '#000';
 		else
@@ -612,7 +609,10 @@ export default class AudioMotionAnalyzer {
 				this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor; // use background color defined by gradient
 
 		// clear the canvas
-		this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
+		// this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
+
+		// TODO: fix it up
+		this._canvasCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
 		// get a new array of data from the FFT
 		this._analyzer.getByteFrequencyData( this._dataArray );
