@@ -615,8 +615,8 @@ export default class AudioMotionAnalyzer {
 		// Force transparent background (for now)
 		this._canvasCtx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 		// this._canvasCtx.globalAlpha = 0;
-		// this._canvasCtx.fillStyle = "rgba(0, 0, 0, 0)";
-		// this._canvasCtx.fillRect(0, 0, this._canvas.width, this._canvas.height);
+		this._canvasCtx.fillStyle = "rgba(0, 0, 0, 0)";
+		this._canvasCtx.fillRect(0, 0, this._canvas.width, this._canvas.height);
 		// this._canvasCtx.globalAlpha = 1;
 
 		// // Setting this to anything other than the transparent color fixes the transparent background issue??
@@ -1061,8 +1061,8 @@ export default class AudioMotionAnalyzer {
 		// clear the canvas
 		// this._canvasCtx.fillStyle = '#000';
 		this._canvasCtx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-		// this._canvasCtx.fillStyle = 'rgba(0, 0, 0, 0)';
-		// this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
+		this._canvasCtx.fillStyle = 'rgba(0, 0, 0, 0)';
+		this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
 
 		// // set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
 		// this._canvasCtx.lineJoin = 'bevel';
