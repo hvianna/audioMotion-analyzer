@@ -610,10 +610,6 @@ export default class AudioMotionAnalyzer {
 			else
 				this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor; // use background color defined by gradient
 
-		// TODO: remove this stuff
-		// this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
-		// this._canvasCtx.fillStyle = "rgba(0, 0, 0, 0)"; 
-
 		// clear the canvas
 		this._canvasCtx.fillRect(0, 0, this._canvas.width, this._canvas.height);
 
@@ -760,7 +756,7 @@ export default class AudioMotionAnalyzer {
 				height = analyzerHeight;
 			}
 
-			this._canvasCtx.fillStyle = '#000';
+			this._canvasCtx.fillStyle = (this.useAlpha) ? 'rgba(0, 0, 0, 0)' : '#000';
 			this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
 			this._canvasCtx.globalAlpha = this.reflexAlpha;
 			this._canvasCtx.setTransform( 1, 0, 0, -1, 0, this._canvas.height );
@@ -1047,10 +1043,6 @@ export default class AudioMotionAnalyzer {
 		// workaround for wrong dPR reported on Android TV
 		if ( this._pixelRatio == 2 && window.screen.height <= 540 )
 			this._pixelRatio = 1;
-
-		// TODO: remove this stuff
-		// this._canvasCtx.fillStyle = '#000';
-		// this._canvasCtx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 
 		// clear the canvas
 		this._canvasCtx.fillStyle = (this.useAlpha) ? 'rgba(0, 0, 0, 0)' : '#000';
