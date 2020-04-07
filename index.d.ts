@@ -129,7 +129,7 @@ declare class AudioMotionAnalyzer {
     public setFreqRange(minFreq: number, maxFreq: number): void;
     public setOptions(options: Options): void;
     public setSensitivity(minDecibels: number, maxDecibels: number): void;
-    public toggleAnalyzer(value?: boolean);
+    public toggleAnalyzer(value?: boolean): void;
     public toggleFullscreen(): void;
 }
 
