@@ -708,7 +708,7 @@ export default class AudioMotionAnalyzer {
 					this._canvasCtx.globalAlpha = 1;
 				}
 				else // Draw bars
-					roundRect(this._canvasCtx, posX, analyzerHeight, adjWidth, -barHeight, this.rectRadius, true, false);
+					roundRect(this._canvasCtx, posX, analyzerHeight, adjWidth, barHeight, this.rectRadius, true, false);
 			}
 
 			// Draw peak
