@@ -600,19 +600,25 @@ export default class AudioMotionAnalyzer {
 			  isLumiBars     = ( this._lumiBars && isOctaveBands ),
 			  analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0;
 
-		if ( ! this.showBgColor )	// use black background
-			this._canvasCtx.fillStyle = '#000';
-		else
-			if ( isLedDisplay )
-				this._canvasCtx.fillStyle = '#111';
-			else
-				this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor; // use background color defined by gradient
+		// if ( ! this.showBgColor )	// use black background
+		// 	this._canvasCtx.fillStyle = '#000';
+		// else
+		// 	if ( isLedDisplay )
+		// 		this._canvasCtx.fillStyle = '#111';
+		// 	else
+		// 		this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor; // use background color defined by gradient
 
 		// clear the canvas
 		// this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
 
-		// TODO: fix it up
-		this._canvasCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		// Force transparent background
+		this._canvasCtx.fillStyle = "rgba(0, 0, 0, 0)";
+		this._canvasCtx.fillRect(0, 0, this._canvas.width, this._canvas.height);
+		// this._canvasCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+		// Setting this to anything other than the transparent color fixes the transparent background issue
+		// Source: http://marcuscobden.co.uk/stuff/2008-10/webkit-canvas-fillstyle/
+		this._canvasCtx.fillStyle = "red";
 
 		// get a new array of data from the FFT
 		this._analyzer.getByteFrequencyData( this._dataArray );
