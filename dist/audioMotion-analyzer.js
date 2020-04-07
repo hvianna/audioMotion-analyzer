@@ -123,7 +123,8 @@ export default class AudioMotionAnalyzer {
 		this._canvas = document.createElement('canvas');
 		this._canvas.style = 'max-width: 100%;';
 		this._container.appendChild( this._canvas );
-		this._canvasCtx = this._canvas.getContext( '2d', { alpha: false } );
+		// this._canvasCtx = this._canvas.getContext( '2d', { alpha: false } );
+		this._canvasCtx = this._canvas.getContext( '2d', { alpha: true } );
 
 		// auxiliary canvas for the LED mask
 		this._ledsMask = document.createElement('canvas');
@@ -614,8 +615,8 @@ export default class AudioMotionAnalyzer {
 		// Force transparent background (for now)
 		this._canvasCtx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 		// this._canvasCtx.globalAlpha = 0;
-		this._canvasCtx.fillStyle = "rgba(0, 0, 0, 0)";
-		this._canvasCtx.fillRect(0, 0, this._canvas.width, this._canvas.height);
+		// this._canvasCtx.fillStyle = "rgba(0, 0, 0, 0)";
+		// this._canvasCtx.fillRect(0, 0, this._canvas.width, this._canvas.height);
 		// this._canvasCtx.globalAlpha = 1;
 
 		// // Setting this to anything other than the transparent color fixes the transparent background issue??
@@ -834,6 +835,8 @@ export default class AudioMotionAnalyzer {
 	 * Generate gradients
 	 */
 	_generateGradients() {
+		return; // TODO: remove
+
 		let grad;
 
 		const analyzerHeight = ( this._lumiBars && this._mode % 10 ) ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio ) | 0;
@@ -876,6 +879,7 @@ export default class AudioMotionAnalyzer {
 	 *                           minLog
 	 */
 	_precalculateBarPositions() {
+		return; // TODO: remove
 
 		if ( ! this._initDone )
 			return;
