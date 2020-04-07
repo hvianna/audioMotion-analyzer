@@ -3,6 +3,13 @@ type OnCanvasResizeFunction = (reason: CanvasResizeReason, instance: AudioMotion
 
 type CanvasResizeReason = "create" | "fschange" | "lores" | "resize" | "user";
 
+interface RectRadiusOptions {
+    tl?: number; // Top-left
+    tr?: number; // Top-right
+    br?: number; // Bottom-right
+    bl?: number; // Bottom-left
+}
+
 interface Options {
     audioCtx?: AudioContext;
     barSpace?: number;
@@ -32,6 +39,7 @@ interface Options {
     start?: boolean;
     width?: number;
     useAlpha?: boolean;
+    rectRadius?: RectRadiusOptions;
 }
 
 type GradientColorStop = string | { pos: number; color: string};
@@ -121,7 +129,8 @@ declare class AudioMotionAnalyzer {
 
     get version(): string;
 
-    public useAlpha: boolean;
+    public readonly useAlpha: boolean;
+    public rectRadius: RectRadiusOptions;
 
     public onCanvasDraw: OnCanvasDrawFunction;
     public onCanvasResize: OnCanvasResizeFunction;
