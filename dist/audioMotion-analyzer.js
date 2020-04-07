@@ -709,7 +709,7 @@ export default class AudioMotionAnalyzer {
 				}
 				else // Draw bars
 					if (barHeight <= this.rectRadius.bl || barHeight <= this.rectRadius.br) {
-						this._canvasCtx.fillRect( posX, analyzerHeight, adjWidth, 0);
+						roundRect(this._canvasCtx, posX, analyzerHeight - barHeight, adjWidth, barHeight, { ...this.rectRadius, bl: 0, br: 0 }, true, false);
 					} else {
 						roundRect(this._canvasCtx, posX, analyzerHeight - barHeight, adjWidth, barHeight, this.rectRadius, true, false);
 					}
