@@ -611,6 +611,7 @@ export default class AudioMotionAnalyzer {
 				this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor; // use background color defined by gradient
 
 		// clear the canvas
+		this._canvasCtx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 		this._canvasCtx.fillRect(0, 0, this._canvas.width, this._canvas.height);
 
 		// get a new array of data from the FFT
@@ -759,6 +760,7 @@ export default class AudioMotionAnalyzer {
 			}
 
 			this._canvasCtx.fillStyle = (this.useAlpha) ? 'rgba(0, 0, 0, 0)' : '#000';
+			this._canvasCtx.clearRect(0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
 			this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
 			this._canvasCtx.fillStyle = "red";
 			this._canvasCtx.globalAlpha = this.reflexAlpha;
@@ -1049,6 +1051,7 @@ export default class AudioMotionAnalyzer {
 
 		// clear the canvas
 		this._canvasCtx.fillStyle = (this.useAlpha) ? 'rgba(0, 0, 0, 0)' : '#000';
+		this._canvasCtx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 		this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
 
 		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
