@@ -616,6 +616,8 @@ export default class AudioMotionAnalyzer {
 		// get a new array of data from the FFT
 		this._analyzer.getByteFrequencyData( this._dataArray );
 
+		this._canvasCtx.fillStyle = "red";
+
 		// set selected gradient
 		this._canvasCtx.fillStyle = this._gradients[ this._gradient ].gradient;
 
@@ -758,6 +760,7 @@ export default class AudioMotionAnalyzer {
 
 			this._canvasCtx.fillStyle = (this.useAlpha) ? 'rgba(0, 0, 0, 0)' : '#000';
 			this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
+			this._canvasCtx.fillStyle = "red";
 			this._canvasCtx.globalAlpha = this.reflexAlpha;
 			this._canvasCtx.setTransform( 1, 0, 0, -1, 0, this._canvas.height );
 			this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, posY, this._canvas.width, height );
