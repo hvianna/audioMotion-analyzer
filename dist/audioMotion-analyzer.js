@@ -600,6 +600,9 @@ export default class AudioMotionAnalyzer {
 			  isLumiBars     = ( this._lumiBars && isOctaveBands ),
 			  analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0;
 
+		// Wipe the entire canvas (this allows for transparent backgrounds)
+		this._canvasCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
 		if ( ! this.showBgColor )	// use black background
 			this._canvasCtx.fillStyle = '#000';
 		else
