@@ -123,6 +123,7 @@ export default class AudioMotionAnalyzer {
 		this._canvas = document.createElement('canvas');
 		this._canvas.style = 'max-width: 100%;';
 		this._container.appendChild( this._canvas );
+		// TODO: handle this
 		// this._canvasCtx = this._canvas.getContext( '2d', { alpha: false } );
 		this._canvasCtx = this._canvas.getContext( '2d', { alpha: true } );
 
@@ -623,183 +624,183 @@ export default class AudioMotionAnalyzer {
 		// // Source: http://marcuscobden.co.uk/stuff/2008-10/webkit-canvas-fillstyle/
 		// this._canvasCtx.fillStyle = "red";
 
-		// // get a new array of data from the FFT
-		// this._analyzer.getByteFrequencyData( this._dataArray );
+		// get a new array of data from the FFT
+		this._analyzer.getByteFrequencyData( this._dataArray );
 
-		// // set selected gradient
-		// this._canvasCtx.fillStyle = this._gradients[ this._gradient ].gradient;
+		// set selected gradient
+		this._canvasCtx.fillStyle = this._gradients[ this._gradient ].gradient;
 
-		// // if in "area fill" mode, start the drawing path
-		// if ( this._mode == 10 ) {
-		// 	this._canvasCtx.beginPath();
-		// 	this._canvasCtx.moveTo( -this.lineWidth, analyzerHeight );
-		// }
+		// if in "area fill" mode, start the drawing path
+		if ( this._mode == 10 ) {
+			this._canvasCtx.beginPath();
+			this._canvasCtx.moveTo( -this.lineWidth, analyzerHeight );
+		}
 
-		// // compute the effective bar width, considering the selected bar spacing
-		// // if led effect is active, ensure at least the spacing defined by the led options
-		// let width = this._barWidth - ( ! isOctaveBands ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
+		// compute the effective bar width, considering the selected bar spacing
+		// if led effect is active, ensure at least the spacing defined by the led options
+		let width = this._barWidth - ( ! isOctaveBands ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
 
-		// // if no bar spacing is required, make sure width is integer for pixel accurate calculation
-		// if ( this._barSpace == 0 && ! isLedDisplay )
-		// 	width |= 0;
+		// if no bar spacing is required, make sure width is integer for pixel accurate calculation
+		if ( this._barSpace == 0 && ! isLedDisplay )
+			width |= 0;
 
-		// // draw bars / lines
+		// draw bars / lines
 
-		// let bar, barHeight;
-		// const nBars = this._analyzerBars.length;
+		let bar, barHeight;
+		const nBars = this._analyzerBars.length;
 
-		// for ( let i = 0; i < nBars; i++ ) {
+		for ( let i = 0; i < nBars; i++ ) {
 
-		// 	bar = this._analyzerBars[ i ];
+			bar = this._analyzerBars[ i ];
 
-		// 	if ( bar.endIdx == 0 ) { // single FFT bin
-		// 		barHeight = this._dataArray[ bar.dataIdx ];
-		// 		// apply smoothing factor when several bars share the same bin
-		// 		if ( bar.factor )
-		// 			barHeight += ( this._dataArray[ bar.dataIdx + 1 ] - barHeight ) * bar.factor;
-		// 	}
-		// 	else { 					// range of bins
-		// 		barHeight = 0;
-		// 		// use the highest value in the range
-		// 		for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
-		// 			barHeight = Math.max( barHeight, this._dataArray[ j ] );
-		// 	}
+			if ( bar.endIdx == 0 ) { // single FFT bin
+				barHeight = this._dataArray[ bar.dataIdx ];
+				// apply smoothing factor when several bars share the same bin
+				if ( bar.factor )
+					barHeight += ( this._dataArray[ bar.dataIdx + 1 ] - barHeight ) * bar.factor;
+			}
+			else { 					// range of bins
+				barHeight = 0;
+				// use the highest value in the range
+				for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
+					barHeight = Math.max( barHeight, this._dataArray[ j ] );
+			}
 
-		// 	// set opacity for lumi bars before barHeight value is normalized
-		// 	if ( isLumiBars )
-		// 		this._canvasCtx.globalAlpha = barHeight / 255;
+			// set opacity for lumi bars before barHeight value is normalized
+			if ( isLumiBars )
+				this._canvasCtx.globalAlpha = barHeight / 255;
 
-		// 	if ( isLedDisplay ) // normalize barHeight to match one of the "led" elements
-		// 		barHeight = ( barHeight / 255 * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
-		// 	else
-		// 		barHeight = barHeight / 255 * analyzerHeight | 0;
+			if ( isLedDisplay ) // normalize barHeight to match one of the "led" elements
+				barHeight = ( barHeight / 255 * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
+			else
+				barHeight = barHeight / 255 * analyzerHeight | 0;
 
-		// 	if ( barHeight >= bar.peak ) {
-		// 		bar.peak = barHeight;
-		// 		bar.hold = 30; // set peak hold time to 30 frames (0.5s)
-		// 		bar.accel = 0;
-		// 	}
+			if ( barHeight >= bar.peak ) {
+				bar.peak = barHeight;
+				bar.hold = 30; // set peak hold time to 30 frames (0.5s)
+				bar.accel = 0;
+			}
 
-		// 	let posX = bar.posX;
-		// 	let adjWidth = width; // bar width may need small adjustments for some bars, when barSpace == 0
+			let posX = bar.posX;
+			let adjWidth = width; // bar width may need small adjustments for some bars, when barSpace == 0
 
-		// 	// Draw line / bar
-		// 	if ( this._mode == 10 ) {
-		// 		this._canvasCtx.lineTo( bar.posX, analyzerHeight - barHeight );
-		// 	}
-		// 	else {
-		// 		if ( this._mode > 0 ) {
-		// 			if ( isLedDisplay )
-		// 				posX += Math.max( this._ledOptions.spaceH / 2, this._barSpacePx / 2 );
-		// 			else {
-		// 				if ( this._barSpace == 0 ) {
-		// 					posX |= 0;
-		// 					if ( i > 0 && posX > this._analyzerBars[ i - 1 ].posX + width ) {
-		// 						posX--;
-		// 						adjWidth++;
-		// 					}
-		// 				}
-		// 				else
-		// 					posX += this._barSpacePx / 2;
-		// 			}
-		// 		}
+			// Draw line / bar
+			if ( this._mode == 10 ) {
+				this._canvasCtx.lineTo( bar.posX, analyzerHeight - barHeight );
+			}
+			else {
+				if ( this._mode > 0 ) {
+					if ( isLedDisplay )
+						posX += Math.max( this._ledOptions.spaceH / 2, this._barSpacePx / 2 );
+					else {
+						if ( this._barSpace == 0 ) {
+							posX |= 0;
+							if ( i > 0 && posX > this._analyzerBars[ i - 1 ].posX + width ) {
+								posX--;
+								adjWidth++;
+							}
+						}
+						else
+							posX += this._barSpacePx / 2;
+					}
+				}
 
-		// 		if ( isLumiBars ) {
-		// 			this._canvasCtx.fillRect( posX, 0, adjWidth, this._canvas.height );
-		// 			this._canvasCtx.globalAlpha = 1;
-		// 		}
-		// 		else
-		// 			this._canvasCtx.fillRect( posX, analyzerHeight, adjWidth, -barHeight );
-		// 	}
+				if ( isLumiBars ) {
+					this._canvasCtx.fillRect( posX, 0, adjWidth, this._canvas.height );
+					this._canvasCtx.globalAlpha = 1;
+				}
+				else
+					this._canvasCtx.fillRect( posX, analyzerHeight, adjWidth, -barHeight );
+			}
 
-		// 	// Draw peak
-		// 	if ( bar.peak > 0 ) {
-		// 		if ( this.showPeaks && ! isLumiBars ) {
-		// 			if ( isLedDisplay ) {
-		// 				this._canvasCtx.fillRect(
-		// 					posX,
-		// 					( this._ledOptions.nLeds - bar.peak / ( analyzerHeight + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ),
-		// 					width,
-		// 					this._ledOptions.ledHeight
-		// 				);
-		// 			}
-		// 			else
-		// 				this._canvasCtx.fillRect( posX, analyzerHeight - bar.peak, adjWidth, 2 );
-		// 		}
+			// Draw peak
+			if ( bar.peak > 0 ) {
+				if ( this.showPeaks && ! isLumiBars ) {
+					if ( isLedDisplay ) {
+						this._canvasCtx.fillRect(
+							posX,
+							( this._ledOptions.nLeds - bar.peak / ( analyzerHeight + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ),
+							width,
+							this._ledOptions.ledHeight
+						);
+					}
+					else
+						this._canvasCtx.fillRect( posX, analyzerHeight - bar.peak, adjWidth, 2 );
+				}
 
-		// 		if ( bar.hold )
-		// 			bar.hold--;
-		// 		else {
-		// 			bar.accel++;
-		// 			bar.peak -= bar.accel;
-		// 		}
-		// 	}
-		// } // for ( let i = 0; i < l; i++ )
+				if ( bar.hold )
+					bar.hold--;
+				else {
+					bar.accel++;
+					bar.peak -= bar.accel;
+				}
+			}
+		} // for ( let i = 0; i < l; i++ )
 
-		// if ( this._mode == 10 ) { // fill area
-		// 	this._canvasCtx.lineTo( bar.posX + this.lineWidth, analyzerHeight );
+		if ( this._mode == 10 ) { // fill area
+			this._canvasCtx.lineTo( bar.posX + this.lineWidth, analyzerHeight );
 
-		// 	if ( this.lineWidth > 0 ) {
-		// 		this._canvasCtx.lineWidth = this.lineWidth;
-		// 		this._canvasCtx.strokeStyle = this._canvasCtx.fillStyle;
-		// 		this._canvasCtx.stroke();
-		// 	}
+			if ( this.lineWidth > 0 ) {
+				this._canvasCtx.lineWidth = this.lineWidth;
+				this._canvasCtx.strokeStyle = this._canvasCtx.fillStyle;
+				this._canvasCtx.stroke();
+			}
 
-		// 	if ( this.fillAlpha > 0 ) {
-		// 		this._canvasCtx.globalAlpha = this.fillAlpha;
-		// 		this._canvasCtx.fill();
-		// 		this._canvasCtx.globalAlpha = 1;
-		// 	}
-		// }
-		// else if ( isLedDisplay ) // applies LEDs mask over the canvas
-		// 	this._canvasCtx.drawImage( this._ledsMask, 0, 0 );
+			if ( this.fillAlpha > 0 ) {
+				this._canvasCtx.globalAlpha = this.fillAlpha;
+				this._canvasCtx.fill();
+				this._canvasCtx.globalAlpha = 1;
+			}
+		}
+		else if ( isLedDisplay ) // applies LEDs mask over the canvas
+			this._canvasCtx.drawImage( this._ledsMask, 0, 0 );
 
-		// // Reflex effect
-		// if ( this._reflexRatio > 0 && ! isLumiBars ) {
-		// 	let posY, height;
-		// 	if ( this.reflexFit ) {
-		// 		posY   = 0;
-		// 		height = this._canvas.height - analyzerHeight;
-		// 	}
-		// 	else {
-		// 		posY   = this._canvas.height - analyzerHeight * 2;
-		// 		height = analyzerHeight;
-		// 	}
+		// Reflex effect
+		if ( this._reflexRatio > 0 && ! isLumiBars ) {
+			let posY, height;
+			if ( this.reflexFit ) {
+				posY   = 0;
+				height = this._canvas.height - analyzerHeight;
+			}
+			else {
+				posY   = this._canvas.height - analyzerHeight * 2;
+				height = analyzerHeight;
+			}
 
-		// 	this._canvasCtx.fillStyle = '#000';
-		// 	this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
-		// 	this._canvasCtx.globalAlpha = this.reflexAlpha;
-		// 	this._canvasCtx.setTransform( 1, 0, 0, -1, 0, this._canvas.height );
-		// 	this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, posY, this._canvas.width, height );
-		// 	this._canvasCtx.globalAlpha = 1;
-		// 	this._canvasCtx.setTransform();
-		// }
+			this._canvasCtx.fillStyle = '#000';
+			this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
+			this._canvasCtx.globalAlpha = this.reflexAlpha;
+			this._canvasCtx.setTransform( 1, 0, 0, -1, 0, this._canvas.height );
+			this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, posY, this._canvas.width, height );
+			this._canvasCtx.globalAlpha = 1;
+			this._canvasCtx.setTransform();
+		}
 
-		// if ( this.showScale )
-		// 	this._canvasCtx.drawImage( this._labels, 0, this._canvas.height - this._labels.height );
+		if ( this.showScale )
+			this._canvasCtx.drawImage( this._labels, 0, this._canvas.height - this._labels.height );
 
-		// this._frame++;
+		this._frame++;
 
-		// const elapsed = timestamp - this._time;
+		const elapsed = timestamp - this._time;
 
-		// if ( elapsed >= 1000 ) {
-		// 	this._fps = this._frame / ( elapsed / 1000 );
-		// 	this._frame = 0;
-		// 	this._time = timestamp;
-		// }
-		// if ( this.showFPS ) {
-		// 	const size = 20 * this._pixelRatio;
-		// 	this._canvasCtx.font = `bold ${size}px sans-serif`;
-		// 	this._canvasCtx.fillStyle = '#0f0';
-		// 	this._canvasCtx.textAlign = 'right';
-		// 	this._canvasCtx.fillText( Math.round( this._fps ), this._canvas.width - size, size * 2 );
-		// }
+		if ( elapsed >= 1000 ) {
+			this._fps = this._frame / ( elapsed / 1000 );
+			this._frame = 0;
+			this._time = timestamp;
+		}
+		if ( this.showFPS ) {
+			const size = 20 * this._pixelRatio;
+			this._canvasCtx.font = `bold ${size}px sans-serif`;
+			this._canvasCtx.fillStyle = '#0f0';
+			this._canvasCtx.textAlign = 'right';
+			this._canvasCtx.fillText( Math.round( this._fps ), this._canvas.width - size, size * 2 );
+		}
 
-		// if ( this.onCanvasDraw ) {
-		// 	this._canvasCtx.save();
-		// 	this.onCanvasDraw( this );
-		// 	this._canvasCtx.restore();
-		// }
+		if ( this.onCanvasDraw ) {
+			this._canvasCtx.save();
+			this.onCanvasDraw( this );
+			this._canvasCtx.restore();
+		}
 
 		// schedule next canvas update
 		this._animationReq = requestAnimationFrame( timestamp => this._draw( timestamp ) );
@@ -835,8 +836,6 @@ export default class AudioMotionAnalyzer {
 	 * Generate gradients
 	 */
 	_generateGradients() {
-		return; // TODO: remove
-
 		let grad;
 
 		const analyzerHeight = ( this._lumiBars && this._mode % 10 ) ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio ) | 0;
@@ -879,8 +878,6 @@ export default class AudioMotionAnalyzer {
 	 *                           minLog
 	 */
 	_precalculateBarPositions() {
-		return; // TODO: remove
-
 		if ( ! this._initDone )
 			return;
 
@@ -1064,26 +1061,26 @@ export default class AudioMotionAnalyzer {
 		this._canvasCtx.fillStyle = 'rgba(0, 0, 0, 0)';
 		this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
 
-		// // set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
-		// this._canvasCtx.lineJoin = 'bevel';
+		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
+		this._canvasCtx.lineJoin = 'bevel';
 
-		// // (re)generate gradients
-		// this._generateGradients();
+		// (re)generate gradients
+		this._generateGradients();
 
-		// // update LED mask canvas dimensions
-		// this._ledsMask.width = this._canvas.width;
-		// this._ledsMask.height = this._canvas.height;
+		// update LED mask canvas dimensions
+		this._ledsMask.width = this._canvas.width;
+		this._ledsMask.height = this._canvas.height;
 
-		// // update labels canvas dimensions
-		// this._labels.width = this._canvas.width;
-		// this._labels.height = this._pixelRatio * ( this.isFullscreen ? 40 : 20 );
+		// update labels canvas dimensions
+		this._labels.width = this._canvas.width;
+		this._labels.height = this._pixelRatio * ( this.isFullscreen ? 40 : 20 );
 
-		// // calculate bar positions and led options
-		// this._precalculateBarPositions();
+		// calculate bar positions and led options
+		this._precalculateBarPositions();
 
-		// // call callback function, if defined
-		// if ( this.onCanvasResize )
-		// 	this.onCanvasResize( reason, this );
+		// call callback function, if defined
+		if ( this.onCanvasResize )
+			this.onCanvasResize( reason, this );
 	}
 
 	/**
