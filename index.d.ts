@@ -10,7 +10,7 @@ interface RectRadiusOptions {
     bl?: number; // Bottom-left
 }
 
-interface Options {
+export interface Options {
     audioCtx?: AudioContext;
     barSpace?: number;
     fftSize?: number;
@@ -21,7 +21,7 @@ interface Options {
     lumiBars?: boolean;
     maxDecibels?: number;
     maxFreq?: number;
-    minDecibles?: number;
+    minDecibels?: number;
     minFreq?: number;
     mode?: number;
     onCanvasDraw?: OnCanvasDrawFunction;
