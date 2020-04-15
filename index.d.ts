@@ -14,7 +14,7 @@ interface Options {
     lumiBars?: boolean;
     maxDecibels?: number;
     maxFreq?: number;
-    minDecibles?: number;
+    minDecibels?: number;
     minFreq?: number;
     mode?: number;
     onCanvasDraw?: OnCanvasDrawFunction;
