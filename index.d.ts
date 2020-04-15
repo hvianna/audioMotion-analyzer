@@ -38,7 +38,7 @@ type GradientColorStop = string | { pos: number; color: string};
 interface GradientOptions {
     bgColor: string;
     dir?: 'h';
-    colorStops: GradientColorStop[];
+    colorStops: [GradientColorStop, GradientColorStop, ...GradientColorStop[]];
 }
 
 declare class AudioMotionAnalyzer {
