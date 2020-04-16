@@ -1,15 +1,15 @@
-audioMotion-analyzer
-====================
 
-High-resolution real-time graphic audio spectrum analyzer JavaScript module with no dependencies.
+## About
 
-This is the graphic spectrum analyzer I originally wrote for [audioMotion](https://audiomotion.me), here in a standalone module for you to use in your own JavaScript projects.
+I originally wrote this as part of my [audioMotion](https://audiomotion.me) spectrum analyzer and music player.
+
+This package provides only the graphic spectrum analyzer, as a standalone module, for you to use in your own JavaScript projects.
 
 ## Online demo
 
-[▶ audioMotion.dev/demo](https://audiomotion.dev/demo/)
+[![demo-animation](demo/demo.gif)](https://audiomotion.dev/demo/)
 
-![demo-animation](demo/demo.gif)
+?> https://audiomotion.dev/demo/
 
 ## Features
 
@@ -17,6 +17,7 @@ This is the graphic spectrum analyzer I originally wrote for [audioMotion](https
 + Logarithmic frequency scale with customizable range
 + 10 visualization modes: choose between discrete frequencies or octave bands based on the equal tempered scale
 + Optional vintage LED effect and variable luminance bars for octave bands modes
++ Optional customizable reflection effect
 + Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing constant
 + Comes with 3 predefined color gradients - easily add your own!
 + No dependencies, less than 20kB minified
@@ -98,11 +99,13 @@ If `start: false` is specified, the analyzer will be created stopped. You can th
 
 ## Interface objects
 
-### `analyzer` *[AnalyserNode](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode) object*
+### `analyzer` *AnalyserNode object*
 
 Connect any additional audio sources to this object, so their output is displayed in the graphic analyzer.
 
-### `audioCtx` *[AudioContext](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) object*
+Reference: https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode
+
+### `audioCtx` *AudioContext object*
 
 AudioContext object created by audioMotion-analyzer or provided by the user in the [constructor](#constructor) options.
 
@@ -125,17 +128,25 @@ gainNode.connect( audioMotion.analyzer );
 oscillator.start();
 ```
 
-### `audioSource` *[MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) object*
+Reference: https://developer.mozilla.org/en-US/docs/Web/API/AudioContext
+
+### `audioSource` *MediaElementAudioSourceNode object*
 
 Object representing the HTML media element connected using the `source` property in the class [constructor](#constructor) options. See also the [`connectAudio()`](#connectaudio-element-) method.
+
+Reference: https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode
 
 ### `canvas` *HTMLCanvasElement object*
 
 Canvas element created by audioMotion.
 
+Reference: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement
+
 ### `canvasCtx` *CanvasRenderingContext2D object*
 
 2D rendering context for drawing in audioMotion's canvas.
+
+Reference: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
 
 
 ## Properties
@@ -155,7 +166,7 @@ Prefer proportional spacing to obtain consistent results among different resolut
 
 Defaults to **0.1**.
 
-### `dataArray` *[UInt8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) array* *(Read only)*
+### `dataArray` *UInt8Array array* *(Read only)*
 
 Data array returned by the analyzer's [`getByteFrequencyData()`](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteFrequencyData).
 Array size is half the current FFT size, with element values ranging from 0 to 255.
@@ -191,7 +202,11 @@ Canvas dimensions used during fullscreen mode. These take the current pixel rati
 
 ### `gradient` *string*
 
-Currently selected gradient. *gradient* must be the name of a built-in or [registered](#registergradient-name-options-) gradient. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*. Defaults to **'classic'**.
+Currently selected color gradient used for analyzer graphics.
+
+It must be the name of a built-in or [registered](#registergradient-name-options-) gradient. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*.
+
+Defaults to **'classic'**.
 
 ### `height` *number*
 ### `width` *number*
@@ -200,11 +215,11 @@ Nominal dimensions of the analyzer.
 
 If one or both of these are `undefined`, the analyzer will try to adjust to the container's width and/or height.
 If the container's width and/or height are 0 (inline elements), a reference size of **640 x 270 pixels** will be used to replace the missing dimension(s).
-This should be considered the minimum dimensions for proper visualization of all available modes with the LED effect on.
+This should be considered the minimum dimensions for proper visualization of all available modes with the [LED effect](#showleds-boolean) on.
 
 You can set both values at once using the [`setCanvasSize()`](#setcanvassize-width-height-) method.
 
-If you want the actual canvas dimensions, use `audioMotion.canvas.width` and `audioMotion.canvas.height`.
+?> You can read the actual canvas dimensions at any time directly from the [`canvas`](#canvas-htmlcanvaselement-object) object.
 
 ### `isFullscreen` *boolean* *(Read only)*
 
@@ -228,7 +243,7 @@ Defaults to **0**. For the line to be distinguishable, set also [`fillAlpha`](#f
 
 Low resolution mode halves the effective pixel ratio, resulting in four times less pixels to render. This may improve performance significantly, especially in 4K+ monitors.
 
-If you plan on allowing users to interactively toggle low resolution mode, you may need to set a fixed size for the canvas via CSS, like so:
+?> If you want to allow users to interactively toggle low resolution mode, you may need to set a fixed size for the canvas via CSS, like so:
 
 ```css
 #container canvas {
@@ -276,19 +291,19 @@ Current visualization mode.
 
 Valid values are:
 
-| Value | Mode | Available since |
-|-------|------|-----------------|
-| 0 | Discrete frequencies | |
-| 1 | 1/24th octave bands | |
-| 2 | 1/12th octave bands | |
-| 3 | 1/8th octave bands | |
-| 4 | 1/6th octave bands | |
-| 5 | 1/4th octave bands | |
-| 6 | 1/3rd octave bands | |
-| 7 | half octave bands | |
-| 8 | full octave bands | |
-| 9 | *reserved* (not valid) | |
-| 10 | Line / Area graph | v1.1.0 |
+Value | Mode | Available since
+------|------|----------------
+0 | Discrete frequencies | v1.0.0
+1 | 1/24th octave bands | v1.0.0
+2 | 1/12th octave bands | v1.0.0
+3 | 1/8th octave bands | v1.0.0
+4 | 1/6th octave bands | v1.0.0
+5 | 1/4th octave bands | v1.0.0
+6 | 1/3rd octave bands | v1.0.0
+7 | half octave bands | v1.0.0
+8 | full octave bands | v1.0.0
+9 | *reserved* (not valid) | -
+10 | Line / Area graph | v1.1.0
 
 Defaults to **0**.
 
@@ -353,15 +368,17 @@ Defaults to **0** (no reflection).
 
 ### `smoothing` *number*
 
-Sets the analyzer's [smoothingTimeConstant](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/smoothingTimeConstant). *value* must be a float between 0 and 1.
+Sets the analyzer's [smoothingTimeConstant](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/smoothingTimeConstant).
 
-Lower values make the analyzer respond faster to changes. Defaults to **0.5**.
+Its value must be a float between 0 and 1. Lower values make the analyzer respond faster to changes.
+
+Defaults to **0.5**.
 
 ### `version` *string* *(Read only)*
 
 *Available since v2.0.0*
 
-Returns the current version of audioMotion-analyzer.
+Returns the version of the **audioMotion-analyzer** package.
 
 
 ## Callback functions
@@ -496,7 +513,7 @@ audioMotion-analyzer uses a custom error object to throw errors for some critica
 
 The `code` property is a string label that can be checked to identify the specific error in a reliable way.
 
-`code`                     | Error description
+code                       | Error description
 ---------------------------|--------------------
 ERR_AUDIO_CONTEXT_FAIL     | Could not create audio context. The user agent may lack support for the Web Audio API.
 ERR_INVALID_AUDIO_CONTEXT  | [Audio context](#audioctx-audiocontext-object) provided by user is not valid.
@@ -508,7 +525,24 @@ ERR_GRADIENT_MISSING_COLOR | The `options` parameter for [`registerGradient()`](
 ERR_REFLEX_OUT_OF_RANGE    | Tried to assign a value < 0 or >= 1 to [`reflexRatio`](#reflexratio-number) property.
 ERR_UNKNOWN_GRADIENT       | User tried to [select a gradient](#gradient-string) not previously registered.
 
+## Changelog
+
+See [Changelog.md](Changelog.md)
+
+## Acknowledgments
+
+* Thanks to [Yuji Koike](http://www.ykcircus.com) for his awesome [Soniq Viewer for iOS](https://itunes.apple.com/us/app/soniq-viewer/id448343005), which inspired me to create **audioMotion**
+* [HTML Canvas Reference @W3Schools](https://www.w3schools.com/tags/ref_canvas.asp)
+* [Web Audio API documentation @MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
+* [What does the FFT data in the Web Audio API correspond to?](https://stackoverflow.com/a/14789992/2370385)
+* [Equations for equal-tempered scale frequencies](http://pages.mtu.edu/~suits/NoteFreqCalcs.html)
+* This documentation website is powered by [GitHub Pages](https://pages.github.com/), [docsify](https://docsify.js.org/) and [docsify-themeable](https://jhildenbiddle.github.io/docsify-themeable).
+
+## Donate
+
+[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q6157GZ)
+
 ## License
 
-audioMotion-analyzer copyright (c) 2018-2020 Henrique Avila Vianna<br>
+audioMotion-analyzer copyright (c) 2018-2020 [Henrique Avila Vianna](https://henriquevianna.com)<br>
 Licensed under the [GNU Affero General Public License, version 3 or later](https://www.gnu.org/licenses/agpl.html).

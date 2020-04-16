@@ -3,14 +3,14 @@ Changelog
 
 ## version 2.1.0 - released 2020-04-06 :mask:
 
-### Added:
+### Added: {docsify-ignore}
 
 + Customizable Reflex effect - see [`reflexRatio`](README.md#reflexratio-number) and try it in the [demo](https://audiomotion.dev/demo/fluid.html).
 
 
 ## version 2.0.0 - released 2020-03-24 :mask:
 
-### Added:
+### Added: {docsify-ignore}
 
 + New [`lineWidth`](README.md#linewidth-number) and [`fillAlpha`](README.md#fillalpha-number) properties for [mode 10](README.md#mode-number) customization, so it can now work as an area graph (default), a line graph or a combination of both;
 + New [`barSpace`](README.md#barspace-number) property for customizable bar spacing in octave bands modes;
@@ -18,7 +18,7 @@ Changelog
 + Custom [error codes](README.md#custom-errors);
 + New [`version`](README.md#version-string-read-only) property;
 
-### Changed:
+### Changed: {docsify-ignore}
 
 + Increased default spacing between bars in octave bands modes - to get the previous look, set [`barSpace`](README.md#barspace-number) to **1**;
 + Improved accuracy when positioning the X-axis scale labels in octave bands modes;
@@ -27,13 +27,13 @@ Changelog
 + Several functions were refactored for improved legibility, memory usage and performance;
 + Improved documentation and demos;
 
-### Fixed:
+### Fixed: {docsify-ignore}
 
 + The multi-instance demo should now work on browsers other than Firefox (it now uses a shared audio context);
 + `isFullscreen` property now correctly reads `false` (instead of `undefined`) when the analyzer is not in fullscreen (*potentially breaking change*);
 + Setting one of the callback functions to `undefined` with `setOptions()` now properly unregisters the callback (*potentially breaking change*);
 
-### API breaking changes:
+### API breaking changes: {docsify-ignore}
 
 + `audioCtx`, `analyzer`, `canvas` and `canvasCtx` objects are now read-only (`canvasCtx` properties may be safely modified while inside the callback for `onCanvasDraw`);
 + `frame` and `time` properties are not exposed anymore, as they are intended for internal use only;
