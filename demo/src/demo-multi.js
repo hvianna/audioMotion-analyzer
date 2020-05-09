@@ -4,7 +4,7 @@
  * https://github.com/hvianna/audioMotion-analyzer
  */
 
-import AudioMotionAnalyzer from '../dist/audioMotion-analyzer.js';
+import AudioMotionAnalyzer from '../../dist/audioMotion-analyzer.js';
 
 // for the demo's sensitivity presets
 const mindB = [ -70, -80, -85, -90, -100 ],
