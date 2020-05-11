@@ -46,6 +46,7 @@ export default class AudioMotionAnalyzer {
 			lineWidth   : 0,
 			fillAlpha   : 1,
 			barSpace    : 0.1,
+			overlay     : false,
 			start       : true
 		};
 
@@ -123,7 +124,7 @@ export default class AudioMotionAnalyzer {
 		this._canvas = document.createElement('canvas');
 		this._canvas.style = 'max-width: 100%;';
 		this._container.appendChild( this._canvas );
-		this._canvasCtx = this._canvas.getContext( '2d', { alpha: false } );
+		this._canvasCtx = this._canvas.getContext('2d');
 
 		// auxiliary canvas for the LED mask
 		this._ledsMask = document.createElement('canvas');
@@ -600,6 +601,10 @@ export default class AudioMotionAnalyzer {
 			  isLumiBars     = ( this._lumiBars && isOctaveBands ),
 			  analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0;
 
+		// clear the canvas, if in overlay mode
+		if ( this.overlay )
+			this._canvasCtx.clearRect( 0, 0, this._canvas.width, this._canvas.height );
+
 		if ( ! this.showBgColor )	// use black background
 			this._canvasCtx.fillStyle = '#000';
 		else
@@ -608,8 +613,9 @@ export default class AudioMotionAnalyzer {
 			else
 				this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor; // use background color defined by gradient
 
-		// clear the canvas
-		this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
+		// paint full canvas with background color
+		if ( ! this.overlay || this.showBgColor )
+			this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
 
 		// get a new array of data from the FFT
 		this._analyzer.getByteFrequencyData( this._dataArray );
@@ -739,8 +745,13 @@ export default class AudioMotionAnalyzer {
 				this._canvasCtx.globalAlpha = 1;
 			}
 		}
-		else if ( isLedDisplay ) // applies LEDs mask over the canvas
+		else if ( isLedDisplay ) { // applies LEDs mask over the canvas
+			if ( this.overlay )
+				this._canvasCtx.globalCompositeOperation = 'destination-out';
+
 			this._canvasCtx.drawImage( this._ledsMask, 0, 0 );
+			this._canvasCtx.globalCompositeOperation = 'source-over';
+		}
 
 		// Reflex effect
 		if ( this._reflexRatio > 0 && ! isLumiBars ) {
@@ -754,13 +765,15 @@ export default class AudioMotionAnalyzer {
 				height = analyzerHeight;
 			}
 
-			this._canvasCtx.fillStyle = '#000';
-			this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
+			if ( ! this.overlay || this.showBgColor ) {
+				this._canvasCtx.fillStyle = this.overlay ? this._gradients[ this._gradient ].bgColor : '#000';
+				this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
+			}
 			this._canvasCtx.globalAlpha = this.reflexAlpha;
 			this._canvasCtx.setTransform( 1, 0, 0, -1, 0, this._canvas.height );
 			this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, posY, this._canvas.width, height );
-			this._canvasCtx.globalAlpha = 1;
 			this._canvasCtx.setTransform();
+			this._canvasCtx.globalAlpha = 1;
 		}
 
 		if ( this.showScale )
@@ -1043,9 +1056,11 @@ export default class AudioMotionAnalyzer {
 		if ( this._pixelRatio == 2 && window.screen.height <= 540 )
 			this._pixelRatio = 1;
 
-		// clear the canvas
-		this._canvasCtx.fillStyle = '#000';
-		this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
+		// if not in overlay mode, paint the canvas black
+		if ( ! this.overlay ) {
+			this._canvasCtx.fillStyle = '#000';
+			this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
+		}
 
 		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
 		this._canvasCtx.lineJoin = 'bevel';
