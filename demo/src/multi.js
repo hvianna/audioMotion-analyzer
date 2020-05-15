@@ -6,11 +6,9 @@
 
 import AudioMotionAnalyzer from '../../dist/audioMotion-analyzer.js';
 
-// for the demo's sensitivity presets
-const mindB = [ -70, -80, -85, -90, -100 ],
-	  maxdB = [ -10, -20, -25, -30, -40 ];
-
-const audioEl = document.getElementById('audio');
+const mindB = [ -70, -80, -85, -90, -100 ], // for sensitivity presets
+	  maxdB = [ -10, -20, -25, -30, -40 ],
+	  audioEl = document.getElementById('audio');
 
 var audioMotion = [],
 	selectedAnalyzer = 0,
@@ -21,10 +19,10 @@ var audioMotion = [],
 
 try {
 	// create the audio context that will be shared by all instances
-	let AudioContext = window.AudioContext || window.webkitAudioContext;
+	const AudioContext = window.AudioContext || window.webkitAudioContext;
 	audioCtx = new AudioContext();
 
-	for ( let i = 0; i < 3; i++ ) {
+	for ( const i = 0; i < 3; i++ ) {
 		audioMotion[ i ] = new AudioMotionAnalyzer(
 			document.getElementById( `container${i}` ),
 			{
@@ -46,7 +44,7 @@ catch( err ) {
 	document.getElementById('container0').innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
 }
 
-// display package version in the footer
+// Display package version in the footer
 document.getElementById('version').innerText = audioMotion[0].version;
 
 // Set options for each instance
@@ -133,7 +131,7 @@ document.querySelectorAll('[data-setting]').forEach( el => {
 });
 
 document.getElementById('range').addEventListener( 'change', e => {
-	let selected = e.target[ e.target.selectedIndex ];
+	const selected = e.target[ e.target.selectedIndex ];
 	audioMotion[ selectedAnalyzer ].setFreqRange( selected.dataset.min, selected.dataset.max );
 });
 
@@ -143,7 +141,6 @@ document.getElementById('sensitivity').addEventListener( 'change', e => audioMot
 document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
 
 // File and URL loading
-
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
 document.getElementById('loadFromURL').addEventListener( 'click', () => {
 	audioEl.src = document.getElementById('remoteURL').value;
@@ -154,14 +151,12 @@ document.getElementById('loadFromURL').addEventListener( 'click', () => {
 updateUI();
 
 // Resume audio context if in suspended state (browsers' autoplay policy)
-
 window.addEventListener( 'click', () => {
 	if ( audioMotion[0].audioCtx.state == 'suspended' )
 		audioMotion[0].audioCtx.resume();
 });
 
 // The callback function is used here to draw the pulsating logo on the canvas
-
 function displayCanvasMsg( instance ) {
 	if ( ! instance.showLogo )
 		return;
@@ -171,7 +166,7 @@ function displayCanvasMsg( instance ) {
 		size *= 2;
 
 	// find the data array index for 140Hz
-	let idx = Math.round( 140 * instance.analyzer.fftSize / instance.audioCtx.sampleRate );
+	const idx = Math.round( 140 * instance.analyzer.fftSize / instance.audioCtx.sampleRate );
 
 	// use the 140Hz amplitude to increase the font size and make the logo pulse to the beat
 	instance.canvasCtx.font = `${size + instance.dataArray[ idx ] / 16 * instance.pixelRatio}px Orbitron,sans-serif`;
@@ -182,9 +177,8 @@ function displayCanvasMsg( instance ) {
 }
 
 // Load song from user's computer
-
 function loadSong( el ) {
-	let reader = new FileReader();
+	const reader = new FileReader();
 
 	reader.readAsDataURL( el.files[0] );
 	reader.onload = () => {
@@ -194,15 +188,13 @@ function loadSong( el ) {
 }
 
 // Update value div of range input elements
-
 function updateRangeElement( el ) {
-	let s = el.nextElementSibling;
+	const s = el.nextElementSibling;
 	if ( s && s.className == 'value' )
 		s.innerText = el.value;
 }
 
 // Update UI elements to reflect the selected analyzer's current settings
-
 function updateUI() {
 	document.querySelectorAll('canvas').forEach( el => el.classList.toggle( 'selected', el.parentNode.id.slice(-1) == selectedAnalyzer ) );
 
@@ -216,7 +208,7 @@ function updateUI() {
 
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
 	document.querySelectorAll('button[data-prop]').forEach( el => {
-		let p = audioMotion[ selectedAnalyzer ][ el.dataset.prop ];
+		const p = audioMotion[ selectedAnalyzer ][ el.dataset.prop ];
 		el.classList.toggle( 'active', el.dataset.prop == 'isOn' ? ! p : p );
 	});
 }

@@ -1,5 +1,5 @@
 /**
- * audioMotion-analyzer demo
+ * audioMotion-analyzer fluid layout demo
  *
  * https://github.com/hvianna/audioMotion-analyzer
  */
@@ -10,12 +10,10 @@ const mindB = [ -70, -80, -85, -90, -100 ], // for sensitivity presets
 	  maxdB = [ -10, -20, -25, -30, -40 ],
 	  audioEl = document.getElementById('audio');
 
-var audioMotion;
-
 // Create audioMotion-analyzer object
 
 try {
-	audioMotion = new AudioMotionAnalyzer(
+	var audioMotion = new AudioMotionAnalyzer(
 		document.getElementById('container'),
 		{
 			source: audioEl, // main source is the HTML audio element
@@ -33,7 +31,7 @@ catch( err ) {
 	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
 }
 
-// display package version in the footer
+// Display package version in the footer
 document.getElementById('version').innerText = audioMotion.version;
 
 // Add a custom property to store the logo display preference
@@ -74,7 +72,7 @@ document.querySelectorAll('[data-setting]').forEach( el => {
 });
 
 document.getElementById('range').addEventListener( 'change', e => {
-	let selected = e.target[ e.target.selectedIndex ];
+	const selected = e.target[ e.target.selectedIndex ];
 	audioMotion.setFreqRange( selected.dataset.min, selected.dataset.max );
 });
 
@@ -102,7 +100,6 @@ document.getElementById('btn_play').addEventListener( 'click', () => {
 document.getElementById('btn_soundoff').addEventListener( 'click', () => gainNode.gain.setValueAtTime( 0, audioCtx.currentTime ) );
 
 // File and URL loading
-
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
 document.getElementById('loadFromURL').addEventListener( 'click', () => {
 	audioEl.src = document.getElementById('remoteURL').value;
@@ -113,14 +110,12 @@ document.getElementById('loadFromURL').addEventListener( 'click', () => {
 updateUI();
 
 // Resume audio context if in suspended state (browsers' autoplay policy)
-
 window.addEventListener( 'click', () => {
 	if ( audioMotion.audioCtx.state == 'suspended' )
 		audioMotion.audioCtx.resume();
 });
 
 // The callback function is used here to draw the pulsating logo on the canvas
-
 function displayCanvasMsg() {
 	if ( ! audioMotion.showLogo )
 		return;
@@ -130,7 +125,7 @@ function displayCanvasMsg() {
 		size *= 2;
 
 	// find the data array index for 140Hz
-	let idx = Math.round( 140 * audioMotion.analyzer.fftSize / audioMotion.audioCtx.sampleRate );
+	const idx = Math.round( 140 * audioMotion.analyzer.fftSize / audioMotion.audioCtx.sampleRate );
 
 	// use the 140Hz amplitude to increase the font size and make the logo pulse to the beat
 	audioMotion.canvasCtx.font = `${size + audioMotion.dataArray[ idx ] / 16 * audioMotion.pixelRatio}px Orbitron,sans-serif`;
@@ -141,9 +136,8 @@ function displayCanvasMsg() {
 }
 
 // Load song from user's computer
-
 function loadSong( el ) {
-	let reader = new FileReader();
+	const reader = new FileReader();
 
 	reader.readAsDataURL( el.files[0] );
 	reader.onload = () => {
@@ -153,17 +147,14 @@ function loadSong( el ) {
 }
 
 // Update value div of range input elements
-
 function updateRangeElement( el ) {
-	let s = el.nextElementSibling;
+	const s = el.nextElementSibling;
 	if ( s && s.className == 'value' )
 		s.innerText = el.value;
 }
 
 // Update UI elements to reflect the analyzer's current settings
-
 function updateUI() {
-
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
 
 	document.getElementById('area_options').disabled = ( audioMotion.mode != 10 );
@@ -174,7 +165,7 @@ function updateUI() {
 
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
 	document.querySelectorAll('button[data-prop]').forEach( el => {
-		let p = audioMotion[ el.dataset.prop ];
+		const p = audioMotion[ el.dataset.prop ];
 		el.classList.toggle( 'active', el.dataset.prop == 'isOn' ? ! p : p );
 	});
 }

@@ -17,6 +17,7 @@ const presets = [
 		options: {
 			mode: 3,
 			barSpace: .5,
+			bgAlpha: .2,
 			gradient: 'classic',
 			lumiBars: false,
 			reflexRatio: 0,
@@ -30,6 +31,7 @@ const presets = [
 		name: 'Mirror wave',
 		options: {
 			mode: 10,
+			bgAlpha: .7,
 			fillAlpha: .6,
 			gradient: 'custom',
 			lineWidth: 2,
@@ -46,6 +48,7 @@ const presets = [
 		options: {
 			mode: 5,
 			barSpace: .25,
+			bgAlpha: .8,
 			lumiBars: false,
 			reflexAlpha: .5,
 			reflexFit: true,
@@ -77,7 +80,7 @@ catch( err ) {
 
 // Register custom gradient
 audioMotion.registerGradient( 'custom', {
-	bgColor: '#000a', // semi-transparent background color - equivalent to 'rgba( 0, 0, 0, 170 )'
+	bgColor: '#011a35',
 	colorStops: [ '#ff0080', '#02235e' ]
 });
 
