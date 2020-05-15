@@ -47,6 +47,7 @@ export default class AudioMotionAnalyzer {
 			fillAlpha   : 1,
 			barSpace    : 0.1,
 			overlay     : false,
+			bgAlpha     : 0.7,
 			start       : true
 		};
 
@@ -68,7 +69,7 @@ export default class AudioMotionAnalyzer {
 					'hsl( 60, 100%, 50% )',
 					'hsl( 120, 100%, 50% )',
 					'hsl( 180, 100%, 50% )',
-					'hsl( 240, 100%, 50% )',
+					'hsl( 240, 100%, 50% )'
 				]
 			},
 			rainbow: {
@@ -602,20 +603,26 @@ export default class AudioMotionAnalyzer {
 			  analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0;
 
 		// clear the canvas, if in overlay mode
-		if ( this.overlay )
+		if ( this.overlay ) {
 			this._canvasCtx.clearRect( 0, 0, this._canvas.width, this._canvas.height );
+			this._canvasCtx.globalAlpha = this.bgAlpha; // set opacity for background paint
+		}
 
+		// select background color
 		if ( ! this.showBgColor )	// use black background
 			this._canvasCtx.fillStyle = '#000';
 		else
 			if ( isLedDisplay )
 				this._canvasCtx.fillStyle = '#111';
-			else
-				this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor; // use background color defined by gradient
+			else // use background color defined by gradient
+				this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor;
 
-		// paint full canvas with background color
+		// paint the analyzer background (excludes the reflection area, if any)
 		if ( ! this.overlay || this.showBgColor )
-			this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
+			this._canvasCtx.fillRect( 0, 0, this._canvas.width, isLumiBars ? this._canvas.height : analyzerHeight );
+
+		// restore global alpha
+		this._canvasCtx.globalAlpha = 1;
 
 		// get a new array of data from the FFT
 		this._analyzer.getByteFrequencyData( this._dataArray );
@@ -765,10 +772,15 @@ export default class AudioMotionAnalyzer {
 				height = analyzerHeight;
 			}
 
-			if ( ! this.overlay || this.showBgColor ) {
-				this._canvasCtx.fillStyle = this.overlay ? this._gradients[ this._gradient ].bgColor : '#000';
+			// paint the reflex area with black
+			if ( ! this.overlay || this.showBgColor && this.reflexAlpha < 1 ) {
+				this._canvasCtx.fillStyle = '#000';
+				if ( this.overlay ) // respect the selected bgAlpha when in overlay mode
+					this._canvasCtx.globalAlpha = this.bgAlpha;
 				this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
 			}
+
+			// create the reflection
 			this._canvasCtx.globalAlpha = this.reflexAlpha;
 			this._canvasCtx.setTransform( 1, 0, 0, -1, 0, this._canvas.height );
 			this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, posY, this._canvas.width, height );
