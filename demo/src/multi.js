@@ -22,7 +22,7 @@ try {
 	const AudioContext = window.AudioContext || window.webkitAudioContext;
 	audioCtx = new AudioContext();
 
-	for ( const i = 0; i < 3; i++ ) {
+	for ( let i = 0; i < 3; i++ ) {
 		audioMotion[ i ] = new AudioMotionAnalyzer(
 			document.getElementById( `container${i}` ),
 			{

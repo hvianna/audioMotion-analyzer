@@ -33,7 +33,7 @@ const presets = [
 			mode: 10,
 			bgAlpha: .7,
 			fillAlpha: .6,
-			gradient: 'custom',
+			gradient: 'rainbow',
 			lineWidth: 2,
 			lumiBars: false,
 			reflexAlpha: 1,
@@ -77,12 +77,6 @@ try {
 catch( err ) {
 	container.innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
 }
-
-// Register custom gradient
-audioMotion.registerGradient( 'custom', {
-	bgColor: '#011a35',
-	colorStops: [ '#ff0080', '#02235e' ]
-});
 
 // Display package version in the footer
 document.getElementById('version').innerText = audioMotion.version;

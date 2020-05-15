@@ -210,8 +210,9 @@ ul {
 
 .overlay canvas {
 	bottom: 0;
-	pointer-events: none;
+	pointer-events: none; /* let mouse clicks pass to the underlying video element */
 	position: absolute;
+	touch-action: none; /* ditto for touch events */
 }
 
 .overlay:not(:fullscreen):hover canvas {
