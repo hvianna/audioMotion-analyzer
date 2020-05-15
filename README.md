@@ -5,7 +5,7 @@ I originally wrote this as part of my [audioMotion](https://audiomotion.me) spec
 
 This package provides only the graphic spectrum analyzer, as a standalone module, for you to use in your own JavaScript projects.
 
-## Online demo
+## Online demos
 
 [![demo-animation](demo/demo.gif)](https://audiomotion.dev/demo/)
 
@@ -53,48 +53,64 @@ This will insert the analyzer canvas inside the *#container* element and start t
 
 `new AudioMotionAnalyzer( [container], [{options}] )`
 
-Creates a new instance of audioMotion-analyzer. A canvas element will be created and inserted into the `container` element. If `container` is undefined, the canvas is appended to the document's body.
+Creates a new instance of audioMotion-analyzer.
 
-Available options with default values shown inside parentheses:
+The analyzer canvas will be created and appended to the HTML element referenced by `container`.
+
+If `container` is undefined, the canvas will be appended to the document's body.
+
+### Options
+
+Available options and default values:
 
 options = {<br>
-&emsp;&emsp;[audioCtx](#audioctx-audiocontext-object): *AudioContext object*,<br>
-&emsp;&emsp;[barSpace](#barspace-number): *number* (2),<br>
-&emsp;&emsp;[fftSize](#fftsize-number): *number* (8192),<br>
-&emsp;&emsp;[fillAlpha](#fillalpha-number): *number* (1),<br>
-&emsp;&emsp;[gradient](#gradient-string): *string* ('classic'),<br>
-&emsp;&emsp;[height](#height-number): *number*,<br>
-&emsp;&emsp;[lineWidth](#linewidth-number): *number* (0),<br>
-&emsp;&emsp;[loRes](#lores-boolean): *boolean* (false),<br>
-&emsp;&emsp;[lumiBars](#lumibars-boolean): *boolean* (false),<br>
-&emsp;&emsp;[maxDecibels](#maxdecibels-number): *number* (-25),<br>
-&emsp;&emsp;[maxFreq](#maxfreq-number): *number* (22000),<br>
-&emsp;&emsp;[minDecibels](#mindecibels-number): *number* (-85),<br>
-&emsp;&emsp;[minFreq](#minfreq-number): *number* (20),<br>
-&emsp;&emsp;[mode](#mode-number): *number* (0),<br>
-&emsp;&emsp;[onCanvasDraw](#oncanvasdraw-function): *function*,<br>
-&emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *function*,<br>
-&emsp;&emsp;[reflexAlpha](#reflexalpha-number): *number* (0.15),<br>
-&emsp;&emsp;[reflexFit](#reflexfit-boolean): *boolean* (true),<br>
-&emsp;&emsp;[reflexRatio](#reflexratio-number): *number* (0),<br>
-&emsp;&emsp;[showBgColor](#showbgcolor-boolean): *boolean* (true),<br>
-&emsp;&emsp;[showFPS](#showfps-boolean): *boolean* (false),<br>
-&emsp;&emsp;[showLeds](#showleds-boolean): *boolean* (false),<br>
-&emsp;&emsp;[showPeaks](#showpeaks-boolean): *boolean* (true),<br>
-&emsp;&emsp;[showScale](#showscale-boolean): *boolean* (true),<br>
-&emsp;&emsp;[smoothing](#smoothing-number): *number* (0.5),<br>
-&emsp;&emsp;**source**: *HTMLMediaElement*,<br>
-&emsp;&emsp;**start**: *boolean* (true),<br>
-&emsp;&emsp;[width](#width-number): *number*<br>
+&emsp;&emsp;[audioCtx](#audioctx-audiocontext-object): *undefined*,<br>
+&emsp;&emsp;[barSpace](#barspace-number): **0.1**,<br>
+&emsp;&emsp;[bgAlpha](#bgalpha-number): **0.7**,<br>
+&emsp;&emsp;[fftSize](#fftsize-number): **8192**,<br>
+&emsp;&emsp;[fillAlpha](#fillalpha-number): **1**,<br>
+&emsp;&emsp;[gradient](#gradient-string): **'classic'**,<br>
+&emsp;&emsp;[height](#height-number): *undefined*,<br>
+&emsp;&emsp;[lineWidth](#linewidth-number): **0**,<br>
+&emsp;&emsp;[loRes](#lores-boolean): **false**,<br>
+&emsp;&emsp;[lumiBars](#lumibars-boolean): **false**,<br>
+&emsp;&emsp;[maxDecibels](#maxdecibels-number): **-25**,<br>
+&emsp;&emsp;[maxFreq](#maxfreq-number): **22000**,<br>
+&emsp;&emsp;[minDecibels](#mindecibels-number): **-85**,<br>
+&emsp;&emsp;[minFreq](#minfreq-number): **20**,<br>
+&emsp;&emsp;[mode](#mode-number): **0**,<br>
+&emsp;&emsp;[onCanvasDraw](#oncanvasdraw-function): *undefined*,<br>
+&emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *undefined*,<br>
+&emsp;&emsp;[overlay](#overlay-boolean): **false**,<br>
+&emsp;&emsp;[reflexAlpha](#reflexalpha-number): **0.15**,<br>
+&emsp;&emsp;[reflexFit](#reflexfit-boolean): **true**,<br>
+&emsp;&emsp;[reflexRatio](#reflexratio-number): **0**,<br>
+&emsp;&emsp;[showBgColor](#showbgcolor-boolean): **true**,<br>
+&emsp;&emsp;[showFPS](#showfps-boolean): **false**,<br>
+&emsp;&emsp;[showLeds](#showleds-boolean): **false**,<br>
+&emsp;&emsp;[showPeaks](#showpeaks-boolean): **true**,<br>
+&emsp;&emsp;[showScale](#showscale-boolean): **true**,<br>
+&emsp;&emsp;[smoothing](#smoothing-number): **0.5**,<br>
+&emsp;&emsp;[source](#source-htmlmediaelement-object): *undefined*,<br>
+&emsp;&emsp;[start](#start-boolean): **true**,<br>
+&emsp;&emsp;[width](#width-number): *undefined*<br>
 }
 
-`audioCtx` allows you to provide an external AudioContext object, but you usually don't need to specify this, as audioMotion-analyzer will create its own.
+### `source` *HTMLMediaElement object*
 
-If `source` is specified, the provided media element will be connected to the analyzer. You can later disconnect it by referring to the [`audioSource`](#audiosource-mediaelementaudiosourcenode-object) object.
+If `source` is specified, the media element (`<audio>` or `<video>`) referenced by the object will be connected to the analyzer.
+
+You can later disconnect it by referring to the [`audioSource`](#audiosource-mediaelementaudiosourcenode-object) object.
 
 At least one audio source is required for the analyzer to work. You can also connect audio sources with the [`connectAudio()`](#connectaudio-element-) method.
 
+Object reference: https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement
+
+### `start` *boolean*
+
 If `start: false` is specified, the analyzer will be created stopped. You can then start it with the [`toggleAnalyzer()`](#toggleanalyzer-boolean-) method.
+
+Defaults to **true**, so the analyzer will start running right after initialization.
 
 
 ## Interface objects
@@ -103,11 +119,11 @@ If `start: false` is specified, the analyzer will be created stopped. You can th
 
 Connect any additional audio sources to this object, so their output is displayed in the graphic analyzer.
 
-Reference: https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode
+Object reference: https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode
 
 ### `audioCtx` *AudioContext object*
 
-AudioContext object created by audioMotion-analyzer or provided by the user in the [constructor](#constructor) options.
+AudioContext used by audioMotion-analyzer. If not provided by the user in the [constructor](#constructor) options, it will be created automatically.
 
 Use this object to create additional audio sources to be connected to the analyzer, like oscillator nodes, gain nodes and media streams.
 
@@ -128,25 +144,27 @@ gainNode.connect( audioMotion.analyzer );
 oscillator.start();
 ```
 
-Reference: https://developer.mozilla.org/en-US/docs/Web/API/AudioContext
+Object reference: https://developer.mozilla.org/en-US/docs/Web/API/AudioContext
 
 ### `audioSource` *MediaElementAudioSourceNode object*
 
-Object representing the HTML media element connected using the `source` property in the class [constructor](#constructor) options. See also the [`connectAudio()`](#connectaudio-element-) method.
+Object representing the HTML media element connected using the [`source`](#source-htmlmediaelement-object) property in the [constructor](#constructor) options.
 
-Reference: https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode
+See also the [`connectAudio()`](#connectaudio-element-) method.
+
+Object reference: https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode
 
 ### `canvas` *HTMLCanvasElement object*
 
 Canvas element created by audioMotion.
 
-Reference: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement
+Object reference: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement
 
 ### `canvasCtx` *CanvasRenderingContext2D object*
 
 2D rendering context for drawing in audioMotion's canvas.
 
-Reference: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
+Object reference: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
 
 
 ## Properties
@@ -162,9 +180,19 @@ Use a value between 0 and 1 for spacing proportional to the bar width. Values >=
 For example, `barSpace = 0.5` will use half of the bar width for spacing, while `barSpace = 2` will set a fixed spacing of 2 pixels, independent of the width of bars.
 Prefer proportional spacing to obtain consistent results among different resolutions and screen sizes.
 
-`barSpace = 0` will effectively show contiguous bars, except when the [LED effect](#showleds-boolean) is on, in which case a minimum spacing is enforced.
+`barSpace = 0` will effectively show contiguous bars, except when [`showLeds`](#showleds-boolean) is *true*, in which case a minimum spacing is enforced.
 
 Defaults to **0.1**.
+
+### `bgAlpha` *number*
+
+*Available since v2.2.0*
+
+Controls the opacity of the background, when [`overlay`](#overlay-boolean) and [`showBgColor`](#showbgcolor-boolean) are both set to *true*.
+
+It must be a number between 0 (completely transparent) and 1 (completely opaque).
+
+Defaults to **0.7**.
 
 ### `dataArray` *UInt8Array array* *(Read only)*
 
@@ -179,17 +207,21 @@ The data is updated on every animation frame (ideally 60 times per second).
 
 Number of samples used for the FFT performed by the analyzer node. It must be a power of 2 between 32 and 32768, so valid values are: 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, and 32768.
 
-Higher values provide more detail in the frequency domain, but less detail in the time domain. Defaults to **8192**.
+Higher values provide more detail in the frequency domain, but less detail in the time domain (slower response), so you may need to adjust [`smoothing`](#smoothing-number) accordingly.
+
+Defaults to **8192**.
 
 ### `fillAlpha` *number*
 
 *Available since v2.0.0*
 
-Opacity for the **Line / Area graph** mode. Must be a float between 0 (completely transparent) and 1 (completely opaque).
+Opacity of the area fill in **Line / Area graph** visualization ([`mode`](#mode-number) 10).
+
+It must be a number between 0 (completely transparent) and 1 (completely opaque).
+
+Please note that this affects only the area fill. The line (when [`lineWidth`](#linewidth-number) > 0) is always drawn at full opacity.
 
 Defaults to **1**.
-
-See also [`lineWidth`](#linewidth-number).
 
 ### `fps` *number* *(Read only)*
 
@@ -233,9 +265,11 @@ You can set both values at once using the [`setCanvasSize()`](#setcanvassize-wid
 
 *Available since v2.0.0*
 
-Line width for the **Line / Area graph** mode.
+Line width for the **Line / Area graph** visualization ([`mode`](#mode-number) 10).
 
-Defaults to **0**. For the line to be distinguishable, set also [`fillAlpha`](#fillalpha-number) < 1.
+For the line to be distinguishable, set also [`fillAlpha`](#fillalpha-number) < 1.
+
+Defaults to **0**.
 
 ### `loRes` *boolean*
 
@@ -257,7 +291,11 @@ This will prevent the canvas size from changing, when switching the low resoluti
 
 *Available since v1.1.0*
 
-*true* to always display full-height bars and vary their luminance instead. Only effective for [visualization modes](#mode-number) 1 to 8 (octave bands). Defaults to **false**.
+This is only effective for [visualization modes](#mode-number) 1 to 8 (octave bands).
+
+When set to *true* all analyzer bars will be displayed at full height with varying luminance (opacity, actually) instead.
+
+Defaults to **false**.
 
 ### `maxDecibels` *number*
 ### `minDecibels` *number*
@@ -289,8 +327,6 @@ Current visualization mode.
 + **Octave bands** modes display wider vertical bars, each one representing the *n*th part of an octave, based on a [24-tone equal tempered scale](https://en.wikipedia.org/wiki/Quarter_tone);
 + **Line / Area graph** mode uses the discrete frequencies data to draw a filled shape and/or a continuous line (see [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number) properties).
 
-Valid values are:
-
 Value | Mode | Available since
 ------|------|----------------
 0 | Discrete frequencies | v1.0.0
@@ -307,6 +343,16 @@ Value | Mode | Available since
 
 Defaults to **0**.
 
+### `overlay` *boolean*
+
+*Available since v2.2.0*
+
+Allows the analyzer to be displayed over other content, by making the canvas background transparent, when set to *true*.
+
+When [`showBgColor`](#showbgcolor-boolean) is also *true*, [`bgAlpha`](#bgalpha-number) controls the background opacity.
+
+Defaults to **false**.
+
 ### `pixelRatio` *number* *(Read only)*
 
 Current [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio).
@@ -314,7 +360,7 @@ This is usually **1** for standard displays and **2** for retina / Hi-DPI screen
 
 You can refer to this value to adjust any additional drawings done in the canvas (via [callback function](#oncanvasdraw-function)).
 
-When [low-resolution mode](#lores-boolean) is active *pixelRatio* is halved, i.e. **0.5** for standard displays and **1** for retina / Hi-DPI.
+When [`loRes`](#lores-boolean) is *true* `pixelRatio` is halved, i.e. **0.5** for standard displays and **1** for retina / Hi-DPI.
 
 ### `reflexAlpha` *number*
 
@@ -322,7 +368,7 @@ When [low-resolution mode](#lores-boolean) is active *pixelRatio* is halved, i.e
 
 Reflection opacity (when [`reflexRatio`](#reflexratio-number) > 0).
 
-Must be a float between 0 (completely transparent) and 1 (completely opaque).
+It must be a number between 0 (completely transparent) and 1 (completely opaque).
 
 Defaults to **0.15**.
 
@@ -338,17 +384,22 @@ Defaults to **true**.
 
 *Available since v2.1.0*
 
-Percentage of canvas height used for reflection. Must be a float greater than or equal to 0, and less than 1. Trying to set a value out of this range will throw an `ERR_REFLEX_OUT_OF_RANGE` [error](#custom-errors).
+Percentage of canvas height used for reflection. It must be a number greater than or equal to 0, and less than 1. Trying to set a value out of this range will throw an `ERR_REFLEX_OUT_OF_RANGE` [error](#custom-errors).
 
 For a perfect mirrored effect, set `reflexRatio` to 0.5 and [`reflexAlpha`](#reflexalpha-number) to 1.
 
-This has no effect when [`lumiBars`](#lumibars-boolean) is active.
+This has no effect when [`lumiBars`](#lumibars-boolean) is *true*.
 
 Defaults to **0** (no reflection).
 
 ### `showBgColor` *boolean*
 
-*true* to use background color defined by current gradient; *false* for black background. Defaults to **true**.
+*true* to use the background color defined by the current gradient;
+*false* for black or transparent (when [`overlay`](#overlay-boolean) is *true*) background.
+
+Please note that when [`showLeds`](#showleds-boolean) is *true*, setting `showBgColor` to *true* will show the "unlit" LEDs instead of changing the background.
+
+Defaults to **true**.
 
 ### `showFPS` *boolean*
 
@@ -370,7 +421,7 @@ Defaults to **0** (no reflection).
 
 Sets the analyzer's [smoothingTimeConstant](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/smoothingTimeConstant).
 
-Its value must be a float between 0 and 1. Lower values make the analyzer respond faster to changes.
+It must be a number between 0 and 1. Lower values make the analyzer respond faster to changes.
 
 Defaults to **0.5**.
 
@@ -463,12 +514,12 @@ Registers a custom color gradient.
 
 ```js
 const options = {
-    bgColor: '#111', // background color (required)
-    dir: 'h',        // add this to create a horizontal gradient (optional)
-    colorStops: [    // list your gradient colors in this array (at least 2 entries are required)
-        'red',                      // colors may be defined in any CSS valid format
+    bgColor: '#011a35', // background color (optional) - defaults to '#111'
+    dir: 'h',           // add this property to create a horizontal gradient (optional)
+    colorStops: [       // list your gradient colors in this array (at least 2 entries are required)
+        'red',                      // colors may be defined in any valid CSS format
         { pos: .6, color: '#ff0' }, // use an object to adjust the position (0 to 1) of a color
-        'hsl( 120, 100%, 50% )'     // colors may be defined in any CSS valid format
+        'hsl( 120, 100%, 50% )'     // colors may be defined in any valid CSS format
     ]
 }
 
@@ -489,7 +540,7 @@ Sets the desired frequency range. Values are expressed in Hz (Hertz).
 
 Shorthand method for setting several options at once.
 
-`options` is an object with the same structure used in the class [constructor](#constructor), except for the `audioCtx` and `source` options which are only available at construction time.
+Refer to the class [constructor](#options) for available options. `audioCtx` and `source` properties can only be set at initialization.
 
 ### `setSensitivity( minDecibels, maxDecibels )`
 
@@ -497,13 +548,21 @@ Adjust the analyzer's sensitivity. See [`maxDecibels`](#maxdecibels-number) and 
 
 ### `toggleAnalyzer( [boolean] )`
 
-Starts (*true*) or stops (*false*) the analyzer animation. If no argument provided, inverts the current status. Returns the resulting status.
-The analyzer is started by default upon [object construction](#constructor), unless you specify `start: false` in the options.
+Starts (*true*) or stops (*false*) the analyzer animation. If no argument provided, inverts the current status.
+
+Returns the resulting status.
+
+The analyzer is started by default after initialization, unless you specify [`start: false`](#start-boolean) in the [constructor](#constructor) options.
 
 ### `toggleFullscreen()`
 
-Toggles fullscreen mode. As per [API specification](https://fullscreen.spec.whatwg.org/), fullscreen requests must be triggered by user activation, so you must call this function from within an event handler or otherwise the request will be denied.
+Toggles fullscreen mode on / off.
 
+As per [API specification](https://fullscreen.spec.whatwg.org/), fullscreen requests must be triggered by user action,
+so you must call this function from within a mouse or keyboard event handler, otherwise the request will be denied.
+
+Please note that if you're displaying the analyzer over other content, you'll probably want to handle fullscreen mode
+on the container element instead. See the [overlay demo](https://audiomotion.dev/demo/overlay.html) for an example.
 
 ## Custom Errors
 
@@ -536,7 +595,7 @@ See [Changelog.md](Changelog.md)
 * [Web Audio API documentation @MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 * [What does the FFT data in the Web Audio API correspond to?](https://stackoverflow.com/a/14789992/2370385)
 * [Equations for equal-tempered scale frequencies](http://pages.mtu.edu/~suits/NoteFreqCalcs.html)
-* The font used in audioMotion's logo is [Orbitron](https://fonts.google.com/specimen/Orbitron) designed by Matt McInerney
+* The font used in audioMotion's logo is [Orbitron](https://fonts.google.com/specimen/Orbitron) by Matt McInerney
 * This documentation website is powered by [GitHub Pages](https://pages.github.com/), [docsify](https://docsify.js.org/) and [docsify-themeable](https://jhildenbiddle.github.io/docsify-themeable).
 
 ## Donate
