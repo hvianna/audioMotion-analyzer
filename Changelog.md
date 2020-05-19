@@ -1,6 +1,18 @@
 Changelog
 =========
 
+## version 2.2.0 - released 2020-05-19 :mask:
+
+### Added: {docsify-ignore}
+
++ New [`overlay`](#README.md#overlay-boolean) and [`bgAlpha`](#README.md#bgalpha-number) properties allow displaying the analyzer over other contents.
+[Check out the new demo!](https://audiomotion.dev/demo/overlay.html)
+
+### Changed: {docsify-ignore}
+
++ Corrected the documentation for the [`registerGradient()`](README.md#registergradient-name-options-) method, which stated the `bgColor` property was required (it has always been optional).
+
+
 ## version 2.1.0 - released 2020-04-06 :mask:
 
 ### Added: {docsify-ignore}

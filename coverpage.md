@@ -9,5 +9,5 @@
 - Lots of customization options
 - No dependencies, less than 20kB minified
 
-[Demo](https://audiomotion.dev/demo/)
+[Demos](https://audiomotion.dev/demo/)
 [Get Started](#usage)

@@ -3,8 +3,9 @@ const path = require('path');
 module.exports = {
   mode: 'production',
   entry: {
-  	'demo': './src/demo.js',
-  	'demo-multi': './src/demo-multi.js'
+  	'fluid': './demo/src/fluid.js',
+  	'multi': './demo/src/multi.js',
+  	'overlay': './demo/src/overlay.js'
   },
   output: {
     path: path.resolve(__dirname, 'demo'),
