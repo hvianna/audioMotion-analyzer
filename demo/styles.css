@@ -133,7 +133,9 @@ ul {
 	100% { -webkit-mask-position: -10%; }
 }
 
-#audio {
+#audio,
+#video {
+	display: block;
 	width: 100%;
 }
 
@@ -196,4 +198,23 @@ ul {
 
 .selected {
 	outline: 3px solid #c00;
+}
+
+/* overlay */
+#container.overlay {
+	height: 563px;
+	margin: 0 auto;
+	position: relative;
+	width: 100%;
+}
+
+.overlay canvas {
+	bottom: 0;
+	pointer-events: none; /* let mouse clicks pass to the underlying video element */
+	position: absolute;
+	touch-action: none; /* ditto for touch events */
+}
+
+.overlay:not(:fullscreen):hover canvas {
+	opacity: .5;
 }
