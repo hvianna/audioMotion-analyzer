@@ -5,7 +5,7 @@ Changelog
 
 ### Added: {docsify-ignore}
 
-+ New [`overlay`](#README.md#overlay-boolean) and [`bgAlpha`](#README.md#bgalpha-number) properties allow displaying the analyzer over other contents.
++ New [`overlay`](README.md#overlay-boolean) and [`bgAlpha`](README.md#bgalpha-number) properties allow displaying the analyzer over other contents.
 [Check out the new demo!](https://audiomotion.dev/demo/overlay.html)
 
 ### Changed: {docsify-ignore}
