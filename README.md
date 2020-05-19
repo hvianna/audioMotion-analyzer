@@ -584,10 +584,6 @@ ERR_GRADIENT_MISSING_COLOR | The `options` parameter for [`registerGradient()`](
 ERR_REFLEX_OUT_OF_RANGE    | Tried to assign a value < 0 or >= 1 to [`reflexRatio`](#reflexratio-number) property.
 ERR_UNKNOWN_GRADIENT       | User tried to [select a gradient](#gradient-string) not previously registered.
 
-## Changelog
-
-See [Changelog.md](Changelog.md)
-
 ## Acknowledgments
 
 * Thanks to [Yuji Koike](http://www.ykcircus.com) for his awesome [Soniq Viewer for iOS](https://itunes.apple.com/us/app/soniq-viewer/id448343005), which inspired me to create **audioMotion**
@@ -598,7 +594,17 @@ See [Changelog.md](Changelog.md)
 * The font used in audioMotion's logo is [Orbitron](https://fonts.google.com/specimen/Orbitron) by Matt McInerney
 * This documentation website is powered by [GitHub Pages](https://pages.github.com/), [docsify](https://docsify.js.org/) and [docsify-themeable](https://jhildenbiddle.github.io/docsify-themeable).
 
-## Donate
+## Changelog
+
+See [Changelog.md](Changelog.md)
+
+## Get in touch!
+
+If you create something cool with this project, or simply think it's useful, I would like to know! Please drop me an e-mail at hvianna@gmail.com
+
+If you have a feature request or code suggestion, please see [CONTRIBUTING.md](CONTRIBUTING.md)
+
+And if you're feeling generous you can [buy me a coffee on Ko-fi](https://ko-fi.com/Q5Q6157GZ) :grin::coffee:
 
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q6157GZ)
 
