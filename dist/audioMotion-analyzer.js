@@ -670,8 +670,11 @@ export default class AudioMotionAnalyzer {
 			if ( isLumiBars )
 				this._canvasCtx.globalAlpha = barHeight / 255;
 
-			if ( isLedDisplay ) // normalize barHeight to match one of the "led" elements
+			if ( isLedDisplay ) { // normalize barHeight to match one of the "led" elements
 				barHeight = ( barHeight / 255 * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
+				if ( barHeight < 0 )
+					barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
+			}
 			else
 				barHeight = barHeight / 255 * analyzerHeight | 0;
 
