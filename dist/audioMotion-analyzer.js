@@ -775,20 +775,18 @@ export default class AudioMotionAnalyzer {
 				height = analyzerHeight;
 			}
 
-			// paint the reflex area with black
-			if ( ! this.overlay || this.showBgColor && this.reflexAlpha < 1 ) {
-				this._canvasCtx.fillStyle = '#000';
-				if ( this.overlay ) // respect the selected bgAlpha when in overlay mode
-					this._canvasCtx.globalAlpha = this.bgAlpha;
-				this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
-			}
-
 			// create the reflection
-			this._canvasCtx.globalAlpha = this.reflexAlpha;
 			this._canvasCtx.setTransform( 1, 0, 0, -1, 0, this._canvas.height );
 			this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, posY, this._canvas.width, height );
 			this._canvasCtx.setTransform();
-			this._canvasCtx.globalAlpha = 1;
+
+			// apply a semi-transparent black layer over it
+			if ( this.reflexAlpha < 1 ) {
+				this._canvasCtx.globalAlpha = 1 - this.reflexAlpha;
+				this._canvasCtx.fillStyle = '#000';
+				this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
+				this._canvasCtx.globalAlpha = 1;
+			}
 		}
 
 		if ( this.showScale )
