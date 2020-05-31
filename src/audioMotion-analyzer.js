@@ -2,12 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 2.2.0
+ * @version 2.2.1
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const _VERSION = '2.2.0';
+const _VERSION = '2.2.1';
 
 export default class AudioMotionAnalyzer {
 
@@ -670,8 +670,11 @@ export default class AudioMotionAnalyzer {
 			if ( isLumiBars )
 				this._canvasCtx.globalAlpha = barHeight / 255;
 
-			if ( isLedDisplay ) // normalize barHeight to match one of the "led" elements
+			if ( isLedDisplay ) { // normalize barHeight to match one of the "led" elements
 				barHeight = ( barHeight / 255 * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
+				if ( barHeight < 0 )
+					barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
+			}
 			else
 				barHeight = barHeight / 255 * analyzerHeight | 0;
 
@@ -772,20 +775,18 @@ export default class AudioMotionAnalyzer {
 				height = analyzerHeight;
 			}
 
-			// paint the reflex area with black
-			if ( ! this.overlay || this.showBgColor && this.reflexAlpha < 1 ) {
-				this._canvasCtx.fillStyle = '#000';
-				if ( this.overlay ) // respect the selected bgAlpha when in overlay mode
-					this._canvasCtx.globalAlpha = this.bgAlpha;
-				this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
-			}
-
 			// create the reflection
-			this._canvasCtx.globalAlpha = this.reflexAlpha;
 			this._canvasCtx.setTransform( 1, 0, 0, -1, 0, this._canvas.height );
 			this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, posY, this._canvas.width, height );
 			this._canvasCtx.setTransform();
-			this._canvasCtx.globalAlpha = 1;
+
+			// apply a semi-transparent black layer over it
+			if ( this.reflexAlpha < 1 ) {
+				this._canvasCtx.globalAlpha = 1 - this.reflexAlpha;
+				this._canvasCtx.fillStyle = '#000';
+				this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
+				this._canvasCtx.globalAlpha = 1;
+			}
 		}
 
 		if ( this.showScale )

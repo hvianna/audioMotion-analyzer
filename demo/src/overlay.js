@@ -4,7 +4,7 @@
  * https://github.com/hvianna/audioMotion-analyzer
  */
 
-import AudioMotionAnalyzer from '../../dist/audioMotion-analyzer.js';
+import AudioMotionAnalyzer from '../../src/audioMotion-analyzer.js';
 
 const videoEl = document.getElementById('video'),
 	  container = document.getElementById('container'),
@@ -48,7 +48,7 @@ const presets = [
 		options: {
 			mode: 5,
 			barSpace: .25,
-			bgAlpha: .8,
+			bgAlpha: .5,
 			lumiBars: false,
 			reflexAlpha: .5,
 			reflexFit: true,
