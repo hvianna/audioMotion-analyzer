@@ -1,6 +1,21 @@
 Changelog
 =========
 
+## version 2.2.1 - released 2020-05-31 :mask:
+
+### Changed: {docsify-ignore}
+
++ Improved the Reflex effect in [`overlay`](README.md#overlay-boolean) mode - the [`reflexAlpha`](README.md#reflexalpha-number) property is
+now used to adjust the opacity of a dark layer applied *over* the reflection area, which prevents undesired transparency of the reflection itself
+and creates a consistent effect, whether overlay mode is on or off;
+
++ The package source code has been moved from the `dist` to the `src` folder.
+
+### Fixed: {docsify-ignore}
+
++ Prevent showing leds below the 0 level, when both reflex and overlay are active.
+
+
 ## version 2.2.0 - released 2020-05-19 :mask:
 
 ### Added: {docsify-ignore}
