@@ -196,12 +196,13 @@ Defaults to **0.7**.
 
 ### `dataArray` *UInt8Array array* *(Read only)*
 
-Data array returned by the analyzer's [`getByteFrequencyData()`](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteFrequencyData).
-Array size is half the current FFT size, with element values ranging from 0 to 255.
+Data array updated by the analyzer's [`getByteFrequencyData()`](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteFrequencyData) method on every animation frame (ideally 60 times per second).
 
-Each array element represents a specific value in the frequency domain, such that: `frequency = i * audioCtx.sampleRate / fftSize`, where *i* is the array index.
+Array size is defined by `analyzer.frequencyBinCount` (which should be half the current [FFT size](#fftsize-number)), with element values ranging from 0 to 255.
 
-The data is updated on every animation frame (ideally 60 times per second).
+Each array element represents a discrete value in the frequency domain, such that: *frequency = index * [audioCtx](#audioctx-audiocontext-object).sampleRate / fftSize*.
+
+See also [`binToFreq()`](#bintofreq-bin-) and [`freqToBin()`](#freqtobin-frequency-rounding-) methods.
 
 ### `fftSize` *number*
 
@@ -440,7 +441,7 @@ If defined, this function will be called after rendering each frame.
 
 The audioMotion object will be passed as an argument to the callback function.
 
-Example usage:
+Usage example:
 
 ```js
 const audioMotion = new AudioMotionAnalyzer(
@@ -457,7 +458,7 @@ function displayCanvasMsg( instance ) {
         size *= 2;
 
     // find the data array index for 140Hz
-    const idx = Math.round( 140 * instance.analyzer.fftSize / instance.audioCtx.sampleRate );
+    const idx = instance.freqToBin(140);
 
     // use the 140Hz amplitude to increase the font size and make the logo pulse to the beat
     instance.canvasCtx.font = `${size + instance.dataArray[ idx ] / 16 * instance.pixelRatio}px Orbitron,sans-serif`;
@@ -482,7 +483,7 @@ Reason | Description
 `'resize'` | browser window resized (only when [`width`](#width-number) and/or [`height`](#height-number) are undefined)
 `'user'` | canvas dimensions changed by user script, via [`height`](#height-number) and [`width`](#width-number) properties, [`setCanvasSize()`](#setcanvassize-width-height-) or [`setOptions()`](#setoptions-options-) methods
 
-Example usage:
+Usage example:
 
 ```js
 const audioMotion = new AudioMotionAnalyzer(
@@ -498,6 +499,14 @@ const audioMotion = new AudioMotionAnalyzer(
 
 ## Methods
 
+### `binToFreq( bin )`
+
+*Available since v2.3.0*
+
+Returns the frequency (in hertz) represented by a given FFT bin (a [`dataArray`](#dataarray-uint8array-array-read-only) index).
+
+`bin` must be a **number** equal or greater than 0 and less than `analyzer.frequencyBinCount` (the same as `dataArray.length`).
+
 ### `connectAudio( element )`
 
 Connects an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) (`<audio>` or `<video>` HTML element) to the analyzer.
@@ -505,6 +514,22 @@ Connects an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/
 Returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) which can be used for later disconnection.
 
 For connecting other audio sources, like oscillators and streams, use the [`audioCtx`](#audioctx-audiocontext-object) and [`analyzer`](#analyzer-analysernode-object) objects.
+
+### `freqToBin( frequency, [rounding] )`
+
+*Available since v2.3.0*
+
+Returns the [`dataArray`](#dataarray-uint8array-array-read-only) index which more closely corresponds to a given frequency.
+
+`frequency` must be a **number** equal or greater than zero, representing a frequency in hertz.
+
+`rounding` is an optional **string** to select the [Math method](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math#Static_methods)
+used for rounding the index value to an integer. Valid options are `'floor'`, `'round'` (default) and `'ceil'`.
+
+Please note that the returned value will cap at the highest valid index (`analyzer.frequencyBinCount - 1`) for any frequency higher
+than **half** the current sampling rate (`audioCtx.sampleRate`).
+
+See the [*onCanvasDraw* usage example](#oncanvasdraw-function).
 
 ### `registerGradient( name, options )`
 

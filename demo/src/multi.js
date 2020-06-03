@@ -166,7 +166,7 @@ function displayCanvasMsg( instance ) {
 		size *= 2;
 
 	// find the data array index for 140Hz
-	const idx = Math.round( 140 * instance.analyzer.fftSize / instance.audioCtx.sampleRate );
+	const idx = instance.freqToBin(140);
 
 	// use the 140Hz amplitude to increase the font size and make the logo pulse to the beat
 	instance.canvasCtx.font = `${size + instance.dataArray[ idx ] / 16 * instance.pixelRatio}px Orbitron,sans-serif`;
