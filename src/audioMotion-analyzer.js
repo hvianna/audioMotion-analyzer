@@ -42,6 +42,7 @@ export default class AudioMotionAnalyzer {
 			loRes       : false,
 			reflexRatio : 0,
 			reflexAlpha : 0.15,
+			reflexBright: 1,
 			reflexFit   : true,
 			lineWidth   : 0,
 			fillAlpha   : 1,
@@ -643,9 +644,13 @@ export default class AudioMotionAnalyzer {
 			else // use background color defined by gradient
 				this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor;
 
-		// paint the analyzer background (excludes the reflection area, if any)
-		if ( ! this.overlay || this.showBgColor )
-			this._canvasCtx.fillRect( 0, 0, this._canvas.width, isLumiBars ? this._canvas.height : analyzerHeight );
+		// fill the canvas background if needed
+		if ( ! this.overlay || this.showBgColor ) {
+			// the reflection area will not be painted when lumiBars are inactive and:
+			//    showLeds is true (background color is used only in the LEDs area and will be copied into the reflection)
+			// or overlay is true and reflexAlpha == 1 (avoids alpha over alpha problem, in case bgAlpha < 1)
+	 		this._canvasCtx.fillRect( 0, 0, this._canvas.width, ! isLumiBars && ( isLedDisplay || this.overlay && this.reflexAlpha == 1 ) ? analyzerHeight : this._canvas.height );
+		}
 
 		// restore global alpha
 		this._canvasCtx.globalAlpha = 1;
@@ -801,18 +806,25 @@ export default class AudioMotionAnalyzer {
 				height = analyzerHeight;
 			}
 
+			// clear the reflection area with black for LEDs display when not in overlay mode
+			if ( ! this.overlay && isLedDisplay ) {
+				this._canvasCtx.fillStyle = '#000';
+				this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
+			}
+
+			// set alpha and brightness for the reflection
+			this._canvasCtx.globalAlpha = this.reflexAlpha;
+			if ( this.reflexBright != 1 )
+				this._canvasCtx.filter = `brightness(${this.reflexBright})`;
+
 			// create the reflection
 			this._canvasCtx.setTransform( 1, 0, 0, -1, 0, this._canvas.height );
 			this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, posY, this._canvas.width, height );
-			this._canvasCtx.setTransform();
 
-			// apply a semi-transparent black layer over it
-			if ( this.reflexAlpha < 1 ) {
-				this._canvasCtx.globalAlpha = 1 - this.reflexAlpha;
-				this._canvasCtx.fillStyle = '#000';
-				this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
-				this._canvasCtx.globalAlpha = 1;
-			}
+			// reset changed properties
+			this._canvasCtx.setTransform();
+			this._canvasCtx.filter = 'none';
+			this._canvasCtx.globalAlpha = 1;
 		}
 
 		if ( this.showScale )

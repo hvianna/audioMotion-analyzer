@@ -83,6 +83,7 @@ options = {<br>
 &emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *undefined*,<br>
 &emsp;&emsp;[overlay](#overlay-boolean): **false**,<br>
 &emsp;&emsp;[reflexAlpha](#reflexalpha-number): **0.15**,<br>
+&emsp;&emsp;[reflexBright](#reflexbright-number): **1**,<br>
 &emsp;&emsp;[reflexFit](#reflexfit-boolean): **true**,<br>
 &emsp;&emsp;[reflexRatio](#reflexratio-number): **0**,<br>
 &emsp;&emsp;[showBgColor](#showbgcolor-boolean): **true**,<br>
@@ -373,6 +374,20 @@ It must be a number between 0 (completely transparent) and 1 (completely opaque)
 
 Defaults to **0.15**.
 
+### `reflexBright` *number*
+
+*Available since v2.3.0*
+
+Reflection brightness (when [`reflexRatio`](#reflexratio-number) > 0).
+
+It must be a number. Values below 1 darken the reflection and above 1 make it brighter.
+A value of 0 will render the reflected image completely black, while a value of 1 will preserve the original brightness.
+
+Please note that this feature relies on the [`filter`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter) property of Canvas API,
+which is [currently not supported in some browsers](https://caniuse.com/#feat=mdn-api_canvasrenderingcontext2d_filter) (notably, Opera and Safari).
+
+Defaults to **1**.
+
 ### `reflexFit` *boolean*
 
 *Available since v2.1.0*
@@ -387,7 +402,7 @@ Defaults to **true**.
 
 Percentage of canvas height used for reflection. It must be a number greater than or equal to 0, and less than 1. Trying to set a value out of this range will throw an `ERR_REFLEX_OUT_OF_RANGE` [error](#custom-errors).
 
-For a perfect mirrored effect, set `reflexRatio` to 0.5 and [`reflexAlpha`](#reflexalpha-number) to 1.
+For a perfect mirrored effect, set `reflexRatio` to 0.5 and both [`reflexAlpha`](#reflexalpha-number) and [`reflexBright`](#reflexbright-number) to 1.
 
 This has no effect when [`lumiBars`](#lumibars-boolean) is *true*.
 
