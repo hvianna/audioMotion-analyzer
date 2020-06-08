@@ -1,13 +1,26 @@
 Changelog
 =========
 
-## version 2.2.1 - released 2020-05-31 :mask:
+## version 2.3.0 (2020-06-08)
+
+### Added: {docsify-ignore}
+
++ [`binToFreq()`](README.md#bintofreq-bin-) and [`freqToBin()`](README.md#freqtobin-frequency-rounding-) methods;
++ [`reflexBright`](README.md#reflexbright-number) property, which allows to adjust the brightness of the reflected image.
 
 ### Changed: {docsify-ignore}
 
-+ Improved the Reflex effect in [`overlay`](README.md#overlay-boolean) mode - the [`reflexAlpha`](README.md#reflexalpha-number) property is
++ Reverted the change to `reflexAlpha` introduced in [v2.2.1](https://github.com/hvianna/audioMotion-analyzer/releases/tag/2.2.1)
++ Removed the forced black layer off the reflection background.
+
+
+## version 2.2.1 (2020-05-31)
+
+### Changed: {docsify-ignore}
+
++ ~~Improved the Reflex effect in [`overlay`](README.md#overlay-boolean) mode - the [`reflexAlpha`](README.md#reflexalpha-number) property is
 now used to adjust the opacity of a dark layer applied *over* the reflection area, which prevents undesired transparency of the reflection itself
-and creates a consistent effect, whether overlay mode is on or off;
+and creates a consistent effect, whether overlay mode is on or off~~ **(reverted in v2.3.0)**;
 
 + The package source code has been moved from the `dist` to the `src` folder.
 
@@ -16,7 +29,7 @@ and creates a consistent effect, whether overlay mode is on or off;
 + Prevent showing leds below the 0 level, when both reflex and overlay are active.
 
 
-## version 2.2.0 - released 2020-05-19 :mask:
+## version 2.2.0 (2020-05-19)
 
 ### Added: {docsify-ignore}
 
@@ -28,14 +41,14 @@ and creates a consistent effect, whether overlay mode is on or off;
 + Corrected the documentation for the [`registerGradient()`](README.md#registergradient-name-options-) method, which stated the `bgColor` property was required (it has always been optional).
 
 
-## version 2.1.0 - released 2020-04-06 :mask:
+## version 2.1.0 (2020-04-06)
 
 ### Added: {docsify-ignore}
 
 + Customizable Reflex effect - see [`reflexRatio`](README.md#reflexratio-number) and try it in the [demo](https://audiomotion.dev/demo/fluid.html).
 
 
-## version 2.0.0 - released 2020-03-24 :mask:
+## version 2.0.0 (2020-03-24)
 
 ### Added: {docsify-ignore}
 
@@ -68,28 +81,28 @@ and creates a consistent effect, whether overlay mode is on or off;
 + Errors now return a custom object and some error messages have changed - use the new [`code` property](README.md#custom-errors) to identify errors in a reliable way.
 
 
-## version 1.2.0 - released 2019-12-19
+## version 1.2.0 (2019-12-19)
 
 + Improves the look of bars at lower frequencies in octave bands modes (especially 1/12th and 1/24th);
 + Minor tweak to the "Rainbow" gradient to make cyan and blue shades a little more balanced.
 
 
-## version 1.1.0 - released 2019-12-08
+## version 1.1.0 (2019-12-08)
 
 + New **Area fill** visualization mode (`mode: 10`), which uses the same full-frequency data of the *discrete frequencies* mode, but generates a brighter filled shape;
 + New **Luminance Bars** option (`lumiBars: <boolean>`) for octave bands modes, which displays analyzer bars always at full-height, with varying luminance instead.
 
 
-## version 1.0.1 - released 2019-10-22
+## version 1.0.1 (2019-10-22)
 
 + Minor cleanup to optimize npm package size.
 
 
-## version 1.0.0 - released 2019-10-07
+## version 1.0.0 (2019-10-07)
 
 + First stable release.
 
 
-## version 1.0.0-rc.1 - released 2019-10-05
+## version 1.0.0-rc.1 (2019-10-05)
 
 + Release candidate for v1.0.0
