@@ -2,12 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 2.2.1
+ * @version 2.3.0
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const _VERSION = '2.2.1';
+const _VERSION = '2.3.0';
 
 export default class AudioMotionAnalyzer {
 
@@ -42,6 +42,7 @@ export default class AudioMotionAnalyzer {
 			loRes       : false,
 			reflexRatio : 0,
 			reflexAlpha : 0.15,
+			reflexBright: 1,
 			reflexFit   : true,
 			lineWidth   : 0,
 			fillAlpha   : 1,
@@ -384,6 +385,32 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Returns the frequency represented by a given FFT bin
+	 *
+	 * @param {number} bin FFT data array index
+	 * @returns {number}   Frequency in hertz
+	 */
+	binToFreq( bin ) {
+		return bin * this._audioCtx.sampleRate / this._analyzer.fftSize;
+	}
+
+	/**
+	 * Returns the FFT bin which more closely corresponds to a given frequency
+	 *
+	 * @param {number} freq       Frequency in hertz
+	 * @param {string} [rounding] Rounding function: 'floor', 'round' (default) or 'ceil'
+	 * @returns {number}          FFT data array index (integer)
+	 */
+	freqToBin( freq, rounding ) {
+		if ( ! ['floor','ceil'].includes( rounding ) )
+			rounding = 'round';
+
+		const bin = Math[ rounding ]( freq * this._analyzer.fftSize / this._audioCtx.sampleRate );
+
+		return bin < this._analyzer.frequencyBinCount ? bin : this._analyzer.frequencyBinCount - 1;
+	}
+
+	/**
 	 * Registers a custom gradient
 	 *
 	 * @param {string} name
@@ -617,9 +644,13 @@ export default class AudioMotionAnalyzer {
 			else // use background color defined by gradient
 				this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor;
 
-		// paint the analyzer background (excludes the reflection area, if any)
-		if ( ! this.overlay || this.showBgColor )
-			this._canvasCtx.fillRect( 0, 0, this._canvas.width, isLumiBars ? this._canvas.height : analyzerHeight );
+		// fill the canvas background if needed
+		if ( ! this.overlay || this.showBgColor ) {
+			// the reflection area will not be painted when lumiBars are inactive and:
+			//    showLeds is true (background color is used only in the LEDs area and will be copied into the reflection)
+			// or overlay is true and reflexAlpha == 1 (avoids alpha over alpha problem, in case bgAlpha < 1)
+	 		this._canvasCtx.fillRect( 0, 0, this._canvas.width, ! isLumiBars && ( isLedDisplay || this.overlay && this.reflexAlpha == 1 ) ? analyzerHeight : this._canvas.height );
+		}
 
 		// restore global alpha
 		this._canvasCtx.globalAlpha = 1;
@@ -775,18 +806,25 @@ export default class AudioMotionAnalyzer {
 				height = analyzerHeight;
 			}
 
+			// clear the reflection area with black for LEDs display when not in overlay mode
+			if ( ! this.overlay && isLedDisplay ) {
+				this._canvasCtx.fillStyle = '#000';
+				this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
+			}
+
+			// set alpha and brightness for the reflection
+			this._canvasCtx.globalAlpha = this.reflexAlpha;
+			if ( this.reflexBright != 1 )
+				this._canvasCtx.filter = `brightness(${this.reflexBright})`;
+
 			// create the reflection
 			this._canvasCtx.setTransform( 1, 0, 0, -1, 0, this._canvas.height );
 			this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, posY, this._canvas.width, height );
-			this._canvasCtx.setTransform();
 
-			// apply a semi-transparent black layer over it
-			if ( this.reflexAlpha < 1 ) {
-				this._canvasCtx.globalAlpha = 1 - this.reflexAlpha;
-				this._canvasCtx.fillStyle = '#000';
-				this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
-				this._canvasCtx.globalAlpha = 1;
-			}
+			// reset changed properties
+			this._canvasCtx.setTransform();
+			this._canvasCtx.filter = 'none';
+			this._canvasCtx.globalAlpha = 1;
 		}
 
 		if ( this.showScale )
@@ -817,32 +855,6 @@ export default class AudioMotionAnalyzer {
 
 		// schedule next canvas update
 		this._animationReq = requestAnimationFrame( timestamp => this._draw( timestamp ) );
-	}
-
-	/**
-	 * Find the FFT bin which represents a given frequency
-	 *
-	 * @param {number} freq   Frequency in hertz
-	 * @param {string} [func] Rounding function: 'floor', 'round' (default) or 'ceil'
-	 * @returns {number}      FFT data array index which closely represents the given frequency
-	 */
-	_findFrequencyBin( freq, func ) {
-		const bin = freq * this._analyzer.fftSize / this._audioCtx.sampleRate;
-
-		if ( ! ['floor','ceil'].includes( func ) )
-			func = 'round';
-
-		return Math[ func ]( bin );
-	}
-
-	/**
-	 * Find the frequency represented by a given FFT bin
-	 *
-	 * @param {number} bin FFT data array index
-	 * @returns {number}   Frequency in hertz represented by the given FFT bin
-	 */
-	_findBinFrequency( bin ) {
-		return bin * this._audioCtx.sampleRate / this._analyzer.fftSize;
 	}
 
 	/**
@@ -906,14 +918,14 @@ export default class AudioMotionAnalyzer {
 			minLog = Math.log10( this._minFreq );
 			bandWidth = this._canvas.width / ( Math.log10( this._maxFreq ) - minLog );
 
-			const minIndex = this._findFrequencyBin( this._minFreq, 'floor' );
-			const maxIndex = Math.min( this._findFrequencyBin( this._maxFreq ), this._analyzer.frequencyBinCount - 1 );
+			const minIndex = this.freqToBin( this._minFreq, 'floor' );
+			const maxIndex = this.freqToBin( this._maxFreq );
 
 	 		let lastPos = -999;
 
 			for ( let i = minIndex; i <= maxIndex; i++ ) {
-				let freq = this._findBinFrequency( i ); // frequency represented in this bin
-				let pos = Math.round( bandWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
+				const freq = this.binToFreq( i ); // frequency represented by this index
+				const pos = Math.round( bandWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
 				if ( pos > lastPos ) {
@@ -968,8 +980,8 @@ export default class AudioMotionAnalyzer {
 			let nBars   = 0;  // count of bars with the same index
 
 			temperedScale.forEach( ( freq, index ) => {
-				// which FFT bin represents this frequency?
-				const bin = this._findFrequencyBin( freq );
+				// which FFT bin best represents this frequency?
+				const bin = this.freqToBin( freq );
 
 				let idx, nextBin;
 				// start from the last used FFT bin
@@ -995,7 +1007,7 @@ export default class AudioMotionAnalyzer {
 				prevBin = nextBin = bin;
 				// check if there's another band after this one
 				if ( temperedScale[ index + 1 ] !== undefined ) {
-					nextBin = this._findFrequencyBin( temperedScale[ index + 1 ] );
+					nextBin = this.freqToBin( temperedScale[ index + 1 ] );
 					// and use half the bins in between for this band
 					if ( nextBin - bin > 1 )
 						prevBin += Math.round( ( nextBin - bin ) / 2 );
@@ -1008,7 +1020,7 @@ export default class AudioMotionAnalyzer {
 					dataIdx: idx,
 					endIdx,
 //					freq, // nominal frequency for this band
-//					range: [ this._findBinFrequency( idx ), this._findBinFrequency( endIdx || idx ) ], // actual range of frequencies
+//					range: [ this.binToFreq( idx ), this.binToFreq( endIdx || idx ) ], // actual range of frequencies
 					factor: 0,
 					peak: 0,
 					hold: 0,

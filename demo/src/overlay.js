@@ -37,6 +37,7 @@ const presets = [
 			lineWidth: 2,
 			lumiBars: false,
 			reflexAlpha: 1,
+			reflexBright: 1,
 			reflexRatio: .5,
 			showBgColor: false,
 			showPeaks: false,
