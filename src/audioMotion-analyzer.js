@@ -7,7 +7,7 @@
  * @license AGPL-3.0-or-later
  */
 
-const _VERSION = '2.3.0';
+const _VERSION = '2.4.0-dev';
 
 export default class AudioMotionAnalyzer {
 
@@ -49,6 +49,7 @@ export default class AudioMotionAnalyzer {
 			barSpace    : 0.1,
 			overlay     : false,
 			bgAlpha     : 0.7,
+			radial		: false,
 			start       : true
 		};
 
@@ -627,7 +628,17 @@ export default class AudioMotionAnalyzer {
 		const isOctaveBands  = ( this._mode % 10 != 0 ), // mode > 0 && mode < 10
 			  isLedDisplay   = ( this.showLeds  && isOctaveBands ),
 			  isLumiBars     = ( this._lumiBars && isOctaveBands ),
-			  analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0;
+			  analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0,
+			  radius         = this._canvas.height >> 2;
+
+		// helper function for radial mode
+		const radialXY = ( x, y ) => {
+			const centerX = this._canvas.width >> 1,
+				  centerY = this._canvas.height >> 1,
+				  height  = radius + y,
+				  angle   = ( 2 * Math.PI * ( x / this._canvas.width ) ) - Math.PI / 2;
+			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
+		}
 
 		// clear the canvas, if in overlay mode
 		if ( this.overlay ) {
@@ -662,9 +673,12 @@ export default class AudioMotionAnalyzer {
 		this._canvasCtx.fillStyle = this._gradients[ this._gradient ].gradient;
 
 		// if in "area fill" mode, start the drawing path
-		if ( this._mode == 10 ) {
+		if ( this._mode == 10 || this.radial ) {
 			this._canvasCtx.beginPath();
-			this._canvasCtx.moveTo( -this.lineWidth, analyzerHeight );
+			if ( this.radial )
+				this._canvasCtx.moveTo( ...radialXY( 0, 0 ) );
+			else
+				this._canvasCtx.moveTo( -this.lineWidth, analyzerHeight );
 		}
 
 		// compute the effective bar width, considering the selected bar spacing
@@ -697,17 +711,21 @@ export default class AudioMotionAnalyzer {
 					barHeight = Math.max( barHeight, this._dataArray[ j ] );
 			}
 
+			barHeight /= 255;
+
 			// set opacity for lumi bars before barHeight value is normalized
 			if ( isLumiBars )
-				this._canvasCtx.globalAlpha = barHeight / 255;
+				this._canvasCtx.globalAlpha = barHeight;
 
 			if ( isLedDisplay ) { // normalize barHeight to match one of the "led" elements
-				barHeight = ( barHeight / 255 * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
+				barHeight = ( barHeight * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
 				if ( barHeight < 0 )
 					barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
 			}
+			else if ( this.radial )
+				barHeight = barHeight * radius | 0;
 			else
-				barHeight = barHeight / 255 * analyzerHeight | 0;
+				barHeight = barHeight * analyzerHeight | 0;
 
 			if ( barHeight >= bar.peak ) {
 				bar.peak = barHeight;
@@ -720,7 +738,10 @@ export default class AudioMotionAnalyzer {
 
 			// Draw line / bar
 			if ( this._mode == 10 ) {
-				this._canvasCtx.lineTo( bar.posX, analyzerHeight - barHeight );
+				if ( ! this.radial )
+					this._canvasCtx.lineTo( bar.posX, analyzerHeight - barHeight );
+				else if ( bar.posX >= 0 )
+					this._canvasCtx.lineTo( ...radialXY( bar.posX, barHeight ) );
 			}
 			else {
 				if ( this._mode > 0 ) {
@@ -743,8 +764,15 @@ export default class AudioMotionAnalyzer {
 					this._canvasCtx.fillRect( posX, 0, adjWidth, this._canvas.height );
 					this._canvasCtx.globalAlpha = 1;
 				}
-				else
+				else if ( ! this.radial ) {
 					this._canvasCtx.fillRect( posX, analyzerHeight, adjWidth, -barHeight );
+				}
+				else if ( bar.posX >= 0 ) {
+					this._canvasCtx.moveTo( ...radialXY( posX, 0 ) );
+					this._canvasCtx.lineTo( ...radialXY( posX, barHeight ) );
+					this._canvasCtx.lineTo( ...radialXY( posX + adjWidth, barHeight ) );
+					this._canvasCtx.lineTo( ...radialXY( posX + adjWidth, 0 ) );
+				}
 			}
 
 			// Draw peak
@@ -772,7 +800,10 @@ export default class AudioMotionAnalyzer {
 		} // for ( let i = 0; i < l; i++ )
 
 		if ( this._mode == 10 ) { // fill area
-			this._canvasCtx.lineTo( bar.posX + this.lineWidth, analyzerHeight );
+			if ( this.radial )
+				this._canvasCtx.closePath();
+			else
+				this._canvasCtx.lineTo( bar.posX + this.lineWidth, analyzerHeight );
 
 			if ( this.lineWidth > 0 ) {
 				this._canvasCtx.lineWidth = this.lineWidth;
@@ -792,6 +823,10 @@ export default class AudioMotionAnalyzer {
 
 			this._canvasCtx.drawImage( this._ledsMask, 0, 0 );
 			this._canvasCtx.globalCompositeOperation = 'source-over';
+		}
+		else if ( this.radial ) {
+			this._canvasCtx.fillStyle = this._canvasCtx.fillStyle;
+			this._canvasCtx.fill();
 		}
 
 		// Reflex effect
