@@ -133,9 +133,11 @@ export default class AudioMotionAnalyzer {
 		this._ledsMask = document.createElement('canvas');
 		this._ledsCtx = this._ledsMask.getContext('2d');
 
-		// auxiliary canvas for the X-axis scale labels
+		// auxiliary canvases for the X-axis scale labels
 		this._labels = document.createElement('canvas');
 		this._labelsCtx = this._labels.getContext('2d');
+		this._circScale = document.createElement('canvas');
+		this._circScaleCtx = this._circScale.getContext('2d');
 
 		// adjust canvas on window resize
 		window.addEventListener( 'resize', () => {
@@ -862,8 +864,12 @@ export default class AudioMotionAnalyzer {
 			this._canvasCtx.globalAlpha = 1;
 		}
 
-		if ( this.showScale )
-			this._canvasCtx.drawImage( this._labels, 0, this._canvas.height - this._labels.height );
+		if ( this.showScale ) {
+			if ( this.radial )
+				this._canvasCtx.drawImage( this._circScale, this._canvas.width / 2 - this._circScale.width / 2, this._canvas.height / 2 - this._circScale.height / 2 );
+			else
+				this._canvasCtx.drawImage( this._labels, 0, this._canvas.height - this._labels.height );
+		}
 
 		this._frame++;
 
@@ -1067,24 +1073,47 @@ export default class AudioMotionAnalyzer {
 
 		this._createLedMask();
 
-		// Create the X-axis scale in the auxiliary canvas
+		// Create the X-axis scale in the auxiliary canvases
 
-		this._labels.width |= 0; // clear canvas
-		this._labelsCtx.fillStyle = '#000c';
-		this._labelsCtx.fillRect( 0, 0, this._labels.width, this._labels.height );
+		// clear canvases
+		this._labels.width |= 0;
+		this._circScale.width |= 0;
 
-		this._labelsCtx.fillStyle = '#fff';
-		this._labelsCtx.font = `${ this._labels.height / 2 }px sans-serif`;
-		this._labelsCtx.textAlign = 'center';
+		const scaleHeight = this._labels.height;
+		this._labelsCtx.fillStyle = this._circScaleCtx.strokeStyle = '#000c';
+		this._labelsCtx.fillRect( 0, 0, this._labels.width, scaleHeight );
+
+		const radius = this._circScale.width >> 1;
+		const tau = 2 * Math.PI;
+		this._circScaleCtx.arc( radius, radius, radius - scaleHeight / 2, 0, tau );
+		this._circScaleCtx.lineWidth = scaleHeight;
+		this._circScaleCtx.stroke();
+
+		this._labelsCtx.fillStyle = this._circScaleCtx.fillStyle = '#fff';
+		this._labelsCtx.font = this._circScaleCtx.font = `${ scaleHeight / 2 }px sans-serif`;
+		this._labelsCtx.textAlign = this._circScaleCtx.textAlign = 'center';
+
+		const radialXY = ( x, y ) => {
+			const height = radius - scaleHeight + y,
+				  angle  = tau * ( x / this._canvas.width ) - Math.PI / 2;
+			return [ radius + height * Math.cos( angle ), radius + height * Math.sin( angle ) ];
+		}
 
 		const freqLabels = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
 
 		for ( const freq of freqLabels ) {
-			this._labelsCtx.fillText(
-				( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
-				bandWidth * ( Math.log10( freq ) - minLog ),
-				this._labels.height * .75
-			);
+			const label = ( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
+				  x = bandWidth * ( Math.log10( freq ) - minLog );
+
+			this._labelsCtx.fillText( label, x,	this._labels.height * .75 );
+
+			if ( x >= 0 && x <= this._canvas.width ) { // avoid overlapping (wrap-around) labels in the circular scale
+				this._circScaleCtx.save();
+				this._circScaleCtx.translate( ...radialXY( x, scaleHeight >> 2 ) );
+				this._circScaleCtx.rotate( tau * ( x / this._canvas.width ) );
+				this._circScaleCtx.fillText( label, 0, 0 );
+				this._circScaleCtx.restore();
+			}
 		}
 	}
 
@@ -1135,6 +1164,7 @@ export default class AudioMotionAnalyzer {
 		// update labels canvas dimensions
 		this._labels.width = this._canvas.width;
 		this._labels.height = this._pixelRatio * ( this.isFullscreen ? 40 : 20 );
+		this._circScale.width = this._circScale.height = this._canvas.height >> 1;
 
 		// calculate bar positions and led options
 		this._precalculateBarPositions();
