@@ -633,7 +633,7 @@ export default class AudioMotionAnalyzer {
 			  analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0,
 			  radius         = this._canvas.height >> 2;
 
-		// helper function for radial mode
+		// helper function for converting planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y ) => {
 			const centerX = this._canvas.width >> 1,
 				  centerY = this._canvas.height >> 1,
@@ -674,12 +674,10 @@ export default class AudioMotionAnalyzer {
 		// set selected gradient
 		this._canvasCtx.fillStyle = this._gradients[ this._gradient ].gradient;
 
-		// if in "area fill" mode, start the drawing path
+		// if in graph or radial mode, start the drawing path
 		if ( this._mode == 10 || this.radial ) {
 			this._canvasCtx.beginPath();
-			if ( this.radial )
-				this._canvasCtx.moveTo( ...radialXY( 0, 0 ) );
-			else
+			if ( ! this.radial )
 				this._canvasCtx.moveTo( -this.lineWidth, analyzerHeight );
 		}
 
@@ -814,6 +812,11 @@ export default class AudioMotionAnalyzer {
 			}
 
 			if ( this.fillAlpha > 0 ) {
+				if ( this.radial ) {
+					// exclude the center circle (radius-1) from the fill area
+					this._canvasCtx.moveTo( ( this._canvas.width >> 1 ) + radius - 1, this._canvas.height >> 1 );
+					this._canvasCtx.arc( this._canvas.width >> 1, this._canvas.height >> 1, radius - 1, 0, 2 * Math.PI, true );
+				}
 				this._canvasCtx.globalAlpha = this.fillAlpha;
 				this._canvasCtx.fill();
 				this._canvasCtx.globalAlpha = 1;
