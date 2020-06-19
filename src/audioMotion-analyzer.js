@@ -902,12 +902,18 @@ export default class AudioMotionAnalyzer {
 	 * Generate gradients
 	 */
 	_generateGradients() {
-		let grad;
 
 		const analyzerHeight = ( this._lumiBars && this._mode % 10 ) ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio ) | 0;
 
 		Object.keys( this._gradients ).forEach( key => {
-			if ( this._gradients[ key ].dir && this._gradients[ key ].dir == 'h' )
+			let grad;
+			if ( this.radial ) {
+				const centerX = this._canvas.width >> 1,
+					  centerY = this._canvas.height >> 1,
+					  radius = this._canvas.height >> 2;
+				grad = this._canvasCtx.createRadialGradient( centerX, centerY, centerY, centerX, centerY, radius );
+			}
+			else if ( this._gradients[ key ].dir && this._gradients[ key ].dir == 'h' )
 				grad = this._canvasCtx.createLinearGradient( 0, 0, this._canvas.width, 0 );
 			else
 				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, analyzerHeight );
