@@ -255,6 +255,16 @@ export default class AudioMotionAnalyzer {
 		}
 	}
 
+	// Radial mode
+
+	get radial() {
+		return this._radial;
+	}
+	set radial( value ) {
+		this._radial = Boolean( value );
+		this._generateGradients();
+	}
+
 	// Reflex
 
 	get reflexRatio() {
@@ -628,9 +638,9 @@ export default class AudioMotionAnalyzer {
 	_draw( timestamp ) {
 
 		const isOctaveBands  = ( this._mode % 10 != 0 ), // mode > 0 && mode < 10
-			  isLedDisplay   = ( this.showLeds  && isOctaveBands && ! this.radial ),
-			  isLumiBars     = ( this._lumiBars && isOctaveBands && ! this.radial ),
-			  analyzerHeight = this._canvas.height * ( isLumiBars || this.radial ? 1 : 1 - this._reflexRatio ) | 0,
+			  isLedDisplay   = ( this.showLeds  && isOctaveBands && ! this._radial ),
+			  isLumiBars     = ( this._lumiBars && isOctaveBands && ! this._radial ),
+			  analyzerHeight = this._canvas.height * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0,
 			  centerX        = this._canvas.width >> 1,
 			  centerY        = this._canvas.height >> 1,
 			  radius         = this._canvas.height >> 2,
@@ -684,9 +694,9 @@ export default class AudioMotionAnalyzer {
 		this._canvasCtx.fillStyle = this._gradients[ this._gradient ].gradient;
 
 		// if in graph or radial mode, start the drawing path
-		if ( this._mode == 10 || this.radial ) {
+		if ( this._mode == 10 || this._radial ) {
 			this._canvasCtx.beginPath();
-			if ( ! this.radial )
+			if ( ! this._radial )
 				this._canvasCtx.moveTo( -this.lineWidth, analyzerHeight );
 		}
 
@@ -732,7 +742,7 @@ export default class AudioMotionAnalyzer {
 					barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
 			}
 			else
-				barHeight = barHeight * ( this.radial ? radius : analyzerHeight ) | 0;
+				barHeight = barHeight * ( this._radial ? radius : analyzerHeight ) | 0;
 
 			if ( barHeight >= bar.peak ) {
 				bar.peak = barHeight;
@@ -745,7 +755,7 @@ export default class AudioMotionAnalyzer {
 
 			// Draw line / bar
 			if ( this._mode == 10 ) {
-				if ( ! this.radial )
+				if ( ! this._radial )
 					this._canvasCtx.lineTo( bar.posX, analyzerHeight - barHeight );
 				else if ( bar.posX >= 0 ) // avoid overlapping wrap-around frequencies
 					this._canvasCtx.lineTo( ...radialXY( bar.posX, barHeight ) );
@@ -771,7 +781,7 @@ export default class AudioMotionAnalyzer {
 					this._canvasCtx.fillRect( posX, 0, adjWidth, this._canvas.height );
 					this._canvasCtx.globalAlpha = 1;
 				}
-				else if ( ! this.radial ) {
+				else if ( ! this._radial ) {
 					this._canvasCtx.fillRect( posX, analyzerHeight, adjWidth, -barHeight );
 				}
 				else if ( bar.posX >= 0 ) {
@@ -790,7 +800,7 @@ export default class AudioMotionAnalyzer {
 							this._ledOptions.ledHeight
 						);
 					}
-					else if ( ! this.radial ) {
+					else if ( ! this._radial ) {
 						this._canvasCtx.fillRect( posX, analyzerHeight - bar.peak, adjWidth, 2 );
 					}
 					else if ( this.mode != 10 && bar.posX >= 0 ) { // radial - no peaks for mode 10 or wrap-around frequencies
@@ -808,7 +818,7 @@ export default class AudioMotionAnalyzer {
 		} // for ( let i = 0; i < l; i++ )
 
 		if ( this._mode == 10 ) { // fill area
-			if ( this.radial )
+			if ( this._radial )
 				this._canvasCtx.closePath();
 			else
 				this._canvasCtx.lineTo( bar.posX + this.lineWidth, analyzerHeight );
@@ -820,7 +830,7 @@ export default class AudioMotionAnalyzer {
 			}
 
 			if ( this.fillAlpha > 0 ) {
-				if ( this.radial ) {
+				if ( this._radial ) {
 					// exclude the center circle (radius-1) from the fill area
 					this._canvasCtx.moveTo( centerX + radius - 1, centerY );
 					this._canvasCtx.arc( centerX, centerY, radius - 1, 0, tau, true );
@@ -837,7 +847,7 @@ export default class AudioMotionAnalyzer {
 			this._canvasCtx.drawImage( this._ledsMask, 0, 0 );
 			this._canvasCtx.globalCompositeOperation = 'source-over';
 		}
-		else if ( this.radial ) {
+		else if ( this._radial ) {
 			this._canvasCtx.fillStyle = this._canvasCtx.fillStyle;
 			this._canvasCtx.fill();
 		}
@@ -876,7 +886,7 @@ export default class AudioMotionAnalyzer {
 		}
 
 		if ( this.showScale ) {
-			if ( this.radial )
+			if ( this._radial )
 				this._canvasCtx.drawImage( this._circScale, ( this._canvas.width - this._circScale.width ) >> 1, ( this._canvas.height - this._circScale.height ) >> 1 );
 			else
 				this._canvasCtx.drawImage( this._labels, 0, this._canvas.height - this._labels.height );
@@ -918,7 +928,7 @@ export default class AudioMotionAnalyzer {
 
 		Object.keys( this._gradients ).forEach( key => {
 			let grad;
-			if ( this.radial ) {
+			if ( this._radial ) {
 				const centerX = this._canvas.width >> 1,
 					  centerY = this._canvas.height >> 1,
 					  radius = this._canvas.height >> 2;
