@@ -7,7 +7,7 @@
  * @license AGPL-3.0-or-later
  */
 
-const _VERSION = '2.4.0-dev';
+const _VERSION = '2.4.0-beta';
 
 export default class AudioMotionAnalyzer {
 
@@ -628,18 +628,27 @@ export default class AudioMotionAnalyzer {
 	_draw( timestamp ) {
 
 		const isOctaveBands  = ( this._mode % 10 != 0 ), // mode > 0 && mode < 10
-			  isLedDisplay   = ( this.showLeds  && isOctaveBands ),
-			  isLumiBars     = ( this._lumiBars && isOctaveBands ),
-			  analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0,
-			  radius         = this._canvas.height >> 2;
+			  isLedDisplay   = ( this.showLeds  && isOctaveBands && ! this.radial ),
+			  isLumiBars     = ( this._lumiBars && isOctaveBands && ! this.radial ),
+			  analyzerHeight = this._canvas.height * ( isLumiBars || this.radial ? 1 : 1 - this._reflexRatio ) | 0,
+			  centerX        = this._canvas.width >> 1,
+			  centerY        = this._canvas.height >> 1,
+			  radius         = this._canvas.height >> 2,
+  			  tau            = 2 * Math.PI;
 
-		// helper function for converting planar X,Y coordinates to radial coordinates
+		// helper function - convert planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y ) => {
-			const centerX = this._canvas.width >> 1,
-				  centerY = this._canvas.height >> 1,
-				  height  = radius + y,
-				  angle   = ( 2 * Math.PI * ( x / this._canvas.width ) ) - Math.PI / 2;
+			const height = radius + y,
+				  angle  = tau * ( x / this._canvas.width ) - Math.PI / 2;
 			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
+		}
+
+		// helper function - draw a polygon of width `w` and height `h` at (x,y) in radial mode
+		const radialPoly = ( x, y, w, h ) => {
+			this._canvasCtx.moveTo( ...radialXY( x, y ) );
+			this._canvasCtx.lineTo( ...radialXY( x, y + h ) );
+			this._canvasCtx.lineTo( ...radialXY( x + w, y + h ) );
+			this._canvasCtx.lineTo( ...radialXY( x + w, y ) );
 		}
 
 		// clear the canvas, if in overlay mode
@@ -659,10 +668,10 @@ export default class AudioMotionAnalyzer {
 
 		// fill the canvas background if needed
 		if ( ! this.overlay || this.showBgColor ) {
-			// the reflection area will not be painted when lumiBars are inactive and:
-			//    showLeds is true (background color is used only in the LEDs area and will be copied into the reflection)
-			// or overlay is true and reflexAlpha == 1 (avoids alpha over alpha problem, in case bgAlpha < 1)
-	 		this._canvasCtx.fillRect( 0, 0, this._canvas.width, ! isLumiBars && ( isLedDisplay || this.overlay && this.reflexAlpha == 1 ) ? analyzerHeight : this._canvas.height );
+			// exclude the reflection area when:
+			// - showLeds is true (background color is used only for "unlit" LEDs)
+			// - overlay is true and reflexAlpha == 1 (avoids alpha over alpha difference, in case bgAlpha < 1)
+			this._canvasCtx.fillRect( 0, 0, this._canvas.width, ( isLedDisplay || this.overlay && this.reflexAlpha == 1 ) ? analyzerHeight : this._canvas.height );
 		}
 
 		// restore global alpha
@@ -722,10 +731,8 @@ export default class AudioMotionAnalyzer {
 				if ( barHeight < 0 )
 					barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
 			}
-			else if ( this.radial )
-				barHeight = barHeight * radius | 0;
 			else
-				barHeight = barHeight * analyzerHeight | 0;
+				barHeight = barHeight * ( this.radial ? radius : analyzerHeight ) | 0;
 
 			if ( barHeight >= bar.peak ) {
 				bar.peak = barHeight;
@@ -740,7 +747,7 @@ export default class AudioMotionAnalyzer {
 			if ( this._mode == 10 ) {
 				if ( ! this.radial )
 					this._canvasCtx.lineTo( bar.posX, analyzerHeight - barHeight );
-				else if ( bar.posX >= 0 )
+				else if ( bar.posX >= 0 ) // avoid overlapping wrap-around frequencies
 					this._canvasCtx.lineTo( ...radialXY( bar.posX, barHeight ) );
 			}
 			else {
@@ -768,10 +775,7 @@ export default class AudioMotionAnalyzer {
 					this._canvasCtx.fillRect( posX, analyzerHeight, adjWidth, -barHeight );
 				}
 				else if ( bar.posX >= 0 ) {
-					this._canvasCtx.moveTo( ...radialXY( posX, 0 ) );
-					this._canvasCtx.lineTo( ...radialXY( posX, barHeight ) );
-					this._canvasCtx.lineTo( ...radialXY( posX + adjWidth, barHeight ) );
-					this._canvasCtx.lineTo( ...radialXY( posX + adjWidth, 0 ) );
+					radialPoly( posX, 0, adjWidth, barHeight );
 				}
 			}
 
@@ -786,8 +790,12 @@ export default class AudioMotionAnalyzer {
 							this._ledOptions.ledHeight
 						);
 					}
-					else
+					else if ( ! this.radial ) {
 						this._canvasCtx.fillRect( posX, analyzerHeight - bar.peak, adjWidth, 2 );
+					}
+					else if ( this.mode != 10 && bar.posX >= 0 ) { // radial - no peaks for mode 10 or wrap-around frequencies
+						radialPoly( posX, bar.peak, adjWidth, -2 );
+					}
 				}
 
 				if ( bar.hold )
@@ -814,8 +822,8 @@ export default class AudioMotionAnalyzer {
 			if ( this.fillAlpha > 0 ) {
 				if ( this.radial ) {
 					// exclude the center circle (radius-1) from the fill area
-					this._canvasCtx.moveTo( ( this._canvas.width >> 1 ) + radius - 1, this._canvas.height >> 1 );
-					this._canvasCtx.arc( this._canvas.width >> 1, this._canvas.height >> 1, radius - 1, 0, 2 * Math.PI, true );
+					this._canvasCtx.moveTo( centerX + radius - 1, centerY );
+					this._canvasCtx.arc( centerX, centerY, radius - 1, 0, tau, true );
 				}
 				this._canvasCtx.globalAlpha = this.fillAlpha;
 				this._canvasCtx.fill();
@@ -869,7 +877,7 @@ export default class AudioMotionAnalyzer {
 
 		if ( this.showScale ) {
 			if ( this.radial )
-				this._canvasCtx.drawImage( this._circScale, this._canvas.width / 2 - this._circScale.width / 2, this._canvas.height / 2 - this._circScale.height / 2 );
+				this._canvasCtx.drawImage( this._circScale, ( this._canvas.width - this._circScale.width ) >> 1, ( this._canvas.height - this._circScale.height ) >> 1 );
 			else
 				this._canvasCtx.drawImage( this._labels, 0, this._canvas.height - this._labels.height );
 		}
