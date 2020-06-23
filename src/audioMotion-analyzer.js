@@ -1184,9 +1184,6 @@ export default class AudioMotionAnalyzer {
 		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
 		this._canvasCtx.lineJoin = 'bevel';
 
-		// (re)generate gradients
-		this._generateGradients();
-
 		// update LED mask canvas dimensions
 		this._ledsMask.width = this._canvas.width;
 		this._ledsMask.height = this._canvas.height;
@@ -1195,6 +1192,9 @@ export default class AudioMotionAnalyzer {
 		this._labels.width = this._canvas.width;
 		this._labels.height = this._pixelRatio * ( this.isFullscreen ? 40 : 20 );
 		this._circScale.width = this._circScale.height = this._canvas.height >> 2;
+
+		// (re)generate gradients
+		this._generateGradients();
 
 		// calculate bar positions and led options
 		this._precalculateBarPositions();
