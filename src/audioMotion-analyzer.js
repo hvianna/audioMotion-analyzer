@@ -1102,10 +1102,9 @@ export default class AudioMotionAnalyzer {
 
 		// Create the X-axis scale in the auxiliary canvases
 
-		const scaleHeight = this._labels.height,
-			  labelY      = scaleHeight * .75,
+		const scaleHeight = this._canvas.height * .03 | 0,
 			  radius      = this._circScale.width >> 1, // also used as the center X and Y coordinates of the circular scale canvas
-			  radialY     = radius - labelY,
+			  radialY     = radius - scaleHeight * .75,
 			  tau         = 2 * Math.PI,
 			  freqLabels  = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
 
@@ -1114,21 +1113,22 @@ export default class AudioMotionAnalyzer {
 		this._circScale.width |= 0;
 
 		this._labelsCtx.fillStyle = this._circScaleCtx.strokeStyle = '#000c';
-		this._labelsCtx.fillRect( 0, 0, this._labels.width, scaleHeight );
+		this._labelsCtx.fillRect( 0, 0, this._labels.width, this._labels.height );
 
 		this._circScaleCtx.arc( radius, radius, radius - scaleHeight / 2, 0, tau );
 		this._circScaleCtx.lineWidth = scaleHeight;
 		this._circScaleCtx.stroke();
 
 		this._labelsCtx.fillStyle = this._circScaleCtx.fillStyle = '#fff';
-		this._labelsCtx.font = this._circScaleCtx.font = `${ scaleHeight / 2 }px sans-serif`;
+		this._labelsCtx.font = `${ this._labels.height >> 1 }px sans-serif`;
+		this._circScaleCtx.font = `${ scaleHeight >> 1 }px sans-serif`;
 		this._labelsCtx.textAlign = this._circScaleCtx.textAlign = 'center';
 
 		for ( const freq of freqLabels ) {
 			const label = ( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
 				  x     = bandWidth * ( Math.log10( freq ) - minLog );
 
-			this._labelsCtx.fillText( label, x,	labelY );
+			this._labelsCtx.fillText( label, x,	this._labels.height * .75 );
 
 			// avoid overlapping wrap-around labels in the circular scale
 			if ( x > 0 && x < this._canvas.width ) {
