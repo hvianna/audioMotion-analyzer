@@ -137,13 +137,12 @@ function displayCanvasMsg() {
 
 // Load song from user's computer
 function loadSong( el ) {
-	const reader = new FileReader();
+	const fileBlob = el.files[0];
 
-	reader.readAsDataURL( el.files[0] );
-	reader.onload = () => {
-		audioEl.src = reader.result;
+	if ( fileBlob ) {
+		audioEl.src = URL.createObjectURL( fileBlob );
 		audioEl.play();
-	};
+	}
 }
 
 // Update value div of range input elements

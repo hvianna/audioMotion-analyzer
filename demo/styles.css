@@ -17,7 +17,7 @@ a:not([class]):hover {
 }
 
 button {
-	margin: 6px;
+	margin: 5px;
 	padding: 6px;
 	vertical-align: bottom;
 }

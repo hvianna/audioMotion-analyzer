@@ -20,6 +20,7 @@ const presets = [
 			bgAlpha: .2,
 			gradient: 'classic',
 			lumiBars: false,
+			radial: false,
 			reflexRatio: 0,
 			showBgColor: false,
 			showLeds: true,
@@ -36,11 +37,26 @@ const presets = [
 			gradient: 'rainbow',
 			lineWidth: 2,
 			lumiBars: false,
+			radial: false,
 			reflexAlpha: 1,
 			reflexBright: 1,
 			reflexRatio: .5,
 			showBgColor: false,
 			showPeaks: false,
+			overlay: true
+		}
+	},
+	{
+		name: 'Radial',
+		options: {
+			mode: 3,
+			barSpace: .1,
+			bgAlpha: .5,
+			gradient: 'prism',
+			radial: true,
+			showBgColor: true,
+			showLeds: false,
+			showPeaks: true,
 			overlay: true
 		}
 	},
@@ -51,6 +67,7 @@ const presets = [
 			barSpace: .25,
 			bgAlpha: .5,
 			lumiBars: false,
+			radial: false,
 			reflexAlpha: .5,
 			reflexFit: true,
 			reflexRatio: .3,
@@ -135,8 +152,8 @@ presets.forEach( ( preset, index ) => {
 });
 
 // Initialize settings with options from a preset
-audioMotion.setOptions( presets[1].options );
-presetSelection.value = 1;
+presetSelection.value = 2;
+audioMotion.setOptions( presets[ presetSelection.value ].options );
 updateUI();
 
 // Resume audio context if in suspended state (browsers' autoplay policy)
