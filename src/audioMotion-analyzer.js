@@ -1102,16 +1102,20 @@ export default class AudioMotionAnalyzer {
 
 		// Create the X-axis scale in the auxiliary canvases
 
+		const scaleHeight = this._labels.height,
+			  labelY      = scaleHeight * .75,
+			  radius      = this._circScale.width >> 1, // also used as the center X and Y coordinates of the circular scale canvas
+			  radialY     = radius - labelY,
+			  tau         = 2 * Math.PI,
+			  freqLabels  = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
+
 		// clear canvases
 		this._labels.width |= 0;
 		this._circScale.width |= 0;
 
-		const scaleHeight = this._labels.height;
 		this._labelsCtx.fillStyle = this._circScaleCtx.strokeStyle = '#000c';
 		this._labelsCtx.fillRect( 0, 0, this._labels.width, scaleHeight );
 
-		const radius = this._circScale.width >> 1;
-		const tau = 2 * Math.PI;
 		this._circScaleCtx.arc( radius, radius, radius - scaleHeight / 2, 0, tau );
 		this._circScaleCtx.lineWidth = scaleHeight;
 		this._circScaleCtx.stroke();
@@ -1120,24 +1124,23 @@ export default class AudioMotionAnalyzer {
 		this._labelsCtx.font = this._circScaleCtx.font = `${ scaleHeight / 2 }px sans-serif`;
 		this._labelsCtx.textAlign = this._circScaleCtx.textAlign = 'center';
 
-		const radialXY = ( x, y ) => {
-			const height = radius - scaleHeight + y,
-				  angle  = tau * ( x / this._canvas.width ) - Math.PI / 2;
-			return [ radius + height * Math.cos( angle ), radius + height * Math.sin( angle ) ];
-		}
-
-		const freqLabels = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
-
 		for ( const freq of freqLabels ) {
 			const label = ( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
-				  x = bandWidth * ( Math.log10( freq ) - minLog );
+				  x     = bandWidth * ( Math.log10( freq ) - minLog );
 
-			this._labelsCtx.fillText( label, x,	this._labels.height * .75 );
+			this._labelsCtx.fillText( label, x,	labelY );
 
-			if ( x >= 0 && x <= this._canvas.width ) { // avoid overlapping (wrap-around) labels in the circular scale
+			// avoid overlapping wrap-around labels in the circular scale
+			if ( x >= 0 && x <= this._canvas.width ) {
+
+				const angle  = tau * ( x / this._canvas.width ),
+					  adjAng = angle - Math.PI / 2, // rotate angles so 0 is at the top
+					  posX   = radialY * Math.cos( adjAng ),
+					  posY   = radialY * Math.sin( adjAng );
+
 				this._circScaleCtx.save();
-				this._circScaleCtx.translate( ...radialXY( x, scaleHeight >> 2 ) );
-				this._circScaleCtx.rotate( tau * ( x / this._canvas.width ) );
+				this._circScaleCtx.translate( radius + posX, radius + posY );
+				this._circScaleCtx.rotate( angle );
 				this._circScaleCtx.fillText( label, 0, 0 );
 				this._circScaleCtx.restore();
 			}
