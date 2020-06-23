@@ -637,13 +637,13 @@ export default class AudioMotionAnalyzer {
 	 */
 	_draw( timestamp ) {
 
-		const isOctaveBands  = ( this._mode % 10 != 0 ), // mode > 0 && mode < 10
+		const isOctaveBands  = ( this._mode % 10 != 0 ),
 			  isLedDisplay   = ( this.showLeds  && isOctaveBands && ! this._radial ),
 			  isLumiBars     = ( this._lumiBars && isOctaveBands && ! this._radial ),
 			  analyzerHeight = this._canvas.height * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0,
 			  centerX        = this._canvas.width >> 1,
 			  centerY        = this._canvas.height >> 1,
-			  radius         = this._canvas.height >> 2,
+			  radius         = this._circScale.width >> 1,
   			  tau            = 2 * Math.PI;
 
 		// helper function - convert planar X,Y coordinates to radial coordinates
@@ -742,7 +742,7 @@ export default class AudioMotionAnalyzer {
 					barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
 			}
 			else
-				barHeight = barHeight * ( this._radial ? radius : analyzerHeight ) | 0;
+				barHeight = barHeight * ( this._radial ? centerY - radius : analyzerHeight ) | 0;
 
 			if ( barHeight >= bar.peak ) {
 				bar.peak = barHeight;
@@ -931,7 +931,7 @@ export default class AudioMotionAnalyzer {
 			if ( this._radial ) {
 				const centerX = this._canvas.width >> 1,
 					  centerY = this._canvas.height >> 1,
-					  radius = this._canvas.height >> 2;
+					  radius = this._circScale.width >> 1;
 				grad = this._canvasCtx.createRadialGradient( centerX, centerY, centerY, centerX, centerY, radius );
 			}
 			else if ( this._gradients[ key ].dir && this._gradients[ key ].dir == 'h' )
@@ -1131,7 +1131,7 @@ export default class AudioMotionAnalyzer {
 			this._labelsCtx.fillText( label, x,	labelY );
 
 			// avoid overlapping wrap-around labels in the circular scale
-			if ( x >= 0 && x <= this._canvas.width ) {
+			if ( x > 0 && x < this._canvas.width ) {
 
 				const angle  = tau * ( x / this._canvas.width ),
 					  adjAng = angle - Math.PI / 2, // rotate angles so 0 is at the top
@@ -1194,7 +1194,7 @@ export default class AudioMotionAnalyzer {
 		// update labels canvas dimensions
 		this._labels.width = this._canvas.width;
 		this._labels.height = this._pixelRatio * ( this.isFullscreen ? 40 : 20 );
-		this._circScale.width = this._circScale.height = this._canvas.height >> 1;
+		this._circScale.width = this._circScale.height = this._canvas.height >> 2;
 
 		// calculate bar positions and led options
 		this._precalculateBarPositions();
