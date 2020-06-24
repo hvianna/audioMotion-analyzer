@@ -50,6 +50,7 @@ export default class AudioMotionAnalyzer {
 			overlay     : false,
 			bgAlpha     : 0.7,
 			radial		: false,
+			rotate      : 0,
 			start       : true
 		};
 
@@ -640,16 +641,19 @@ export default class AudioMotionAnalyzer {
 		const isOctaveBands  = ( this._mode % 10 != 0 ),
 			  isLedDisplay   = ( this.showLeds  && isOctaveBands && ! this._radial ),
 			  isLumiBars     = ( this._lumiBars && isOctaveBands && ! this._radial ),
-			  analyzerHeight = this._canvas.height * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0,
-			  centerX        = this._canvas.width >> 1,
+			  analyzerHeight = this._canvas.height * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0;
+
+		// radial related constants
+		const centerX        = this._canvas.width >> 1,
 			  centerY        = this._canvas.height >> 1,
 			  radius         = this._circScale.width >> 1,
-  			  tau            = 2 * Math.PI;
+  			  tau            = 2 * Math.PI,
+  			  rotation       = this.rotate != 0 ? timestamp / 1e4 * this.rotate % tau : -Math.PI / 2; // if not rotating, adjust angles so 0 is at the top
 
 		// helper function - convert planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y ) => {
 			const height = radius + y,
-				  angle  = tau * ( x / this._canvas.width ) - Math.PI / 2;
+				  angle  = tau * ( x / this._canvas.width ) + rotation;
 			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
 		}
 
@@ -886,8 +890,14 @@ export default class AudioMotionAnalyzer {
 		}
 
 		if ( this.showScale ) {
-			if ( this._radial )
-				this._canvasCtx.drawImage( this._circScale, ( this._canvas.width - this._circScale.width ) >> 1, ( this._canvas.height - this._circScale.height ) >> 1 );
+			if ( this._radial ) {
+				this._canvasCtx.save();
+				this._canvasCtx.translate( centerX, centerY );
+				if ( this.rotate != 0 )
+					this._canvasCtx.rotate( rotation + Math.PI / 2 );
+				this._canvasCtx.drawImage( this._circScale, -radius, -radius );
+				this._canvasCtx.restore();
+			}
 			else
 				this._canvasCtx.drawImage( this._labels, 0, this._canvas.height - this._labels.height );
 		}
