@@ -640,11 +640,13 @@ export default class AudioMotionAnalyzer {
 		const isOctaveBands  = ( this._mode % 10 != 0 ),
 			  isLedDisplay   = ( this.showLeds  && isOctaveBands && ! this._radial ),
 			  isLumiBars     = ( this._lumiBars && isOctaveBands && ! this._radial ),
-			  analyzerHeight = this._canvas.height * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0,
-			  centerX        = this._canvas.width >> 1,
-			  centerY        = this._canvas.height >> 1,
-			  radius         = this._circScale.width >> 1,
-  			  tau            = 2 * Math.PI;
+			  analyzerHeight = this._canvas.height * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0;
+
+		// radial related constants
+		const centerX = this._canvas.width >> 1,
+			  centerY = this._canvas.height >> 1,
+			  radius  = this._circScale.width >> 1,
+  			  tau     = 2 * Math.PI;
 
 		// helper function - convert planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y ) => {
@@ -887,7 +889,7 @@ export default class AudioMotionAnalyzer {
 
 		if ( this.showScale ) {
 			if ( this._radial )
-				this._canvasCtx.drawImage( this._circScale, ( this._canvas.width - this._circScale.width ) >> 1, ( this._canvas.height - this._circScale.height ) >> 1 );
+				this._canvasCtx.drawImage( this._circScale, centerX - radius, centerY - radius );
 			else
 				this._canvasCtx.drawImage( this._labels, 0, this._canvas.height - this._labels.height );
 		}
@@ -926,14 +928,15 @@ export default class AudioMotionAnalyzer {
 
 		const analyzerHeight = ( this._lumiBars && this._mode % 10 ) ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio ) | 0;
 
+		// for radial mode
+		const centerX = this._canvas.width >> 1,
+			  centerY = this._canvas.height >> 1,
+			  radius  = this._circScale.width >> 1;
+
 		Object.keys( this._gradients ).forEach( key => {
 			let grad;
-			if ( this._radial ) {
-				const centerX = this._canvas.width >> 1,
-					  centerY = this._canvas.height >> 1,
-					  radius = this._circScale.width >> 1;
+			if ( this._radial )
 				grad = this._canvasCtx.createRadialGradient( centerX, centerY, centerY, centerX, centerY, radius );
-			}
 			else if ( this._gradients[ key ].dir && this._gradients[ key ].dir == 'h' )
 				grad = this._canvasCtx.createLinearGradient( 0, 0, this._canvas.width, 0 );
 			else
