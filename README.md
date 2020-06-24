@@ -82,6 +82,7 @@ options = {<br>
 &emsp;&emsp;[onCanvasDraw](#oncanvasdraw-function): *undefined*,<br>
 &emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *undefined*,<br>
 &emsp;&emsp;[overlay](#overlay-boolean): **false**,<br>
+&emsp;&emsp;[radial](#radial-boolean): **false**,<br>
 &emsp;&emsp;[reflexAlpha](#reflexalpha-number): **0.15**,<br>
 &emsp;&emsp;[reflexBright](#reflexbright-number): **1**,<br>
 &emsp;&emsp;[reflexFit](#reflexfit-boolean): **true**,<br>
@@ -329,21 +330,34 @@ Current visualization mode.
 + **Octave bands** modes display wider vertical bars, each one representing the *n*th part of an octave, based on a [24-tone equal tempered scale](https://en.wikipedia.org/wiki/Quarter_tone);
 + **Line / Area graph** mode uses the discrete frequencies data to draw a filled shape and/or a continuous line (see [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number) properties).
 
-Value | Mode | Available since
-------|------|----------------
-0 | Discrete frequencies | v1.0.0
-1 | 1/24th octave bands | v1.0.0
-2 | 1/12th octave bands | v1.0.0
-3 | 1/8th octave bands | v1.0.0
-4 | 1/6th octave bands | v1.0.0
-5 | 1/4th octave bands | v1.0.0
-6 | 1/3rd octave bands | v1.0.0
-7 | half octave bands | v1.0.0
-8 | full octave bands | v1.0.0
-9 | *reserved* (not valid) | -
-10 | Line / Area graph | v1.1.0
+`mode` | Visualization | notes
+------:|:-------------:|------
+0 | Discrete frequencies |
+1 | 1/24th octave bands |
+2 | 1/12th octave bands |
+3 | 1/8th octave bands |
+4 | 1/6th octave bands |
+5 | 1/4th octave bands |
+6 | 1/3rd octave bands |
+7 | Half octave bands |
+8 | Full octave bands |
+9 | *(not valid)* | *reserved*
+10 | Line / Area graph | *added in v1.1.0*
 
 Defaults to **0**.
+
+### `radial` *boolean*
+
+*Available since v2.4.0*
+
+When *true*, the spectrum analyzer is rendered as a circle, with radial frequency bars spreading from the center of the canvas.
+
+When radial mode is active, [`lumiBars`](#lumibars-boolean) and [`showLeds`](#showleds-boolean) have no effect, and
+[`showPeaks`](#showpeaks-boolean) also has no effect for **Line / Area graph** visualization.
+
+Defaults to **false**.
+
+!> **On Firefox, [`fillAlpha`](#fillalpha-number) won't work properly in radial mode, due to [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912).**
 
 ### `overlay` *boolean*
 
@@ -392,7 +406,7 @@ Defaults to **1**.
 
 *Available since v2.1.0*
 
-When *true* the reflection will be adjusted (stretched or shrinked) to fit the canvas. If set to *false* the reflected image may be cut at the bottom (when [`reflexRatio`](#reflexratio-number) < 0.5) or not fill the entire canvas (when [`reflexRatio`](#reflexratio-number) > 0.5).
+When *true*, the reflection will be adjusted (stretched or shrinked) to fit the canvas. If set to *false* the reflected image may be cut at the bottom (when [`reflexRatio`](#reflexratio-number) < 0.5) or not fill the entire canvas (when [`reflexRatio`](#reflexratio-number) > 0.5).
 
 Defaults to **true**.
 
