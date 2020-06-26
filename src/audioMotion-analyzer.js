@@ -51,7 +51,7 @@ export default class AudioMotionAnalyzer {
 			bgAlpha     : 0.7,
 			radial		: false,
 			spinSpeed   : 0,
-			spinOnBeat  : false,
+			spinMode    : '',
 			start       : true
 		};
 
@@ -648,6 +648,9 @@ export default class AudioMotionAnalyzer {
 	 */
 	_draw( timestamp ) {
 
+		if ( this._spinAngle === undefined || this.spinSpeed == 0 )
+			this._spinAngle = - Math.PI / 2;
+
 		const isOctaveBands  = ( this._mode % 10 != 0 ),
 			  isLedDisplay   = ( this.showLeds  && isOctaveBands && ! this._radial ),
 			  isLumiBars     = ( this._lumiBars && isOctaveBands && ! this._radial ),
@@ -658,15 +661,21 @@ export default class AudioMotionAnalyzer {
 			  centerY        = this._canvas.height >> 1,
 			  radius         = this._circScale.width >> 1,
 			  tau            = 2 * Math.PI,
-			  rotation       = ( this.spinSpeed == 0 || this._energy.peak == 0
-			  					 ? 0
-			  					 : timestamp / 1e4 * this.spinSpeed * ( this.spinOnBeat ? this._energy.peak : 1 ) % tau
-			  				   ) - Math.PI / 2; // angles are rotated so 0 is at the top
+			  msFrame        = 1 / 60 * 1000, // nominal timestamp increment per frame (~16.667ms)
+			  spinRate       = 5000; // base spin angle increment per frame (msFrame/spinRate radians)
+
+		if ( this.radial && this.spinSpeed != 0 && this._energy.peak != 0 ) {
+			if ( this.spinMode == 'beat' )
+				this._spinAngle = timestamp / spinRate * this.spinSpeed * this._energy.peak % tau;
+			else
+				this._spinAngle += ( this.spinMode == 'energy' ? 2 * this._energy.instant : 1 ) * msFrame * this.spinSpeed / spinRate;
+		}
 
 		// helper function - convert planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y ) => {
 			const height = radius + y,
-				  angle  = tau * ( x / this._canvas.width ) + rotation;
+				  angle  = tau * ( x / this._canvas.width ) + this._spinAngle;
+
 			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
 		}
 
@@ -925,7 +934,7 @@ export default class AudioMotionAnalyzer {
 				this._canvasCtx.save();
 				this._canvasCtx.translate( centerX, centerY );
 				if ( this.spinSpeed != 0 )
-					this._canvasCtx.rotate( rotation + Math.PI / 2 );
+					this._canvasCtx.rotate( this._spinAngle + Math.PI / 2 );
 				this._canvasCtx.drawImage( this._circScale, -radius, -radius );
 				this._canvasCtx.restore();
 			}
