@@ -122,6 +122,9 @@ export default class AudioMotionAnalyzer {
 		this._audioSource = ( options.source ) ? this.connectAudio( options.source ) : undefined;
 		this._analyzer.connect( this._audioCtx.destination );
 
+		// initialize object to save instant and peak energy
+		this._energy = { instant: 0, peak: 0, hold: 0 };
+
 		// Create canvases
 
 		// main spectrum analyzer canvas
@@ -360,6 +363,9 @@ export default class AudioMotionAnalyzer {
 	get fps() {
 		return this._fps;
 	}
+	get instantEnergy() {
+		return this._energy.instant;
+	}
 	get isFullscreen() {
 		if ( document.fullscreenElement )
 			return document.fullscreenElement === this._canvas;
@@ -370,6 +376,9 @@ export default class AudioMotionAnalyzer {
 	}
 	get isOn() {
 		return this._animationReq !== undefined;
+	}
+	get peakEnergy() {
+		return this._energy.peak;
 	}
 	get pixelRatio() {
 		return this._pixelRatio;
@@ -714,7 +723,9 @@ export default class AudioMotionAnalyzer {
 
 		// draw bars / lines
 
-		let bar, barHeight;
+		let bar, barHeight,
+			energy = 0;
+
 		const nBars = this._analyzerBars.length;
 
 		for ( let i = 0; i < nBars; i++ ) {
@@ -735,6 +746,7 @@ export default class AudioMotionAnalyzer {
 			}
 
 			barHeight /= 255;
+			energy += barHeight;
 
 			// set opacity for lumi bars before barHeight value is normalized
 			if ( isLumiBars )
@@ -820,6 +832,21 @@ export default class AudioMotionAnalyzer {
 				}
 			}
 		} // for ( let i = 0; i < l; i++ )
+
+		// Update instant and peak energy
+		this._energy.instant = energy / nBars;
+		if ( this._energy.instant >= this._energy.peak ) {
+			this._energy.peak = this._energy.instant;
+			this._energy.hold = 30;
+		}
+		else {
+			if ( this._energy.hold > 0 )
+				this._energy.hold--;
+			else if ( this._energy.peak < 1e-4 )
+				this._energy.peak *= .95; // decay
+			else
+				this._energy.peak = 0; // when the value gets too small, we drop it 0
+		}
 
 		if ( this._mode == 10 ) { // fill area
 			if ( this._radial )
