@@ -50,7 +50,8 @@ export default class AudioMotionAnalyzer {
 			overlay     : false,
 			bgAlpha     : 0.7,
 			radial		: false,
-			rotate      : 0,
+			spinSpeed   : 0,
+			spinOnBeat  : false,
 			start       : true
 		};
 
@@ -656,8 +657,11 @@ export default class AudioMotionAnalyzer {
 		const centerX        = this._canvas.width >> 1,
 			  centerY        = this._canvas.height >> 1,
 			  radius         = this._circScale.width >> 1,
-  			  tau            = 2 * Math.PI,
-  			  rotation       = this.rotate != 0 ? timestamp / 1e4 * this.rotate % tau : -Math.PI / 2; // if not rotating, adjust angles so 0 is at the top
+			  tau            = 2 * Math.PI,
+			  rotation       = ( this.spinSpeed == 0 || this._energy.peak == 0
+			  					 ? 0
+			  					 : timestamp / 1e4 * this.spinSpeed * ( this.spinOnBeat ? this._energy.peak : 1 ) % tau
+			  				   ) - Math.PI / 2; // angles are rotated so 0 is at the top
 
 		// helper function - convert planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y ) => {
@@ -920,7 +924,7 @@ export default class AudioMotionAnalyzer {
 			if ( this._radial ) {
 				this._canvasCtx.save();
 				this._canvasCtx.translate( centerX, centerY );
-				if ( this.rotate != 0 )
+				if ( this.spinSpeed != 0 )
 					this._canvasCtx.rotate( rotation + Math.PI / 2 );
 				this._canvasCtx.drawImage( this._circScale, -radius, -radius );
 				this._canvasCtx.restore();
