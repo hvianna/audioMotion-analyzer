@@ -649,7 +649,7 @@ export default class AudioMotionAnalyzer {
 	_draw( timestamp ) {
 
 		if ( this._spinAngle === undefined || this.spinSpeed == 0 )
-			this._spinAngle = - Math.PI / 2;
+			this._spinAngle = -Math.PI / 2;
 
 		const isOctaveBands  = ( this._mode % 10 != 0 ),
 			  isLedDisplay   = ( this.showLeds  && isOctaveBands && ! this._radial ),
@@ -664,7 +664,7 @@ export default class AudioMotionAnalyzer {
 			  msFrame        = 1 / 60 * 1000, // nominal timestamp increment per frame (~16.667ms)
 			  spinRate       = 9550; // base angle increment (msFrame/spinRate radians per frame) - full rotation in ~60s
 
-		if ( this.radial && this.spinSpeed != 0 && this._energy.peak != 0 ) {
+		if ( this.radial && this.spinSpeed != 0 && this._energy.peak > 0 ) {
 			if ( this.spinMode == 'beat' )
 				this._spinAngle = timestamp / spinRate * this.spinSpeed * this._energy.peak % tau;
 			else
@@ -716,8 +716,8 @@ export default class AudioMotionAnalyzer {
 		// get a new array of data from the FFT
 		this._analyzer.getByteFrequencyData( this._dataArray );
 
-		// set selected gradient
-		this._canvasCtx.fillStyle = this._gradients[ this._gradient ].gradient;
+		// set selected gradient for fill and stroke
+		this._canvasCtx.fillStyle = this._canvasCtx.strokeStyle = this._gradients[ this._gradient ].gradient;
 
 		// if in graph or radial mode, start the drawing path
 		if ( this._mode == 10 || this._radial ) {
@@ -869,15 +869,14 @@ export default class AudioMotionAnalyzer {
 
 			if ( this.lineWidth > 0 ) {
 				this._canvasCtx.lineWidth = this.lineWidth;
-				this._canvasCtx.strokeStyle = this._canvasCtx.fillStyle;
 				this._canvasCtx.stroke();
 			}
 
 			if ( this.fillAlpha > 0 ) {
 				if ( this._radial ) {
-					// exclude the center circle (radius-1) from the fill area
-					this._canvasCtx.moveTo( centerX + radius - 1, centerY );
-					this._canvasCtx.arc( centerX, centerY, radius - 1, 0, tau, true );
+					// exclude the center circle from the fill area
+					this._canvasCtx.moveTo( centerX + radius, centerY );
+					this._canvasCtx.arc( centerX, centerY, radius, 0, tau, true );
 				}
 				this._canvasCtx.globalAlpha = this.fillAlpha;
 				this._canvasCtx.fill();
@@ -1153,9 +1152,9 @@ export default class AudioMotionAnalyzer {
 
 		// Create the X-axis scale in the auxiliary canvases
 
-		const scaleHeight = this._canvas.height * .03 | 0,
-			  radius      = this._circScale.width >> 1, // also used as the center X and Y coordinates of the circular scale canvas
-			  radialY     = radius - scaleHeight * .75,
+		const scaleHeight = this._canvas.height * .03 | 0, // circular scale height (radial mode)
+			  radius      = this._circScale.width >> 1,    // this is also used as the center X and Y coordinates of the circScale canvas
+			  radialY     = radius - scaleHeight * .75,    // vertical position of text labels in the circular scale
 			  tau         = 2 * Math.PI,
 			  freqLabels  = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
 
@@ -1183,7 +1182,6 @@ export default class AudioMotionAnalyzer {
 
 			// avoid overlapping wrap-around labels in the circular scale
 			if ( x > 0 && x < this._canvas.width ) {
-
 				const angle  = tau * ( x / this._canvas.width ),
 					  adjAng = angle - Math.PI / 2, // rotate angles so 0 is at the top
 					  posX   = radialY * Math.cos( adjAng ),
