@@ -662,13 +662,13 @@ export default class AudioMotionAnalyzer {
 			  radius         = this._circScale.width >> 1,
 			  tau            = 2 * Math.PI,
 			  msFrame        = 1 / 60 * 1000, // nominal timestamp increment per frame (~16.667ms)
-			  spinRate       = 5000; // base spin angle increment per frame (msFrame/spinRate radians)
+			  spinRate       = 9550; // base angle increment (msFrame/spinRate radians per frame) - full rotation in ~60s
 
 		if ( this.radial && this.spinSpeed != 0 && this._energy.peak != 0 ) {
 			if ( this.spinMode == 'beat' )
 				this._spinAngle = timestamp / spinRate * this.spinSpeed * this._energy.peak % tau;
 			else
-				this._spinAngle += ( this.spinMode == 'energy' ? 2 * this._energy.instant : 1 ) * msFrame * this.spinSpeed / spinRate;
+				this._spinAngle += ( this.spinMode == 'energy' ? 2 * this._energy.instant : 1 ) * this.spinSpeed * msFrame / spinRate;
 		}
 
 		// helper function - convert planar X,Y coordinates to radial coordinates
@@ -855,8 +855,8 @@ export default class AudioMotionAnalyzer {
 		else {
 			if ( this._energy.hold > 0 )
 				this._energy.hold--;
-			else if ( this._energy.peak > 1e-4 )
-				this._energy.peak *= .95; // decay
+			else if ( this._energy.peak > 1e-3 )
+				this._energy.peak *= .97; // decay
 			else
 				this._energy.peak = 0; // when the value gets too small, we drop it to 0
 		}
