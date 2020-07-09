@@ -652,14 +652,16 @@ export default class AudioMotionAnalyzer {
 		if ( this._spinAngle === undefined || this.spinSpeed == 0 )
 			this._spinAngle = -Math.PI / 2;
 
-		const isOctaveBands  = ( this._mode % 10 != 0 ),
+		const canvas         = this._canvas,
+			  ctx            = this._canvasCtx,
+			  isOctaveBands  = ( this._mode % 10 != 0 ),
 			  isLedDisplay   = ( this.showLeds  && isOctaveBands && ! this._radial ),
 			  isLumiBars     = ( this._lumiBars && isOctaveBands && ! this._radial ),
-			  analyzerHeight = this._canvas.height * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0;
+			  analyzerHeight = canvas.height * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0;
 
 		// radial related constants
-		const centerX        = this._canvas.width >> 1,
-			  centerY        = this._canvas.height >> 1,
+		const centerX        = canvas.width >> 1,
+			  centerY        = canvas.height >> 1,
 			  radius         = this._circScale.width >> 1,
 			  tau            = 2 * Math.PI,
 			  msFrame        = 1 / 60 * 1000, // nominal timestamp increment per frame (~16.667ms)
@@ -675,56 +677,56 @@ export default class AudioMotionAnalyzer {
 		// helper function - convert planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y ) => {
 			const height = radius + y,
-				  angle  = tau * ( x / this._canvas.width ) + this._spinAngle;
+				  angle  = tau * ( x / canvas.width ) + this._spinAngle;
 
 			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
 		}
 
 		// helper function - draw a polygon of width `w` and height `h` at (x,y) in radial mode
 		const radialPoly = ( x, y, w, h ) => {
-			this._canvasCtx.moveTo( ...radialXY( x, y ) );
-			this._canvasCtx.lineTo( ...radialXY( x, y + h ) );
-			this._canvasCtx.lineTo( ...radialXY( x + w, y + h ) );
-			this._canvasCtx.lineTo( ...radialXY( x + w, y ) );
+			ctx.moveTo( ...radialXY( x, y ) );
+			ctx.lineTo( ...radialXY( x, y + h ) );
+			ctx.lineTo( ...radialXY( x + w, y + h ) );
+			ctx.lineTo( ...radialXY( x + w, y ) );
 		}
 
 		// clear the canvas, if in overlay mode
 		if ( this.overlay ) {
-			this._canvasCtx.clearRect( 0, 0, this._canvas.width, this._canvas.height );
-			this._canvasCtx.globalAlpha = this.bgAlpha; // set opacity for background paint
+			ctx.clearRect( 0, 0, canvas.width, canvas.height );
+			ctx.globalAlpha = this.bgAlpha; // set opacity for background paint
 		}
 
 		// select background color
 		if ( ! this.showBgColor )	// use black background
-			this._canvasCtx.fillStyle = '#000';
+			ctx.fillStyle = '#000';
 		else
 			if ( isLedDisplay )
-				this._canvasCtx.fillStyle = '#111';
+				ctx.fillStyle = '#111';
 			else // use background color defined by gradient
-				this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor;
+				ctx.fillStyle = this._gradients[ this._gradient ].bgColor;
 
 		// fill the canvas background if needed
 		if ( ! this.overlay || this.showBgColor ) {
 			// exclude the reflection area when:
 			// - showLeds is true (background color is used only for "unlit" LEDs)
 			// - overlay is true and reflexAlpha == 1 (avoids alpha over alpha difference, in case bgAlpha < 1)
-			this._canvasCtx.fillRect( 0, 0, this._canvas.width, ( isLedDisplay || this.overlay && this.reflexAlpha == 1 ) ? analyzerHeight : this._canvas.height );
+			ctx.fillRect( 0, 0, canvas.width, ( isLedDisplay || this.overlay && this.reflexAlpha == 1 ) ? analyzerHeight : canvas.height );
 		}
 
 		// restore global alpha
-		this._canvasCtx.globalAlpha = 1;
+		ctx.globalAlpha = 1;
 
 		// get a new array of data from the FFT
 		this._analyzer.getByteFrequencyData( this._dataArray );
 
 		// set selected gradient for fill and stroke
-		this._canvasCtx.fillStyle = this._canvasCtx.strokeStyle = this._gradients[ this._gradient ].gradient;
+		ctx.fillStyle = ctx.strokeStyle = this._gradients[ this._gradient ].gradient;
 
 		// if in graph or radial mode, start the drawing path
 		if ( this._mode == 10 || this._radial ) {
-			this._canvasCtx.beginPath();
+			ctx.beginPath();
 			if ( ! this._radial )
-				this._canvasCtx.moveTo( -this.lineWidth, analyzerHeight );
+				ctx.moveTo( -this.lineWidth, analyzerHeight );
 		}
 
 		// compute the effective bar width, considering the selected bar spacing
@@ -764,7 +766,7 @@ export default class AudioMotionAnalyzer {
 
 			// set opacity for lumi bars before barHeight value is normalized
 			if ( isLumiBars )
-				this._canvasCtx.globalAlpha = barHeight;
+				ctx.globalAlpha = barHeight;
 
 			if ( isLedDisplay ) { // normalize barHeight to match one of the "led" elements
 				barHeight = ( barHeight * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
@@ -786,9 +788,9 @@ export default class AudioMotionAnalyzer {
 			// Draw line / bar
 			if ( this._mode == 10 ) {
 				if ( ! this._radial )
-					this._canvasCtx.lineTo( bar.posX, analyzerHeight - barHeight );
+					ctx.lineTo( bar.posX, analyzerHeight - barHeight );
 				else if ( bar.posX >= 0 ) // avoid overlapping wrap-around frequencies
-					this._canvasCtx.lineTo( ...radialXY( bar.posX, barHeight ) );
+					ctx.lineTo( ...radialXY( bar.posX, barHeight ) );
 			}
 			else {
 				if ( this._mode > 0 ) {
@@ -808,11 +810,11 @@ export default class AudioMotionAnalyzer {
 				}
 
 				if ( isLumiBars ) {
-					this._canvasCtx.fillRect( posX, 0, adjWidth, this._canvas.height );
-					this._canvasCtx.globalAlpha = 1;
+					ctx.fillRect( posX, 0, adjWidth, canvas.height );
+					ctx.globalAlpha = 1;
 				}
 				else if ( ! this._radial ) {
-					this._canvasCtx.fillRect( posX, analyzerHeight, adjWidth, -barHeight );
+					ctx.fillRect( posX, analyzerHeight, adjWidth, -barHeight );
 				}
 				else if ( bar.posX >= 0 ) {
 					radialPoly( posX, 0, adjWidth, barHeight );
@@ -823,7 +825,7 @@ export default class AudioMotionAnalyzer {
 			if ( bar.peak > 0 ) {
 				if ( this.showPeaks && ! isLumiBars ) {
 					if ( isLedDisplay ) {
-						this._canvasCtx.fillRect(
+						ctx.fillRect(
 							posX,
 							( this._ledOptions.nLeds - bar.peak / ( analyzerHeight + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ),
 							width,
@@ -831,7 +833,7 @@ export default class AudioMotionAnalyzer {
 						);
 					}
 					else if ( ! this._radial ) {
-						this._canvasCtx.fillRect( posX, analyzerHeight - bar.peak, adjWidth, 2 );
+						ctx.fillRect( posX, analyzerHeight - bar.peak, adjWidth, 2 );
 					}
 					else if ( this.mode != 10 && bar.posX >= 0 ) { // radial - no peaks for mode 10 or wrap-around frequencies
 						radialPoly( posX, bar.peak, adjWidth, -2 );
@@ -864,36 +866,36 @@ export default class AudioMotionAnalyzer {
 
 		if ( this._mode == 10 ) { // fill area
 			if ( this._radial )
-				this._canvasCtx.closePath();
+				ctx.closePath();
 			else
-				this._canvasCtx.lineTo( bar.posX + this.lineWidth, analyzerHeight );
+				ctx.lineTo( bar.posX + this.lineWidth, analyzerHeight );
 
 			if ( this.lineWidth > 0 ) {
-				this._canvasCtx.lineWidth = this.lineWidth;
-				this._canvasCtx.stroke();
+				ctx.lineWidth = this.lineWidth;
+				ctx.stroke();
 			}
 
 			if ( this.fillAlpha > 0 ) {
 				if ( this._radial ) {
 					// exclude the center circle from the fill area
-					this._canvasCtx.moveTo( centerX + radius, centerY );
-					this._canvasCtx.arc( centerX, centerY, radius, 0, tau, true );
+					ctx.moveTo( centerX + radius, centerY );
+					ctx.arc( centerX, centerY, radius, 0, tau, true );
 				}
-				this._canvasCtx.globalAlpha = this.fillAlpha;
-				this._canvasCtx.fill();
-				this._canvasCtx.globalAlpha = 1;
+				ctx.globalAlpha = this.fillAlpha;
+				ctx.fill();
+				ctx.globalAlpha = 1;
 			}
 		}
 		else if ( isLedDisplay ) { // applies LEDs mask over the canvas
 			if ( this.overlay )
-				this._canvasCtx.globalCompositeOperation = 'destination-out';
+				ctx.globalCompositeOperation = 'destination-out';
 
-			this._canvasCtx.drawImage( this._ledsMask, 0, 0 );
-			this._canvasCtx.globalCompositeOperation = 'source-over';
+			ctx.drawImage( this._ledsMask, 0, 0 );
+			ctx.globalCompositeOperation = 'source-over';
 		}
 		else if ( this._radial ) {
-			this._canvasCtx.fillStyle = this._canvasCtx.fillStyle;
-			this._canvasCtx.fill();
+			ctx.fillStyle = ctx.fillStyle;
+			ctx.fill();
 		}
 
 		// Reflex effect
@@ -901,46 +903,46 @@ export default class AudioMotionAnalyzer {
 			let posY, height;
 			if ( this.reflexFit ) {
 				posY   = 0;
-				height = this._canvas.height - analyzerHeight;
+				height = canvas.height - analyzerHeight;
 			}
 			else {
-				posY   = this._canvas.height - analyzerHeight * 2;
+				posY   = canvas.height - analyzerHeight * 2;
 				height = analyzerHeight;
 			}
 
 			// clear the reflection area with black for LEDs display when not in overlay mode
 			if ( ! this.overlay && isLedDisplay ) {
-				this._canvasCtx.fillStyle = '#000';
-				this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
+				ctx.fillStyle = '#000';
+				ctx.fillRect( 0, analyzerHeight, canvas.width, canvas.height - analyzerHeight );
 			}
 
 			// set alpha and brightness for the reflection
-			this._canvasCtx.globalAlpha = this.reflexAlpha;
+			ctx.globalAlpha = this.reflexAlpha;
 			if ( this.reflexBright != 1 )
-				this._canvasCtx.filter = `brightness(${this.reflexBright})`;
+				ctx.filter = `brightness(${this.reflexBright})`;
 
 			// create the reflection
-			this._canvasCtx.setTransform( 1, 0, 0, -1, 0, this._canvas.height );
-			this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, posY, this._canvas.width, height );
+			ctx.setTransform( 1, 0, 0, -1, 0, canvas.height );
+			ctx.drawImage( canvas, 0, 0, canvas.width, analyzerHeight, 0, posY, canvas.width, height );
 
 			// reset changed properties
-			this._canvasCtx.setTransform();
-			this._canvasCtx.filter = 'none';
-			this._canvasCtx.globalAlpha = 1;
+			ctx.setTransform();
+			ctx.filter = 'none';
+			ctx.globalAlpha = 1;
 		}
 
 		// draw frequency scale (X-axis)
 		if ( this.showScale ) {
 			if ( this._radial ) {
-				this._canvasCtx.save();
-				this._canvasCtx.translate( centerX, centerY );
+				ctx.save();
+				ctx.translate( centerX, centerY );
 				if ( this.spinSpeed != 0 )
-					this._canvasCtx.rotate( this._spinAngle + Math.PI / 2 );
-				this._canvasCtx.drawImage( this._circScale, -radius, -radius );
-				this._canvasCtx.restore();
+					ctx.rotate( this._spinAngle + Math.PI / 2 );
+				ctx.drawImage( this._circScale, -radius, -radius );
+				ctx.restore();
 			}
 			else
-				this._canvasCtx.drawImage( this._labels, 0, this._canvas.height - this._labels.height );
+				ctx.drawImage( this._labels, 0, canvas.height - this._labels.height );
 		}
 
 		// draw dB scale (Y-axis)
@@ -950,29 +952,29 @@ export default class AudioMotionAnalyzer {
 				  fontSize    = scaleWidth >> 1,
 				  interval    = analyzerHeight / ( this._analyzer.maxDecibels - this._analyzer.minDecibels );
 
-			this._canvasCtx.fillStyle = '#000c';
-			this._canvasCtx.fillRect( 0, 0, scaleWidth, scaleHeight );
-			this._canvasCtx.fillRect( this._canvas.width - scaleWidth, 0, scaleWidth, scaleHeight );
+			ctx.fillStyle = '#000c';
+			ctx.fillRect( 0, 0, scaleWidth, scaleHeight );
+			ctx.fillRect( canvas.width - scaleWidth, 0, scaleWidth, scaleHeight );
 
-			this._canvasCtx.fillStyle = '#fff';
-			this._canvasCtx.font = `${fontSize}px sans-serif`;
-			this._canvasCtx.textAlign = 'right';
+			ctx.fillStyle = '#fff';
+			ctx.font = `${fontSize}px sans-serif`;
+			ctx.textAlign = 'right';
 
-			this._canvasCtx.beginPath();
+			ctx.beginPath();
 
 			for ( let db = this._analyzer.maxDecibels; db > this._analyzer.minDecibels; db -= 10 ) {
 				const posY = ( this._analyzer.maxDecibels - db ) * interval;
-				this._canvasCtx.fillText( db, scaleWidth * .85, posY + ( fontSize >> 1 ) );
-				this._canvasCtx.fillText( db, this._canvas.width - scaleWidth * .1, posY + ( fontSize >> 1 ) );
-				this._canvasCtx.moveTo( scaleWidth, posY );
-				this._canvasCtx.lineTo( this._canvas.width - scaleWidth, posY );
+				ctx.fillText( db, scaleWidth * .85, posY + ( fontSize >> 1 ) );
+				ctx.fillText( db, canvas.width - scaleWidth * .1, posY + ( fontSize >> 1 ) );
+				ctx.moveTo( scaleWidth, posY );
+				ctx.lineTo( canvas.width - scaleWidth, posY );
 			}
 
-			this._canvasCtx.strokeStyle = '#888';
-			this._canvasCtx.lineWidth = 1;
-			this._canvasCtx.setLineDash([2,2]);
-			this._canvasCtx.stroke();
-			this._canvasCtx.setLineDash([]);
+			ctx.strokeStyle = '#888';
+			ctx.lineWidth = 1;
+			ctx.setLineDash([2,2]);
+			ctx.stroke();
+			ctx.setLineDash([]);
 		}
 
 		// calculate and update current frame rate
@@ -987,18 +989,18 @@ export default class AudioMotionAnalyzer {
 		}
 		if ( this.showFPS ) {
 			const size = 20 * this._pixelRatio;
-			this._canvasCtx.font = `bold ${size}px sans-serif`;
-			this._canvasCtx.fillStyle = '#0f0';
-			this._canvasCtx.textAlign = 'right';
-			this._canvasCtx.fillText( Math.round( this._fps ), this._canvas.width - size, size * 2 );
+			ctx.font = `bold ${size}px sans-serif`;
+			ctx.fillStyle = '#0f0';
+			ctx.textAlign = 'right';
+			ctx.fillText( Math.round( this._fps ), canvas.width - size, size * 2 );
 		}
 
 		// call callback function, if defined
 		if ( this.onCanvasDraw ) {
-			this._canvasCtx.save();
-			this._canvasCtx.fillStyle = this._canvasCtx.strokeStyle = this._gradients[ this._gradient ].gradient;
+			ctx.save();
+			ctx.fillStyle = ctx.strokeStyle = this._gradients[ this._gradient ].gradient;
 			this.onCanvasDraw( this );
-			this._canvasCtx.restore();
+			ctx.restore();
 		}
 
 		// schedule next canvas update
