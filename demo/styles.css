@@ -36,14 +36,16 @@ canvas {
 }
 
 fieldset {
-	border: none;
+	border: 1px dotted #666;
 	display: inline-block;
-	margin: 0;
-	padding: 0;
+	height: 70px;
 	vertical-align: top;
 }
 fieldset:disabled {
 	display: none;
+}
+fieldset legend {
+	font-size: 12px;
 }
 
 header {
@@ -94,6 +96,7 @@ ul {
 }
 
 .label {
+	color: #fff;
 	display: inline-block;
 	font-size: 12px;
 	margin: 0 6px;
@@ -169,15 +172,26 @@ ul {
 /* fluid full-width analyzer (single instance demo) */
 #container {
 	height: 45vh;
-	margin: 0 calc( 50% - 50vw );
+	margin: 0 calc( 50% - 50vw + 9px );
 }
 
 #container1 {
 	margin-bottom: 15px;
 }
 
+#frequency {
+	width: 100px;
+}
+
 .center {
 	text-align: center;
+}
+
+.flex {
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+	margin: 10px 0;
 }
 
 .main {
