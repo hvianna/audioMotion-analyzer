@@ -960,6 +960,7 @@ export default class AudioMotionAnalyzer {
 
 		if ( this.onCanvasDraw ) {
 			this._canvasCtx.save();
+			this._canvasCtx.fillStyle = this._canvasCtx.strokeStyle = this._gradients[ this._gradient ].gradient;
 			this.onCanvasDraw( this );
 			this._canvasCtx.restore();
 		}
