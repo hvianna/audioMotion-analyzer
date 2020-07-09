@@ -36,6 +36,7 @@ export default class AudioMotionAnalyzer {
 			showBgColor : true,
 			showLeds    : false,
 			showScale   : true,
+			showScaleY  : false,
 			showPeaks   : true,
 			showFPS     : false,
 			lumiBars    : false,
@@ -928,6 +929,7 @@ export default class AudioMotionAnalyzer {
 			this._canvasCtx.globalAlpha = 1;
 		}
 
+		// draw frequency scale (X-axis)
 		if ( this.showScale ) {
 			if ( this._radial ) {
 				this._canvasCtx.save();
@@ -941,8 +943,41 @@ export default class AudioMotionAnalyzer {
 				this._canvasCtx.drawImage( this._labels, 0, this._canvas.height - this._labels.height );
 		}
 
-		this._frame++;
+		// draw dB scale (Y-axis)
+		if ( this.showScaleY && ! isLumiBars && ! this._radial ) {
+			const scaleWidth  = analyzerHeight * .04 | 0,
+				  scaleHeight = analyzerHeight - ( this.showScale && this.reflexRatio == 0 ? this._labels.height : 0 ),
+				  fontSize    = scaleWidth >> 1,
+				  interval    = analyzerHeight / ( this._analyzer.maxDecibels - this._analyzer.minDecibels );
 
+			this._canvasCtx.fillStyle = '#000c';
+			this._canvasCtx.fillRect( 0, 0, scaleWidth, scaleHeight );
+			this._canvasCtx.fillRect( this._canvas.width - scaleWidth, 0, scaleWidth, scaleHeight );
+
+			this._canvasCtx.fillStyle = '#fff';
+			this._canvasCtx.font = `${fontSize}px sans-serif`;
+			this._canvasCtx.textAlign = 'right';
+
+			this._canvasCtx.beginPath();
+
+			for ( let db = this._analyzer.maxDecibels; db > this._analyzer.minDecibels; db -= 10 ) {
+				const posY = ( this._analyzer.maxDecibels - db ) * interval;
+				this._canvasCtx.fillText( db, scaleWidth * .85, posY + ( fontSize >> 1 ) );
+				this._canvasCtx.fillText( db, this._canvas.width - scaleWidth * .1, posY + ( fontSize >> 1 ) );
+				this._canvasCtx.moveTo( scaleWidth, posY );
+				this._canvasCtx.lineTo( this._canvas.width - scaleWidth, posY );
+			}
+
+			this._canvasCtx.strokeStyle = '#888';
+			this._canvasCtx.lineWidth = 1;
+			this._canvasCtx.setLineDash([2,2]);
+			this._canvasCtx.stroke();
+			this._canvasCtx.setLineDash([]);
+		}
+
+		// calculate and update current frame rate
+
+		this._frame++;
 		const elapsed = timestamp - this._time;
 
 		if ( elapsed >= 1000 ) {
@@ -958,6 +993,7 @@ export default class AudioMotionAnalyzer {
 			this._canvasCtx.fillText( Math.round( this._fps ), this._canvas.width - size, size * 2 );
 		}
 
+		// call callback function, if defined
 		if ( this.onCanvasDraw ) {
 			this._canvasCtx.save();
 			this._canvasCtx.fillStyle = this._canvasCtx.strokeStyle = this._gradients[ this._gradient ].gradient;
