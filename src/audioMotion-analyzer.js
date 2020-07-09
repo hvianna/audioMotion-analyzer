@@ -355,6 +355,9 @@ export default class AudioMotionAnalyzer {
 	get dataArray() {
 		return this._dataArray;
 	}
+	get energy() {
+		return this._energy.instant;
+	}
 	get fsWidth() {
 		return this._fsWidth;
 	}
@@ -363,9 +366,6 @@ export default class AudioMotionAnalyzer {
 	}
 	get fps() {
 		return this._fps;
-	}
-	get instantEnergy() {
-		return this._energy.instant;
 	}
 	get isFullscreen() {
 		if ( document.fullscreenElement )
