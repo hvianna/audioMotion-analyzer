@@ -696,7 +696,7 @@ export default class AudioMotionAnalyzer {
 				  fontSize    = scaleWidth >> 1,
 				  interval    = analyzerHeight / ( this._analyzer.maxDecibels - this._analyzer.minDecibels );
 
-			ctx.fillStyle = '#fff';
+			ctx.fillStyle = '#888';
 			ctx.font = `${fontSize}px sans-serif`;
 			ctx.textAlign = 'right';
 			ctx.lineWidth = 1;
