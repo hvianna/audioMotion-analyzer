@@ -716,11 +716,42 @@ export default class AudioMotionAnalyzer {
 		// restore global alpha
 		ctx.globalAlpha = 1;
 
+		// draw dB scale (Y-axis)
+		if ( this.showScaleY && ! isLumiBars && ! this._radial ) {
+			const scaleWidth  = canvas.height / 25 | 0,
+				  scaleHeight = analyzerHeight - ( this.showScale && this.reflexRatio == 0 ? this._labels.height : 0 ),
+				  fontSize    = scaleWidth >> 1,
+				  interval    = analyzerHeight / ( this._analyzer.maxDecibels - this._analyzer.minDecibels );
+
+			ctx.fillStyle = '#fff';
+			ctx.font = `${fontSize}px sans-serif`;
+			ctx.textAlign = 'right';
+			ctx.lineWidth = 1;
+
+			for ( let db = this._analyzer.maxDecibels; db > this._analyzer.minDecibels; db -= 5 ) {
+				ctx.beginPath();
+				const posY = ( this._analyzer.maxDecibels - db ) * interval,
+					  full = ( db % 10 == 0 ) | 0;
+				if ( full ) {
+					ctx.fillText( db, scaleWidth * .85, posY + ( fontSize >> 1 ) );
+					ctx.fillText( db, canvas.width - scaleWidth * .1, posY + ( fontSize >> 1 ) );
+					ctx.strokeStyle = '#888';
+					ctx.setLineDash([2,4]);
+				}
+				else {
+					ctx.strokeStyle = '#555';
+					ctx.setLineDash([2,8]);
+				}
+				ctx.moveTo( scaleWidth * full, posY );
+				ctx.lineTo( canvas.width - scaleWidth * full, posY );
+				ctx.stroke();
+			}
+
+			ctx.setLineDash([]); // restore solid lines
+		}
+
 		// get a new array of data from the FFT
 		this._analyzer.getByteFrequencyData( this._dataArray );
-
-		// set selected gradient for fill and stroke
-		ctx.fillStyle = ctx.strokeStyle = this._gradients[ this._gradient ].gradient;
 
 		// if in graph or radial mode, start the drawing path
 		if ( this._mode == 10 || this._radial ) {
@@ -736,6 +767,9 @@ export default class AudioMotionAnalyzer {
 		// if no bar spacing is required, make sure width is integer for pixel accurate calculation
 		if ( this._barSpace == 0 && ! isLedDisplay )
 			width |= 0;
+
+		// set selected gradient for fill and stroke
+		ctx.fillStyle = ctx.strokeStyle = this._gradients[ this._gradient ].gradient;
 
 		// draw bars / lines
 
@@ -943,38 +977,6 @@ export default class AudioMotionAnalyzer {
 			}
 			else
 				ctx.drawImage( this._labels, 0, canvas.height - this._labels.height );
-		}
-
-		// draw dB scale (Y-axis)
-		if ( this.showScaleY && ! isLumiBars && ! this._radial ) {
-			const scaleWidth  = analyzerHeight * .04 | 0,
-				  scaleHeight = analyzerHeight - ( this.showScale && this.reflexRatio == 0 ? this._labels.height : 0 ),
-				  fontSize    = scaleWidth >> 1,
-				  interval    = analyzerHeight / ( this._analyzer.maxDecibels - this._analyzer.minDecibels );
-
-			ctx.fillStyle = '#000c';
-			ctx.fillRect( 0, 0, scaleWidth, scaleHeight );
-			ctx.fillRect( canvas.width - scaleWidth, 0, scaleWidth, scaleHeight );
-
-			ctx.fillStyle = '#fff';
-			ctx.font = `${fontSize}px sans-serif`;
-			ctx.textAlign = 'right';
-
-			ctx.beginPath();
-
-			for ( let db = this._analyzer.maxDecibels; db > this._analyzer.minDecibels; db -= 10 ) {
-				const posY = ( this._analyzer.maxDecibels - db ) * interval;
-				ctx.fillText( db, scaleWidth * .85, posY + ( fontSize >> 1 ) );
-				ctx.fillText( db, canvas.width - scaleWidth * .1, posY + ( fontSize >> 1 ) );
-				ctx.moveTo( scaleWidth, posY );
-				ctx.lineTo( canvas.width - scaleWidth, posY );
-			}
-
-			ctx.strokeStyle = '#888';
-			ctx.lineWidth = 1;
-			ctx.setLineDash([2,2]);
-			ctx.stroke();
-			ctx.setLineDash([]);
 		}
 
 		// calculate and update current frame rate
