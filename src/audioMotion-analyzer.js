@@ -135,10 +135,6 @@ export default class AudioMotionAnalyzer {
 		this._container.appendChild( this._canvas );
 		this._canvasCtx = this._canvas.getContext('2d');
 
-		// auxiliary canvas for the LED mask
-		this._ledsMask = document.createElement('canvas');
-		this._ledsCtx = this._ledsMask.getContext('2d');
-
 		// auxiliary canvases for the X-axis scale labels
 		this._labels = document.createElement('canvas');
 		this._labelsCtx = this._labels.getContext('2d');
@@ -180,7 +176,6 @@ export default class AudioMotionAnalyzer {
 	set barSpace( value ) {
 		this._barSpace = Number( value );
 		this._calculateBarSpacePx();
-		this._createLedMask();
 	}
 
 	// FFT size
@@ -257,7 +252,7 @@ export default class AudioMotionAnalyzer {
 		this._lumiBars = Boolean( value );
 		if ( this._reflexRatio > 0 ) {
 			this._generateGradients();
-			this._createLedMask();
+			this._calculateLedProperties();
 		}
 	}
 
@@ -283,7 +278,7 @@ export default class AudioMotionAnalyzer {
 		else {
 			this._reflexRatio = value;
 			this._generateGradients();
-			this._createLedMask();
+			this._calculateLedProperties();
 		}
 	}
 
@@ -573,16 +568,14 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Create mask for vintage LED effect on auxiliary canvas
+	 * Calculate attributes for the vintage LEDs effect, based on visualization mode and canvas resolution
 	 */
-	_createLedMask() {
+	_calculateLedProperties() {
 		// no need for this if in discrete frequencies or area fill modes
 		if ( this._mode % 10 == 0 || ! this._initDone )
 			return;
 
 		const analyzerHeight = this._lumiBars ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio ) | 0;
-
-		// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
 
 		let spaceV = Math.min( 6, analyzerHeight / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
 		let nLeds;
@@ -625,22 +618,6 @@ export default class AudioMotionAnalyzer {
 			spaceV,
 			ledHeight: ( analyzerHeight + spaceV ) / nLeds - spaceV
 		};
-
-		// use either the LEDs default horizontal space or the user selected bar space, whichever is larger
-		const spacing = Math.max( this._ledOptions.spaceH, this._barSpacePx );
-
-		// clear the auxiliary canvas
-		this._ledsMask.width |= 0;
-
-		// add a vertical black line to the left of each bar to create the LED columns
-		this._analyzerBars.forEach( bar => this._ledsCtx.fillRect( bar.posX - spacing / 2, 0, spacing, analyzerHeight ) );
-
-		// add a vertical black line in the mask canvas after the last led column
-		this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - spacing / 2, 0, spacing, analyzerHeight );
-
-		// add horizontal black lines to create the LED rows
-		for ( let i = this._ledOptions.ledHeight; i < analyzerHeight; i += this._ledOptions.ledHeight + this._ledOptions.spaceV )
-			this._ledsCtx.fillRect( 0, i, this._canvas.width, this._ledOptions.spaceV );
 	}
 
 	/**
@@ -697,20 +674,16 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// select background color
-		if ( ! this.showBgColor )	// use black background
+		if ( ! this.showBgColor || isLedDisplay && ! this.overlay )
 			ctx.fillStyle = '#000';
 		else
-			if ( isLedDisplay )
-				ctx.fillStyle = '#111';
-			else // use background color defined by gradient
-				ctx.fillStyle = this._gradients[ this._gradient ].bgColor;
+			ctx.fillStyle = this._gradients[ this._gradient ].bgColor;
 
 		// fill the canvas background if needed
 		if ( ! this.overlay || this.showBgColor ) {
-			// exclude the reflection area when:
-			// - showLeds is true (background color is used only for "unlit" LEDs)
-			// - overlay is true and reflexAlpha == 1 (avoids alpha over alpha difference, in case bgAlpha < 1)
-			ctx.fillRect( 0, 0, canvas.width, ( isLedDisplay || this.overlay && this.reflexAlpha == 1 ) ? analyzerHeight : canvas.height );
+			// exclude the reflection area when overlay is true and reflexAlpha == 1
+			// (avoids alpha over alpha difference, in case bgAlpha < 1)
+			ctx.fillRect( 0, 0, canvas.width, ( this.overlay && this.reflexAlpha == 1 ) ? analyzerHeight : canvas.height );
 		}
 
 		// restore global alpha
@@ -753,20 +726,24 @@ export default class AudioMotionAnalyzer {
 		// get a new array of data from the FFT
 		this._analyzer.getByteFrequencyData( this._dataArray );
 
-		// if in graph or radial mode, start the drawing path
-		if ( this._mode == 10 || this._radial ) {
-			ctx.beginPath();
-			if ( ! this._radial )
-				ctx.moveTo( -this.lineWidth, analyzerHeight );
-		}
+		// start drawing path
+		ctx.beginPath();
+
+		// in line / graph mode, line starts off screen
+		if ( this._mode == 10 && ! this._radial )
+			ctx.moveTo( -this.lineWidth, analyzerHeight );
 
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing defined by the led options
 		let width = this._barWidth - ( ! isOctaveBands ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
 
-		// if no bar spacing is required, make sure width is integer for pixel accurate calculation
-		if ( this._barSpace == 0 && ! isLedDisplay )
-			width |= 0;
+		// set line width and dash for LEDs effect
+		if ( isLedDisplay ) {
+			ctx.setLineDash( [ this._ledOptions.ledHeight, this._ledOptions.spaceV ] );
+			ctx.lineWidth = width;
+		}
+		else if ( this._barSpace == 0 )
+			width |= 0; // make sure width is integer for pixel accurate calculation, when no bar spacing is required
 
 		// set selected gradient for fill and stroke
 		ctx.fillStyle = ctx.strokeStyle = this._gradients[ this._gradient ].gradient;
@@ -843,12 +820,28 @@ export default class AudioMotionAnalyzer {
 					}
 				}
 
-				if ( isLumiBars ) {
-					ctx.fillRect( posX, 0, adjWidth, canvas.height );
-					ctx.globalAlpha = 1;
+				if ( isLedDisplay ) {
+					const x = posX + width / 2;
+					// draw "unlit" leds
+					if ( this.showBgColor && ! this.overlay ) {
+						const alpha = ctx.globalAlpha;
+						ctx.beginPath();
+						ctx.moveTo( x, 0 );
+						ctx.lineTo( x, analyzerHeight );
+						ctx.strokeStyle = '#7f7f7f22';
+						ctx.globalAlpha = 1;
+						ctx.stroke();
+						// restore properties
+						ctx.strokeStyle = ctx.fillStyle;
+						ctx.globalAlpha = alpha;
+					}
+					ctx.beginPath();
+					ctx.moveTo( x, isLumiBars ? 0 : analyzerHeight );
+					ctx.lineTo( x, isLumiBars ? canvas.height : analyzerHeight - barHeight );
+					ctx.stroke();
 				}
 				else if ( ! this._radial ) {
-					ctx.fillRect( posX, analyzerHeight, adjWidth, -barHeight );
+					ctx.fillRect( posX, isLumiBars ? 0 : analyzerHeight, adjWidth, isLumiBars ? canvas.height : -barHeight );
 				}
 				else if ( bar.posX >= 0 ) {
 					radialPoly( posX, 0, adjWidth, barHeight );
@@ -882,6 +875,10 @@ export default class AudioMotionAnalyzer {
 				}
 			}
 		} // for ( let i = 0; i < l; i++ )
+
+		// restore canvas properties
+		ctx.globalAlpha = 1;
+		ctx.setLineDash([]);
 
 		// Update instant and peak energy
 		this._energy.instant = energy / nBars;
@@ -920,15 +917,7 @@ export default class AudioMotionAnalyzer {
 				ctx.globalAlpha = 1;
 			}
 		}
-		else if ( isLedDisplay ) { // applies LEDs mask over the canvas
-			if ( this.overlay )
-				ctx.globalCompositeOperation = 'destination-out';
-
-			ctx.drawImage( this._ledsMask, 0, 0 );
-			ctx.globalCompositeOperation = 'source-over';
-		}
 		else if ( this._radial ) {
-			ctx.fillStyle = ctx.fillStyle;
 			ctx.fill();
 		}
 
@@ -1189,7 +1178,7 @@ export default class AudioMotionAnalyzer {
 			} );
 		}
 
-		this._createLedMask();
+		this._calculateLedProperties();
 
 		// Create the X-axis scale in the auxiliary canvases
 
@@ -1273,10 +1262,6 @@ export default class AudioMotionAnalyzer {
 
 		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
 		this._canvasCtx.lineJoin = 'bevel';
-
-		// update LED mask canvas dimensions
-		this._ledsMask.width = this._canvas.width;
-		this._ledsMask.height = this._canvas.height;
 
 		// update labels canvas dimensions
 		this._labels.width = this._canvas.width;
