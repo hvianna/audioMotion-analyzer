@@ -14,7 +14,7 @@
 		<ul class="header-nav">
 			<li><a href="index.html">Demos</a></li>
             <li><a href="https://audiomotion.dev">Home</a></li>
-			<li><a href="https://github.com/hvianna/audioMotion-analyzer/blob/develop/src/demo.js">View on GitHub</a></li>
+			<li><a href="https://github.com/hvianna/audioMotion-analyzer/tree/master/demo/src/fluid.js">View on GitHub</a></li>
 		</ul>
 	</header>
 
@@ -109,20 +109,7 @@
 
 		<div class="box center">
 			<fieldset>
-				<legend>Line / Area graph only</legend>
-				<label class="label">lineWidth
-					<input type="range" min="0" max="9" step="1" data-setting="lineWidth">
-					<div class="value"></div>
-				</label>
-
-				<label class="label">fillAlpha
-					<input type="range" min="0" max="1" step=".1" data-setting="fillAlpha">
-					<div class="value"></div>
-				</label>
-			</fieldset>
-
-			<fieldset>
-				<legend>Octave bands only</legend>
+				<legend>modes 1-8 only</legend>
 				<label class="label">barSpace
 					<select data-setting="barSpace">
 						<option value="0">0</option>
@@ -139,16 +126,21 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>Radial mode</legend>
-				<button data-prop="radial">radial</button>
-
-				<label class="label">spinMode
-					<select data-setting="spinMode">
-						<option value="">constant</option>
-						<option value="energy">energy</option>
-						<option value="beat">beat</option>
-					</select>
+				<legend>mode 10 only</legend>
+				<label class="label">lineWidth
+					<input type="range" min="0" max="9" step="1" data-setting="lineWidth">
+					<div class="value"></div>
 				</label>
+
+				<label class="label">fillAlpha
+					<input type="range" min="0" max="1" step=".1" data-setting="fillAlpha">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Radial effect</legend>
+				<button data-prop="radial">radial</button>
 
 				<label class="label">spinSpeed
 					<input type="range" min="-5" max="5" step="1" data-setting="spinSpeed">
@@ -179,6 +171,7 @@
 			<button data-prop="showLeds">showLeds</button>
 			<button data-prop="lumiBars">lumiBars</button>
 			<button data-prop="showScale">showScale</button>
+			<button data-prop="showScaleY">showScaleY</button>
 			<button data-prop="loRes">loRes</button>
 			<button data-prop="showFPS">showFPS</button>
 		</div>

@@ -17,12 +17,12 @@ const presets = [
 		options: {
 			mode: 3,
 			barSpace: .5,
-			bgAlpha: .2,
+			bgAlpha: .7,
 			gradient: 'classic',
 			lumiBars: false,
 			radial: false,
 			reflexRatio: 0,
-			showBgColor: false,
+			showBgColor: true,
 			showLeds: true,
 			showPeaks: true,
 			overlay: true
@@ -112,13 +112,7 @@ document.querySelectorAll('button[data-prop]').forEach( el => {
 });
 
 document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'change', () => {
-		audioMotion[ el.dataset.setting ] = el.value;
-		if ( el.dataset.setting == 'mode' ) {
-			document.getElementById('area_options').disabled = ( audioMotion.mode != 10 );
-			document.getElementById('bar_options').disabled = ( audioMotion.mode == 0 || audioMotion.mode == 10 );
-		}
-	});
+	el.addEventListener( 'change', () => audioMotion[ el.dataset.setting ] = el.value );
 });
 
 presetSelection.addEventListener( 'change', () => {
@@ -172,9 +166,6 @@ function updateRangeElement( el ) {
 // Update UI elements to reflect the analyzer's current settings
 function updateUI() {
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
-
-	document.getElementById('area_options').disabled = ( audioMotion.mode != 10 );
-	document.getElementById('bar_options').disabled = ( audioMotion.mode == 0 || audioMotion.mode == 10 );
 
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
 	document.querySelectorAll('button[data-prop]').forEach( el => {

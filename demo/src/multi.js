@@ -27,15 +27,14 @@ try {
 			document.getElementById( `container${i}` ),
 			{
 				audioCtx,
-				onCanvasDraw: displayCanvasMsg,
 				onCanvasResize: ( reason, instance ) => { if ( reason == 'fschange' ) updateUI(); }
 			}
 		);
 
-		// after creating the first instance, we connect the audio element and get the audioSource reference
-		// we then connect the audioSource to the other instances' analyzers
+		// after creating the first instance, we connect the audio element to it and get the audioSource reference
 		if ( i == 0 )
 			audioSource = audioMotion[0].connectAudio( audioEl );
+		// we then connect the audioSource to the other instances' analyzers
 		else
 			audioSource.connect( audioMotion[ i ].analyzer );
 	}
@@ -48,17 +47,15 @@ catch( err ) {
 document.getElementById('version').innerText = audioMotion[0].version;
 
 // Set options for each instance
-// a custom property 'showLogo' is added to each instance, to store the logo display preference
 
 audioMotion[0].setOptions({
 	mode: 3,
 	showLeds: true,
-	showFPS: true,
+	showScaleY: true,
 	barSpace: 0.5,
 	width: 640,
 	height: 270
 });
-audioMotion[0].showLogo = true;
 
 audioMotion[1].setOptions({
 	mode: 10,
@@ -72,7 +69,6 @@ audioMotion[1].setOptions({
 	width: 320,
 	height: 145
 });
-audioMotion[1].showLogo = false;
 
 audioMotion[2].setOptions({
 	mode: 2,
@@ -88,7 +84,6 @@ audioMotion[2].setOptions({
 	width: 320,
 	height: 145
 });
-audioMotion[2].showLogo = false;
 
 // Analyzer selector
 
@@ -121,13 +116,7 @@ document.querySelectorAll('button[data-prop]').forEach( el => {
 });
 
 document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'change', () => {
-		audioMotion[ selectedAnalyzer ][ el.dataset.setting ] = el.value;
-		if ( el.dataset.setting == 'mode' ) {
-			document.getElementById('area_options').disabled = ( audioMotion[ selectedAnalyzer ].mode != 10 );
-			document.getElementById('bar_options').disabled = ( audioMotion[ selectedAnalyzer ].mode == 0 || audioMotion[ selectedAnalyzer ].mode == 10 );
-		}
-	});
+	el.addEventListener( 'change', () => audioMotion[ selectedAnalyzer ][ el.dataset.setting ] = el.value );
 });
 
 document.getElementById('range').addEventListener( 'change', e => {
@@ -140,12 +129,8 @@ document.getElementById('sensitivity').addEventListener( 'change', e => audioMot
 // Display value of ranged input elements
 document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
 
-// File and URL loading
+// File upload
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
-document.getElementById('loadFromURL').addEventListener( 'click', () => {
-	audioEl.src = document.getElementById('remoteURL').value;
-	audioEl.play();
-});
 
 // Initialize UI elements
 updateUI();
@@ -155,26 +140,6 @@ window.addEventListener( 'click', () => {
 	if ( audioMotion[0].audioCtx.state == 'suspended' )
 		audioMotion[0].audioCtx.resume();
 });
-
-// The callback function is used here to draw the pulsating logo on the canvas
-function displayCanvasMsg( instance ) {
-	if ( ! instance.showLogo )
-		return;
-
-	let size = 20 * instance.pixelRatio;
-	if ( instance.isFullscreen )
-		size *= 2;
-
-	// find the data array index for 140Hz
-	const idx = instance.freqToBin(140);
-
-	// use the 140Hz amplitude to increase the font size and make the logo pulse to the beat
-	instance.canvasCtx.font = `${size + instance.dataArray[ idx ] / 16 * instance.pixelRatio}px Orbitron,sans-serif`;
-
-	instance.canvasCtx.fillStyle = '#fff8';
-	instance.canvasCtx.textAlign = 'center';
-	instance.canvasCtx.fillText( 'audioMotion', instance.canvas.width - size * 8, size * 2 );
-}
 
 // Load song from user's computer
 function loadSong( el ) {
@@ -198,9 +163,6 @@ function updateUI() {
 	document.querySelectorAll('canvas').forEach( el => el.classList.toggle( 'selected', el.parentNode.id.slice(-1) == selectedAnalyzer ) );
 
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ selectedAnalyzer ][ el.dataset.setting ] );
-
-	document.getElementById('area_options').disabled = ( audioMotion[ selectedAnalyzer ].mode != 10 );
-	document.getElementById('bar_options').disabled = ( audioMotion[ selectedAnalyzer ].mode == 0 || audioMotion[ selectedAnalyzer ].mode == 10 );
 
 	document.getElementById('range').selectedIndex = [20,30,100].indexOf( audioMotion[ selectedAnalyzer ].minFreq );
 	document.getElementById('sensitivity').value = maxdB.indexOf( audioMotion[ selectedAnalyzer ].maxDecibels );
