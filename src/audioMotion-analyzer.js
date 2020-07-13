@@ -173,7 +173,7 @@ export default class AudioMotionAnalyzer {
 		return this._barSpace;
 	}
 	set barSpace( value ) {
-		this._barSpace = Number( value );
+		this._barSpace = Number( value ) || 0;
 		this._calculateBarSpacePx();
 	}
 
@@ -223,7 +223,7 @@ export default class AudioMotionAnalyzer {
 		return this._mode;
 	}
 	set mode( value ) {
-		const mode = Number( value );
+		const mode = value | 0;
 		if ( mode >= 0 && mode <= 10 && mode != 9 ) {
 			this._mode = mode;
 			this._precalculateBarPositions();
@@ -231,7 +231,7 @@ export default class AudioMotionAnalyzer {
 				this._generateGradients();
 		}
 		else
-			throw new AudioMotionError( 'ERR_INVALID_MODE', `Invalid mode: ${mode}` );
+			throw new AudioMotionError( 'ERR_INVALID_MODE', `Invalid mode: ${value}` );
 	}
 
 	// Low-resolution mode
@@ -240,7 +240,7 @@ export default class AudioMotionAnalyzer {
 		return this._loRes;
 	}
 	set loRes( value ) {
-		this._loRes = Boolean( value );
+		this._loRes = !! value;
 		this._setCanvas('lores');
 	}
 
@@ -248,7 +248,7 @@ export default class AudioMotionAnalyzer {
 		return this._lumiBars;
 	}
 	set lumiBars( value ) {
-		this._lumiBars = Boolean( value );
+		this._lumiBars = !! value;
 		if ( this._reflexRatio > 0 ) {
 			this._generateGradients();
 			this._calculateLedProperties();
@@ -261,7 +261,7 @@ export default class AudioMotionAnalyzer {
 		return this._radial;
 	}
 	set radial( value ) {
-		this._radial = Boolean( value );
+		this._radial = !! value;
 		this._generateGradients();
 	}
 
@@ -281,7 +281,7 @@ export default class AudioMotionAnalyzer {
 		return this._reflexRatio;
 	}
 	set reflexRatio( value ) {
-		value = Number( value );
+		value = Number( value ) || 0;
 		if ( value < 0 || value >= 1 )
 			throw new AudioMotionError( 'ERR_REFLEX_OUT_OF_RANGE', `Reflex ratio must be >= 0 and < 1` );
 		else {
