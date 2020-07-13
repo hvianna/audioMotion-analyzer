@@ -156,17 +156,14 @@ function drawCallback() {
 	}
 
 	if ( features.showLogo ) {
-		const size = ( audioMotion.isFullscreen ? 40 : 20 ) * audioMotion.pixelRatio;
+		const baseSize = ( audioMotion.isFullscreen ? 40 : 20 ) * audioMotion.pixelRatio;
 
-		// find the data array index for 140Hz
-		const idx = audioMotion.freqToBin(140);
-
-		// use the 140Hz amplitude to increase the font size and make the logo pulse to the beat
-		ctx.font = `${size + audioMotion.dataArray[ idx ] / 16 * audioMotion.pixelRatio}px Orbitron,sans-serif`;
+		// use the 'energy' value to increase the font size and make the logo pulse to the beat
+		ctx.font = `${ baseSize + audioMotion.energy * 25 * audioMotion.pixelRatio }px Orbitron, sans-serif`;
 
 		ctx.fillStyle = '#fff8';
 		ctx.textAlign = 'center';
-		ctx.fillText( 'audioMotion', canvas.width - size * 8, size * 2 );
+		ctx.fillText( 'audioMotion', canvas.width - baseSize * 8, baseSize * 2 );
 	}
 
 	if ( features.songProgress && audioMotion.radial ) {
