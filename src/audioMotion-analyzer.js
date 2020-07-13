@@ -52,7 +52,6 @@ export default class AudioMotionAnalyzer {
 			bgAlpha     : 0.7,
 			radial		: false,
 			spinSpeed   : 0,
-			spinMode    : '',
 			start       : true
 		};
 
@@ -264,6 +263,16 @@ export default class AudioMotionAnalyzer {
 	set radial( value ) {
 		this._radial = Boolean( value );
 		this._generateGradients();
+	}
+
+	get spinSpeed() {
+		return this._spinSpeed;
+	}
+	set spinSpeed( value ) {
+		value = Number( value ) || 0;
+		if ( this._spinSpeed === undefined || value == 0 )
+			this._spinAngle = -Math.PI / 2; // initialize or reset the rotation angle
+		this._spinSpeed = value;
 	}
 
 	// Reflex
@@ -625,10 +634,6 @@ export default class AudioMotionAnalyzer {
 	 * this is called 60 times per second by requestAnimationFrame()
 	 */
 	_draw( timestamp ) {
-
-		if ( this._spinAngle === undefined || this.spinSpeed == 0 )
-			this._spinAngle = -Math.PI / 2;
-
 		const canvas         = this._canvas,
 			  ctx            = this._canvasCtx,
 			  isOctaveBands  = ( this._mode % 10 != 0 ),
@@ -640,16 +645,10 @@ export default class AudioMotionAnalyzer {
 		const centerX        = canvas.width >> 1,
 			  centerY        = canvas.height >> 1,
 			  radius         = this._circScale.width >> 1,
-			  tau            = 2 * Math.PI,
-			  msFrame        = 1 / 60 * 1000, // nominal timestamp increment per frame (~16.667ms)
-			  spinRate       = 9550; // base angle increment (msFrame/spinRate radians per frame) - full rotation in ~60s
+			  tau            = 2 * Math.PI;
 
-		if ( this.radial && this.spinSpeed != 0 && this._energy.peak > 0 ) {
-			if ( this.spinMode == 'beat' )
-				this._spinAngle = timestamp / spinRate * this.spinSpeed * this._energy.peak % tau;
-			else
-				this._spinAngle += ( this.spinMode == 'energy' ? 2 * this._energy.instant : 1 ) * this.spinSpeed * msFrame / spinRate;
-		}
+		if ( this._energy.instant > 0 )
+			this._spinAngle += this._spinSpeed * tau / 3600;
 
 		// helper function - convert planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y ) => {
@@ -957,7 +956,7 @@ export default class AudioMotionAnalyzer {
 			if ( this._radial ) {
 				ctx.save();
 				ctx.translate( centerX, centerY );
-				if ( this.spinSpeed != 0 )
+				if ( this._spinSpeed != 0 )
 					ctx.rotate( this._spinAngle + Math.PI / 2 );
 				ctx.drawImage( this._circScale, -radius, -radius );
 				ctx.restore();
