@@ -889,10 +889,8 @@ export default class AudioMotionAnalyzer {
 		else {
 			if ( this._energy.hold > 0 )
 				this._energy.hold--;
-			else if ( this._energy.peak > 1e-3 )
-				this._energy.peak *= .97; // decay
-			else
-				this._energy.peak = 0; // when the value gets too small, we drop it to 0
+			else if ( this._energy.peak > 0 )
+				this._energy.peak *= ( 30 + this._energy.hold-- ) / 30; // decay
 		}
 
 		if ( this._mode == 10 ) { // fill area
