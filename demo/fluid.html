@@ -18,7 +18,7 @@
 		</ul>
 	</header>
 
-	<div id="container"></div>
+	<div id="container" class="fluid"></div>
 	<audio id="audio" controls crossorigin="anonymous"></audio>
 
 	<div class="flex">
@@ -34,6 +34,10 @@
 
 	<div class="analyzer-configuration">
 		<div class="box center">
+			<label class="label">Load a preset
+				<select id="presets"></select>
+			</label>
+
 			<label class="label">mode
 				<select data-setting="mode">
 					<option value="0">0 - Discrete frequencies</option>
@@ -168,6 +172,14 @@
 				<button data-prop="reflexFit">reflexFit</button>
 			</fieldset>
 
+			<fieldset>
+				<legend>Overlay mode</legend>
+				<button data-prop="overlay">overlay</button>
+				<label class="label">bgAlpha
+					<input type="range" id="bg_alpha" min="0" max="1" step=".1" data-setting="bgAlpha">
+					<div class="value"></div>
+				</label>
+			</fieldset>
 		</div>
 
 		<div class="box center">

@@ -175,6 +175,12 @@ ul {
 	margin: 0 calc( 50% - 50vw + 9px );
 }
 
+/* background animation for overlay test on fluid demo */
+.fluid canvas {
+	background-image: url(sealoop.gif);
+	background-size: cover;
+}
+
 #container1 {
 	margin-bottom: 15px;
 }

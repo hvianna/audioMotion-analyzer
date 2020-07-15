@@ -6,7 +6,76 @@
 
 import AudioMotionAnalyzer from '../../src/audioMotion-analyzer.js';
 
-const audioEl = document.getElementById('audio');
+const audioEl = document.getElementById('audio'),
+	  presetSelection = document.getElementById('presets');
+
+// Visualization presets
+const presets = [
+	{
+		name: 'Defaults',
+		options: undefined
+	},
+	{
+		name: 'Classic LEDs',
+		options: {
+			mode: 3,
+			barSpace: .4,
+			gradient: 'classic',
+			lumiBars: false,
+			radial: false,
+			reflexRatio: 0,
+			showBgColor: true,
+			showLeds: true,
+			showPeaks: true
+		}
+	},
+	{
+		name: 'Mirror wave',
+		options: {
+			mode: 10,
+			fillAlpha: .6,
+			gradient: 'rainbow',
+			lineWidth: 2,
+			radial: false,
+			reflexAlpha: 1,
+			reflexBright: 1,
+			reflexRatio: .5,
+			showPeaks: false
+		}
+	},
+	{
+		name: 'Radial overlay',
+		options: {
+			mode: 5,
+			barSpace: .1,
+			gradient: 'prism',
+			radial: true,
+			showBgColor: true,
+			showLeds: false,
+			showPeaks: true,
+			spinSpeed: 1,
+			overlay: true
+		}
+	},
+	{
+		name: 'Reflex Bars',
+		options: {
+			mode: 5,
+			barSpace: .25,
+			gradient: 'rainbow',
+			lumiBars: false,
+			radial: false,
+			reflexAlpha: .25,
+			reflexBright: 1,
+			reflexFit: true,
+			reflexRatio: .3,
+			showBgColor: false,
+			showLeds: false,
+			showPeaks: true,
+			overlay: false
+		}
+	}
+];
 
 // Demo-specific features
 const features = {
@@ -74,6 +143,18 @@ document.querySelectorAll('[data-setting]').forEach( el => {
 
 // Display value of ranged input elements
 document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
+
+// Populate the UI presets select element
+
+presets.forEach( ( preset, index ) => {
+	const option = new Option( preset.name, index );
+	presetSelection.append( option );
+});
+
+presetSelection.addEventListener( 'change', () => {
+	audioMotion.setOptions( presets[ presetSelection.value ].options );
+	updateUI();
+});
 
 // Test tones playback
 
