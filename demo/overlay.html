@@ -22,10 +22,7 @@
 		<video id="video" src="night-mist.mp4" controls></video>
 	</div>
 
-	<div class="box center">
-		<button data-prop="isOn" data-func="toggleAnalyzer">Freeze</button>
-		<button id="btn_fullscr">Fullscreen</button>
-	</div>
+	<p>&nbsp;</p>
 
 	<div class="analyzer-configuration">
 		<div class="box center">
@@ -55,6 +52,55 @@
 					<option value="rainbow">rainbow</option>
 				</select>
 			</label>
+
+			<label class="label">fftSize
+				<select data-setting="fftSize">
+					<option value="1024">1024</option>
+					<option value="2048">2048</option>
+					<option value="4096">4096</option>
+					<option value="8192">8192</option>
+					<option value="16384">16384</option>
+					<option value="32768">32768</option>
+				</select>
+			</label>
+
+			<label class="label">minFreq
+				<select data-setting="minFreq">
+					<option value="10">10</option>
+					<option value="20">20</option>
+					<option value="30">30</option>
+					<option value="40">40</option>
+					<option value="60">60</option>
+					<option value="100">100</option>
+				</select>
+			</label>
+
+			<label class="label">maxFreq
+				<select data-setting="maxFreq">
+					<option value="8000">8000</option>
+					<option value="10000">10000</option>
+					<option value="12000">12000</option>
+					<option value="16000">16000</option>
+					<option value="20000">20000</option>
+					<option value="22000">22000</option>
+				</select>
+			</label>
+
+			<label class="label">minDecibels
+				<input type="range" min="-100" max="-60" step="5" data-setting="minDecibels">
+				<div class="value"></div>
+			</label>
+
+			<label class="label">maxDecibels
+				<input type="range" min="-40" max="0" step="5" data-setting="maxDecibels">
+				<div class="value"></div>
+			</label>
+
+			<label class="label">smoothing
+				<input type="range" min="0" max=".9" step=".1" data-setting="smoothing">
+				<div class="value"></div>
+			</label>
+
 		</div>
 
 		<div class="box center">
@@ -134,6 +180,8 @@
 			<button data-prop="showScaleY">showScaleY</button>
 			<button data-prop="loRes">loRes</button>
 			<button data-prop="showFPS">showFPS</button>
+			<button data-prop="isOn" data-func="toggleAnalyzer">Freeze</button>
+			<button id="btn_fullscr">Fullscreen</button>
 		</div>
 	</div>
 

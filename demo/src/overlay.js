@@ -13,6 +13,10 @@ const videoEl = document.getElementById('video'),
 // Visualization presets
 const presets = [
 	{
+		name: 'Defaults',
+		options: undefined
+	},
+	{
 		name: 'Classic LEDs',
 		options: {
 			mode: 3,
@@ -53,6 +57,7 @@ const presets = [
 			barSpace: .1,
 			bgAlpha: .5,
 			gradient: 'prism',
+			maxFreq: 16000,
 			radial: true,
 			showBgColor: true,
 			showLeds: false,
@@ -82,15 +87,7 @@ const presets = [
 // Create audioMotion-analyzer object
 
 try {
-	var audioMotion = new AudioMotionAnalyzer(
-		container,
-		{
-			source: videoEl,
-			maxFreq: 16000,
-			overlay: true,
-			showScale: false
-		}
-	);
+	var audioMotion = new AudioMotionAnalyzer( container, {	source: videoEl	} );
 }
 catch( err ) {
 	container.innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
@@ -146,7 +143,7 @@ presets.forEach( ( preset, index ) => {
 });
 
 // Initialize settings with options from a preset
-presetSelection.value = 2;
+presetSelection.value = 3;
 audioMotion.setOptions( presets[ presetSelection.value ].options );
 updateUI();
 
