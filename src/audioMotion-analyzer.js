@@ -22,39 +22,6 @@ export default class AudioMotionAnalyzer {
 
 		this._initDone = false;
 
-		// Settings defaults
-
-		const defaults = {
-			mode        : 0,
-			fftSize     : 8192,
-			minFreq     : 20,
-			maxFreq     : 22000,
-			smoothing   : 0.5,
-			gradient    : 'classic',
-			minDecibels : -85,
-			maxDecibels : -25,
-			showBgColor : true,
-			showLeds    : false,
-			showScale   : true,
-			showScaleY  : false,
-			showPeaks   : true,
-			showFPS     : false,
-			lumiBars    : false,
-			loRes       : false,
-			reflexRatio : 0,
-			reflexAlpha : 0.15,
-			reflexBright: 1,
-			reflexFit   : true,
-			lineWidth   : 0,
-			fillAlpha   : 1,
-			barSpace    : 0.1,
-			overlay     : false,
-			bgAlpha     : 0.7,
-			radial		: false,
-			spinSpeed   : 0,
-			start       : true
-		};
-
 		// Gradient definitions
 
 		this._gradients = {
@@ -149,9 +116,8 @@ export default class AudioMotionAnalyzer {
 		// adjust canvas size on fullscreen change
 		this._canvas.addEventListener( 'fullscreenchange', () => this._setCanvas('fschange') );
 
-		// Set configuration options, using defaults for any missing properties
-
-		this._setProperties( options, defaults );
+		// Set configuration options and use defaults for any missing properties
+		this._setProperties( options, true );
 
 		// Finish canvas setup
 
@@ -1274,14 +1240,47 @@ export default class AudioMotionAnalyzer {
 	/**
 	 * Set object properties
 	 */
-	_setProperties( options, defaults ) {
+	_setProperties( options, useDefaults ) {
 
+		// settings defaults
+		const defaults = {
+			mode        : 0,
+			fftSize     : 8192,
+			minFreq     : 20,
+			maxFreq     : 22000,
+			smoothing   : 0.5,
+			gradient    : 'classic',
+			minDecibels : -85,
+			maxDecibels : -25,
+			showBgColor : true,
+			showLeds    : false,
+			showScale   : true,
+			showScaleY  : false,
+			showPeaks   : true,
+			showFPS     : false,
+			lumiBars    : false,
+			loRes       : false,
+			reflexRatio : 0,
+			reflexAlpha : 0.15,
+			reflexBright: 1,
+			reflexFit   : true,
+			lineWidth   : 0,
+			fillAlpha   : 1,
+			barSpace    : 0.1,
+			overlay     : false,
+			bgAlpha     : 0.7,
+			radial		: false,
+			spinSpeed   : 0,
+			start       : true
+		};
+
+		// callback functions properties
 		const callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
 
 		// audioCtx is set only at initialization; we handle 'start' after setting all other properties
 		const ignore = [ 'audioCtx', 'start' ];
 
-		if ( defaults )
+		if ( useDefaults || options === undefined )
 			options = Object.assign( defaults, options );
 
 		for ( const prop of Object.keys( options ) ) {
