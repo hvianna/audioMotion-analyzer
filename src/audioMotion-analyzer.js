@@ -373,12 +373,7 @@ export default class AudioMotionAnalyzer {
 		return this._fps;
 	}
 	get isFullscreen() {
-		if ( document.fullscreenElement )
-			return document.fullscreenElement === this._canvas;
-		else if ( document.webkitFullscreenElement )
-			return document.webkitFullscreenElement === this._canvas;
-		else
-			return false;
+		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._canvas;
 	}
 	get isOn() {
 		return this._animationReq !== undefined;
