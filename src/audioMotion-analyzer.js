@@ -662,25 +662,31 @@ export default class AudioMotionAnalyzer {
 			ctx.lineWidth = 1;
 
 			for ( let db = this._analyzer.maxDecibels; db > this._analyzer.minDecibels; db -= 5 ) {
-				ctx.beginPath();
 				const posY = ( this._analyzer.maxDecibels - db ) * interval,
-					  full = ( db % 10 == 0 ) | 0;
-				if ( full ) {
-					ctx.fillText( db, scaleWidth * .85, posY + ( fontSize >> 1 ) );
-					ctx.fillText( db, canvas.width - scaleWidth * .1, posY + ( fontSize >> 1 ) );
+					  even = ( db % 10 == 0 ) | 0;
+
+				if ( even ) {
+					const labelY = posY == 0 ? fontSize * .8 : posY + fontSize * .35;
+					ctx.fillText( db, scaleWidth * .85, labelY );
+					ctx.fillText( db, canvas.width - scaleWidth * .1, labelY );
 					ctx.strokeStyle = '#888';
 					ctx.setLineDash([2,4]);
+					ctx.lineDashOffset = 0;
 				}
 				else {
 					ctx.strokeStyle = '#555';
 					ctx.setLineDash([2,8]);
+					ctx.lineDashOffset = 1;
 				}
-				ctx.moveTo( scaleWidth * full, posY );
-				ctx.lineTo( canvas.width - scaleWidth * full, posY );
+
+				ctx.beginPath();
+				ctx.moveTo( scaleWidth * even, posY );
+				ctx.lineTo( canvas.width - scaleWidth * even, posY );
 				ctx.stroke();
 			}
-
-			ctx.setLineDash([]); // restore solid lines
+			// restore line properties
+			ctx.setLineDash([]);
+			ctx.lineDashOffset = 0;
 		}
 
 		// get a new array of data from the FFT
