@@ -214,9 +214,9 @@ See also [`binToFreq()`](#bintofreq-bin-) and [`freqToBin()`](#freqtobin-frequen
 
 Returns a number between 0 and 1, representing the instant "energy" of the frequency spectrum. Updated on every animation frame.
 
-This value is obtained by a simple average of the amplitudes of currently displayed frequency bands, and roughly represents how loud/busy the spectrum is at a given moment.
+The energy value is obtained by a simple average of the amplitudes of currently displayed frequency bands, and roughly represents how loud/busy the spectrum is at a given moment.
 
-Use this inside the [onCanvasDraw](#oncanvasdraw-function) callback, for example, for rendering additional visual effects.
+You can use this inside your callback function to create additional visual effects. For usage example see the [*onCanvasDraw* documentation](#oncanvasdraw-function).
 
 See also [`peakEnergy`](#peakenergy-number-read-only).
 
@@ -274,9 +274,13 @@ You can set both values at once using the [`setCanvasSize()`](#setcanvassize-wid
 
 *true* when the analyzer is being displayed in fullscreen, or *false* otherwise.
 
+See [`toggleFullscreen()`](#togglefullscreen).
+
 ### `isOn` *boolean* *(Read only)*
 
 *true* if the analyzer canvas animation is running, or *false* if it's stopped.
+
+See [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
 
 ### `lineWidth` *number*
 
@@ -473,11 +477,9 @@ Defaults to **true**.
 
 *Available since v2.4.0*
 
-*true* to display the level (dB) scale on the Y axis.
+*true* to display the level (dB) scale on the Y axis. Defaults to **false**.
 
-This has no effect when [`radial`](#radial-boolean) or [`lumiBars`](#lumibars-boolean) are set to *true*.
-
-Defaults to **false**.
+This option has no effect when [`radial`](#radial-boolean) or [`lumiBars`](#lumibars-boolean) are set to *true*.
 
 ### `smoothing` *number*
 
@@ -526,18 +528,19 @@ const audioMotion = new AudioMotionAnalyzer(
 );
 
 function drawCallback( instance ) {
-	const ctx  = instance.canvasCtx,
-    	  size = ( instance.isFullscreen ? 40 : 20 ) * instance.pixelRatio,
-          idx  = instance.freqToBin(140); // get the data array index for 140Hz
+	const ctx      = instance.canvasCtx,
+    	  baseSize = ( instance.isFullscreen ? 40 : 20 ) * instance.pixelRatio;
 
-    // use the 140Hz amplitude to increase the font size and make the logo pulse to the beat
-    ctx.font = `${size + instance.dataArray[ idx ] / 16 * instance.pixelRatio}px Orbitron,sans-serif`;
+    // use the 'energy' value to increase the font size and make the logo pulse to the beat
+    ctx.font = `${ baseSize + instance.energy * 25 * instance.pixelRatio }px Orbitron, sans-serif`;
 
     ctx.fillStyle = '#fff8';
     ctx.textAlign = 'center';
-    ctx.fillText( 'audioMotion', instance.canvas.width - size * 8, size * 2 );
+    ctx.fillText( 'audioMotion', instance.canvas.width - baseSize * 8, baseSize * 2 );
 }
 ```
+
+For more examples, see the fluid demo [source code](https://github.com/hvianna/audioMotion-analyzer/blob/master/demo/src/fluid.js#L221).
 
 ### `onCanvasResize` *function*
 
@@ -593,13 +596,13 @@ Returns the [`dataArray`](#dataarray-uint8array-array-read-only) index which mor
 
 `frequency` must be a **number** equal or greater than zero, representing a frequency in hertz.
 
-`rounding` is an optional **string** to select the [Math method](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math#Static_methods)
-used for rounding the index value to an integer. Valid options are `'floor'`, `'round'` (default) and `'ceil'`.
+`rounding` is an optional **string** indicating the method to be used for rounding the index value to an integer.
+Valid options are `'floor'`, `'round'` (default) and `'ceil'`.
+
+See [Math static methods](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math#Static_methods).
 
 Please note that the returned value will cap at the highest valid index (`analyzer.frequencyBinCount - 1`) for any frequency higher
 than **half** the current sampling rate (`audioCtx.sampleRate`).
-
-See the [*onCanvasDraw* usage example](#oncanvasdraw-function).
 
 ### `registerGradient( name, options )`
 
@@ -631,11 +634,13 @@ Sets the analyzer nominal dimensions in pixels. See [`height`](#height-number) a
 
 Sets the desired frequency range. Values are expressed in Hz (Hertz).
 
-### `setOptions( {options} )`
+### `setOptions( [options] )`
 
 Shorthand method for setting several options at once.
 
-Refer to the class [constructor](#options) for available options. `audioCtx` and `source` properties can only be set at initialization.
+`options` should be an object as defined in the class [constructor](#options), except for the `audioCtx` and `source` properties.
+
+**If called with no argument (or `options` is *undefined*), resets all configuration options to their default values.**
 
 ### `setSensitivity( minDecibels, maxDecibels )`
 
@@ -653,11 +658,12 @@ The analyzer is started by default after initialization, unless you specify [`st
 
 Toggles fullscreen mode on / off.
 
-As per [API specification](https://fullscreen.spec.whatwg.org/), fullscreen requests must be triggered by user action,
-so you must call this function from within a mouse or keyboard event handler, otherwise the request will be denied.
+Please note that fullscreen requests must be triggered by user action, like a key press or mouse click,
+so you must call this method from within a user-generated event handler.
 
-Please note that if you're displaying the analyzer over other content, you'll probably want to handle fullscreen mode
-on the container element instead. See the [overlay demo](https://audiomotion.dev/demo/overlay.html) for an example.
+Also, if you're displaying the analyzer over other content in [overlay](#overlay-boolean) mode,
+you'll probably want to handle fullscreen on the container element instead, using your own code.
+See the [overlay demo](https://audiomotion.dev/demo/overlay.html) for an example.
 
 ## Custom Errors
 
