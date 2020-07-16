@@ -7,7 +7,7 @@ This package provides only the graphic spectrum analyzer, as a standalone module
 
 ## Online demos
 
-[![demo-animation](demo/demo.gif)](https://audiomotion.dev/demo/)
+[![demo-animation](demo/media/demo.gif)](https://audiomotion.dev/demo/)
 
 ?> https://audiomotion.dev/demo/
 

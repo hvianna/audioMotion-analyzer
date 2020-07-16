@@ -238,3 +238,36 @@ ul {
 .overlay:not(:fullscreen):hover canvas {
 	opacity: .5;
 }
+
+/* Image gallery on index page */
+
+.gallery {
+	height: 280px;
+	margin: 0 calc( 50% - 50vw );
+	overflow: hidden;
+	position: relative;
+}
+.gallery:hover .gallery-internal {
+	animation-play-state: paused;
+}
+.gallery img {
+	width: 500px;
+}
+
+.gallery-internal {
+	animation: rotate 45s linear infinite;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	width: 9999px;
+}
+.gallery-internal li {
+	display: inline-block;
+	padding: 0 2px;
+}
+
+@keyframes rotate {
+	0%   { left: 0; }
+	100% { left: -3024px; }
+}
