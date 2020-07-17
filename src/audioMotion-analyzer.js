@@ -663,7 +663,7 @@ export default class AudioMotionAnalyzer {
 
 			for ( let db = this._analyzer.maxDecibels; db > this._analyzer.minDecibels; db -= 5 ) {
 				const posY = ( this._analyzer.maxDecibels - db ) * interval,
-					  even = ( db % 10 == 0 ) | 0;
+					  even = ( db % 2 == 0 ) | 0;
 
 				if ( even ) {
 					const labelY = posY == 0 ? fontSize * .8 : posY + fontSize * .35;
@@ -895,12 +895,6 @@ export default class AudioMotionAnalyzer {
 			else {
 				posY   = canvas.height - analyzerHeight * 2;
 				height = analyzerHeight;
-			}
-
-			// clear the reflection area with black for LEDs display when not in overlay mode
-			if ( ! this.overlay && isLedDisplay ) {
-				ctx.fillStyle = '#000';
-				ctx.fillRect( 0, analyzerHeight, canvas.width, canvas.height - analyzerHeight );
 			}
 
 			// set alpha and brightness for the reflection
