@@ -177,7 +177,7 @@ ul {
 
 /* background animation for overlay test on fluid demo */
 .fluid canvas {
-	background-image: url(sealoop.gif);
+	background-image: url(media/sealoop.gif);
 	background-size: cover;
 }
 
