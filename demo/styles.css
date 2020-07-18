@@ -123,12 +123,12 @@ ul {
 	color: #fff;
 	content: 'audioMotion-analyzer';
 	left: 0;
-	mask-image: linear-gradient(-75deg, transparent 45%, #000 50%, transparent 55%);
-	mask-size: 200%;
 	position: absolute;
 	top: 0;
-	-webkit-mask-position: -50%;
+	-webkit-mask-image: linear-gradient(-75deg, transparent 45%, #000 50%, transparent 55%);
 	-webkit-text-fill-color: #fff;
+	-webkit-mask-position: -50%;
+	-webkit-mask-size: 200%;
 }
 
 @keyframes shine {
