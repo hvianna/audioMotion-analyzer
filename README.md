@@ -15,9 +15,8 @@ This package provides only the graphic spectrum analyzer, as a standalone module
 
 + High-resolution (retina / HiDPI ready) real-time audio spectrum analyzer with fullscreen support
 + Logarithmic frequency scale with customizable range
-+ 10 visualization modes: choose between discrete frequencies or octave bands based on the equal tempered scale
-+ Optional vintage LED effect and variable luminance bars for octave bands modes
-+ Optional customizable reflection effect
++ Visualize discrete frequencies with full FFT resolution, or octave bands based on the equal tempered scale
++ Optional effects: vintage LEDs, luminance bars, customizable reflection, radial visualization
 + Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing constant
 + Comes with 3 predefined color gradients - easily add your own!
 + No dependencies, less than 20kB minified
@@ -240,6 +239,8 @@ Please note that this affects only the area fill. The line (when [`lineWidth`](#
 
 Defaults to **1**.
 
+!> [See related known issue](#fillalpha-and-radial-mode-on-firefox)
+
 ### `fps` *number* *(Read only)*
 
 Current frame rate.
@@ -377,7 +378,7 @@ See also [`spinSpeed`](#spinspeed-number).
 
 Defaults to **false**.
 
-!> **On Firefox, [`fillAlpha`](#fillalpha-number) won't work properly in radial mode, due to [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912).**
+!> [See related known issue](#fillalpha-and-radial-mode-on-firefox)
 
 ### `overlay` *boolean*
 
@@ -423,10 +424,9 @@ Reflection brightness (when [`reflexRatio`](#reflexratio-number) > 0).
 It must be a number. Values below 1 darken the reflection and above 1 make it brighter.
 A value of 0 will render the reflected image completely black, while a value of 1 will preserve the original brightness.
 
-Please note that this feature relies on the [`filter`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter) property of Canvas API,
-which is [currently not supported in some browsers](https://caniuse.com/#feat=mdn-api_canvasrenderingcontext2d_filter) (notably, Opera and Safari).
-
 Defaults to **1**.
+
+!> [See related known issue](#reflexbright-wont-work-on-some-browsers)
 
 ### `reflexFit` *boolean*
 
@@ -450,10 +450,16 @@ Defaults to **0** (no reflection).
 
 ### `showBgColor` *boolean*
 
-*true* to use the background color defined by the current gradient;
-*false* for black or transparent (when [`overlay`](#overlay-boolean) is *true*) background.
+Determines whether the canvas background should be painted.
 
-Please note that when [`showLeds`](#showleds-boolean) is *true* and [`overlay`](#overlay-boolean) is *false*, a value of *true* will show the "unlit" LEDs instead of changing the background.
+If ***true***, the background color defined by the current gradient will be used.
+Opacity can be adjusted via [`bgAlpha`](#bgalpha-number) property, when [`overlay`](#overlay-boolean) is ***true***.
+
+If ***false***, the canvas background will be painted black when [`overlay`](#overlay-boolean) is ***false***,
+or transparent when [`overlay`](#overlay-boolean) is ***true***.
+
+?> Please note that when [`overlay`](#overlay-boolean) is ***false*** and [`showLeds`](#showleds-boolean) is ***true***, the background color will always be black
+and setting `showBgColor` to ***true*** will make the "unlit" LEDs visible instead.
 
 Defaults to **true**.
 
@@ -684,6 +690,17 @@ ERR_GRADIENT_NOT_AN_OBJECT | The `options` parameter for [`registerGradient()`](
 ERR_GRADIENT_MISSING_COLOR | The `options` parameter for [`registerGradient()`](#registergradient-name-options-) must define at least two color-stops.
 ERR_REFLEX_OUT_OF_RANGE    | Tried to assign a value < 0 or >= 1 to [`reflexRatio`](#reflexratio-number) property.
 ERR_UNKNOWN_GRADIENT       | User tried to [select a gradient](#gradient-string) not previously registered.
+
+## Known Issues
+
+### reflexBright won't work on some browsers
+
+[`reflexBright`](#reflexbright-number) feature relies on the [`filter`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter) property of the Canvas API,
+which is [currently not supported in some browsers](https://caniuse.com/#feat=mdn-api_canvasrenderingcontext2d_filter) (notably, Opera and Safari).
+
+### fillAlpha and radial mode on Firefox
+
+On Firefox, [`fillAlpha`](#fillalpha-number) won't work properly when [`radial`](#radial-boolean) is *true*, due to [this five-year-old bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912) still unaddressed.
 
 ## Acknowledgments
 
