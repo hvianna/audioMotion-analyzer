@@ -1,7 +1,7 @@
 {
   "name": "audiomotion-analyzer",
   "description": "High-resolution real-time graphic audio spectrum analyzer JavaScript module with no dependencies.",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "main": "./src/audioMotion-analyzer.js",
   "scripts": {
     "build-demo": "webpack"
@@ -25,6 +25,6 @@
   "homepage": "https://audiomotion.dev",
   "devDependencies": {
     "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.11"
+    "webpack-cli": "^3.3.12"
   }
 }
