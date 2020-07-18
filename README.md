@@ -7,7 +7,7 @@ This package provides only the graphic spectrum analyzer, as a standalone module
 
 ## Online demos
 
-[![demo-animation](demo/demo.gif)](https://audiomotion.dev/demo/)
+[![demo-animation](demo/media/demo.gif)](https://audiomotion.dev/demo/)
 
 ?> https://audiomotion.dev/demo/
 
@@ -15,9 +15,8 @@ This package provides only the graphic spectrum analyzer, as a standalone module
 
 + High-resolution (retina / HiDPI ready) real-time audio spectrum analyzer with fullscreen support
 + Logarithmic frequency scale with customizable range
-+ 10 visualization modes: choose between discrete frequencies or octave bands based on the equal tempered scale
-+ Optional vintage LED effect and variable luminance bars for octave bands modes
-+ Optional customizable reflection effect
++ Visualize discrete frequencies with full FFT resolution, or octave bands based on the equal tempered scale
++ Optional effects: vintage LEDs, luminance bars, customizable reflection, radial visualization
 + Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing constant
 + Comes with 3 predefined color gradients - easily add your own!
 + No dependencies, less than 20kB minified
@@ -82,6 +81,7 @@ options = {<br>
 &emsp;&emsp;[onCanvasDraw](#oncanvasdraw-function): *undefined*,<br>
 &emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *undefined*,<br>
 &emsp;&emsp;[overlay](#overlay-boolean): **false**,<br>
+&emsp;&emsp;[radial](#radial-boolean): **false**,<br>
 &emsp;&emsp;[reflexAlpha](#reflexalpha-number): **0.15**,<br>
 &emsp;&emsp;[reflexBright](#reflexbright-number): **1**,<br>
 &emsp;&emsp;[reflexFit](#reflexfit-boolean): **true**,<br>
@@ -91,8 +91,10 @@ options = {<br>
 &emsp;&emsp;[showLeds](#showleds-boolean): **false**,<br>
 &emsp;&emsp;[showPeaks](#showpeaks-boolean): **true**,<br>
 &emsp;&emsp;[showScale](#showscale-boolean): **true**,<br>
+&emsp;&emsp;[showScaleY](#showscaley-boolean): **false**,<br>
 &emsp;&emsp;[smoothing](#smoothing-number): **0.5**,<br>
 &emsp;&emsp;[source](#source-htmlmediaelement-object): *undefined*,<br>
+&emsp;&emsp;[spinSpeed](#spinspeed-number): **0**,<br>
 &emsp;&emsp;[start](#start-boolean): **true**,<br>
 &emsp;&emsp;[width](#width-number): *undefined*<br>
 }
@@ -205,6 +207,18 @@ Each array element represents a discrete value in the frequency domain, such tha
 
 See also [`binToFreq()`](#bintofreq-bin-) and [`freqToBin()`](#freqtobin-frequency-rounding-) methods.
 
+### `energy` *number* *(Read only)*
+
+*Available since v2.4.0*
+
+Returns a number between 0 and 1, representing the instant "energy" of the frequency spectrum. Updated on every animation frame.
+
+The energy value is obtained by a simple average of the amplitudes of currently displayed frequency bands, and roughly represents how loud/busy the spectrum is at a given moment.
+
+You can use this inside your callback function to create additional visual effects. For usage example see the [*onCanvasDraw* documentation](#oncanvasdraw-function).
+
+See also [`peakEnergy`](#peakenergy-number-read-only).
+
 ### `fftSize` *number*
 
 Number of samples used for the FFT performed by the analyzer node. It must be a power of 2 between 32 and 32768, so valid values are: 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, and 32768.
@@ -224,6 +238,8 @@ It must be a number between 0 (completely transparent) and 1 (completely opaque)
 Please note that this affects only the area fill. The line (when [`lineWidth`](#linewidth-number) > 0) is always drawn at full opacity.
 
 Defaults to **1**.
+
+!> [See related known issue](#fillalpha-and-radial-mode-on-firefox)
 
 ### `fps` *number* *(Read only)*
 
@@ -259,9 +275,13 @@ You can set both values at once using the [`setCanvasSize()`](#setcanvassize-wid
 
 *true* when the analyzer is being displayed in fullscreen, or *false* otherwise.
 
+See [`toggleFullscreen()`](#togglefullscreen).
+
 ### `isOn` *boolean* *(Read only)*
 
 *true* if the analyzer canvas animation is running, or *false* if it's stopped.
+
+See [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
 
 ### `lineWidth` *number*
 
@@ -329,21 +349,36 @@ Current visualization mode.
 + **Octave bands** modes display wider vertical bars, each one representing the *n*th part of an octave, based on a [24-tone equal tempered scale](https://en.wikipedia.org/wiki/Quarter_tone);
 + **Line / Area graph** mode uses the discrete frequencies data to draw a filled shape and/or a continuous line (see [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number) properties).
 
-Value | Mode | Available since
-------|------|----------------
-0 | Discrete frequencies | v1.0.0
-1 | 1/24th octave bands | v1.0.0
-2 | 1/12th octave bands | v1.0.0
-3 | 1/8th octave bands | v1.0.0
-4 | 1/6th octave bands | v1.0.0
-5 | 1/4th octave bands | v1.0.0
-6 | 1/3rd octave bands | v1.0.0
-7 | half octave bands | v1.0.0
-8 | full octave bands | v1.0.0
-9 | *reserved* (not valid) | -
-10 | Line / Area graph | v1.1.0
+mode | description | notes
+------:|:-------------:|------
+0 | Discrete frequencies |
+1 | 1/24th octave bands |
+2 | 1/12th octave bands |
+3 | 1/8th octave bands |
+4 | 1/6th octave bands |
+5 | 1/4th octave bands |
+6 | 1/3rd octave bands |
+7 | Half octave bands |
+8 | Full octave bands |
+9 | *(not valid)* | *reserved*
+10 | Line / Area graph | *added in v1.1.0*
 
 Defaults to **0**.
+
+### `radial` *boolean*
+
+*Available since v2.4.0*
+
+When *true*, the spectrum analyzer is rendered as a circle, with radial frequency bars spreading from the center of the canvas.
+
+When radial mode is active, [`lumiBars`](#lumibars-boolean) and [`showLeds`](#showleds-boolean) have no effect, and
+also [`showPeaks`](#showpeaks-boolean) has no effect in **Line / Area graph** mode.
+
+See also [`spinSpeed`](#spinspeed-number).
+
+Defaults to **false**.
+
+!> [See related known issue](#fillalpha-and-radial-mode-on-firefox)
 
 ### `overlay` *boolean*
 
@@ -354,6 +389,12 @@ Allows the analyzer to be displayed over other content, by making the canvas bac
 When [`showBgColor`](#showbgcolor-boolean) is also *true*, [`bgAlpha`](#bgalpha-number) controls the background opacity.
 
 Defaults to **false**.
+
+### `peakEnergy` *number* *(Read only)*
+
+*Available since v2.4.0*
+
+Returns a number between 0 and 1, representing the peak [energy](#energy-number-read-only) value of the last 30 frames (approximately 0.5s). Updated on every animation frame.
 
 ### `pixelRatio` *number* *(Read only)*
 
@@ -383,16 +424,15 @@ Reflection brightness (when [`reflexRatio`](#reflexratio-number) > 0).
 It must be a number. Values below 1 darken the reflection and above 1 make it brighter.
 A value of 0 will render the reflected image completely black, while a value of 1 will preserve the original brightness.
 
-Please note that this feature relies on the [`filter`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter) property of Canvas API,
-which is [currently not supported in some browsers](https://caniuse.com/#feat=mdn-api_canvasrenderingcontext2d_filter) (notably, Opera and Safari).
-
 Defaults to **1**.
+
+!> [See related known issue](#reflexbright-wont-work-on-some-browsers)
 
 ### `reflexFit` *boolean*
 
 *Available since v2.1.0*
 
-When *true* the reflection will be adjusted (stretched or shrinked) to fit the canvas. If set to *false* the reflected image may be cut at the bottom (when [`reflexRatio`](#reflexratio-number) < 0.5) or not fill the entire canvas (when [`reflexRatio`](#reflexratio-number) > 0.5).
+When *true*, the reflection will be adjusted (stretched or shrinked) to fit the canvas. If set to *false* the reflected image may be cut at the bottom (when [`reflexRatio`](#reflexratio-number) < 0.5) or not fill the entire canvas (when [`reflexRatio`](#reflexratio-number) > 0.5).
 
 Defaults to **true**.
 
@@ -410,10 +450,16 @@ Defaults to **0** (no reflection).
 
 ### `showBgColor` *boolean*
 
-*true* to use the background color defined by the current gradient;
-*false* for black or transparent (when [`overlay`](#overlay-boolean) is *true*) background.
+Determines whether the canvas background should be painted.
 
-Please note that when [`showLeds`](#showleds-boolean) is *true*, setting `showBgColor` to *true* will show the "unlit" LEDs instead of changing the background.
+If ***true***, the background color defined by the current gradient will be used.
+Opacity can be adjusted via [`bgAlpha`](#bgalpha-number) property, when [`overlay`](#overlay-boolean) is ***true***.
+
+If ***false***, the canvas background will be painted black when [`overlay`](#overlay-boolean) is ***false***,
+or transparent when [`overlay`](#overlay-boolean) is ***true***.
+
+?> Please note that when [`overlay`](#overlay-boolean) is ***false*** and [`showLeds`](#showleds-boolean) is ***true***, the background color will always be black
+and setting `showBgColor` to ***true*** will make the "unlit" LEDs visible instead.
 
 Defaults to **true**.
 
@@ -431,7 +477,15 @@ Defaults to **true**.
 
 ### `showScale` *boolean*
 
-*true* to display frequency labels in the X axis. Defaults to **true**.
+*true* to display the frequency (Hz) scale on the X axis. Defaults to **true**.
+
+### `showScaleY` *boolean*
+
+*Available since v2.4.0*
+
+*true* to display the level (dB) scale on the Y axis. Defaults to **false**.
+
+This option has no effect when [`radial`](#radial-boolean) or [`lumiBars`](#lumibars-boolean) are set to *true*.
 
 ### `smoothing` *number*
 
@@ -440,6 +494,16 @@ Sets the analyzer's [smoothingTimeConstant](https://developer.mozilla.org/en-US/
 It must be a number between 0 and 1. Lower values make the analyzer respond faster to changes.
 
 Defaults to **0.5**.
+
+### `spinSpeed` *number*
+
+*Available since v2.4.0*
+
+When [`radial`](#radial-boolean) is *true*, this property defines the analyzer rotation speed, in revolutions per minute.
+
+Positive values will make the analyzer rotate clockwise, while negative values will make it rotate counterclockwise. A value of 0 results in no rotation.
+
+Defaults to **0**.
 
 ### `version` *string* *(Read only)*
 
@@ -456,6 +520,8 @@ If defined, this function will be called after rendering each frame.
 
 The audioMotion object will be passed as an argument to the callback function.
 
+Canvas properties `fillStyle` and `strokeStyle` will be set to the current gradient when the function is called.
+
 Usage example:
 
 ```js
@@ -463,26 +529,24 @@ const audioMotion = new AudioMotionAnalyzer(
     document.getElementById('container'),
     {
         source: document.getElementById('audio'),
-        onCanvasDraw: displayCanvasMsg
+        onCanvasDraw: drawCallback
     }
 );
 
-function displayCanvasMsg( instance ) {
-    let size = 20 * instance.pixelRatio;
-    if ( instance.isFullscreen )
-        size *= 2;
+function drawCallback( instance ) {
+	const ctx      = instance.canvasCtx,
+    	  baseSize = ( instance.isFullscreen ? 40 : 20 ) * instance.pixelRatio;
 
-    // find the data array index for 140Hz
-    const idx = instance.freqToBin(140);
+    // use the 'energy' value to increase the font size and make the logo pulse to the beat
+    ctx.font = `${ baseSize + instance.energy * 25 * instance.pixelRatio }px Orbitron, sans-serif`;
 
-    // use the 140Hz amplitude to increase the font size and make the logo pulse to the beat
-    instance.canvasCtx.font = `${size + instance.dataArray[ idx ] / 16 * instance.pixelRatio}px Orbitron,sans-serif`;
-
-    instance.canvasCtx.fillStyle = '#fff8';
-    instance.canvasCtx.textAlign = 'center';
-    instance.canvasCtx.fillText( 'audioMotion', instance.canvas.width - size * 8, size * 2 );
+    ctx.fillStyle = '#fff8';
+    ctx.textAlign = 'center';
+    ctx.fillText( 'audioMotion', instance.canvas.width - baseSize * 8, baseSize * 2 );
 }
 ```
+
+For more examples, see the fluid demo [source code](https://github.com/hvianna/audioMotion-analyzer/blob/master/demo/src/fluid.js#L221).
 
 ### `onCanvasResize` *function*
 
@@ -506,7 +570,7 @@ const audioMotion = new AudioMotionAnalyzer(
     {
         source: document.getElementById('audio'),
         onCanvasResize: ( reason, instance ) => {
-            console.log( `[${reason}] set: ${instance.width} x ${instance.height} | actual: ${instance.canvas.width} x ${instance.canvas.height}` );
+            console.log( `[${reason}] canvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
         }
     }
 );
@@ -538,13 +602,13 @@ Returns the [`dataArray`](#dataarray-uint8array-array-read-only) index which mor
 
 `frequency` must be a **number** equal or greater than zero, representing a frequency in hertz.
 
-`rounding` is an optional **string** to select the [Math method](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math#Static_methods)
-used for rounding the index value to an integer. Valid options are `'floor'`, `'round'` (default) and `'ceil'`.
+`rounding` is an optional **string** indicating the method to be used for rounding the index value to an integer.
+Valid options are `'floor'`, `'round'` (default) and `'ceil'`.
+
+See [Math static methods](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math#Static_methods).
 
 Please note that the returned value will cap at the highest valid index (`analyzer.frequencyBinCount - 1`) for any frequency higher
 than **half** the current sampling rate (`audioCtx.sampleRate`).
-
-See the [*onCanvasDraw* usage example](#oncanvasdraw-function).
 
 ### `registerGradient( name, options )`
 
@@ -576,11 +640,13 @@ Sets the analyzer nominal dimensions in pixels. See [`height`](#height-number) a
 
 Sets the desired frequency range. Values are expressed in Hz (Hertz).
 
-### `setOptions( {options} )`
+### `setOptions( [options] )`
 
 Shorthand method for setting several options at once.
 
-Refer to the class [constructor](#options) for available options. `audioCtx` and `source` properties can only be set at initialization.
+`options` should be an object as defined in the class [constructor](#options), except for the `audioCtx` and `source` properties.
+
+**If called with no argument (or `options` is *undefined*), resets all configuration options to their default values.**
 
 ### `setSensitivity( minDecibels, maxDecibels )`
 
@@ -598,11 +664,12 @@ The analyzer is started by default after initialization, unless you specify [`st
 
 Toggles fullscreen mode on / off.
 
-As per [API specification](https://fullscreen.spec.whatwg.org/), fullscreen requests must be triggered by user action,
-so you must call this function from within a mouse or keyboard event handler, otherwise the request will be denied.
+Please note that fullscreen requests must be triggered by user action, like a key press or mouse click,
+so you must call this method from within a user-generated event handler.
 
-Please note that if you're displaying the analyzer over other content, you'll probably want to handle fullscreen mode
-on the container element instead. See the [overlay demo](https://audiomotion.dev/demo/overlay.html) for an example.
+Also, if you're displaying the analyzer over other content in [overlay](#overlay-boolean) mode,
+you'll probably want to handle fullscreen on the container element instead, using your own code.
+See the [overlay demo](https://audiomotion.dev/demo/overlay.html) for an example.
 
 ## Custom Errors
 
@@ -623,6 +690,17 @@ ERR_GRADIENT_NOT_AN_OBJECT | The `options` parameter for [`registerGradient()`](
 ERR_GRADIENT_MISSING_COLOR | The `options` parameter for [`registerGradient()`](#registergradient-name-options-) must define at least two color-stops.
 ERR_REFLEX_OUT_OF_RANGE    | Tried to assign a value < 0 or >= 1 to [`reflexRatio`](#reflexratio-number) property.
 ERR_UNKNOWN_GRADIENT       | User tried to [select a gradient](#gradient-string) not previously registered.
+
+## Known Issues
+
+### reflexBright won't work on some browsers
+
+[`reflexBright`](#reflexbright-number) feature relies on the [`filter`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter) property of the Canvas API,
+which is [currently not supported in some browsers](https://caniuse.com/#feat=mdn-api_canvasrenderingcontext2d_filter) (notably, Opera and Safari).
+
+### fillAlpha and radial mode on Firefox
+
+On Firefox, [`fillAlpha`](#fillalpha-number) won't work properly when [`radial`](#radial-boolean) is *true*, due to [this five-year-old bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912) still unaddressed.
 
 ## Acknowledgments
 

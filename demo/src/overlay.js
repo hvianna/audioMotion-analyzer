@@ -13,15 +13,20 @@ const videoEl = document.getElementById('video'),
 // Visualization presets
 const presets = [
 	{
+		name: 'Defaults',
+		options: undefined
+	},
+	{
 		name: 'Classic LEDs',
 		options: {
 			mode: 3,
 			barSpace: .5,
-			bgAlpha: .2,
+			bgAlpha: .7,
 			gradient: 'classic',
 			lumiBars: false,
+			radial: false,
 			reflexRatio: 0,
-			showBgColor: false,
+			showBgColor: true,
 			showLeds: true,
 			showPeaks: true,
 			overlay: true
@@ -36,11 +41,27 @@ const presets = [
 			gradient: 'rainbow',
 			lineWidth: 2,
 			lumiBars: false,
+			radial: false,
 			reflexAlpha: 1,
 			reflexBright: 1,
 			reflexRatio: .5,
 			showBgColor: false,
 			showPeaks: false,
+			overlay: true
+		}
+	},
+	{
+		name: 'Radial',
+		options: {
+			mode: 3,
+			barSpace: .1,
+			bgAlpha: .5,
+			gradient: 'prism',
+			maxFreq: 16000,
+			radial: true,
+			showBgColor: true,
+			showLeds: false,
+			showPeaks: true,
 			overlay: true
 		}
 	},
@@ -51,6 +72,7 @@ const presets = [
 			barSpace: .25,
 			bgAlpha: .5,
 			lumiBars: false,
+			radial: false,
 			reflexAlpha: .5,
 			reflexFit: true,
 			reflexRatio: .3,
@@ -65,15 +87,7 @@ const presets = [
 // Create audioMotion-analyzer object
 
 try {
-	var audioMotion = new AudioMotionAnalyzer(
-		container,
-		{
-			source: videoEl,
-			maxFreq: 16000,
-			overlay: true,
-			showScale: false
-		}
-	);
+	var audioMotion = new AudioMotionAnalyzer( container, {	source: videoEl	} );
 }
 catch( err ) {
 	container.innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
@@ -95,13 +109,7 @@ document.querySelectorAll('button[data-prop]').forEach( el => {
 });
 
 document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'change', () => {
-		audioMotion[ el.dataset.setting ] = el.value;
-		if ( el.dataset.setting == 'mode' ) {
-			document.getElementById('area_options').disabled = ( audioMotion.mode != 10 );
-			document.getElementById('bar_options').disabled = ( audioMotion.mode == 0 || audioMotion.mode == 10 );
-		}
-	});
+	el.addEventListener( 'change', () => audioMotion[ el.dataset.setting ] = el.value );
 });
 
 presetSelection.addEventListener( 'change', () => {
@@ -135,8 +143,8 @@ presets.forEach( ( preset, index ) => {
 });
 
 // Initialize settings with options from a preset
-audioMotion.setOptions( presets[1].options );
-presetSelection.value = 1;
+presetSelection.value = 3;
+audioMotion.setOptions( presets[ presetSelection.value ].options );
 updateUI();
 
 // Resume audio context if in suspended state (browsers' autoplay policy)
@@ -155,9 +163,6 @@ function updateRangeElement( el ) {
 // Update UI elements to reflect the analyzer's current settings
 function updateUI() {
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
-
-	document.getElementById('area_options').disabled = ( audioMotion.mode != 10 );
-	document.getElementById('bar_options').disabled = ( audioMotion.mode == 0 || audioMotion.mode == 10 );
 
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
 	document.querySelectorAll('button[data-prop]').forEach( el => {

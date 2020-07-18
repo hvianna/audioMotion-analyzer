@@ -6,9 +6,83 @@
 
 import AudioMotionAnalyzer from '../../src/audioMotion-analyzer.js';
 
-const mindB = [ -70, -80, -85, -90, -100 ], // for sensitivity presets
-	  maxdB = [ -10, -20, -25, -30, -40 ],
-	  audioEl = document.getElementById('audio');
+const audioEl = document.getElementById('audio'),
+	  presetSelection = document.getElementById('presets');
+
+// Visualization presets
+const presets = [
+	{
+		name: 'Defaults',
+		options: undefined
+	},
+	{
+		name: 'Classic LEDs',
+		options: {
+			mode: 3,
+			barSpace: .4,
+			gradient: 'classic',
+			lumiBars: false,
+			radial: false,
+			reflexRatio: 0,
+			showBgColor: true,
+			showLeds: true,
+			showPeaks: true
+		}
+	},
+	{
+		name: 'Mirror wave',
+		options: {
+			mode: 10,
+			fillAlpha: .6,
+			gradient: 'rainbow',
+			lineWidth: 2,
+			radial: false,
+			reflexAlpha: 1,
+			reflexBright: 1,
+			reflexRatio: .5,
+			showPeaks: false
+		}
+	},
+	{
+		name: 'Radial overlay',
+		options: {
+			mode: 5,
+			barSpace: .1,
+			gradient: 'prism',
+			radial: true,
+			showBgColor: true,
+			showLeds: false,
+			showPeaks: true,
+			spinSpeed: 1,
+			overlay: true
+		}
+	},
+	{
+		name: 'Reflex Bars',
+		options: {
+			mode: 5,
+			barSpace: .25,
+			gradient: 'rainbow',
+			lumiBars: false,
+			radial: false,
+			reflexAlpha: .25,
+			reflexBright: 1,
+			reflexFit: true,
+			reflexRatio: .3,
+			showBgColor: false,
+			showLeds: false,
+			showPeaks: true,
+			overlay: false
+		}
+	}
+];
+
+// Demo-specific features
+const features = {
+	showLogo: false,
+	energyMeter: false,
+	songProgress: false
+}
 
 // Create audioMotion-analyzer object
 
@@ -16,11 +90,10 @@ try {
 	var audioMotion = new AudioMotionAnalyzer(
 		document.getElementById('container'),
 		{
-			source: audioEl, // main source is the HTML audio element
-			showFPS: true,
-			onCanvasDraw: displayCanvasMsg, // callback function to add custom content to the canvas
+			source: audioEl, // main audio source is the HTML <audio> element
+			onCanvasDraw: drawCallback, // callback function used to add custom features for this demo
 			onCanvasResize: ( reason, instance ) => {
-				console.log( `[${reason}] set: ${instance.width} x ${instance.height} | actual: ${instance.canvas.width} x ${instance.canvas.height}` );
+				console.log( `[${reason}] canvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
 				if ( reason == 'fschange' )
 					updateUI();
 			}
@@ -33,10 +106,6 @@ catch( err ) {
 
 // Display package version in the footer
 document.getElementById('version').innerText = audioMotion.version;
-
-// Add a custom property to store the logo display preference
-// this is a feature added by this demo, not part of audioMotion-analyzer
-audioMotion.showLogo = true;
 
 // Create oscillator and gain nodes, and connect them to the analyzer
 
@@ -51,7 +120,7 @@ gainNode.connect( audioMotion.analyzer );
 
 // Event listeners for UI controls
 
-document.querySelectorAll('button[data-prop]').forEach( el => {
+document.querySelectorAll('[data-prop]').forEach( el => {
 	el.addEventListener( 'click', () => {
 		if ( el.dataset.func )
 			audioMotion[ el.dataset.func ]();
@@ -61,25 +130,31 @@ document.querySelectorAll('button[data-prop]').forEach( el => {
 	});
 });
 
-document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'change', () => {
-		audioMotion[ el.dataset.setting ] = el.value;
-		if ( el.dataset.setting == 'mode' ) {
-			document.getElementById('area_options').disabled = ( audioMotion.mode != 10 );
-			document.getElementById('bar_options').disabled = ( audioMotion.mode == 0 || audioMotion.mode == 10 );
-		}
+document.querySelectorAll('[data-feature]').forEach( el => {
+	el.addEventListener( 'click', () => {
+		features[ el.dataset.feature ] = ! features[ el.dataset.feature ];
+		el.classList.toggle( 'active' );
 	});
 });
 
-document.getElementById('range').addEventListener( 'change', e => {
-	const selected = e.target[ e.target.selectedIndex ];
-	audioMotion.setFreqRange( selected.dataset.min, selected.dataset.max );
+document.querySelectorAll('[data-setting]').forEach( el => {
+	el.addEventListener( 'change', () => audioMotion[ el.dataset.setting ] = el.value );
 });
-
-document.getElementById('sensitivity').addEventListener( 'change', e => audioMotion.setSensitivity( mindB[ e.target.value ], maxdB[ e.target.value ] ) );
 
 // Display value of ranged input elements
 document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
+
+// Populate the UI presets select element
+
+presets.forEach( ( preset, index ) => {
+	const option = new Option( preset.name, index );
+	presetSelection.append( option );
+});
+
+presetSelection.addEventListener( 'change', () => {
+	audioMotion.setOptions( presets[ presetSelection.value ].options );
+	updateUI();
+});
 
 // Test tones playback
 
@@ -92,19 +167,15 @@ document.querySelectorAll('#wave, #note, #frequency').forEach( el => {
 });
 
 document.getElementById('btn_play').addEventListener( 'click', () => {
-		oscillator.type = document.getElementById('wave').value;
-		oscillator.frequency.setValueAtTime( document.getElementById('note').value || document.getElementById('frequency').value, audioCtx.currentTime );
-		gainNode.gain.setValueAtTime( .2, audioCtx.currentTime );
+	oscillator.type = document.getElementById('wave').value;
+	oscillator.frequency.setValueAtTime( document.getElementById('note').value || document.getElementById('frequency').value, audioCtx.currentTime );
+	gainNode.gain.setValueAtTime( .2, audioCtx.currentTime );
 });
 
 document.getElementById('btn_soundoff').addEventListener( 'click', () => gainNode.gain.setValueAtTime( 0, audioCtx.currentTime ) );
 
-// File and URL loading
+// File upload
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
-document.getElementById('loadFromURL').addEventListener( 'click', () => {
-	audioEl.src = document.getElementById('remoteURL').value;
-	audioEl.play();
-});
 
 // Initialize UI elements
 updateUI();
@@ -115,35 +186,14 @@ window.addEventListener( 'click', () => {
 		audioMotion.audioCtx.resume();
 });
 
-// The callback function is used here to draw the pulsating logo on the canvas
-function displayCanvasMsg() {
-	if ( ! audioMotion.showLogo )
-		return;
-
-	let size = 20 * audioMotion.pixelRatio;
-	if ( audioMotion.isFullscreen )
-		size *= 2;
-
-	// find the data array index for 140Hz
-	const idx = audioMotion.freqToBin(140);
-
-	// use the 140Hz amplitude to increase the font size and make the logo pulse to the beat
-	audioMotion.canvasCtx.font = `${size + audioMotion.dataArray[ idx ] / 16 * audioMotion.pixelRatio}px Orbitron,sans-serif`;
-
-	audioMotion.canvasCtx.fillStyle = '#fff8';
-	audioMotion.canvasCtx.textAlign = 'center';
-	audioMotion.canvasCtx.fillText( 'audioMotion', audioMotion.canvas.width - size * 8, size * 2 );
-}
-
 // Load song from user's computer
 function loadSong( el ) {
-	const reader = new FileReader();
+	const fileBlob = el.files[0];
 
-	reader.readAsDataURL( el.files[0] );
-	reader.onload = () => {
-		audioEl.src = reader.result;
+	if ( fileBlob ) {
+		audioEl.src = URL.createObjectURL( fileBlob );
 		audioEl.play();
-	};
+	}
 }
 
 // Update value div of range input elements
@@ -157,15 +207,59 @@ function updateRangeElement( el ) {
 function updateUI() {
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
 
-	document.getElementById('area_options').disabled = ( audioMotion.mode != 10 );
-	document.getElementById('bar_options').disabled = ( audioMotion.mode == 0 || audioMotion.mode == 10 );
-
-	document.getElementById('range').selectedIndex = [20,30,100].indexOf( audioMotion.minFreq );
-	document.getElementById('sensitivity').value = maxdB.indexOf( audioMotion.maxDecibels );
-
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
 	document.querySelectorAll('button[data-prop]').forEach( el => {
 		const p = audioMotion[ el.dataset.prop ];
 		el.classList.toggle( 'active', el.dataset.prop == 'isOn' ? ! p : p );
 	});
+
+	document.querySelectorAll('button[data-feature]').forEach( el => el.classList.toggle( 'active', features[ el.dataset.feature ] ) );
+}
+
+// Callback function used to add custom features for this demo
+
+function drawCallback() {
+
+	const canvas   = audioMotion.canvas,
+		  ctx      = audioMotion.canvasCtx,
+		  gradient = ctx.fillStyle; // save the current gradient
+
+	if ( features.energyMeter ) {
+		ctx.fillStyle = '#fff8';
+		ctx.fillRect( 50, canvas.height, 50, -canvas.height * audioMotion.energy );
+
+		ctx.fillStyle = '#f008';
+		ctx.fillRect( 50, canvas.height - canvas.height * audioMotion.peakEnergy, 50, 2 );
+
+		ctx.font = '16px sans-serif';
+		ctx.textAlign = 'left';
+		ctx.fillText( audioMotion.peakEnergy, 50, canvas.height - 4 - canvas.height * audioMotion.peakEnergy);
+	}
+
+	if ( features.showLogo ) {
+		const baseSize = ( audioMotion.isFullscreen ? 40 : 20 ) * audioMotion.pixelRatio;
+
+		// use the 'energy' value to increase the font size and make the logo pulse to the beat
+		ctx.font = `${ baseSize + audioMotion.energy * 25 * audioMotion.pixelRatio }px Orbitron, sans-serif`;
+
+		ctx.fillStyle = '#fff8';
+		ctx.textAlign = 'center';
+		ctx.fillText( 'audioMotion', canvas.width - baseSize * 8, baseSize * 2 );
+	}
+
+	if ( features.songProgress && audioMotion.radial ) {
+		const lineWidth = canvas.height / 60,
+			  radius    = canvas.height / 8 - lineWidth / 2 - ( audioMotion.showScale ? canvas.height * .03 : 0 ),
+			  centerX   = canvas.width / 2,
+			  centerY   = canvas.height / 2,
+			  angle     = ( 2 * Math.PI * audioEl.currentTime / audioEl.duration ) - Math.PI / 2;
+
+		ctx.beginPath();
+		ctx.arc( centerX, centerY, radius, -Math.PI / 2, angle );
+		ctx.fillStyle = gradient;
+		ctx.lineWidth = lineWidth;
+		ctx.globalAlpha = audioMotion.energy;
+		ctx.stroke();
+	}
+
 }

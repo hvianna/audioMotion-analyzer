@@ -2,12 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 2.3.0
+ * @version 2.4.0
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const _VERSION = '2.3.0';
+const _VERSION = '2.4.0';
 
 export default class AudioMotionAnalyzer {
 
@@ -21,36 +21,6 @@ export default class AudioMotionAnalyzer {
 	constructor( container, options = {} ) {
 
 		this._initDone = false;
-
-		// Settings defaults
-
-		const defaults = {
-			mode        : 0,
-			fftSize     : 8192,
-			minFreq     : 20,
-			maxFreq     : 22000,
-			smoothing   : 0.5,
-			gradient    : 'classic',
-			minDecibels : -85,
-			maxDecibels : -25,
-			showBgColor : true,
-			showLeds    : false,
-			showScale   : true,
-			showPeaks   : true,
-			showFPS     : false,
-			lumiBars    : false,
-			loRes       : false,
-			reflexRatio : 0,
-			reflexAlpha : 0.15,
-			reflexBright: 1,
-			reflexFit   : true,
-			lineWidth   : 0,
-			fillAlpha   : 1,
-			barSpace    : 0.1,
-			overlay     : false,
-			bgAlpha     : 0.7,
-			start       : true
-		};
 
 		// Gradient definitions
 
@@ -120,6 +90,9 @@ export default class AudioMotionAnalyzer {
 		this._audioSource = ( options.source ) ? this.connectAudio( options.source ) : undefined;
 		this._analyzer.connect( this._audioCtx.destination );
 
+		// initialize object to save instant and peak energy
+		this._energy = { instant: 0, peak: 0, hold: 0 };
+
 		// Create canvases
 
 		// main spectrum analyzer canvas
@@ -128,13 +101,11 @@ export default class AudioMotionAnalyzer {
 		this._container.appendChild( this._canvas );
 		this._canvasCtx = this._canvas.getContext('2d');
 
-		// auxiliary canvas for the LED mask
-		this._ledsMask = document.createElement('canvas');
-		this._ledsCtx = this._ledsMask.getContext('2d');
-
-		// auxiliary canvas for the X-axis scale labels
+		// auxiliary canvases for the X-axis scale labels
 		this._labels = document.createElement('canvas');
 		this._labelsCtx = this._labels.getContext('2d');
+		this._circScale = document.createElement('canvas');
+		this._circScaleCtx = this._circScale.getContext('2d');
 
 		// adjust canvas on window resize
 		window.addEventListener( 'resize', () => {
@@ -145,9 +116,8 @@ export default class AudioMotionAnalyzer {
 		// adjust canvas size on fullscreen change
 		this._canvas.addEventListener( 'fullscreenchange', () => this._setCanvas('fschange') );
 
-		// Set configuration options, using defaults for any missing properties
-
-		this._setProperties( options, defaults );
+		// Set configuration options and use defaults for any missing properties
+		this._setProperties( options, true );
 
 		// Finish canvas setup
 
@@ -169,9 +139,8 @@ export default class AudioMotionAnalyzer {
 		return this._barSpace;
 	}
 	set barSpace( value ) {
-		this._barSpace = Number( value );
+		this._barSpace = Number( value ) || 0;
 		this._calculateBarSpacePx();
-		this._createLedMask();
 	}
 
 	// FFT size
@@ -220,7 +189,7 @@ export default class AudioMotionAnalyzer {
 		return this._mode;
 	}
 	set mode( value ) {
-		const mode = Number( value );
+		const mode = value | 0;
 		if ( mode >= 0 && mode <= 10 && mode != 9 ) {
 			this._mode = mode;
 			this._precalculateBarPositions();
@@ -228,7 +197,7 @@ export default class AudioMotionAnalyzer {
 				this._generateGradients();
 		}
 		else
-			throw new AudioMotionError( 'ERR_INVALID_MODE', `Invalid mode: ${mode}` );
+			throw new AudioMotionError( 'ERR_INVALID_MODE', `Invalid mode: ${value}` );
 	}
 
 	// Low-resolution mode
@@ -237,7 +206,7 @@ export default class AudioMotionAnalyzer {
 		return this._loRes;
 	}
 	set loRes( value ) {
-		this._loRes = Boolean( value );
+		this._loRes = !! value;
 		this._setCanvas('lores');
 	}
 
@@ -245,11 +214,31 @@ export default class AudioMotionAnalyzer {
 		return this._lumiBars;
 	}
 	set lumiBars( value ) {
-		this._lumiBars = Boolean( value );
+		this._lumiBars = !! value;
 		if ( this._reflexRatio > 0 ) {
 			this._generateGradients();
-			this._createLedMask();
+			this._calculateLedProperties();
 		}
+	}
+
+	// Radial mode
+
+	get radial() {
+		return this._radial;
+	}
+	set radial( value ) {
+		this._radial = !! value;
+		this._generateGradients();
+	}
+
+	get spinSpeed() {
+		return this._spinSpeed;
+	}
+	set spinSpeed( value ) {
+		value = Number( value ) || 0;
+		if ( this._spinSpeed === undefined || value == 0 )
+			this._spinAngle = -Math.PI / 2; // initialize or reset the rotation angle
+		this._spinSpeed = value;
 	}
 
 	// Reflex
@@ -258,13 +247,13 @@ export default class AudioMotionAnalyzer {
 		return this._reflexRatio;
 	}
 	set reflexRatio( value ) {
-		value = Number( value );
+		value = Number( value ) || 0;
 		if ( value < 0 || value >= 1 )
 			throw new AudioMotionError( 'ERR_REFLEX_OUT_OF_RANGE', `Reflex ratio must be >= 0 and < 1` );
 		else {
 			this._reflexRatio = value;
 			this._generateGradients();
-			this._createLedMask();
+			this._calculateLedProperties();
 		}
 	}
 
@@ -337,6 +326,9 @@ export default class AudioMotionAnalyzer {
 	get dataArray() {
 		return this._dataArray;
 	}
+	get energy() {
+		return this._energy.instant;
+	}
 	get fsWidth() {
 		return this._fsWidth;
 	}
@@ -347,15 +339,13 @@ export default class AudioMotionAnalyzer {
 		return this._fps;
 	}
 	get isFullscreen() {
-		if ( document.fullscreenElement )
-			return document.fullscreenElement === this._canvas;
-		else if ( document.webkitFullscreenElement )
-			return document.webkitFullscreenElement === this._canvas;
-		else
-			return false;
+		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._canvas;
 	}
 	get isOn() {
 		return this._animationReq !== undefined;
+	}
+	get peakEnergy() {
+		return this._energy.peak;
 	}
 	get pixelRatio() {
 		return this._pixelRatio;
@@ -548,16 +538,14 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Create mask for vintage LED effect on auxiliary canvas
+	 * Calculate attributes for the vintage LEDs effect, based on visualization mode and canvas resolution
 	 */
-	_createLedMask() {
+	_calculateLedProperties() {
 		// no need for this if in discrete frequencies or area fill modes
 		if ( this._mode % 10 == 0 || ! this._initDone )
 			return;
 
 		const analyzerHeight = this._lumiBars ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio ) | 0;
-
-		// calculates the best attributes for the LEDs effect, based on the visualization mode and canvas resolution
 
 		let spaceV = Math.min( 6, analyzerHeight / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
 		let nLeds;
@@ -600,22 +588,6 @@ export default class AudioMotionAnalyzer {
 			spaceV,
 			ledHeight: ( analyzerHeight + spaceV ) / nLeds - spaceV
 		};
-
-		// use either the LEDs default horizontal space or the user selected bar space, whichever is larger
-		const spacing = Math.max( this._ledOptions.spaceH, this._barSpacePx );
-
-		// clear the auxiliary canvas
-		this._ledsMask.width |= 0;
-
-		// add a vertical black line to the left of each bar to create the LED columns
-		this._analyzerBars.forEach( bar => this._ledsCtx.fillRect( bar.posX - spacing / 2, 0, spacing, analyzerHeight ) );
-
-		// add a vertical black line in the mask canvas after the last led column
-		this._ledsCtx.fillRect( this._analyzerBars[ this._analyzerBars.length - 1 ].posX + this._barWidth - spacing / 2, 0, spacing, analyzerHeight );
-
-		// add horizontal black lines to create the LED rows
-		for ( let i = this._ledOptions.ledHeight; i < analyzerHeight; i += this._ledOptions.ledHeight + this._ledOptions.spaceV )
-			this._ledsCtx.fillRect( 0, i, this._canvas.width, this._ledOptions.spaceV );
 	}
 
 	/**
@@ -623,61 +595,130 @@ export default class AudioMotionAnalyzer {
 	 * this is called 60 times per second by requestAnimationFrame()
 	 */
 	_draw( timestamp ) {
+		const canvas         = this._canvas,
+			  ctx            = this._canvasCtx,
+			  isOctaveBands  = ( this._mode % 10 != 0 ),
+			  isLedDisplay   = ( this.showLeds  && isOctaveBands && ! this._radial ),
+			  isLumiBars     = ( this._lumiBars && isOctaveBands && ! this._radial ),
+			  analyzerHeight = canvas.height * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0;
 
-		const isOctaveBands  = ( this._mode % 10 != 0 ), // mode > 0 && mode < 10
-			  isLedDisplay   = ( this.showLeds  && isOctaveBands ),
-			  isLumiBars     = ( this._lumiBars && isOctaveBands ),
-			  analyzerHeight = this._canvas.height * ( 1 - this._reflexRatio ) | 0;
+		// radial related constants
+		const centerX        = canvas.width >> 1,
+			  centerY        = canvas.height >> 1,
+			  radius         = this._circScale.width >> 1,
+			  tau            = 2 * Math.PI;
+
+		if ( this._energy.instant > 0 )
+			this._spinAngle += this._spinSpeed * tau / 3600;
+
+		// helper function - convert planar X,Y coordinates to radial coordinates
+		const radialXY = ( x, y ) => {
+			const height = radius + y,
+				  angle  = tau * ( x / canvas.width ) + this._spinAngle;
+
+			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
+		}
+
+		// helper function - draw a polygon of width `w` and height `h` at (x,y) in radial mode
+		const radialPoly = ( x, y, w, h ) => {
+			ctx.moveTo( ...radialXY( x, y ) );
+			ctx.lineTo( ...radialXY( x, y + h ) );
+			ctx.lineTo( ...radialXY( x + w, y + h ) );
+			ctx.lineTo( ...radialXY( x + w, y ) );
+		}
 
 		// clear the canvas, if in overlay mode
 		if ( this.overlay ) {
-			this._canvasCtx.clearRect( 0, 0, this._canvas.width, this._canvas.height );
-			this._canvasCtx.globalAlpha = this.bgAlpha; // set opacity for background paint
+			ctx.clearRect( 0, 0, canvas.width, canvas.height );
+			ctx.globalAlpha = this.bgAlpha; // set opacity for background paint
 		}
 
 		// select background color
-		if ( ! this.showBgColor )	// use black background
-			this._canvasCtx.fillStyle = '#000';
+		if ( ! this.showBgColor || isLedDisplay && ! this.overlay )
+			ctx.fillStyle = '#000';
 		else
-			if ( isLedDisplay )
-				this._canvasCtx.fillStyle = '#111';
-			else // use background color defined by gradient
-				this._canvasCtx.fillStyle = this._gradients[ this._gradient ].bgColor;
+			ctx.fillStyle = this._gradients[ this._gradient ].bgColor;
 
 		// fill the canvas background if needed
 		if ( ! this.overlay || this.showBgColor ) {
-			// the reflection area will not be painted when lumiBars are inactive and:
-			//    showLeds is true (background color is used only in the LEDs area and will be copied into the reflection)
-			// or overlay is true and reflexAlpha == 1 (avoids alpha over alpha problem, in case bgAlpha < 1)
-	 		this._canvasCtx.fillRect( 0, 0, this._canvas.width, ! isLumiBars && ( isLedDisplay || this.overlay && this.reflexAlpha == 1 ) ? analyzerHeight : this._canvas.height );
+			// exclude the reflection area when overlay is true and reflexAlpha == 1
+			// (avoids alpha over alpha difference, in case bgAlpha < 1)
+			ctx.fillRect( 0, 0, canvas.width, ( this.overlay && this.reflexAlpha == 1 ) ? analyzerHeight : canvas.height );
 		}
 
 		// restore global alpha
-		this._canvasCtx.globalAlpha = 1;
+		ctx.globalAlpha = 1;
+
+		// draw dB scale (Y-axis)
+		if ( this.showScaleY && ! isLumiBars && ! this._radial ) {
+			const scaleWidth  = canvas.height / 25 | 0,
+				  scaleHeight = analyzerHeight - ( this.showScale && this.reflexRatio == 0 ? this._labels.height : 0 ),
+				  fontSize    = scaleWidth >> 1,
+				  interval    = analyzerHeight / ( this._analyzer.maxDecibels - this._analyzer.minDecibels );
+
+			ctx.fillStyle = '#888';
+			ctx.font = `${fontSize}px sans-serif`;
+			ctx.textAlign = 'right';
+			ctx.lineWidth = 1;
+
+			for ( let db = this._analyzer.maxDecibels; db > this._analyzer.minDecibels; db -= 5 ) {
+				const posY = ( this._analyzer.maxDecibels - db ) * interval,
+					  even = ( db % 2 == 0 ) | 0;
+
+				if ( even ) {
+					const labelY = posY == 0 ? fontSize * .8 : posY + fontSize * .35;
+					ctx.fillText( db, scaleWidth * .85, labelY );
+					ctx.fillText( db, canvas.width - scaleWidth * .1, labelY );
+					ctx.strokeStyle = '#888';
+					ctx.setLineDash([2,4]);
+					ctx.lineDashOffset = 0;
+				}
+				else {
+					ctx.strokeStyle = '#555';
+					ctx.setLineDash([2,8]);
+					ctx.lineDashOffset = 1;
+				}
+
+				ctx.beginPath();
+				ctx.moveTo( scaleWidth * even, posY );
+				ctx.lineTo( canvas.width - scaleWidth * even, posY );
+				ctx.stroke();
+			}
+			// restore line properties
+			ctx.setLineDash([]);
+			ctx.lineDashOffset = 0;
+		}
 
 		// get a new array of data from the FFT
 		this._analyzer.getByteFrequencyData( this._dataArray );
 
-		// set selected gradient
-		this._canvasCtx.fillStyle = this._gradients[ this._gradient ].gradient;
+		// start drawing path
+		ctx.beginPath();
 
-		// if in "area fill" mode, start the drawing path
-		if ( this._mode == 10 ) {
-			this._canvasCtx.beginPath();
-			this._canvasCtx.moveTo( -this.lineWidth, analyzerHeight );
-		}
+		// in line / graph mode, line starts off screen
+		if ( this._mode == 10 && ! this._radial )
+			ctx.moveTo( -this.lineWidth, analyzerHeight );
 
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing defined by the led options
 		let width = this._barWidth - ( ! isOctaveBands ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
 
-		// if no bar spacing is required, make sure width is integer for pixel accurate calculation
-		if ( this._barSpace == 0 && ! isLedDisplay )
-			width |= 0;
+		// set line width and dash for LEDs effect
+		if ( isLedDisplay ) {
+			ctx.setLineDash( [ this._ledOptions.ledHeight, this._ledOptions.spaceV ] );
+			ctx.lineWidth = width;
+		}
+		else if ( this._barSpace == 0 )
+			width |= 0; // make sure width is integer for pixel accurate calculation, when no bar spacing is required
+
+		// set selected gradient for fill and stroke
+		ctx.fillStyle = ctx.strokeStyle = this._gradients[ this._gradient ].gradient;
 
 		// draw bars / lines
 
-		let bar, barHeight;
+		let bar, barHeight,
+			energy = 0;
+
 		const nBars = this._analyzerBars.length;
 
 		for ( let i = 0; i < nBars; i++ ) {
@@ -697,17 +738,20 @@ export default class AudioMotionAnalyzer {
 					barHeight = Math.max( barHeight, this._dataArray[ j ] );
 			}
 
+			barHeight /= 255;
+			energy += barHeight;
+
 			// set opacity for lumi bars before barHeight value is normalized
 			if ( isLumiBars )
-				this._canvasCtx.globalAlpha = barHeight / 255;
+				ctx.globalAlpha = barHeight;
 
 			if ( isLedDisplay ) { // normalize barHeight to match one of the "led" elements
-				barHeight = ( barHeight / 255 * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
+				barHeight = ( barHeight * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
 				if ( barHeight < 0 )
 					barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
 			}
 			else
-				barHeight = barHeight / 255 * analyzerHeight | 0;
+				barHeight = barHeight * ( this._radial ? centerY - radius : analyzerHeight ) | 0;
 
 			if ( barHeight >= bar.peak ) {
 				bar.peak = barHeight;
@@ -720,7 +764,10 @@ export default class AudioMotionAnalyzer {
 
 			// Draw line / bar
 			if ( this._mode == 10 ) {
-				this._canvasCtx.lineTo( bar.posX, analyzerHeight - barHeight );
+				if ( ! this._radial )
+					ctx.lineTo( bar.posX, analyzerHeight - barHeight );
+				else if ( bar.posX >= 0 ) // avoid overlapping wrap-around frequencies
+					ctx.lineTo( ...radialXY( bar.posX, barHeight ) );
 			}
 			else {
 				if ( this._mode > 0 ) {
@@ -739,27 +786,51 @@ export default class AudioMotionAnalyzer {
 					}
 				}
 
-				if ( isLumiBars ) {
-					this._canvasCtx.fillRect( posX, 0, adjWidth, this._canvas.height );
-					this._canvasCtx.globalAlpha = 1;
+				if ( isLedDisplay ) {
+					const x = posX + width / 2;
+					// draw "unlit" leds
+					if ( this.showBgColor && ! this.overlay ) {
+						const alpha = ctx.globalAlpha;
+						ctx.beginPath();
+						ctx.moveTo( x, 0 );
+						ctx.lineTo( x, analyzerHeight );
+						ctx.strokeStyle = '#7f7f7f22';
+						ctx.globalAlpha = 1;
+						ctx.stroke();
+						// restore properties
+						ctx.strokeStyle = ctx.fillStyle;
+						ctx.globalAlpha = alpha;
+					}
+					ctx.beginPath();
+					ctx.moveTo( x, isLumiBars ? 0 : analyzerHeight );
+					ctx.lineTo( x, isLumiBars ? canvas.height : analyzerHeight - barHeight );
+					ctx.stroke();
 				}
-				else
-					this._canvasCtx.fillRect( posX, analyzerHeight, adjWidth, -barHeight );
+				else if ( ! this._radial ) {
+					ctx.fillRect( posX, isLumiBars ? 0 : analyzerHeight, adjWidth, isLumiBars ? canvas.height : -barHeight );
+				}
+				else if ( bar.posX >= 0 ) {
+					radialPoly( posX, 0, adjWidth, barHeight );
+				}
 			}
 
 			// Draw peak
 			if ( bar.peak > 0 ) {
 				if ( this.showPeaks && ! isLumiBars ) {
 					if ( isLedDisplay ) {
-						this._canvasCtx.fillRect(
+						ctx.fillRect(
 							posX,
 							( this._ledOptions.nLeds - bar.peak / ( analyzerHeight + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ),
 							width,
 							this._ledOptions.ledHeight
 						);
 					}
-					else
-						this._canvasCtx.fillRect( posX, analyzerHeight - bar.peak, adjWidth, 2 );
+					else if ( ! this._radial ) {
+						ctx.fillRect( posX, analyzerHeight - bar.peak, adjWidth, 2 );
+					}
+					else if ( this.mode != 10 && bar.posX >= 0 ) { // radial - no peaks for mode 10 or wrap-around frequencies
+						radialPoly( posX, bar.peak, adjWidth, -2 );
+					}
 				}
 
 				if ( bar.hold )
@@ -771,27 +842,47 @@ export default class AudioMotionAnalyzer {
 			}
 		} // for ( let i = 0; i < l; i++ )
 
+		// restore canvas properties
+		ctx.globalAlpha = 1;
+		ctx.setLineDash([]);
+
+		// Update instant and peak energy
+		this._energy.instant = energy / nBars;
+		if ( this._energy.instant >= this._energy.peak ) {
+			this._energy.peak = this._energy.instant;
+			this._energy.hold = 30;
+		}
+		else {
+			if ( this._energy.hold > 0 )
+				this._energy.hold--;
+			else if ( this._energy.peak > 0 )
+				this._energy.peak *= ( 30 + this._energy.hold-- ) / 30; // decay
+		}
+
 		if ( this._mode == 10 ) { // fill area
-			this._canvasCtx.lineTo( bar.posX + this.lineWidth, analyzerHeight );
+			if ( this._radial )
+				ctx.closePath();
+			else
+				ctx.lineTo( bar.posX + this.lineWidth, analyzerHeight );
 
 			if ( this.lineWidth > 0 ) {
-				this._canvasCtx.lineWidth = this.lineWidth;
-				this._canvasCtx.strokeStyle = this._canvasCtx.fillStyle;
-				this._canvasCtx.stroke();
+				ctx.lineWidth = this.lineWidth;
+				ctx.stroke();
 			}
 
 			if ( this.fillAlpha > 0 ) {
-				this._canvasCtx.globalAlpha = this.fillAlpha;
-				this._canvasCtx.fill();
-				this._canvasCtx.globalAlpha = 1;
+				if ( this._radial ) {
+					// exclude the center circle from the fill area
+					ctx.moveTo( centerX + radius, centerY );
+					ctx.arc( centerX, centerY, radius, 0, tau, true );
+				}
+				ctx.globalAlpha = this.fillAlpha;
+				ctx.fill();
+				ctx.globalAlpha = 1;
 			}
 		}
-		else if ( isLedDisplay ) { // applies LEDs mask over the canvas
-			if ( this.overlay )
-				this._canvasCtx.globalCompositeOperation = 'destination-out';
-
-			this._canvasCtx.drawImage( this._ledsMask, 0, 0 );
-			this._canvasCtx.globalCompositeOperation = 'source-over';
+		else if ( this._radial ) {
+			ctx.fill();
 		}
 
 		// Reflex effect
@@ -799,39 +890,45 @@ export default class AudioMotionAnalyzer {
 			let posY, height;
 			if ( this.reflexFit ) {
 				posY   = 0;
-				height = this._canvas.height - analyzerHeight;
+				height = canvas.height - analyzerHeight;
 			}
 			else {
-				posY   = this._canvas.height - analyzerHeight * 2;
+				posY   = canvas.height - analyzerHeight * 2;
 				height = analyzerHeight;
 			}
 
-			// clear the reflection area with black for LEDs display when not in overlay mode
-			if ( ! this.overlay && isLedDisplay ) {
-				this._canvasCtx.fillStyle = '#000';
-				this._canvasCtx.fillRect( 0, analyzerHeight, this._canvas.width, this._canvas.height - analyzerHeight );
-			}
-
 			// set alpha and brightness for the reflection
-			this._canvasCtx.globalAlpha = this.reflexAlpha;
+			ctx.globalAlpha = this.reflexAlpha;
 			if ( this.reflexBright != 1 )
-				this._canvasCtx.filter = `brightness(${this.reflexBright})`;
+				ctx.filter = `brightness(${this.reflexBright})`;
 
 			// create the reflection
-			this._canvasCtx.setTransform( 1, 0, 0, -1, 0, this._canvas.height );
-			this._canvasCtx.drawImage( this._canvas, 0, 0, this._canvas.width, analyzerHeight, 0, posY, this._canvas.width, height );
+			ctx.setTransform( 1, 0, 0, -1, 0, canvas.height );
+			ctx.drawImage( canvas, 0, 0, canvas.width, analyzerHeight, 0, posY, canvas.width, height );
 
 			// reset changed properties
-			this._canvasCtx.setTransform();
-			this._canvasCtx.filter = 'none';
-			this._canvasCtx.globalAlpha = 1;
+			ctx.setTransform();
+			ctx.filter = 'none';
+			ctx.globalAlpha = 1;
 		}
 
-		if ( this.showScale )
-			this._canvasCtx.drawImage( this._labels, 0, this._canvas.height - this._labels.height );
+		// draw frequency scale (X-axis)
+		if ( this.showScale ) {
+			if ( this._radial ) {
+				ctx.save();
+				ctx.translate( centerX, centerY );
+				if ( this._spinSpeed != 0 )
+					ctx.rotate( this._spinAngle + Math.PI / 2 );
+				ctx.drawImage( this._circScale, -radius, -radius );
+				ctx.restore();
+			}
+			else
+				ctx.drawImage( this._labels, 0, canvas.height - this._labels.height );
+		}
+
+		// calculate and update current frame rate
 
 		this._frame++;
-
 		const elapsed = timestamp - this._time;
 
 		if ( elapsed >= 1000 ) {
@@ -841,16 +938,18 @@ export default class AudioMotionAnalyzer {
 		}
 		if ( this.showFPS ) {
 			const size = 20 * this._pixelRatio;
-			this._canvasCtx.font = `bold ${size}px sans-serif`;
-			this._canvasCtx.fillStyle = '#0f0';
-			this._canvasCtx.textAlign = 'right';
-			this._canvasCtx.fillText( Math.round( this._fps ), this._canvas.width - size, size * 2 );
+			ctx.font = `bold ${size}px sans-serif`;
+			ctx.fillStyle = '#0f0';
+			ctx.textAlign = 'right';
+			ctx.fillText( Math.round( this._fps ), canvas.width - size, size * 2 );
 		}
 
+		// call callback function, if defined
 		if ( this.onCanvasDraw ) {
-			this._canvasCtx.save();
+			ctx.save();
+			ctx.fillStyle = ctx.strokeStyle = this._gradients[ this._gradient ].gradient;
 			this.onCanvasDraw( this );
-			this._canvasCtx.restore();
+			ctx.restore();
 		}
 
 		// schedule next canvas update
@@ -861,12 +960,19 @@ export default class AudioMotionAnalyzer {
 	 * Generate gradients
 	 */
 	_generateGradients() {
-		let grad;
 
 		const analyzerHeight = ( this._lumiBars && this._mode % 10 ) ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio ) | 0;
 
+		// for radial mode
+		const centerX = this._canvas.width >> 1,
+			  centerY = this._canvas.height >> 1,
+			  radius  = this._circScale.width >> 1;
+
 		Object.keys( this._gradients ).forEach( key => {
-			if ( this._gradients[ key ].dir && this._gradients[ key ].dir == 'h' )
+			let grad;
+			if ( this._radial )
+				grad = this._canvasCtx.createRadialGradient( centerX, centerY, centerY, centerX, centerY, radius );
+			else if ( this._gradients[ key ].dir && this._gradients[ key ].dir == 'h' )
 				grad = this._canvasCtx.createLinearGradient( 0, 0, this._canvas.width, 0 );
 			else
 				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, analyzerHeight );
@@ -1030,26 +1136,51 @@ export default class AudioMotionAnalyzer {
 			} );
 		}
 
-		this._createLedMask();
+		this._calculateLedProperties();
 
-		// Create the X-axis scale in the auxiliary canvas
+		// Create the X-axis scale in the auxiliary canvases
 
-		this._labels.width |= 0; // clear canvas
-		this._labelsCtx.fillStyle = '#000c';
+		const scaleHeight = this._canvas.height * .03 | 0, // circular scale height (radial mode)
+			  radius      = this._circScale.width >> 1,    // this is also used as the center X and Y coordinates of the circScale canvas
+			  radialY     = radius - scaleHeight * .75,    // vertical position of text labels in the circular scale
+			  tau         = 2 * Math.PI,
+			  freqLabels  = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
+
+		// clear canvases
+		this._labels.width |= 0;
+		this._circScale.width |= 0;
+
+		this._labelsCtx.fillStyle = this._circScaleCtx.strokeStyle = '#000c';
 		this._labelsCtx.fillRect( 0, 0, this._labels.width, this._labels.height );
 
-		this._labelsCtx.fillStyle = '#fff';
-		this._labelsCtx.font = `${ this._labels.height / 2 }px sans-serif`;
-		this._labelsCtx.textAlign = 'center';
+		this._circScaleCtx.arc( radius, radius, radius - scaleHeight / 2, 0, tau );
+		this._circScaleCtx.lineWidth = scaleHeight;
+		this._circScaleCtx.stroke();
 
-		const freqLabels = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
+		this._labelsCtx.fillStyle = this._circScaleCtx.fillStyle = '#fff';
+		this._labelsCtx.font = `${ this._labels.height >> 1 }px sans-serif`;
+		this._circScaleCtx.font = `${ scaleHeight >> 1 }px sans-serif`;
+		this._labelsCtx.textAlign = this._circScaleCtx.textAlign = 'center';
 
 		for ( const freq of freqLabels ) {
-			this._labelsCtx.fillText(
-				( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
-				bandWidth * ( Math.log10( freq ) - minLog ),
-				this._labels.height * .75
-			);
+			const label = ( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
+				  x     = bandWidth * ( Math.log10( freq ) - minLog );
+
+			this._labelsCtx.fillText( label, x,	this._labels.height * .75 );
+
+			// avoid overlapping wrap-around labels in the circular scale
+			if ( x > 0 && x < this._canvas.width ) {
+				const angle  = tau * ( x / this._canvas.width ),
+					  adjAng = angle - Math.PI / 2, // rotate angles so 0 is at the top
+					  posX   = radialY * Math.cos( adjAng ),
+					  posY   = radialY * Math.sin( adjAng );
+
+				this._circScaleCtx.save();
+				this._circScaleCtx.translate( radius + posX, radius + posY );
+				this._circScaleCtx.rotate( angle );
+				this._circScaleCtx.fillText( label, 0, 0 );
+				this._circScaleCtx.restore();
+			}
 		}
 	}
 
@@ -1090,16 +1221,13 @@ export default class AudioMotionAnalyzer {
 		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
 		this._canvasCtx.lineJoin = 'bevel';
 
-		// (re)generate gradients
-		this._generateGradients();
-
-		// update LED mask canvas dimensions
-		this._ledsMask.width = this._canvas.width;
-		this._ledsMask.height = this._canvas.height;
-
 		// update labels canvas dimensions
 		this._labels.width = this._canvas.width;
 		this._labels.height = this._pixelRatio * ( this.isFullscreen ? 40 : 20 );
+		this._circScale.width = this._circScale.height = this._canvas.height >> 2;
+
+		// (re)generate gradients
+		this._generateGradients();
 
 		// calculate bar positions and led options
 		this._precalculateBarPositions();
@@ -1112,14 +1240,47 @@ export default class AudioMotionAnalyzer {
 	/**
 	 * Set object properties
 	 */
-	_setProperties( options, defaults ) {
+	_setProperties( options, useDefaults ) {
 
+		// settings defaults
+		const defaults = {
+			mode        : 0,
+			fftSize     : 8192,
+			minFreq     : 20,
+			maxFreq     : 22000,
+			smoothing   : 0.5,
+			gradient    : 'classic',
+			minDecibels : -85,
+			maxDecibels : -25,
+			showBgColor : true,
+			showLeds    : false,
+			showScale   : true,
+			showScaleY  : false,
+			showPeaks   : true,
+			showFPS     : false,
+			lumiBars    : false,
+			loRes       : false,
+			reflexRatio : 0,
+			reflexAlpha : 0.15,
+			reflexBright: 1,
+			reflexFit   : true,
+			lineWidth   : 0,
+			fillAlpha   : 1,
+			barSpace    : 0.1,
+			overlay     : false,
+			bgAlpha     : 0.7,
+			radial		: false,
+			spinSpeed   : 0,
+			start       : true
+		};
+
+		// callback functions properties
 		const callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
 
 		// audioCtx is set only at initialization; we handle 'start' after setting all other properties
 		const ignore = [ 'audioCtx', 'start' ];
 
-		if ( defaults )
+		if ( useDefaults || options === undefined )
 			options = Object.assign( defaults, options );
 
 		for ( const prop of Object.keys( options ) ) {

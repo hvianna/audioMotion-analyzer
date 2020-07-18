@@ -17,7 +17,7 @@ a:not([class]):hover {
 }
 
 button {
-	margin: 6px;
+	margin: 5px;
 	padding: 6px;
 	vertical-align: bottom;
 }
@@ -36,14 +36,16 @@ canvas {
 }
 
 fieldset {
-	border: none;
+	border: 1px dotted #666;
 	display: inline-block;
-	margin: 0;
-	padding: 0;
+	height: 70px;
 	vertical-align: top;
 }
 fieldset:disabled {
 	display: none;
+}
+fieldset legend {
+	font-size: 12px;
 }
 
 header {
@@ -67,7 +69,7 @@ img {
 }
 
 input[type="range"] {
-	width: 60px;
+	width: 50px;
 }
 
 input[type="text"],
@@ -94,6 +96,7 @@ ul {
 }
 
 .label {
+	color: #fff;
 	display: inline-block;
 	font-size: 12px;
 	margin: 0 6px;
@@ -120,12 +123,12 @@ ul {
 	color: #fff;
 	content: 'audioMotion-analyzer';
 	left: 0;
-	mask-image: linear-gradient(-75deg, transparent 45%, #000 50%, transparent 55%);
-	mask-size: 200%;
 	position: absolute;
 	top: 0;
-	-webkit-mask-position: -50%;
+	-webkit-mask-image: linear-gradient(-75deg, transparent 45%, #000 50%, transparent 55%);
 	-webkit-text-fill-color: #fff;
+	-webkit-mask-position: -50%;
+	-webkit-mask-size: 200%;
 }
 
 @keyframes shine {
@@ -169,15 +172,32 @@ ul {
 /* fluid full-width analyzer (single instance demo) */
 #container {
 	height: 45vh;
-	margin: 0 calc( 50% - 50vw );
+	margin: 0 calc( 50% - 50vw + 9px );
+}
+
+/* background animation for overlay test on fluid demo */
+.fluid canvas {
+	background-image: url(media/sealoop.gif);
+	background-size: cover;
 }
 
 #container1 {
 	margin-bottom: 15px;
 }
 
+#frequency {
+	width: 100px;
+}
+
 .center {
 	text-align: center;
+}
+
+.flex {
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+	margin: 10px 0;
 }
 
 .main {
@@ -217,4 +237,37 @@ ul {
 
 .overlay:not(:fullscreen):hover canvas {
 	opacity: .5;
+}
+
+/* Image gallery on index page */
+
+.gallery {
+	height: 280px;
+	margin: 0 calc( 50% - 50vw );
+	overflow: hidden;
+	position: relative;
+}
+.gallery:hover .gallery-internal {
+	animation-play-state: paused;
+}
+.gallery img {
+	width: 500px;
+}
+
+.gallery-internal {
+	animation: rotate 45s linear infinite;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	width: 9999px;
+}
+.gallery-internal li {
+	display: inline-block;
+	padding: 0 2px;
+}
+
+@keyframes rotate {
+	0%   { left: 0; }
+	100% { left: -3024px; }
 }

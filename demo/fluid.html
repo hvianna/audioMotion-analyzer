@@ -14,86 +14,55 @@
 		<ul class="header-nav">
 			<li><a href="index.html">Demos</a></li>
             <li><a href="https://audiomotion.dev">Home</a></li>
-			<li><a href="https://github.com/hvianna/audioMotion-analyzer/blob/develop/src/demo.js">View on GitHub</a></li>
+			<li><a href="https://github.com/hvianna/audioMotion-analyzer/tree/master/demo/src/fluid.js">View on GitHub</a></li>
 		</ul>
 	</header>
 
-	<div id="container"></div>
+	<div id="container" class="fluid"></div>
 	<audio id="audio" controls crossorigin="anonymous"></audio>
 
-	<p>
-		Load an audio file from your computer:
-		<input type="file" id="uploadFile" accept="audio/*"><br>
-		Load audio file or stream from an URL:
-		<input type="text" id="remoteURL" size="50" placeholder="https://..."> <button id="loadFromURL">Load</button>
-	</p>
+	<div class="flex">
+		<div>
+			Load audio file:
+			<input type="file" id="uploadFile" accept="audio/*">
+		</div>
+		<div>
+			<button data-prop="isOn" data-func="toggleAnalyzer">Freeze</button>
+			<button data-prop="isFullscreen" data-func="toggleFullscreen">Fullscreen</button>
+		</div>
+	</div>
 
 	<div class="analyzer-configuration">
 		<div class="box center">
-			<label class="label">Visualization Mode
-				<select id="mode" data-setting="mode">
-					<option value="0">Discrete frequencies</option>
-					<option value="10">Line / Area graph</option>
-					<option value="1">1/24th octave bands</option>
-					<option value="2">1/12th octave bands</option>
-					<option value="3">1/8th octave bands</option>
-					<option value="4">1/6th octave bands</option>
-					<option value="5">1/4th octave bands</option>
-					<option value="6">1/3rd octave bands</option>
-					<option value="7">Half octave bands</option>
-					<option value="8">Full octave bands</option>
+			<label class="label">Load a preset
+				<select id="presets"></select>
+			</label>
+
+			<label class="label">mode
+				<select data-setting="mode">
+					<option value="0">0 - Discrete frequencies</option>
+					<option value="1">1 - 1/24th octave bands</option>
+					<option value="2">2 - 1/12th octave bands</option>
+					<option value="3">3 - 1/8th octave bands</option>
+					<option value="4">4 - 1/6th octave bands</option>
+					<option value="5">5 - 1/4th octave bands</option>
+					<option value="6">6 - 1/3rd octave bands</option>
+					<option value="7">7 - Half octave bands</option>
+					<option value="8">8 - Full octave bands</option>
+					<option value="10">10 - Line / Area graph</option>
 				</select>
 			</label>
 
-			<fieldset id="area_options">
-				<label class="label">lineWidth
-					<input type="range" id="line_width" min="0" max="9" step="1" data-setting="lineWidth">
-					<div class="value"></div>
-				</label>
-
-				<label class="label">fillAlpha
-					<input type="range" id="fill_alpha" min="0" max="1" step=".1" data-setting="fillAlpha">
-					<div class="value"></div>
-				</label>
-			</fieldset>
-
-			<fieldset id="bar_options">
-				<label class="label">Bar spacing
-					<select id="bar_space" data-setting="barSpace">
-						<option value="0">None</option>
-						<option value="1">1px (legacy)</option>
-						<option value="2">2px</option>
-						<option value="0.1">10% (default)</option>
-						<option value="0.2">20%</option>
-						<option value="0.25">25%</option>
-						<option value="0.4">40%</option>
-						<option value="0.5">50%</option>
-						<option value="0.75">75%</option>
-						<option value="0.9">90%</option>
-					</select>
-				</label>
-			</fieldset>
-
-			<label class="label">Gradient
-				<select id="gradient" data-setting="gradient">
-					<option value="classic">Classic</option>
-					<option value="prism">Prism</option>
-					<option value="rainbow">Rainbow</option>
+			<label class="label">gradient
+				<select data-setting="gradient">
+					<option value="classic">classic</option>
+					<option value="prism">prism</option>
+					<option value="rainbow">rainbow</option>
 				</select>
 			</label>
 
-			<label class="label">reflexRatio
-				<input type="range" id="reflex_ratio" min="0" max=".9" step=".1" data-setting="reflexRatio">
-				<div class="value"></div>
-			</label>
-
-			<label class="label">reflexAlpha
-				<input type="range" id="reflex_alpha" min="0" max="1" step=".05" data-setting="reflexAlpha">
-				<div class="value"></div>
-			</label>
-
-			<label class="label">FFT size
-				<select id="fft" data-setting="fftSize">
+			<label class="label">fftSize
+				<select data-setting="fftSize">
 					<option value="1024">1024</option>
 					<option value="2048">2048</option>
 					<option value="4096">4096</option>
@@ -103,74 +72,174 @@
 				</select>
 			</label>
 
-			<label class="label">Frequency range
-				<select id="range">
-					<option data-min="20" data-max="22000">20Hz - 22KHz</option>
-					<option data-min="30" data-max="16000">30Hz - 16KHz</option>
-					<option data-min="100" data-max="10000">100Hz - 10KHz</option>
+			<label class="label">minFreq
+				<select data-setting="minFreq">
+					<option value="10">10</option>
+					<option value="20">20</option>
+					<option value="30">30</option>
+					<option value="40">40</option>
+					<option value="60">60</option>
+					<option value="100">100</option>
 				</select>
 			</label>
 
-			<label class="label">sensitivity
-				<input type="range" id="sensitivity" min="0" max="4">
+			<label class="label">maxFreq
+				<select data-setting="maxFreq">
+					<option value="8000">8000</option>
+					<option value="10000">10000</option>
+					<option value="12000">12000</option>
+					<option value="16000">16000</option>
+					<option value="20000">20000</option>
+					<option value="22000">22000</option>
+				</select>
+			</label>
+
+			<label class="label">minDecibels
+				<input type="range" min="-100" max="-60" step="5" data-setting="minDecibels">
+				<div class="value"></div>
+			</label>
+
+			<label class="label">maxDecibels
+				<input type="range" min="-40" max="0" step="5" data-setting="maxDecibels">
 				<div class="value"></div>
 			</label>
 
 			<label class="label">smoothing
-				<input type="range" id="smoothing" min="0" max=".9" step=".1" data-setting="smoothing">
+				<input type="range" min="0" max=".9" step=".1" data-setting="smoothing">
 				<div class="value"></div>
 			</label>
+
 		</div>
 
 		<div class="box center">
-			<button id="btn_bgcolor" data-prop="showBgColor">showBgColor</button>
-			<button id="btn_peaks" data-prop="showPeaks">showPeaks</button>
-			<button id="btn_leds" data-prop="showLeds">showLeds</button>
-			<button id="btn_lumi" data-prop="lumiBars">lumiBars</button>
-			<button id="btn_reflex" data-prop="reflexFit">reflexFit</button>
-			<button id="btn_scale" data-prop="showScale">showScale</button>
-			<button id="btn_lores" data-prop="loRes">loRes</button>
-			<button id="btn_fps" data-prop="showFPS">showFPS</button>
-			<button id="btn_logo" data-prop="showLogo">Logo</button>
-			<button id="btn_freeze" data-prop="isOn" data-func="toggleAnalyzer">Freeze</button>
-			<button id="btn_fullscr" data-prop="isFullscreen" data-func="toggleFullscreen">Fullscreen</button>
+			<fieldset>
+				<legend>modes 1-8 only</legend>
+				<label class="label">barSpace
+					<select data-setting="barSpace">
+						<option value="0">0</option>
+						<option value="0.1">0.1</option>
+						<option value="0.2">0.2</option>
+						<option value="0.25">0.25</option>
+						<option value="0.4">0.4</option>
+						<option value="0.5">0.5</option>
+						<option value="0.75">0.75</option>
+						<option value="0.9">0.9</option>
+						<option value="1">1 (legacy)</option>
+					</select>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>mode 10 only</legend>
+				<label class="label">lineWidth
+					<input type="range" min="0" max="9" step="1" data-setting="lineWidth">
+					<div class="value"></div>
+				</label>
+
+				<label class="label">fillAlpha
+					<input type="range" min="0" max="1" step=".1" data-setting="fillAlpha">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Radial effect</legend>
+				<button data-prop="radial">radial</button>
+
+				<label class="label">spinSpeed
+					<input type="range" min="-5" max="5" step="1" data-setting="spinSpeed">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Reflex effect</legend>
+				<label class="label">reflexRatio
+					<input type="range" min="0" max=".9" step=".1" data-setting="reflexRatio">
+					<div class="value"></div>
+				</label>
+
+				<label class="label">reflexAlpha
+					<input type="range" min="0" max="1" step=".05" data-setting="reflexAlpha">
+					<div class="value"></div>
+				</label>
+
+				<label class="label">reflexBright
+					<input type="range" min="0" max="2" step=".1" data-setting="reflexBright">
+					<div class="value"></div>
+				</label>
+
+				<button data-prop="reflexFit">reflexFit</button>
+			</fieldset>
+
+			<fieldset>
+				<legend>Overlay mode</legend>
+				<button data-prop="overlay">overlay</button>
+				<label class="label">bgAlpha
+					<input type="range" id="bg_alpha" min="0" max="1" step=".1" data-setting="bgAlpha">
+					<div class="value"></div>
+				</label>
+			</fieldset>
 		</div>
+
+		<div class="box center">
+			<button data-prop="showBgColor">showBgColor</button>
+			<button data-prop="showPeaks">showPeaks</button>
+			<button data-prop="showLeds">showLeds</button>
+			<button data-prop="lumiBars">lumiBars</button>
+			<button data-prop="showScale">showScale</button>
+			<button data-prop="showScaleY">showScaleY</button>
+			<button data-prop="loRes">loRes</button>
+			<button data-prop="showFPS">showFPS</button>
+		</div>
+
+		<div class="box center">
+			<fieldset>
+				<legend>Features added via callback</legend>
+				<button data-feature="showLogo">Logo</button>
+				<button data-feature="energyMeter">Energy meter</button>
+				<button data-feature="songProgress">Progress bar (radial)</button>
+			</fieldset>
+
+			<fieldset>
+				<legend>Test tones</legend>
+				<label class="label">Waveform
+					<select id="wave">
+						<option>sawtooth</option>
+						<option selected>sine</option>
+						<option>square</option>
+						<option>triangle</option>
+					</select>
+				</label>
+
+				<label class="label">Note
+					<select id="note">
+						<option value="">Use custom</option>
+						<option value="16.35">C0 - 16.35 Hz</option>
+						<option value="32.70">C1 - 32.70 Hz</option>
+						<option value="65.41">C2 - 65.41 Hz</option>
+						<option value="130.81">C3 - 130.81 Hz</option>
+						<option value="261.63">C4 - 261.63 Hz</option>
+						<option value="440" selected>A4 - 440 Hz</option>
+						<option value="523.25">C5 - 523.25 Hz</option>
+						<option value="1046.5">C6 - 1046.5 Hz</option>
+						<option value="2093">C7 - 2093 Hz</option>
+						<option value="4186.01">C8 - 4186.01 Hz</option>
+						<option value="7902.13">B8 - 7902.13 Hz</option>
+					</select>
+				</label>
+
+				<label class="label">Custom freq. (Hz)
+					<input id="frequency" type="text">
+				</label>
+
+				<button id="btn_play">Play</button>
+				<button id="btn_soundoff">STOP</button>
+			</fieldset>
 	</div>
 
-	<div class="box center">
-		<span class="title">Test tones:</span>
-		<label class="label">Waveform
-			<select id="wave">
-				<option>sawtooth</option>
-				<option selected>sine</option>
-				<option>square</option>
-				<option>triangle</option>
-			</select>
-		</label>
+		</div>
 
-		<label class="label">Note
-			<select id="note">
-				<option value="">Use custom</option>
-				<option value="16.35">C0 - 16.35 Hz</option>
-				<option value="32.70">C1 - 32.70 Hz</option>
-				<option value="65.41">C2 - 65.41 Hz</option>
-				<option value="130.81">C3 - 130.81 Hz</option>
-				<option value="261.63">C4 - 261.63 Hz</option>
-				<option value="440" selected>A4 - 440 Hz</option>
-				<option value="523.25">C5 - 523.25 Hz</option>
-				<option value="1046.5">C6 - 1046.5 Hz</option>
-				<option value="2093">C7 - 2093 Hz</option>
-				<option value="4186.01">C8 - 4186.01 Hz</option>
-				<option value="7902.13">B8 - 7902.13 Hz</option>
-			</select>
-		</label>
-
-		<label class="label">Custom frequency (Hz)
-			<input id="frequency" type="text">
-		</label>
-
-		<button id="btn_play">PLAY</button>
-		<button id="btn_soundoff">SOUND OFF</button>
 	</div>
 
 	<div class="credits">
