@@ -1,6 +1,24 @@
 Changelog
 =========
 
+## version 2.4.0 (2020-07-18)
+
+### Added: {docsify-ignore}
+
++ New **Radial** visualization - see [`radial`](README.md#radial-boolean) and [`spinSpeed`](README.md#spinspeed-number) properties and try them in the [demos](https://audiomotion.dev/demo)!
++ [`showScaleY`](README.md#showscaley-boolean) property for displaying the level (dB) scale on the analyzer's vertical axis;
++ [`energy`](README.md#energy-number-read-only) and [`peakEnergy`](README.md#peakenergy-number-read-only) read-only properties;
++ [Known issues](README.md#known-issues) section added to the documentation.
+
+### Changed: {docsify-ignore}
+
++ [`setOptions()`](README.md#setoptions-options-) called with no argument now **resets all configuration options to their default values** (it used to raise an error);
++ The LED effect code has been refactored to improve appearance and compatibility with other (future) effects;
++ "Unlit" LEDs are no longer displayed in **overlay mode** - see the notice in [`showBgColor`](README.md#showbgcolor-boolean) documentation;
++ Canvas `fillStyle` and `strokeStyle` properties are now set with the current gradient before calling the [`onCanvasDraw`](README.md#oncanvasdraw-function) callback function;
++ Updated all [demos](https://audiomotion.dev/demo) with more straightforward access to configuration options.
+
+
 ## version 2.3.0 (2020-06-08)
 
 ### Added: {docsify-ignore}
