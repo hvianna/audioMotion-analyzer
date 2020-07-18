@@ -167,9 +167,9 @@ document.querySelectorAll('#wave, #note, #frequency').forEach( el => {
 });
 
 document.getElementById('btn_play').addEventListener( 'click', () => {
-		oscillator.type = document.getElementById('wave').value;
-		oscillator.frequency.setValueAtTime( document.getElementById('note').value || document.getElementById('frequency').value, audioCtx.currentTime );
-		gainNode.gain.setValueAtTime( .2, audioCtx.currentTime );
+	oscillator.type = document.getElementById('wave').value;
+	oscillator.frequency.setValueAtTime( document.getElementById('note').value || document.getElementById('frequency').value, audioCtx.currentTime );
+	gainNode.gain.setValueAtTime( .2, audioCtx.currentTime );
 });
 
 document.getElementById('btn_soundoff').addEventListener( 'click', () => gainNode.gain.setValueAtTime( 0, audioCtx.currentTime ) );
