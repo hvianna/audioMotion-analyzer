@@ -802,10 +802,10 @@ export default class AudioMotionAnalyzer {
 				else
 					barHeight = barHeight * ( this._radial ? centerY - radius : analyzerHeight ) | 0;
 
-				if ( barHeight >= bar.peak ) {
-					bar.peak = barHeight;
-					bar.hold = 30; // set peak hold time to 30 frames (0.5s)
-					bar.accel = 0;
+				if ( barHeight >= bar.peak[ channel ] ) {
+					bar.peak[ channel ] = barHeight;
+					bar.hold[ channel ] = 30; // set peak hold time to 30 frames (0.5s)
+					bar.accel[ channel ] = 0;
 				}
 
 				let posX = bar.posX;
@@ -864,29 +864,29 @@ export default class AudioMotionAnalyzer {
 				}
 
 				// Draw peak
-				if ( bar.peak > 0 ) {
+				if ( bar.peak[ channel ] > 0 ) {
 					if ( this.showPeaks && ! isLumiBars ) {
 						if ( isLedDisplay ) {
 							ctx.fillRect(
 								posX,
-								( this._ledOptions.nLeds - bar.peak / ( ( analyzerHeight << channel ) + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ),
+								( this._ledOptions.nLeds - bar.peak[ channel ] / ( ( analyzerHeight << channel ) + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ),
 								width,
 								this._ledOptions.ledHeight
 							);
 						}
 						else if ( ! this._radial ) {
-							ctx.fillRect( posX, ( analyzerHeight << channel ) - bar.peak, adjWidth, 2 );
+							ctx.fillRect( posX, ( analyzerHeight << channel ) - bar.peak[ channel ], adjWidth, 2 );
 						}
 						else if ( this.mode != 10 && bar.posX >= 0 ) { // radial - no peaks for mode 10 or wrap-around frequencies
-							radialPoly( posX, bar.peak, adjWidth, -2 );
+							radialPoly( posX, bar.peak[ channel ], adjWidth, -2 );
 						}
 					}
 
-					if ( bar.hold )
-						bar.hold--;
+					if ( bar.hold[ channel ] )
+						bar.hold[ channel ]--;
 					else {
-						bar.accel++;
-						bar.peak -= bar.accel;
+						bar.accel[ channel ]++;
+						bar.peak[ channel ] -= bar.accel[ channel ];
 					}
 				}
 			} // for ( let i = 0; i < l; i++ )
@@ -1086,7 +1086,7 @@ export default class AudioMotionAnalyzer {
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
 				if ( pos > lastPos ) {
-					this._analyzerBars.push( { posX: pos, dataIdx: i, endIdx: 0, factor: 0, peak: 0, hold: 0, accel: 0 } );
+					this._analyzerBars.push( { posX: pos, dataIdx: i, endIdx: 0, factor: 0, peak: [0,0], hold: [], accel: [] } );
 					lastPos = pos;
 				} // otherwise, add this frequency to the last bar's range
 				else if ( this._analyzerBars.length )
@@ -1179,9 +1179,9 @@ export default class AudioMotionAnalyzer {
 //					freq, // nominal frequency for this band
 //					range: [ this.binToFreq( idx ), this.binToFreq( endIdx || idx ) ], // actual range of frequencies
 					factor: 0,
-					peak: 0,
-					hold: 0,
-					accel: 0
+					peak: [0,0],
+					hold: [],
+					accel: []
 				} );
 
 			} );
