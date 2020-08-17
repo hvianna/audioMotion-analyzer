@@ -346,6 +346,8 @@ export default class AudioMotionAnalyzer {
 
 		// connect output node to destination
 		output.connect( this._audioCtx.destination );
+
+		this._setCanvas(); // needed to resize the circular scale and regenerate gradients (to do)
 	}
 
 	// Read only properties
@@ -649,7 +651,7 @@ export default class AudioMotionAnalyzer {
 		// radial related constants
 		const centerX        = canvas.width >> 1,
 			  centerY        = canvas.height >> 1,
-			  radius         = this._circScale.width >> 1,
+			  radius         = ( this._circScale.width >> 1 ) - ( this._stereo * this._canvas.height * .015 | 0 ),
 			  tau            = 2 * Math.PI;
 
 		if ( this._energy.instant > 0 )
@@ -808,6 +810,9 @@ export default class AudioMotionAnalyzer {
 					bar.accel[ channel ] = 0;
 				}
 
+				if ( this._radial && channel == 1 )
+					barHeight *= -1;
+
 				let posX = bar.posX;
 				let adjWidth = width; // bar width may need small adjustments for some bars, when barSpace == 0
 
@@ -878,7 +883,7 @@ export default class AudioMotionAnalyzer {
 							ctx.fillRect( posX, ( analyzerHeight << channel ) - bar.peak[ channel ], adjWidth, 2 );
 						}
 						else if ( this.mode != 10 && bar.posX >= 0 ) { // radial - no peaks for mode 10 or wrap-around frequencies
-							radialPoly( posX, bar.peak[ channel ], adjWidth, -2 );
+							radialPoly( posX, bar.peak[ channel ] * ( channel == 1 ? -1 : 1 ), adjWidth, -2 );
 						}
 					}
 
@@ -970,7 +975,7 @@ export default class AudioMotionAnalyzer {
 				ctx.translate( centerX, centerY );
 				if ( this._spinSpeed != 0 )
 					ctx.rotate( this._spinAngle + Math.PI / 2 );
-				ctx.drawImage( this._circScale, -radius, -radius );
+				ctx.drawImage( this._circScale, -this._circScale.width >> 1, -this._circScale.width >> 1 );
 				ctx.restore();
 			}
 			else
@@ -1275,7 +1280,10 @@ export default class AudioMotionAnalyzer {
 		// update labels canvas dimensions
 		this._labels.width = this._canvas.width;
 		this._labels.height = this._pixelRatio * ( this.isFullscreen ? 40 : 20 );
-		this._circScale.width = this._circScale.height = this._canvas.height >> 2;
+
+		// the radius of the radial analyzer is 75% of the (main) canvas height for stereo and 25% for mono
+		// in stereo mode, the scale is positioned exactly between both channels, by adding the bar width (3% of main canvas height) to the scale canvas size
+		this._circScale.width = this._circScale.height = this._canvas.height * ( this._stereo ? .75 : .25 ) + ( this._stereo * this._canvas.height * .03 | 0 );
 
 		// (re)generate gradients
 		this._generateGradients();
