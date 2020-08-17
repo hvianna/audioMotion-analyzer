@@ -646,7 +646,8 @@ export default class AudioMotionAnalyzer {
 			  isOctaveBands  = ( this._mode % 10 != 0 ),
 			  isLedDisplay   = ( this.showLeds  && isOctaveBands && ! this._radial ),
 			  isLumiBars     = ( this._lumiBars && isOctaveBands && ! this._radial ),
-			  analyzerHeight = ( canvas.height * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0 ) >> this._stereo;
+			  channelHeight  = canvas.height >> this._stereo,
+			  analyzerHeight = channelHeight * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0;
 
 		// radial related constants
 		const centerX        = canvas.width >> 1,
@@ -861,7 +862,7 @@ export default class AudioMotionAnalyzer {
 						ctx.stroke();
 					}
 					else if ( ! this._radial ) {
-						ctx.fillRect( posX, isLumiBars ? 0 : analyzerHeight << channel, adjWidth, isLumiBars ? canvas.height : -barHeight );
+						ctx.fillRect( posX, isLumiBars ? 0 : channelHeight * channel + analyzerHeight, adjWidth, isLumiBars ? channelHeight << channel : -barHeight );
 					}
 					else if ( bar.posX >= 0 ) {
 						radialPoly( posX, 0, adjWidth, barHeight );
@@ -942,9 +943,9 @@ export default class AudioMotionAnalyzer {
 			// Reflex effect
 			if ( this._reflexRatio > 0 && ! isLumiBars ) {
 				let posY, height;
-				if ( this.reflexFit ) {
-					posY   = 0;
-					height = canvas.height - analyzerHeight;
+				if ( this.reflexFit || this._stereo ) { // always fit reflex in stereo mode
+					posY   = this._stereo ? channelHeight * ( 1 - channel ) : 0;
+					height = channelHeight - analyzerHeight;
 				}
 				else {
 					posY   = canvas.height - analyzerHeight * 2;
@@ -958,7 +959,7 @@ export default class AudioMotionAnalyzer {
 
 				// create the reflection
 				ctx.setTransform( 1, 0, 0, -1, 0, canvas.height );
-				ctx.drawImage( canvas, 0, 0, canvas.width, analyzerHeight, 0, posY, canvas.width, height );
+				ctx.drawImage( canvas, 0, channelHeight * channel, canvas.width, analyzerHeight, 0, posY, canvas.width, height );
 
 				// reset changed properties
 				ctx.setTransform();
