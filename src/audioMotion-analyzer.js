@@ -740,13 +740,6 @@ export default class AudioMotionAnalyzer {
 		for ( let i = 0; i < this._stereo + 1; i++ )
 			this._analyzer[ i ].getByteFrequencyData( this._dataArray[ i ] );
 
-		// start drawing path
-		ctx.beginPath();
-
-		// in line / graph mode, line starts off screen
-		if ( this._mode == 10 && ! this._radial )
-			ctx.moveTo( -this.lineWidth, analyzerHeight );
-
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing defined by the led options
 		let width = this._barWidth - ( ! isOctaveBands ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
@@ -762,11 +755,6 @@ export default class AudioMotionAnalyzer {
 		// set selected gradient for fill and stroke
 		ctx.fillStyle = ctx.strokeStyle = this._gradients[ this._gradient ].gradient;
 
-		// draw bars / lines
-
-		let bar, barHeight,
-			energy = 0;
-
 		const nBars = this._analyzerBars.length;
 
 		for ( let channel = 0; channel < this._stereo + 1; channel++ ) {
@@ -776,9 +764,21 @@ export default class AudioMotionAnalyzer {
 				  channelBottom  = channelHeight << channel,
 				  analyzerBottom = channelTop + analyzerHeight;
 
+			// start drawing path
+			ctx.beginPath();
+
+			// in line / graph mode, line starts off screen
+			if ( this._mode == 10 && ! this._radial )
+				ctx.moveTo( -this.lineWidth, analyzerBottom );
+
+			// draw bars / lines
+
+			let energy = 0;
+
 			for ( let i = 0; i < nBars; i++ ) {
 
-				bar = this._analyzerBars[ i ];
+				let bar = this._analyzerBars[ i ],
+					barHeight = 0;
 
 				if ( bar.endIdx == 0 ) { // single FFT bin
 					barHeight = fftData[ bar.dataIdx ];
@@ -787,7 +787,6 @@ export default class AudioMotionAnalyzer {
 						barHeight += ( fftData[ bar.dataIdx + 1 ] - barHeight ) * bar.factor;
 				}
 				else { 					// range of bins
-					barHeight = 0;
 					// use the highest value in the range
 					for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
 						barHeight = Math.max( barHeight, fftData[ j ] );
@@ -919,7 +918,7 @@ export default class AudioMotionAnalyzer {
 				if ( this._radial )
 					ctx.closePath();
 				else
-					ctx.lineTo( bar.posX + this.lineWidth, analyzerBottom );
+					ctx.lineTo( canvas.width + this.lineWidth, analyzerBottom );
 
 				if ( this.lineWidth > 0 ) {
 					ctx.lineWidth = this.lineWidth;
