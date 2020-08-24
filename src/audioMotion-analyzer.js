@@ -756,6 +756,8 @@ export default class AudioMotionAnalyzer {
 		// set selected gradient for fill and stroke
 		ctx.fillStyle = ctx.strokeStyle = this._gradients[ this._gradient ].gradient;
 
+		let energy = 0;
+
 		const nBars = this._analyzerBars.length;
 
 		for ( let channel = 0; channel < this._stereo + 1; channel++ ) {
@@ -773,8 +775,6 @@ export default class AudioMotionAnalyzer {
 				ctx.moveTo( -this.lineWidth, analyzerBottom );
 
 			// draw bars / lines
-
-			let energy = 0;
 
 			for ( let i = 0; i < nBars; i++ ) {
 
@@ -902,20 +902,8 @@ export default class AudioMotionAnalyzer {
 			// restore global alpha
 			ctx.globalAlpha = 1;
 
-			// Update instant and peak energy
-			this._energy.instant = energy / nBars;
-			if ( this._energy.instant >= this._energy.peak ) {
-				this._energy.peak = this._energy.instant;
-				this._energy.hold = 30;
-			}
-			else {
-				if ( this._energy.hold > 0 )
-					this._energy.hold--;
-				else if ( this._energy.peak > 0 )
-					this._energy.peak *= ( 30 + this._energy.hold-- ) / 30; // decay
-			}
-
-			if ( this._mode == 10 ) { // fill area
+			// Fill/stroke drawing path for mode 10 and radial
+			if ( this._mode == 10 ) {
 				if ( this._radial )
 					ctx.closePath();
 				else
@@ -969,6 +957,19 @@ export default class AudioMotionAnalyzer {
 			}
 
 		} // for ( let channel = 0; channel < this._stereo + 1; channel++ ) {
+
+		// Update instant and peak energy
+		this._energy.instant = energy / ( nBars << this._stereo );
+		if ( this._energy.instant >= this._energy.peak ) {
+			this._energy.peak = this._energy.instant;
+			this._energy.hold = 30;
+		}
+		else {
+			if ( this._energy.hold > 0 )
+				this._energy.hold--;
+			else if ( this._energy.peak > 0 )
+				this._energy.peak *= ( 30 + this._energy.hold-- ) / 30; // decay
+		}
 
 		// restore solid lines
 		ctx.setLineDash([]);
