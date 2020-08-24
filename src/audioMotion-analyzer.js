@@ -591,7 +591,8 @@ export default class AudioMotionAnalyzer {
 		if ( this._mode % 10 == 0 || ! this._initDone )
 			return;
 
-		const analyzerHeight = this._lumiBars ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio ) | 0;
+		const canvasHeight   = this._canvas.height >> this._stereo,
+			  analyzerHeight = this._lumiBars ? canvasHeight : canvasHeight * ( 1 - this._reflexRatio ) | 0;
 
 		let spaceV = Math.min( 6, analyzerHeight / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
 		let nLeds;
@@ -877,7 +878,7 @@ export default class AudioMotionAnalyzer {
 						if ( isLedDisplay ) {
 							// convert the bar height to the position of the corresponding led element
 							const fullLeds = bar.peak[ channel ] / ( analyzerHeight + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0,
-								  posY = ( this._ledOptions.nLeds - fullLeds ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV );
+								  posY = ( this._ledOptions.nLeds - fullLeds - 1 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV );
 
 							ctx.fillRect( posX,	channelTop + posY, width, this._ledOptions.ledHeight );
 						}
