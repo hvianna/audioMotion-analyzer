@@ -1,15 +1,10 @@
 
 ## About
 
-I originally wrote this as part of my [audioMotion](https://audiomotion.me) spectrum analyzer and music player.
+**audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer in a vanilla JavaScript module
+with no dependencies. It's highly customizable and optimized for small size and high performance.
 
-This package provides only the graphic spectrum analyzer, as a standalone module, for you to use in your own JavaScript projects.
-
-## Online demos
-
-[![demo-animation](demo/media/demo.gif)](https://audiomotion.dev/demo/)
-
-?> https://audiomotion.dev/demo/
+I originally wrote this for my [**audioMotion**](https://audiomotion.me) spectrum analyzer and music player. Check it out too!
 
 ## Features
 
@@ -21,7 +16,15 @@ This package provides only the graphic spectrum analyzer, as a standalone module
 + Comes with 3 predefined color gradients - easily add your own!
 + No dependencies, less than 20kB minified
 
+## Online demos
+
+[![demo-animation](demo/media/demo.gif)](https://audiomotion.dev/demo/)
+
+?> https://audiomotion.dev/demo/
+
 ## Usage
+
+### Using npm and webpack
 
 Install with npm:
 
@@ -29,13 +32,44 @@ Install with npm:
 $ npm install audiomotion-analyzer
 ```
 
-ES6 import:
+Use ES6 import syntax:
 
 ```js
 import AudioMotionAnalyzer from 'audiomotion-analyzer';
 ```
 
-Minimal constructor:
+### As a native JavaScript module (ESM)
+
+Simply copy the `audioMotion-analyzer.js` file from the `src` folder to your project folder and add the line below to your HTML file:
+
+```html
+<body>
+  .
+  .
+	<script src="main.js" type="module"></script>
+</body>
+```
+
+And in your `main.js` file, use:
+
+```js
+import AudioMotionAnalyzer from './audiomotion-analyzer.js';
+```
+
+Please note that JavaScript security requirements don't allow loading modules via `file://` URLs.
+You'll need a web server, such as [http-server](https://github.com/http-party/http-server), to test files locally.
+
+## Constructor
+
+`new AudioMotionAnalyzer( [container], [{options}] )`
+
+Creates a new instance of audioMotion-analyzer.
+
+The analyzer canvas will be created and appended to the HTML element referenced by `container`.
+
+If `container` is undefined, the canvas will be appended to the document's body.
+
+Usage example:
 
 ```js
 const audioMotion = new AudioMotionAnalyzer(
@@ -47,16 +81,6 @@ const audioMotion = new AudioMotionAnalyzer(
 ```
 
 This will insert the analyzer canvas inside the *#container* element and start the visualization of audio coming from the *#audio* element.
-
-## Constructor
-
-`new AudioMotionAnalyzer( [container], [{options}] )`
-
-Creates a new instance of audioMotion-analyzer.
-
-The analyzer canvas will be created and appended to the HTML element referenced by `container`.
-
-If `container` is undefined, the canvas will be appended to the document's body.
 
 ### Options
 
