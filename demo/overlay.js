@@ -1,1 +1,172 @@
-!function(t){var e={};function i(s){if(e[s])return e[s].exports;var a=e[s]={i:s,l:!1,exports:{}};return t[s].call(a.exports,a,a.exports,i),a.l=!0,a.exports}i.m=t,i.c=e,i.d=function(t,e,s){i.o(t,e)||Object.defineProperty(t,e,{enumerable:!0,get:s})},i.r=function(t){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(t,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(t,"__esModule",{value:!0})},i.t=function(t,e){if(1&e&&(t=i(t)),8&e)return t;if(4&e&&"object"==typeof t&&t&&t.__esModule)return t;var s=Object.create(null);if(i.r(s),Object.defineProperty(s,"default",{enumerable:!0,value:t}),2&e&&"string"!=typeof t)for(var a in t)i.d(s,a,function(e){return t[e]}.bind(null,a));return s},i.n=function(t){var e=t&&t.__esModule?function(){return t.default}:function(){return t};return i.d(e,"a",e),e},i.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)},i.p="",i(i.s=3)}([function(t,e,i){"use strict";i.d(e,"a",(function(){return s}));class s{constructor(t,e={}){this._initDone=!1,this._gradients={classic:{bgColor:"#111",colorStops:["hsl( 0, 100%, 50% )",{pos:.6,color:"hsl( 60, 100%, 50% )"},"hsl( 120, 100%, 50% )"]},prism:{bgColor:"#111",colorStops:["hsl( 0, 100%, 50% )","hsl( 60, 100%, 50% )","hsl( 120, 100%, 50% )","hsl( 180, 100%, 50% )","hsl( 240, 100%, 50% )"]},rainbow:{bgColor:"#111",dir:"h",colorStops:["hsl( 0, 100%, 50% )","hsl( 60, 100%, 50% )","hsl( 120, 100%, 50% )","hsl( 180, 100%, 47% )","hsl( 240, 100%, 58% )","hsl( 300, 100%, 50% )","hsl( 360, 100%, 50% )"]}},this._container=t||document.body,this._defaultWidth=this._container.clientWidth||640,this._defaultHeight=this._container.clientHeight||270;const i=window.AudioContext||window.webkitAudioContext;if(e.hasOwnProperty("audioCtx")){if(!(e.audioCtx instanceof i))throw new a("ERR_INVALID_AUDIO_CONTEXT","Provided audio context is not valid");this._audioCtx=e.audioCtx}else try{this._audioCtx=new i}catch(t){throw new a("ERR_AUDIO_CONTEXT_FAIL","Could not create audio context. Web Audio API not supported?")}this._analyzer=this._audioCtx.createAnalyser(),this._audioSource=e.source?this.connectAudio(e.source):void 0,this._analyzer.connect(this._audioCtx.destination),this._energy={instant:0,peak:0,hold:0},this._canvas=document.createElement("canvas"),this._canvas.style="max-width: 100%;",this._container.appendChild(this._canvas),this._canvasCtx=this._canvas.getContext("2d"),this._labels=document.createElement("canvas"),this._labelsCtx=this._labels.getContext("2d"),this._circScale=document.createElement("canvas"),this._circScaleCtx=this._circScale.getContext("2d"),window.addEventListener("resize",()=>{this._width&&this._height||this._setCanvas("resize")}),this._canvas.addEventListener("fullscreenchange",()=>this._setCanvas("fschange")),this._setProperties(e,!0),this._initDone=!0,this._setCanvas("create")}get barSpace(){return this._barSpace}set barSpace(t){this._barSpace=Number(t)||0,this._calculateBarSpacePx()}get fftSize(){return this._analyzer.fftSize}set fftSize(t){this._analyzer.fftSize=t,this._dataArray=new Uint8Array(this._analyzer.frequencyBinCount),this._precalculateBarPositions()}get gradient(){return this._gradient}set gradient(t){if(!this._gradients.hasOwnProperty(t))throw new a("ERR_UNKNOWN_GRADIENT",`Unknown gradient: '${t}'`);this._gradient=t}get height(){return this._height}set height(t){this._height=t,this._setCanvas("user")}get width(){return this._width}set width(t){this._width=t,this._setCanvas("user")}get mode(){return this._mode}set mode(t){const e=0|t;if(!(e>=0&&e<=10&&9!=e))throw new a("ERR_INVALID_MODE","Invalid mode: "+t);this._mode=e,this._precalculateBarPositions(),this._reflexRatio>0&&this._generateGradients()}get loRes(){return this._loRes}set loRes(t){this._loRes=!!t,this._setCanvas("lores")}get lumiBars(){return this._lumiBars}set lumiBars(t){this._lumiBars=!!t,this._reflexRatio>0&&(this._generateGradients(),this._calculateLedProperties())}get radial(){return this._radial}set radial(t){this._radial=!!t,this._generateGradients()}get spinSpeed(){return this._spinSpeed}set spinSpeed(t){t=Number(t)||0,void 0!==this._spinSpeed&&0!=t||(this._spinAngle=-Math.PI/2),this._spinSpeed=t}get reflexRatio(){return this._reflexRatio}set reflexRatio(t){if((t=Number(t)||0)<0||t>=1)throw new a("ERR_REFLEX_OUT_OF_RANGE","Reflex ratio must be >= 0 and < 1");this._reflexRatio=t,this._generateGradients(),this._calculateLedProperties()}get minFreq(){return this._minFreq}set minFreq(t){if(t<1)throw new a("ERR_FREQUENCY_TOO_LOW","Frequency values must be >= 1");this._minFreq=t,this._precalculateBarPositions()}get maxFreq(){return this._maxFreq}set maxFreq(t){if(t<1)throw new a("ERR_FREQUENCY_TOO_LOW","Frequency values must be >= 1");this._maxFreq=t,this._precalculateBarPositions()}get minDecibels(){return this._analyzer.minDecibels}set minDecibels(t){this._analyzer.minDecibels=t}get maxDecibels(){return this._analyzer.maxDecibels}set maxDecibels(t){this._analyzer.maxDecibels=t}get smoothing(){return this._analyzer.smoothingTimeConstant}set smoothing(t){this._analyzer.smoothingTimeConstant=t}get analyzer(){return this._analyzer}get audioCtx(){return this._audioCtx}get audioSource(){return this._audioSource}get canvas(){return this._canvas}get canvasCtx(){return this._canvasCtx}get dataArray(){return this._dataArray}get energy(){return this._energy.instant}get fsWidth(){return this._fsWidth}get fsHeight(){return this._fsHeight}get fps(){return this._fps}get isFullscreen(){return(document.fullscreenElement||document.webkitFullscreenElement)===this._canvas}get isOn(){return void 0!==this._animationReq}get peakEnergy(){return this._energy.peak}get pixelRatio(){return this._pixelRatio}get version(){return"2.4.0"}connectAudio(t){const e=this._audioCtx.createMediaElementSource(t);return e.connect(this._analyzer),e}binToFreq(t){return t*this._audioCtx.sampleRate/this._analyzer.fftSize}freqToBin(t,e){["floor","ceil"].includes(e)||(e="round");const i=Math[e](t*this._analyzer.fftSize/this._audioCtx.sampleRate);return i<this._analyzer.frequencyBinCount?i:this._analyzer.frequencyBinCount-1}registerGradient(t,e){if("string"!=typeof t||0==t.trim().length)throw new a("ERR_GRADIENT_INVALID_NAME","Gradient name must be a non-empty string");if("object"!=typeof e)throw new a("ERR_GRADIENT_NOT_AN_OBJECT","Gradient options must be an object");if(void 0===e.colorStops||e.colorStops.length<2)throw new a("ERR_GRADIENT_MISSING_COLOR","Gradient must define at least two colors");this._gradients[t]={},void 0!==e.bgColor?this._gradients[t].bgColor=e.bgColor:this._gradients[t].bgColor="#111",void 0!==e.dir&&(this._gradients[t].dir=e.dir),this._gradients[t].colorStops=e.colorStops,this._generateGradients()}setCanvasSize(t,e){this._width=t,this._height=e,this._setCanvas("user")}setFreqRange(t,e){if(t<1||e<1)throw new a("ERR_FREQUENCY_TOO_LOW","Frequency values must be >= 1");this._minFreq=Math.min(t,e),this._maxFreq=Math.max(t,e),this._precalculateBarPositions()}setOptions(t){this._setProperties(t)}setSensitivity(t,e){this._analyzer.minDecibels=Math.min(t,e),this._analyzer.maxDecibels=Math.max(t,e)}toggleAnalyzer(t){const e=this.isOn;return void 0===t&&(t=!e),e&&!t?(cancelAnimationFrame(this._animationReq),this._animationReq=void 0):!e&&t&&(this._frame=this._fps=0,this._time=performance.now(),this._animationReq=requestAnimationFrame(t=>this._draw(t))),this.isOn}toggleFullscreen(){this.isFullscreen?document.exitFullscreen?document.exitFullscreen():document.webkitExitFullscreen&&document.webkitExitFullscreen():this._canvas.requestFullscreen?this._canvas.requestFullscreen():this._canvas.webkitRequestFullscreen&&this._canvas.webkitRequestFullscreen()}_calculateBarSpacePx(){this._barSpacePx=Math.min(this._barWidth-1,this._barSpace>0&&this._barSpace<1?this._barWidth*this._barSpace:this._barSpace)}_calculateLedProperties(){if(this._mode%10==0||!this._initDone)return;const t=this._lumiBars?this._canvas.height:this._canvas.height*(1-this._reflexRatio)|0;let e,i=Math.min(6,t/(90*this._pixelRatio)|0);switch(this._mode){case 8:i=Math.min(16,t/(33*this._pixelRatio)|0),e=24;break;case 7:i=Math.min(8,t/(67*this._pixelRatio)|0),e=48;break;case 6:e=64;break;case 5:case 4:e=80;break;case 3:e=96;break;case 2:i=Math.min(4,t/(135*this._pixelRatio)|0),e=128;break;case 1:i=Math.min(3,Math.max(2,t/(180*this._pixelRatio)|0)),e=128}i*=this._pixelRatio,e=Math.min(e,(t+i)/(2*i)|0),this._ledOptions={nLeds:e,spaceH:this._barWidth*(1==this._mode?.45:this._mode<5?.225:.125),spaceV:i,ledHeight:(t+i)/e-i}}_draw(t){const e=this._canvas,i=this._canvasCtx,s=this._mode%10!=0,a=this.showLeds&&s&&!this._radial,h=this._lumiBars&&s&&!this._radial,n=e.height*(h||this._radial?1:1-this._reflexRatio)|0,r=e.width>>1,l=e.height>>1,o=this._circScale.width>>1,c=2*Math.PI;this._energy.instant>0&&(this._spinAngle+=this._spinSpeed*c/3600);const d=(t,i)=>{const s=o+i,a=c*(t/e.width)+this._spinAngle;return[r+s*Math.cos(a),l+s*Math.sin(a)]},_=(t,e,s,a)=>{i.moveTo(...d(t,e)),i.lineTo(...d(t,e+a)),i.lineTo(...d(t+s,e+a)),i.lineTo(...d(t+s,e))};if(this.overlay&&(i.clearRect(0,0,e.width,e.height),i.globalAlpha=this.bgAlpha),!this.showBgColor||a&&!this.overlay?i.fillStyle="#000":i.fillStyle=this._gradients[this._gradient].bgColor,this.overlay&&!this.showBgColor||i.fillRect(0,0,e.width,this.overlay&&1==this.reflexAlpha?n:e.height),i.globalAlpha=1,this.showScaleY&&!h&&!this._radial){const t=e.height/25|0,s=(this.showScale&&0==this.reflexRatio&&this._labels.height,t>>1),a=n/(this._analyzer.maxDecibels-this._analyzer.minDecibels);i.fillStyle="#888",i.font=s+"px sans-serif",i.textAlign="right",i.lineWidth=1;for(let h=this._analyzer.maxDecibels;h>this._analyzer.minDecibels;h-=5){const n=(this._analyzer.maxDecibels-h)*a,r=h%2==0|0;if(r){const a=0==n?.8*s:n+.35*s;i.fillText(h,.85*t,a),i.fillText(h,e.width-.1*t,a),i.strokeStyle="#888",i.setLineDash([2,4]),i.lineDashOffset=0}else i.strokeStyle="#555",i.setLineDash([2,8]),i.lineDashOffset=1;i.beginPath(),i.moveTo(t*r,n),i.lineTo(e.width-t*r,n),i.stroke()}i.setLineDash([]),i.lineDashOffset=0}this._analyzer.getByteFrequencyData(this._dataArray),i.beginPath(),10!=this._mode||this._radial||i.moveTo(-this.lineWidth,n);let u=this._barWidth-(s?Math.max(a?this._ledOptions.spaceH:0,this._barSpacePx):0);a?(i.setLineDash([this._ledOptions.ledHeight,this._ledOptions.spaceV]),i.lineWidth=u):0==this._barSpace&&(u|=0),i.fillStyle=i.strokeStyle=this._gradients[this._gradient].gradient;let g,p,f=0;const m=this._analyzerBars.length;for(let t=0;t<m;t++){if(g=this._analyzerBars[t],0==g.endIdx)p=this._dataArray[g.dataIdx],g.factor&&(p+=(this._dataArray[g.dataIdx+1]-p)*g.factor);else{p=0;for(let t=g.dataIdx;t<=g.endIdx;t++)p=Math.max(p,this._dataArray[t])}p/=255,f+=p,h&&(i.globalAlpha=p),a?(p=(p*this._ledOptions.nLeds|0)*(this._ledOptions.ledHeight+this._ledOptions.spaceV)-this._ledOptions.spaceV,p<0&&(p=0)):p=p*(this._radial?l-o:n)|0,p>=g.peak&&(g.peak=p,g.hold=30,g.accel=0);let s=g.posX,r=u;if(10==this._mode)this._radial?g.posX>=0&&i.lineTo(...d(g.posX,p)):i.lineTo(g.posX,n-p);else if(this._mode>0&&(a?s+=Math.max(this._ledOptions.spaceH/2,this._barSpacePx/2):0==this._barSpace?(s|=0,t>0&&s>this._analyzerBars[t-1].posX+u&&(s--,r++)):s+=this._barSpacePx/2),a){const t=s+u/2;if(this.showBgColor&&!this.overlay){const e=i.globalAlpha;i.beginPath(),i.moveTo(t,0),i.lineTo(t,n),i.strokeStyle="#7f7f7f22",i.globalAlpha=1,i.stroke(),i.strokeStyle=i.fillStyle,i.globalAlpha=e}i.beginPath(),i.moveTo(t,h?0:n),i.lineTo(t,h?e.height:n-p),i.stroke()}else this._radial?g.posX>=0&&_(s,0,r,p):i.fillRect(s,h?0:n,r,h?e.height:-p);g.peak>0&&(this.showPeaks&&!h&&(a?i.fillRect(s,(this._ledOptions.nLeds-g.peak/(n+this._ledOptions.spaceV)*this._ledOptions.nLeds|0)*(this._ledOptions.ledHeight+this._ledOptions.spaceV),u,this._ledOptions.ledHeight):this._radial?10!=this.mode&&g.posX>=0&&_(s,g.peak,r,-2):i.fillRect(s,n-g.peak,r,2)),g.hold?g.hold--:(g.accel++,g.peak-=g.accel))}if(i.globalAlpha=1,i.setLineDash([]),this._energy.instant=f/m,this._energy.instant>=this._energy.peak?(this._energy.peak=this._energy.instant,this._energy.hold=30):this._energy.hold>0?this._energy.hold--:this._energy.peak>0&&(this._energy.peak*=(30+this._energy.hold--)/30),10==this._mode?(this._radial?i.closePath():i.lineTo(g.posX+this.lineWidth,n),this.lineWidth>0&&(i.lineWidth=this.lineWidth,i.stroke()),this.fillAlpha>0&&(this._radial&&(i.moveTo(r+o,l),i.arc(r,l,o,0,c,!0)),i.globalAlpha=this.fillAlpha,i.fill(),i.globalAlpha=1)):this._radial&&i.fill(),this._reflexRatio>0&&!h){let t,s;this.reflexFit?(t=0,s=e.height-n):(t=e.height-2*n,s=n),i.globalAlpha=this.reflexAlpha,1!=this.reflexBright&&(i.filter=`brightness(${this.reflexBright})`),i.setTransform(1,0,0,-1,0,e.height),i.drawImage(e,0,0,e.width,n,0,t,e.width,s),i.setTransform(),i.filter="none",i.globalAlpha=1}this.showScale&&(this._radial?(i.save(),i.translate(r,l),0!=this._spinSpeed&&i.rotate(this._spinAngle+Math.PI/2),i.drawImage(this._circScale,-o,-o),i.restore()):i.drawImage(this._labels,0,e.height-this._labels.height)),this._frame++;const x=t-this._time;if(x>=1e3&&(this._fps=this._frame/(x/1e3),this._frame=0,this._time=t),this.showFPS){const t=20*this._pixelRatio;i.font=`bold ${t}px sans-serif`,i.fillStyle="#0f0",i.textAlign="right",i.fillText(Math.round(this._fps),e.width-t,2*t)}this.onCanvasDraw&&(i.save(),i.fillStyle=i.strokeStyle=this._gradients[this._gradient].gradient,this.onCanvasDraw(this),i.restore()),this._animationReq=requestAnimationFrame(t=>this._draw(t))}_generateGradients(){const t=this._lumiBars&&this._mode%10?this._canvas.height:this._canvas.height*(1-this._reflexRatio)|0,e=this._canvas.width>>1,i=this._canvas.height>>1,s=this._circScale.width>>1;Object.keys(this._gradients).forEach(a=>{let h;h=this._radial?this._canvasCtx.createRadialGradient(e,i,i,e,i,s):this._gradients[a].dir&&"h"==this._gradients[a].dir?this._canvasCtx.createLinearGradient(0,0,this._canvas.width,0):this._canvasCtx.createLinearGradient(0,0,0,t),this._gradients[a].colorStops&&this._gradients[a].colorStops.forEach((t,e)=>{"object"==typeof t?h.addColorStop(t.pos,t.color):h.addColorStop(e/(this._gradients[a].colorStops.length-1),t)}),this._gradients[a].gradient=h})}_precalculateBarPositions(){if(!this._initDone)return;let t,e;if(this._analyzerBars=[],this._mode%10==0){this._barWidth=1,t=Math.log10(this._minFreq),e=this._canvas.width/(Math.log10(this._maxFreq)-t);const i=this.freqToBin(this._minFreq,"floor"),s=this.freqToBin(this._maxFreq);let a=-999;for(let h=i;h<=s;h++){const i=this.binToFreq(h),s=Math.round(e*(Math.log10(i)-t));s>a?(this._analyzerBars.push({posX:s,dataIdx:h,endIdx:0,factor:0,peak:0,hold:0,accel:0}),a=s):this._analyzerBars.length&&(this._analyzerBars[this._analyzerBars.length-1].endIdx=h)}}else{let i;i=8==this._mode?24:7==this._mode?12:6==this._mode?8:5==this._mode?6:this._mode;const s=2**(1/24),a=440*s**-114;let h,n=[],r=0;for(;(h=a*s**r)<=this._maxFreq;)h>=this._minFreq&&r%i==0&&n.push(h),r++;t=Math.log10(n[0]),e=this._canvas.width/(Math.log10(n[n.length-1])-t),this._barWidth=this._canvas.width/n.length,this._calculateBarSpacePx();let l=0,o=-1,c=0;n.forEach((t,e)=>{const i=this.freqToBin(t);let s,a;if(s=l>0&&l+1<=i?l+1:i,s==o)c++;else{if(c>1)for(let t=1;t<=c;t++)this._analyzerBars[this._analyzerBars.length-t].factor=(c-t)/c;o=s,c=1}l=a=i,void 0!==n[e+1]&&(a=this.freqToBin(n[e+1]),a-i>1&&(l+=Math.round((a-i)/2)));const h=l-s>0?l:0;this._analyzerBars.push({posX:e*this._barWidth,dataIdx:s,endIdx:h,factor:0,peak:0,hold:0,accel:0})})}this._calculateLedProperties();const i=.03*this._canvas.height|0,s=this._circScale.width>>1,a=s-.75*i,h=2*Math.PI,n=[16,31,63,125,250,500,1e3,2e3,4e3,8e3,16e3];this._labels.width|=0,this._circScale.width|=0,this._labelsCtx.fillStyle=this._circScaleCtx.strokeStyle="#000c",this._labelsCtx.fillRect(0,0,this._labels.width,this._labels.height),this._circScaleCtx.arc(s,s,s-i/2,0,h),this._circScaleCtx.lineWidth=i,this._circScaleCtx.stroke(),this._labelsCtx.fillStyle=this._circScaleCtx.fillStyle="#fff",this._labelsCtx.font=(this._labels.height>>1)+"px sans-serif",this._circScaleCtx.font=(i>>1)+"px sans-serif",this._labelsCtx.textAlign=this._circScaleCtx.textAlign="center";for(const i of n){const n=i>=1e3?i/1e3+"k":i,r=e*(Math.log10(i)-t);if(this._labelsCtx.fillText(n,r,.75*this._labels.height),r>0&&r<this._canvas.width){const t=h*(r/this._canvas.width),e=t-Math.PI/2,i=a*Math.cos(e),l=a*Math.sin(e);this._circScaleCtx.save(),this._circScaleCtx.translate(s+i,s+l),this._circScaleCtx.rotate(t),this._circScaleCtx.fillText(n,0,0),this._circScaleCtx.restore()}}}_setCanvas(t){this._initDone&&(this._pixelRatio=window.devicePixelRatio,this._loRes&&(this._pixelRatio/=2),this._fsWidth=Math.max(window.screen.width,window.screen.height)*this._pixelRatio,this._fsHeight=Math.min(window.screen.height,window.screen.width)*this._pixelRatio,this.isFullscreen?(this._canvas.width=this._fsWidth,this._canvas.height=this._fsHeight):(this._canvas.width=(this._width||this._container.clientWidth||this._defaultWidth)*this._pixelRatio,this._canvas.height=(this._height||this._container.clientHeight||this._defaultHeight)*this._pixelRatio),2==this._pixelRatio&&window.screen.height<=540&&(this._pixelRatio=1),this.overlay||(this._canvasCtx.fillStyle="#000",this._canvasCtx.fillRect(0,0,this._canvas.width,this._canvas.height)),this._canvasCtx.lineJoin="bevel",this._labels.width=this._canvas.width,this._labels.height=this._pixelRatio*(this.isFullscreen?40:20),this._circScale.width=this._circScale.height=this._canvas.height>>2,this._generateGradients(),this._precalculateBarPositions(),this.onCanvasResize&&this.onCanvasResize(t,this))}_setProperties(t,e){const i=["onCanvasDraw","onCanvasResize"],s=["audioCtx","start"];(e||void 0===t)&&(t=Object.assign({mode:0,fftSize:8192,minFreq:20,maxFreq:22e3,smoothing:.5,gradient:"classic",minDecibels:-85,maxDecibels:-25,showBgColor:!0,showLeds:!1,showScale:!0,showScaleY:!1,showPeaks:!0,showFPS:!1,lumiBars:!1,loRes:!1,reflexRatio:0,reflexAlpha:.15,reflexBright:1,reflexFit:!0,lineWidth:0,fillAlpha:1,barSpace:.1,overlay:!1,bgAlpha:.7,radial:!1,spinSpeed:0,start:!0},t));for(const e of Object.keys(t))-1!==i.indexOf(e)&&"function"!=typeof t[e]?this[e]=void 0:-1===s.indexOf(e)&&(this[e]=t[e]);void 0!==t.start&&this.toggleAnalyzer(t.start)}}class a extends Error{constructor(t,e){super(e),this.name="AudioMotionError",this.code=t}}},,,function(t,e,i){"use strict";i.r(e);var s=i(0);const a=document.getElementById("video"),h=document.getElementById("container"),n=document.getElementById("presets"),r=[{name:"Defaults",options:void 0},{name:"Classic LEDs",options:{mode:3,barSpace:.5,bgAlpha:.7,gradient:"classic",lumiBars:!1,radial:!1,reflexRatio:0,showBgColor:!0,showLeds:!0,showPeaks:!0,overlay:!0}},{name:"Mirror wave",options:{mode:10,bgAlpha:.7,fillAlpha:.6,gradient:"rainbow",lineWidth:2,lumiBars:!1,radial:!1,reflexAlpha:1,reflexBright:1,reflexRatio:.5,showBgColor:!1,showPeaks:!1,overlay:!0}},{name:"Radial",options:{mode:3,barSpace:.1,bgAlpha:.5,gradient:"prism",maxFreq:16e3,radial:!0,showBgColor:!0,showLeds:!1,showPeaks:!0,overlay:!0}},{name:"Reflex Bars",options:{mode:5,barSpace:.25,bgAlpha:.5,lumiBars:!1,radial:!1,reflexAlpha:.5,reflexFit:!0,reflexRatio:.3,showBgColor:!1,showLeds:!1,showPeaks:!0,overlay:!0}}];try{var l=new s.a(h,{source:a})}catch(t){h.innerHTML=`<p>audioMotion-analyzer failed with error: <em>${t}</em></p>`}function o(t){const e=t.nextElementSibling;e&&"value"==e.className&&(e.innerText=t.value)}function c(){document.querySelectorAll("[data-setting]").forEach(t=>t.value=l[t.dataset.setting]),document.querySelectorAll('input[type="range"]').forEach(t=>o(t)),document.querySelectorAll("button[data-prop]").forEach(t=>{const e=l[t.dataset.prop];t.classList.toggle("active","isOn"==t.dataset.prop?!e:e)})}document.getElementById("version").innerText=l.version,document.querySelectorAll("button[data-prop]").forEach(t=>{t.addEventListener("click",()=>{t.dataset.func?l[t.dataset.func]():l[t.dataset.prop]=!l[t.dataset.prop],t.classList.toggle("active")})}),document.querySelectorAll("[data-setting]").forEach(t=>{t.addEventListener("change",()=>l[t.dataset.setting]=t.value)}),n.addEventListener("change",()=>{l.setOptions(r[n.value].options),c()}),document.querySelectorAll('input[type="range"]').forEach(t=>t.addEventListener("change",()=>o(t))),document.getElementById("btn_fullscr").addEventListener("click",()=>{document.fullscreenElement?document.exitFullscreen?document.exitFullscreen():document.webkitExitFullscreen&&document.webkitExitFullscreen():h.requestFullscreen?h.requestFullscreen():h.webkitRequestFullscreen&&h.webkitRequestFullscreen()}),r.forEach((t,e)=>{const i=new Option(t.name,e);n.append(i)}),n.value=3,l.setOptions(r[n.value].options),c(),window.addEventListener("click",()=>{"suspended"==l.audioCtx.state&&l.audioCtx.resume()})}]);
+/**
+ * audioMotion-analyzer Overlay demo
+ *
+ * https://github.com/hvianna/audioMotion-analyzer
+ */
+
+import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
+
+const videoEl = document.getElementById('video'),
+	  container = document.getElementById('container'),
+	  presetSelection = document.getElementById('presets');
+
+// Visualization presets
+const presets = [
+	{
+		name: 'Defaults',
+		options: undefined
+	},
+	{
+		name: 'Classic LEDs',
+		options: {
+			mode: 3,
+			barSpace: .5,
+			bgAlpha: .7,
+			gradient: 'classic',
+			lumiBars: false,
+			radial: false,
+			reflexRatio: 0,
+			showBgColor: true,
+			showLeds: true,
+			showPeaks: true,
+			overlay: true
+		}
+	},
+	{
+		name: 'Mirror wave',
+		options: {
+			mode: 10,
+			bgAlpha: .7,
+			fillAlpha: .6,
+			gradient: 'rainbow',
+			lineWidth: 2,
+			lumiBars: false,
+			radial: false,
+			reflexAlpha: 1,
+			reflexBright: 1,
+			reflexRatio: .5,
+			showBgColor: false,
+			showPeaks: false,
+			overlay: true
+		}
+	},
+	{
+		name: 'Radial',
+		options: {
+			mode: 3,
+			barSpace: .1,
+			bgAlpha: .5,
+			gradient: 'prism',
+			maxFreq: 16000,
+			radial: true,
+			showBgColor: true,
+			showLeds: false,
+			showPeaks: true,
+			overlay: true
+		}
+	},
+	{
+		name: 'Reflex Bars',
+		options: {
+			mode: 5,
+			barSpace: .25,
+			bgAlpha: .5,
+			lumiBars: false,
+			radial: false,
+			reflexAlpha: .5,
+			reflexFit: true,
+			reflexRatio: .3,
+			showBgColor: false,
+			showLeds: false,
+			showPeaks: true,
+			overlay: true
+		}
+	}
+];
+
+// Create audioMotion-analyzer object
+
+try {
+	var audioMotion = new AudioMotionAnalyzer( container, {	source: videoEl	} );
+}
+catch( err ) {
+	container.innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
+}
+
+// Display package version in the footer
+document.getElementById('version').innerText = audioMotion.version;
+
+// Event listeners for UI controls
+
+document.querySelectorAll('button[data-prop]').forEach( el => {
+	el.addEventListener( 'click', () => {
+		if ( el.dataset.func )
+			audioMotion[ el.dataset.func ]();
+		else
+			audioMotion[ el.dataset.prop ] = ! audioMotion[ el.dataset.prop ];
+		el.classList.toggle( 'active' );
+	});
+});
+
+document.querySelectorAll('[data-setting]').forEach( el => {
+	el.addEventListener( 'change', () => audioMotion[ el.dataset.setting ] = el.value );
+});
+
+presetSelection.addEventListener( 'change', () => {
+	audioMotion.setOptions( presets[ presetSelection.value ].options );
+	updateUI();
+});
+
+// Display value of ranged input elements
+document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
+
+// Handle fullscreen mode for container element
+document.getElementById('btn_fullscr').addEventListener( 'click', () => {
+	if ( document.fullscreenElement ) {
+		if ( document.exitFullscreen )
+			document.exitFullscreen();
+		else if ( document.webkitExitFullscreen )
+			document.webkitExitFullscreen();
+	}
+	else {
+		if ( container.requestFullscreen )
+			container.requestFullscreen();
+		else if ( container.webkitRequestFullscreen )
+			container.webkitRequestFullscreen();
+	}
+});
+
+// Populate the UI presets select element
+presets.forEach( ( preset, index ) => {
+	const option = new Option( preset.name, index );
+	presetSelection.append( option );
+});
+
+// Initialize settings with options from a preset
+presetSelection.value = 3;
+audioMotion.setOptions( presets[ presetSelection.value ].options );
+updateUI();
+
+// Resume audio context if in suspended state (browsers' autoplay policy)
+window.addEventListener( 'click', () => {
+	if ( audioMotion.audioCtx.state == 'suspended' )
+		audioMotion.audioCtx.resume();
+});
+
+// Update value div of range input elements
+function updateRangeElement( el ) {
+	const s = el.nextElementSibling;
+	if ( s && s.className == 'value' )
+		s.innerText = el.value;
+}
+
+// Update UI elements to reflect the analyzer's current settings
+function updateUI() {
+	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
+
+	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
+	document.querySelectorAll('button[data-prop]').forEach( el => {
+		const p = audioMotion[ el.dataset.prop ];
+		el.classList.toggle( 'active', el.dataset.prop == 'isOn' ? ! p : p );
+	});
+}

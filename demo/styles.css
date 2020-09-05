@@ -169,8 +169,13 @@ ul {
 	margin-left: .5em;
 }
 
-/* fluid full-width analyzer (single instance demo) */
+/* minimal demo */
 #container {
+	height: 60vh;
+}
+
+/* fluid full-width analyzer (single instance demo) */
+#container.fluid {
 	height: 45vh;
 	margin: 0 calc( 50% - 50vw + 9px );
 }
