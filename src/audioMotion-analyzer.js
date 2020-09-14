@@ -651,7 +651,7 @@ export default class AudioMotionAnalyzer {
 
 		// draw dB scale (Y-axis)
 		if ( this.showScaleY && ! isLumiBars && ! this._radial ) {
-			const scaleWidth  = canvas.height / 25 | 0,
+			const scaleWidth  = this._labels.height,
 				  scaleHeight = analyzerHeight - ( this.showScale && this.reflexRatio == 0 ? this._labels.height : 0 ),
 				  fontSize    = scaleWidth >> 1,
 				  interval    = analyzerHeight / ( this._analyzer.maxDecibels - this._analyzer.minDecibels );
@@ -1221,9 +1221,9 @@ export default class AudioMotionAnalyzer {
 		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
 		this._canvasCtx.lineJoin = 'bevel';
 
-		// update labels canvas dimensions
+		// update dimensions of auxiliary canvases
 		this._labels.width = this._canvas.width;
-		this._labels.height = this._pixelRatio * ( this.isFullscreen ? 40 : 20 );
+		this._labels.height = Math.max( 20 * this._pixelRatio, this._canvas.height / 27 | 0 );
 		this._circScale.width = this._circScale.height = this._canvas.height >> 2;
 
 		// (re)generate gradients
