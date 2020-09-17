@@ -1188,6 +1188,7 @@ export default class AudioMotionAnalyzer {
 	 * Internal function to change canvas dimensions on demand
 	 */
 	_setCanvas( reason ) {
+		// if initialization is not finished, quit
 		if ( ! this._initDone )
 			return;
 
@@ -1199,40 +1200,43 @@ export default class AudioMotionAnalyzer {
 		this._fsWidth = Math.max( window.screen.width, window.screen.height ) * this._pixelRatio;
 		this._fsHeight = Math.min( window.screen.height, window.screen.width ) * this._pixelRatio;
 
-		if ( this.isFullscreen ) {
-			this._canvas.width = this._fsWidth;
-			this._canvas.height = this._fsHeight;
-		}
-		else {
-			this._canvas.width = ( this._width || this._container.clientWidth || this._defaultWidth ) * this._pixelRatio;
-			this._canvas.height = ( this._height || this._container.clientHeight || this._defaultHeight ) * this._pixelRatio;
-		}
+		const isFullscreen = this.isFullscreen,
+			  newWidth  = isFullscreen ? this._fsWidth  : ( this._width  || this._container.clientWidth  || this._defaultWidth )  * this._pixelRatio | 0,
+			  newHeight = isFullscreen ? this._fsHeight : ( this._height || this._container.clientHeight || this._defaultHeight ) * this._pixelRatio | 0;
 
 		// workaround for wrong dPR reported on Android TV
 		if ( this._pixelRatio == 2 && window.screen.height <= 540 )
 			this._pixelRatio = 1;
 
-		// if not in overlay mode, paint the canvas black
-		if ( ! this.overlay ) {
-			this._canvasCtx.fillStyle = '#000';
-			this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
+		// check if canvas dimensions need to be updated
+		if ( this._canvas.width != newWidth || this._canvas.height != newHeight ) {
+			// apply new dimensions
+			this._canvas.width  = newWidth;
+			this._canvas.height = newHeight;
+
+			// if not in overlay mode, paint the canvas black
+			if ( ! this.overlay ) {
+				this._canvasCtx.fillStyle = '#000';
+				this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
+			}
+
+			// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
+			this._canvasCtx.lineJoin = 'bevel';
+
+			// update dimensions of auxiliary canvases
+			this._labels.width = this._canvas.width;
+			this._labels.height = Math.max( 20 * this._pixelRatio, this._canvas.height / 27 | 0 );
+			this._circScale.width = this._circScale.height = this._canvas.height >> 2;
+
+			// (re)generate gradients
+			this._generateGradients();
+
+			// calculate bar positions and led options
+			this._precalculateBarPositions();
 		}
 
-		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
-		this._canvasCtx.lineJoin = 'bevel';
-
-		// update dimensions of auxiliary canvases
-		this._labels.width = this._canvas.width;
-		this._labels.height = Math.max( 20 * this._pixelRatio, this._canvas.height / 27 | 0 );
-		this._circScale.width = this._circScale.height = this._canvas.height >> 2;
-
-		// (re)generate gradients
-		this._generateGradients();
-
-		// calculate bar positions and led options
-		this._precalculateBarPositions();
-
-		// call callback function, if defined
+		// the callback call is kept out of the previous conditional, so that both 'reasons' are sent on fullscreen changes
+		// (a `resize` event is also triggered and different browsers don't seem to agree on the precedence of these events)
 		if ( this.onCanvasResize )
 			this.onCanvasResize( reason, this );
 	}
