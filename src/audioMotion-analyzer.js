@@ -1248,35 +1248,35 @@ export default class AudioMotionAnalyzer {
 		if ( this._pixelRatio == 2 && window.screen.height <= 540 )
 			this._pixelRatio = 1;
 
-		// check if canvas dimensions need to be updated
-		if ( this._canvas.width != newWidth || this._canvas.height != newHeight ) {
-			// apply new dimensions
-			this._canvas.width  = newWidth;
-			this._canvas.height = newHeight;
+		// if canvas dimensions haven't changed, quit
+		if ( this._canvas.width == newWidth && this._canvas.height == newHeight )
+			return;
 
-			// if not in overlay mode, paint the canvas black
-			if ( ! this.overlay ) {
-				this._canvasCtx.fillStyle = '#000';
-				this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
-			}
+		// apply new dimensions
+		this._canvas.width  = newWidth;
+		this._canvas.height = newHeight;
 
-			// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
-			this._canvasCtx.lineJoin = 'bevel';
-
-			// update dimensions of auxiliary canvases
-			this._labels.width = this._canvas.width;
-			this._labels.height = Math.max( 20 * this._pixelRatio, this._canvas.height / 27 | 0 );
-			this._circScale.width = this._circScale.height = this._canvas.height >> 2;
-
-			// (re)generate gradients
-			this._generateGradients();
-
-			// calculate bar positions and led options
-			this._precalculateBarPositions();
+		// if not in overlay mode, paint the canvas black
+		if ( ! this.overlay ) {
+			this._canvasCtx.fillStyle = '#000';
+			this._canvasCtx.fillRect( 0, 0, this._canvas.width, this._canvas.height );
 		}
 
-		// the callback call is kept out of the previous conditional, so that both 'reasons' are sent on fullscreen changes
-		// (a `resize` event is also triggered and different browsers don't seem to agree on the precedence of these events)
+		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
+		this._canvasCtx.lineJoin = 'bevel';
+
+		// update dimensions of auxiliary canvases
+		this._labels.width = this._canvas.width;
+		this._labels.height = Math.max( 20 * this._pixelRatio, this._canvas.height / 27 | 0 );
+		this._circScale.width = this._circScale.height = this._canvas.height >> 2;
+
+		// (re)generate gradients
+		this._generateGradients();
+
+		// calculate bar positions and led options
+		this._precalculateBarPositions();
+
+		// call the callback function, if defined
 		if ( this.onCanvasResize )
 			this.onCanvasResize( reason, this );
 	}
