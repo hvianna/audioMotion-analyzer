@@ -62,6 +62,7 @@ const presets = [
 			showBgColor: true,
 			showLeds: false,
 			showPeaks: true,
+			spinSpeed: 2,
 			overlay: true
 		}
 	},

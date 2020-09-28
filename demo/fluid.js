@@ -94,7 +94,7 @@ try {
 			onCanvasDraw: drawCallback, // callback function used to add custom features for this demo
 			onCanvasResize: ( reason, instance ) => {
 				console.log( `[${reason}] canvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
-				if ( reason == 'fschange' )
+				if ( reason != 'create' )
 					updateUI();
 			}
 		}

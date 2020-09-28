@@ -27,7 +27,11 @@ try {
 			document.getElementById( `container${i}` ),
 			{
 				audioCtx,
-				onCanvasResize: ( reason, instance ) => { if ( reason == 'fschange' ) updateUI(); }
+				onCanvasResize: ( reason, instance ) => {
+					console.log( `[${instance.canvas.parentElement.id.slice(-1)}] ${reason}: ${instance.canvas.width} x ${instance.canvas.height}` );
+					if ( reason != 'create' )
+						updateUI();
+				}
 			}
 		);
 
@@ -97,7 +101,7 @@ document.querySelectorAll('[name="analyzer"]').forEach( el => {
 // user can also select an analyzer by clicking on it
 document.querySelectorAll('canvas').forEach( el => {
 	el.addEventListener( 'click', () => {
-		selectedAnalyzer = el.parentNode.id.slice(-1);
+		selectedAnalyzer = el.parentElement.id.slice(-1);
 		document.querySelector(`[name="analyzer"][value="${selectedAnalyzer}"`).checked = true;
 		updateUI();
 	});
@@ -160,7 +164,7 @@ function updateRangeElement( el ) {
 
 // Update UI elements to reflect the selected analyzer's current settings
 function updateUI() {
-	document.querySelectorAll('canvas').forEach( el => el.classList.toggle( 'selected', el.parentNode.id.slice(-1) == selectedAnalyzer ) );
+	document.querySelectorAll('canvas').forEach( el => el.classList.toggle( 'selected', el.parentElement.id.slice(-1) == selectedAnalyzer ) );
 
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ selectedAnalyzer ][ el.dataset.setting ] );
 
