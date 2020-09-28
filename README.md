@@ -580,11 +580,15 @@ Two arguments are passed: a string with the reason why the function was called (
 
 Reason | Description
 -------|------------
-`'create'` | canvas created by the class constructor
+`'create'` | canvas created by the audioMotion-analyzer [constructor](#constructor)
 `'fschange'` | analyzer entered or left fullscreen mode
-`'lores'` | low resolution mode toggled on or off
-`'resize'` | browser window resized (only when [`width`](#width-number) and/or [`height`](#height-number) are undefined)
+`'lores'` | [low resolution option](#lores-boolean) toggled on or off
+`'resize'` | browser window or canvas container element were resized
 `'user'` | canvas dimensions changed by user script, via [`height`](#height-number) and [`width`](#width-number) properties, [`setCanvasSize()`](#setcanvassize-width-height-) or [`setOptions()`](#setoptions-options-) methods
+
+?> As of version 2.5.0, the callback is executed only when canvas dimensions *effectively* change from the previous state. See the [release notes](https://github.com/hvianna/audioMotion-analyzer/releases/tag/2.5.0).
+
+!> On **Safari**, fullscreen changes will be reported as `'resize'` to the callback and `'fschange'` will never be issued, due to lack of support for the [fullscreenchange event](https://developer.mozilla.org/en-US/docs/Web/API/Element/fullscreenchange_event).
 
 Usage example:
 
@@ -598,7 +602,7 @@ const audioMotion = new AudioMotionAnalyzer(
         }
     }
 );
-````
+```
 
 ## Methods
 
@@ -717,22 +721,23 @@ ERR_UNKNOWN_GRADIENT       | User tried to [select a gradient](#gradient-string)
 
 ## Known Issues
 
-### reflexBright won't work on some browsers
+### reflexBright won't work on some browsers {docsify-ignore}
 
 [`reflexBright`](#reflexbright-number) feature relies on the [`filter`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter) property of the Canvas API,
 which is [currently not supported in some browsers](https://caniuse.com/#feat=mdn-api_canvasrenderingcontext2d_filter) (notably, Opera and Safari).
 
-### fillAlpha and radial mode on Firefox
+### fillAlpha and radial mode on Firefox {docsify-ignore}
 
-On Firefox, [`fillAlpha`](#fillalpha-number) won't work properly when [`radial`](#radial-boolean) is *true*, due to [this five-year-old bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912) still unaddressed.
+On Firefox, [`fillAlpha`](#fillalpha-number) may not work properly for [`radial`](#radial-boolean) visualization, due to [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912).
 
-## Acknowledgments
+## References and acknowledgments
 
 * Thanks to [Yuji Koike](http://www.ykcircus.com) for his awesome [Soniq Viewer for iOS](https://itunes.apple.com/us/app/soniq-viewer/id448343005), which inspired me to create **audioMotion**
 * [HTML Canvas Reference @W3Schools](https://www.w3schools.com/tags/ref_canvas.asp)
 * [Web Audio API documentation @MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 * [What does the FFT data in the Web Audio API correspond to?](https://stackoverflow.com/a/14789992/2370385)
 * [Equations for equal-tempered scale frequencies](http://pages.mtu.edu/~suits/NoteFreqCalcs.html)
+* [Making Audio Reactive Visuals](https://www.airtightinteractive.com/2013/10/making-audio-reactive-visuals/)
 * The font used in audioMotion's logo is [Orbitron](https://fonts.google.com/specimen/Orbitron) by Matt McInerney
 * This documentation website is powered by [GitHub Pages](https://pages.github.com/), [docsify](https://docsify.js.org/) and [docsify-themeable](https://jhildenbiddle.github.io/docsify-themeable).
 

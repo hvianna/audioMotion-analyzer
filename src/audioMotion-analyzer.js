@@ -7,7 +7,7 @@
  * @license AGPL-3.0-or-later
  */
 
-const _VERSION = '2.4.0';
+const _VERSION = '2.5.0-beta';
 
 export default class AudioMotionAnalyzer {
 
@@ -896,7 +896,7 @@ export default class AudioMotionAnalyzer {
 			if ( this._energy.hold > 0 )
 				this._energy.hold--;
 			else if ( this._energy.peak > 0 )
-				this._energy.peak *= ( 30 + this._energy.hold-- ) / 30; // decay
+				this._energy.peak *= ( 30 + this._energy.hold-- ) / 30; // decay (drops to zero in 30 frames)
 		}
 
 		if ( this._mode == 10 ) { // fill area
