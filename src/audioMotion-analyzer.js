@@ -107,20 +107,60 @@ export default class AudioMotionAnalyzer {
 		this._circScale = document.createElement('canvas');
 		this._circScaleCtx = this._circScale.getContext('2d');
 
-		// adjust canvas on window resize
-		window.addEventListener( 'resize', () => {
-			if ( ! this._width || ! this._height ) // fluid width or height
-				this._setCanvas('resize');
-		});
+		// Update canvas size on container / window resize and fullscreen events
 
-		// adjust canvas size on fullscreen change
-		this._canvas.addEventListener( 'fullscreenchange', () => this._setCanvas('fschange') );
+		// Fullscreen changes are handled quite differently across browsers:
+		// 1. Blink-based browsers will trigger a `resize` event followed by a `fullscreenchange`
+		// 2. Firefox triggers the `fullscreenchange` first and then the `resize`
+		// 3. Chrome on Android (TV) won't trigger a `resize` event, only `fullscreenchange`
+		// 4. Safari won't trigger `fullscreenchange` events at all and on iPadOS the `resize`
+		//    event is triggered **on the window** only (last tested on iPadOS 14)
+
+		// helper function for resize events
+		const onResize = () => {
+			if ( ! this._fsTimeout ) {
+				// delay the resize to prioritize a possible following `fullscreenchange` event
+				this._fsTimeout = window.setTimeout( () => {
+					if ( ! this._fsChanging ) {
+						this._setCanvas('resize');
+						this._fsTimeout = 0;
+					}
+				}, 60 );
+			}
+		}
+
+		// if browser supports ResizeObserver, listen for resize on the container
+		if ( window.ResizeObserver ) {
+			const resizeObserver = new ResizeObserver( onResize );
+			resizeObserver.observe( this._container );
+		}
+
+		// listen for resize events on the window - required for fullscreen on iPadOS
+		window.addEventListener( 'resize', onResize );
+
+		// listen for fullscreenchange events on the canvas - not available on Safari
+		this._canvas.addEventListener( 'fullscreenchange', () => {
+			// set flag to indicate a fullscreen change in progress
+			this._fsChanging = true;
+
+			// if there is a scheduled resize event, clear it
+			if ( this._fsTimeout )
+				window.clearTimeout( this._fsTimeout );
+
+			// update the canvas
+			this._setCanvas('fschange');
+
+			// delay clearing the flag to prevent any shortly following resize event
+			this._fsTimeout = window.setTimeout( () => {
+				this._fsChanging = false;
+				this._fsTimeout = 0;
+			}, 60 );
+		});
 
 		// Set configuration options and use defaults for any missing properties
 		this._setProperties( options, true );
 
 		// Finish canvas setup
-
 		this._initDone = true;
 		this._setCanvas('create');
 	}
