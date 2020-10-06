@@ -175,9 +175,8 @@ Object reference: https://developer.mozilla.org/en-US/docs/Web/API/AudioContext
 
 ### `audioSource` *MediaElementAudioSourceNode object*
 
-Object representing the HTML media element connected using the [`source`](#source-htmlmediaelement-object) property in the [constructor](#constructor) options.
-
-See also the [`connectAudio()`](#connectaudio-element-) method.
+Object representing the HTML media element connected using the [`source`](#source-htmlmediaelement-object) property in the [constructor](#constructor) options,
+or, if that was not provided, **the first** media element connected via the [`connectAudio()`](#connectaudio-element-) method.
 
 Object reference: https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode
 

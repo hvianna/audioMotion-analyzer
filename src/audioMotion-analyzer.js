@@ -411,6 +411,8 @@ export default class AudioMotionAnalyzer {
 	connectAudio( element ) {
 		const audioSource = this._audioCtx.createMediaElementSource( element );
 		audioSource.connect( this._analyzer );
+		if ( this._audioSource === undefined )
+			this._audioSource = audioSource;
 		return audioSource;
 	}
 
