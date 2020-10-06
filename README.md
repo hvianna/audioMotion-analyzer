@@ -140,7 +140,7 @@ If `start: false` is specified, the analyzer will be created stopped. You can th
 Defaults to **true**, so the analyzer will start running right after initialization.
 
 
-## Interface objects
+## Interface objects *(read only)*
 
 ### `analyzer` *AnalyserNode object*
 
@@ -585,9 +585,10 @@ Reason | Description
 `'resize'` | browser window or canvas container element were resized
 `'user'` | canvas dimensions changed by user script, via [`height`](#height-number) and [`width`](#width-number) properties, [`setCanvasSize()`](#setcanvassize-width-height-) or [`setOptions()`](#setoptions-options-) methods
 
-?> As of version 2.5.0, the callback is executed only when canvas dimensions *effectively* change from the previous state. See the [release notes](https://github.com/hvianna/audioMotion-analyzer/releases/tag/2.5.0).
+?> As of [version 2.5.0](https://github.com/hvianna/audioMotion-analyzer/releases/tag/2.5.0), a callback is triggered only when canvas dimensions *effectively* change
+from the previous state, and the `'resize'` reason is no longer sent on fullscreen changes (except on Safari, see below).
 
-!> On **Safari**, fullscreen changes will be reported as `'resize'` to the callback and `'fschange'` will never be issued, due to lack of support for the [fullscreenchange event](https://developer.mozilla.org/en-US/docs/Web/API/Element/fullscreenchange_event).
+!> On **Safari**, fullscreen changes will be reported as `'resize'` to the callback and `'fschange'` will never be issued, due to lack of support for the [*fullscreenchange* event](https://developer.mozilla.org/en-US/docs/Web/API/Element/fullscreenchange_event).
 
 Usage example:
 
@@ -696,7 +697,7 @@ so you must call this method from within a user-generated event handler.
 
 Also, if you're displaying the analyzer over other content in [overlay](#overlay-boolean) mode,
 you'll probably want to handle fullscreen on the container element instead, using your own code.
-See the [overlay demo](https://audiomotion.dev/demo/overlay.html) for an example.
+See the [overlay demo](/demo/overlay.html) for an example.
 
 ## Custom Errors
 

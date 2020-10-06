@@ -9,6 +9,6 @@
 - Lots of customization options
 - No dependencies, less than 20kB minified
 
-[Demos](/demo/ ":ignore")
+[Demos](/demo/)
 [About](#about)
 [Get Started](#usage)

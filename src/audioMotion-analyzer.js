@@ -110,10 +110,10 @@ export default class AudioMotionAnalyzer {
 		// Update canvas size on container / window resize and fullscreen events
 
 		// Fullscreen changes are handled quite differently across browsers:
-		// 1. Blink-based browsers will trigger a `resize` event followed by a `fullscreenchange`
+		// 1. Chromium browsers will trigger a `resize` event followed by a `fullscreenchange`
 		// 2. Firefox triggers the `fullscreenchange` first and then the `resize`
 		// 3. Chrome on Android (TV) won't trigger a `resize` event, only `fullscreenchange`
-		// 4. Safari won't trigger `fullscreenchange` events at all and on iPadOS the `resize`
+		// 4. Safari won't trigger `fullscreenchange` events at all, and on iPadOS the `resize`
 		//    event is triggered **on the window** only (last tested on iPadOS 14)
 
 		// helper function for resize events
