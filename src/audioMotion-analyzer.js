@@ -2,12 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 2.5.0
+ * @version 3.0.0-alpha
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const _VERSION = '2.5.0';
+const _VERSION = '3.0.0-alpha';
 
 export default class AudioMotionAnalyzer {
 
@@ -84,14 +84,38 @@ export default class AudioMotionAnalyzer {
 			}
 		}
 
-		// create two analyzer nodes, channel splitter and merger (for stereo mode)
+		/*
+			Connection routing:
+			===================
+
+			for STEREO:                 +--->  analyzer[0]  ---+
+		    	                        |                      |
+			(source) --->  splitter  ---+                      +--->  merger  --->  gainNode  ---> (destination)
+		    	               |        |                      |                       |
+		        	           |        +--->  analyzer[1]  ---+                       |
+			                   |                                                       |
+			for MONO:          |                                                       |
+			                   |                                                       |
+			(source) --->  splitter  ----->  merger  ------>  analyzer[0]  ------>  gainNode  ---> (destination)
+		    	               |                                                       |
+			                   |                                                       |
+			                   v                                                       v
+			           audioMotion.input       <- (interface objects) ->       audioMotion.output
+		*/
+
+		// create the analyzer nodes, channel splitter and merger, and gain node
 		this._analyzer  = [ this._audioCtx.createAnalyser(), this._audioCtx.createAnalyser() ];
 		this._splitter  = this._audioCtx.createChannelSplitter(2);
  		this._merger    = this._audioCtx.createChannelMerger(2);
- 		this._dataArray = [];
+ 		this._gainNode  = this._audioCtx.createGain();
 
- 		// create audio source, if media element provided in the options
-		this._audioSource = options.source ? this._audioCtx.createMediaElementSource( options.source ) : undefined;
+ 		this._dataArray = []; // TODO - use only one data array for both channels?
+
+ 		// connect audio source, if provided in the options
+		this._audioSource = options.source ? this.connectAudio( options.source ) : undefined;
+
+		// connect output node to destination (speakers)
+		this._gainNode.connect( this._audioCtx.destination );
 
 		// initialize object to save instant and peak energy
 		this._energy = { instant: 0, peak: 0, hold: 0 };
@@ -362,38 +386,36 @@ export default class AudioMotionAnalyzer {
 	set stereo( value ) {
 		this._stereo = !! value;
 
-		const input  = this._stereo ? this._splitter : this._analyzer[0],
-			  output = this._stereo ? this._merger   : this._analyzer[0];
+		// update audio node connections
 
-		// disconnect all previous connections
 		this._splitter.disconnect();
 		this._merger.disconnect();
 
-		// reconnect audio source, if it exists
-		if ( this._audioSource ) {
-			this._audioSource.disconnect();
-			this._audioSource.connect( input );
-		}
-
-		// connect splitter -> analyzer -> merger for stereo
-		if ( this._stereo ) {
-			for ( let i = 0; i < 2; i++ ) {
-				this._splitter.connect( this._analyzer[ i ], i );
-				this._analyzer[ i ].disconnect();
-				this._analyzer[ i ].connect( this._merger, 0, i );
+		for ( let i = 0; i < 2; i++ ) {
+			this._analyzer[ i ].disconnect();
+			if ( this._stereo ) {
+				// connect splitter -> analyzer[0,1] -> merger
+				this._splitter.connect( this._analyzer[ i ], i ).connect( this._merger, 0, i );
+			}
+			else {
+				// passthru splitter -> merger
+				this._splitter.connect( this._merger, i, i );
 			}
 		}
 
-		// connect output node to destination
-		output.connect( this._audioCtx.destination );
+		if ( this._stereo )
+			this._merger.connect( this._gainNode );
+		else
+			this._merger.connect( this._analyzer[0] ).connect( this._gainNode );
 
-		this._setCanvas(); // needed to resize the circular scale and regenerate gradients (to do)
+		// resize the circular scale and regenerate gradients (TODO)
+		this._setCanvas();
 	}
 
 	// Read only properties
 
 	get analyzer() {
-		return this._stereo ? this._analyzer : this._analyzer[0]; // do we need retro-compatibility?
+		return this._analyzer; // TODO: do we still need this?
 	}
 	get audioCtx() {
 		return this._audioCtx;
@@ -408,7 +430,7 @@ export default class AudioMotionAnalyzer {
 		return this._canvasCtx;
 	}
 	get dataArray() {
-		return this._stereo ? this._dataArray : this._dataArray[0]; // do we need retro-compatibility?
+		return this._dataArray; // TODO: do we still need this?
 	}
 	get energy() {
 		return this._energy.instant;
@@ -422,11 +444,17 @@ export default class AudioMotionAnalyzer {
 	get fps() {
 		return this._fps;
 	}
+	get input() {
+		return this._splitter;
+	}
 	get isFullscreen() {
 		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._canvas;
 	}
 	get isOn() {
 		return this._animationReq !== undefined;
+	}
+	get output() {
+		return this._gainNode;
 	}
 	get peakEnergy() {
 		return this._energy.peak;
@@ -454,7 +482,7 @@ export default class AudioMotionAnalyzer {
 	 */
 	connectAudio( element ) {
 		const audioSource = this._audioCtx.createMediaElementSource( element );
-		audioSource.connect( this._stereo ? this._splitter : this._analyzer[0] );
+		audioSource.connect( this._splitter );
 		if ( this._audioSource === undefined )
 			this._audioSource = audioSource;
 		return audioSource;
