@@ -84,11 +84,14 @@ export default class AudioMotionAnalyzer {
 			}
 		}
 
-		// Create analyzer node, connect audio source (if provided) and connect it to the destination
+		// create two analyzer nodes, channel splitter and merger (for stereo mode)
+		this._analyzer  = [ this._audioCtx.createAnalyser(), this._audioCtx.createAnalyser() ];
+		this._splitter  = this._audioCtx.createChannelSplitter(2);
+ 		this._merger    = this._audioCtx.createChannelMerger(2);
+ 		this._dataArray = [];
 
-		this._analyzer = this._audioCtx.createAnalyser();
-		this._audioSource = ( options.source ) ? this.connectAudio( options.source ) : undefined;
-		this._analyzer.connect( this._audioCtx.destination );
+ 		// create audio source, if media element provided in the options
+		this._audioSource = options.source ? this._audioCtx.createMediaElementSource( options.source ) : undefined;
 
 		// initialize object to save instant and peak energy
 		this._energy = { instant: 0, peak: 0, hold: 0 };
@@ -186,11 +189,13 @@ export default class AudioMotionAnalyzer {
 	// FFT size
 
 	get fftSize() {
-		return this._analyzer.fftSize;
+		return this._analyzer[0].fftSize;
 	}
 	set fftSize( value ) {
-		this._analyzer.fftSize = value;
-		this._dataArray = new Uint8Array( this._analyzer.frequencyBinCount );
+		for ( let i = 0; i < 2; i++ ) {
+			this._analyzer[ i ].fftSize = value;
+			this._dataArray[ i ] = new Uint8Array( this._analyzer[ i ].frequencyBinCount );
+		}
 		this._precalculateBarPositions();
 	}
 
@@ -325,31 +330,70 @@ export default class AudioMotionAnalyzer {
 	// Analyzer's sensitivity
 
 	get minDecibels() {
-		return this._analyzer.minDecibels;
+		return this._analyzer[0].minDecibels;
 	}
 	set minDecibels( value ) {
-		this._analyzer.minDecibels = value;
+		for ( let i = 0; i < 2; i++ )
+			this._analyzer[ i ].minDecibels = value;
 	}
 	get maxDecibels() {
-		return this._analyzer.maxDecibels;
+		return this._analyzer[0].maxDecibels;
 	}
 	set maxDecibels( value ) {
-		this._analyzer.maxDecibels = value;
+		for ( let i = 0; i < 2; i++ )
+			this._analyzer[ i ].maxDecibels = value;
 	}
 
 	// Analyzer's smoothing time constant
 
 	get smoothing() {
-		return this._analyzer.smoothingTimeConstant;
+		return this._analyzer[0].smoothingTimeConstant;
 	}
 	set smoothing( value ) {
-		this._analyzer.smoothingTimeConstant = value;
+		for ( let i = 0; i < 2; i++ )
+			this._analyzer[ i ].smoothingTimeConstant = value;
+	}
+
+	// Stereo
+
+	get stereo() {
+		return this._stereo;
+	}
+	set stereo( value ) {
+		this._stereo = !! value;
+
+		const input  = this._stereo ? this._splitter : this._analyzer[0],
+			  output = this._stereo ? this._merger   : this._analyzer[0];
+
+		// disconnect all previous connections
+		this._splitter.disconnect();
+		this._merger.disconnect();
+
+		// reconnect audio source, if it exists
+		if ( this._audioSource ) {
+			this._audioSource.disconnect();
+			this._audioSource.connect( input );
+		}
+
+		// connect splitter -> analyzer -> merger for stereo
+		if ( this._stereo ) {
+			for ( let i = 0; i < 2; i++ ) {
+				this._splitter.connect( this._analyzer[ i ], i );
+				this._analyzer[ i ].disconnect();
+				this._analyzer[ i ].connect( this._merger, 0, i );
+			}
+		}
+
+		// connect output node to destination
+		output.connect( this._audioCtx.destination );
+
+		this._setCanvas(); // needed to resize the circular scale and regenerate gradients (to do)
 	}
 
 	// Read only properties
 
 	get analyzer() {
-		return this._analyzer;
+		return this._stereo ? this._analyzer : this._analyzer[0]; // do we need retro-compatibility?
 	}
 	get audioCtx() {
 		return this._audioCtx;
@@ -364,7 +408,7 @@ export default class AudioMotionAnalyzer {
 		return this._canvasCtx;
 	}
 	get dataArray() {
-		return this._dataArray;
+		return this._stereo ? this._dataArray : this._dataArray[0]; // do we need retro-compatibility?
 	}
 	get energy() {
 		return this._energy.instant;
@@ -410,7 +454,7 @@ export default class AudioMotionAnalyzer {
 	 */
 	connectAudio( element ) {
 		const audioSource = this._audioCtx.createMediaElementSource( element );
-		audioSource.connect( this._analyzer );
+		audioSource.connect( this._stereo ? this._splitter : this._analyzer[0] );
 		if ( this._audioSource === undefined )
 			this._audioSource = audioSource;
 		return audioSource;
@@ -423,7 +467,7 @@ export default class AudioMotionAnalyzer {
 	 * @returns {number}   Frequency in hertz
 	 */
 	binToFreq( bin ) {
-		return bin * this._audioCtx.sampleRate / this._analyzer.fftSize;
+		return bin * this._audioCtx.sampleRate / this._analyzer[0].fftSize;
 	}
 
 	/**
@@ -437,9 +481,9 @@ export default class AudioMotionAnalyzer {
 		if ( ! ['floor','ceil'].includes( rounding ) )
 			rounding = 'round';
 
-		const bin = Math[ rounding ]( freq * this._analyzer.fftSize / this._audioCtx.sampleRate );
+		const bin = Math[ rounding ]( freq * this._analyzer[0].fftSize / this._audioCtx.sampleRate );
 
-		return bin < this._analyzer.frequencyBinCount ? bin : this._analyzer.frequencyBinCount - 1;
+		return bin < this._analyzer[0].frequencyBinCount ? bin : this._analyzer[0].frequencyBinCount - 1;
 	}
 
 	/**
@@ -517,8 +561,10 @@ export default class AudioMotionAnalyzer {
 	 * @param {number} max maximum decibels value
 	 */
 	setSensitivity( min, max ) {
-		this._analyzer.minDecibels = Math.min( min, max );
-		this._analyzer.maxDecibels = Math.max( min, max );
+		for ( let i = 0; i < 2; i++ ) {
+			this._analyzer[ i ].minDecibels = Math.min( min, max );
+			this._analyzer[ i ].maxDecibels = Math.max( min, max );
+		}
 	}
 
 	/**
@@ -587,7 +633,8 @@ export default class AudioMotionAnalyzer {
 		if ( this._mode % 10 == 0 || ! this._initDone )
 			return;
 
-		const analyzerHeight = this._lumiBars ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio ) | 0;
+		const canvasHeight   = this._canvas.height >> this._stereo,
+			  analyzerHeight = this._lumiBars ? canvasHeight : canvasHeight * ( 1 - this._reflexRatio ) | 0;
 
 		let spaceV = Math.min( 6, analyzerHeight / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
 		let nLeds;
@@ -642,12 +689,13 @@ export default class AudioMotionAnalyzer {
 			  isOctaveBands  = ( this._mode % 10 != 0 ),
 			  isLedDisplay   = ( this.showLeds  && isOctaveBands && ! this._radial ),
 			  isLumiBars     = ( this._lumiBars && isOctaveBands && ! this._radial ),
-			  analyzerHeight = canvas.height * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0;
+			  channelHeight  = canvas.height >> this._stereo,
+			  analyzerHeight = channelHeight * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0;
 
 		// radial related constants
 		const centerX        = canvas.width >> 1,
 			  centerY        = canvas.height >> 1,
-			  radius         = this._circScale.width >> 1,
+			  radius         = ( this._circScale.width >> 1 ) - ( this._stereo * this._canvas.height * .015 | 0 ),
 			  tau            = 2 * Math.PI;
 
 		if ( this._energy.instant > 0 )
@@ -696,15 +744,15 @@ export default class AudioMotionAnalyzer {
 			const scaleWidth  = this._labels.height,
 				  scaleHeight = analyzerHeight - ( this.showScale && this.reflexRatio == 0 ? this._labels.height : 0 ),
 				  fontSize    = scaleWidth >> 1,
-				  interval    = analyzerHeight / ( this._analyzer.maxDecibels - this._analyzer.minDecibels );
+				  interval    = analyzerHeight / ( this._analyzer[0].maxDecibels - this._analyzer[0].minDecibels );
 
 			ctx.fillStyle = '#888';
 			ctx.font = `${fontSize}px sans-serif`;
 			ctx.textAlign = 'right';
 			ctx.lineWidth = 1;
 
-			for ( let db = this._analyzer.maxDecibels; db > this._analyzer.minDecibels; db -= 5 ) {
-				const posY = ( this._analyzer.maxDecibels - db ) * interval,
+			for ( let db = this._analyzer[0].maxDecibels; db > this._analyzer[0].minDecibels; db -= 5 ) {
+				const posY = ( this._analyzer[0].maxDecibels - db ) * interval,
 					  even = ( db % 2 == 0 ) | 0;
 
 				if ( even ) {
@@ -732,14 +780,8 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// get a new array of data from the FFT
-		this._analyzer.getByteFrequencyData( this._dataArray );
-
-		// start drawing path
-		ctx.beginPath();
-
-		// in line / graph mode, line starts off screen
-		if ( this._mode == 10 && ! this._radial )
-			ctx.moveTo( -this.lineWidth, analyzerHeight );
+		for ( let i = 0; i < this._stereo + 1; i++ )
+			this._analyzer[ i ].getByteFrequencyData( this._dataArray[ i ] );
 
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing defined by the led options
@@ -756,140 +798,210 @@ export default class AudioMotionAnalyzer {
 		// set selected gradient for fill and stroke
 		ctx.fillStyle = ctx.strokeStyle = this._gradients[ this._gradient ].gradient;
 
-		// draw bars / lines
-
-		let bar, barHeight,
-			energy = 0;
+		let energy = 0;
 
 		const nBars = this._analyzerBars.length;
 
-		for ( let i = 0; i < nBars; i++ ) {
+		for ( let channel = 0; channel < this._stereo + 1; channel++ ) {
 
-			bar = this._analyzerBars[ i ];
+			const fftData        = this._dataArray[ channel ],
+				  channelTop     = channelHeight * channel,
+				  channelBottom  = channelHeight << channel,
+				  analyzerBottom = channelTop + analyzerHeight;
 
-			if ( bar.endIdx == 0 ) { // single FFT bin
-				barHeight = this._dataArray[ bar.dataIdx ];
-				// apply smoothing factor when several bars share the same bin
-				if ( bar.factor )
-					barHeight += ( this._dataArray[ bar.dataIdx + 1 ] - barHeight ) * bar.factor;
-			}
-			else { 					// range of bins
-				barHeight = 0;
-				// use the highest value in the range
-				for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
-					barHeight = Math.max( barHeight, this._dataArray[ j ] );
-			}
+			// start drawing path
+			ctx.beginPath();
 
-			barHeight /= 255;
-			energy += barHeight;
+			// in line / graph mode, line starts off screen
+			if ( this._mode == 10 && ! this._radial )
+				ctx.moveTo( -this.lineWidth, analyzerBottom );
 
-			// set opacity for lumi bars before barHeight value is normalized
-			if ( isLumiBars )
-				ctx.globalAlpha = barHeight;
+			// draw bars / lines
 
-			if ( isLedDisplay ) { // normalize barHeight to match one of the "led" elements
-				barHeight = ( barHeight * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
-				if ( barHeight < 0 )
-					barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
-			}
-			else
-				barHeight = barHeight * ( this._radial ? centerY - radius : analyzerHeight ) | 0;
+			for ( let i = 0; i < nBars; i++ ) {
 
-			if ( barHeight >= bar.peak ) {
-				bar.peak = barHeight;
-				bar.hold = 30; // set peak hold time to 30 frames (0.5s)
-				bar.accel = 0;
-			}
+				let bar = this._analyzerBars[ i ],
+					barHeight = 0;
 
-			let posX = bar.posX;
-			let adjWidth = width; // bar width may need small adjustments for some bars, when barSpace == 0
+				if ( bar.endIdx == 0 ) { // single FFT bin
+					barHeight = fftData[ bar.dataIdx ];
+					// apply smoothing factor when several bars share the same bin
+					if ( bar.factor )
+						barHeight += ( fftData[ bar.dataIdx + 1 ] - barHeight ) * bar.factor;
+				}
+				else { 					// range of bins
+					// use the highest value in the range
+					for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
+						barHeight = Math.max( barHeight, fftData[ j ] );
+				}
 
-			// Draw line / bar
-			if ( this._mode == 10 ) {
-				if ( ! this._radial )
-					ctx.lineTo( bar.posX, analyzerHeight - barHeight );
-				else if ( bar.posX >= 0 ) // avoid overlapping wrap-around frequencies
-					ctx.lineTo( ...radialXY( bar.posX, barHeight ) );
-			}
-			else {
-				if ( this._mode > 0 ) {
-					if ( isLedDisplay )
-						posX += Math.max( this._ledOptions.spaceH / 2, this._barSpacePx / 2 );
-					else {
-						if ( this._barSpace == 0 ) {
-							posX |= 0;
-							if ( i > 0 && posX > this._analyzerBars[ i - 1 ].posX + width ) {
-								posX--;
-								adjWidth++;
+				barHeight /= 255;
+				energy += barHeight;
+
+				// set opacity for lumi bars before barHeight value is normalized
+				if ( isLumiBars )
+					ctx.globalAlpha = barHeight;
+
+				if ( isLedDisplay ) { // normalize barHeight to match one of the "led" elements
+					barHeight = ( barHeight * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
+					if ( barHeight < 0 )
+						barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
+				}
+				else
+					barHeight = barHeight * ( this._radial ? centerY - radius : analyzerHeight ) | 0;
+
+				if ( barHeight >= bar.peak[ channel ] ) {
+					bar.peak[ channel ] = barHeight;
+					bar.hold[ channel ] = 30; // set peak hold time to 30 frames (0.5s)
+					bar.accel[ channel ] = 0;
+				}
+
+				if ( this._radial && channel == 1 )
+					barHeight *= -1;
+
+				let posX = bar.posX;
+				let adjWidth = width; // bar width may need small adjustments for some bars, when barSpace == 0
+
+				// Draw line / bar
+				if ( this._mode == 10 ) {
+					if ( ! this._radial )
+						ctx.lineTo( bar.posX, analyzerBottom - barHeight );
+					else if ( bar.posX >= 0 ) // avoid overlapping wrap-around frequencies
+						ctx.lineTo( ...radialXY( bar.posX, barHeight ) );
+				}
+				else {
+					if ( this._mode > 0 ) {
+						if ( isLedDisplay )
+							posX += Math.max( this._ledOptions.spaceH / 2, this._barSpacePx / 2 );
+						else {
+							if ( this._barSpace == 0 ) {
+								posX |= 0;
+								if ( i > 0 && posX > this._analyzerBars[ i - 1 ].posX + width ) {
+									posX--;
+									adjWidth++;
+								}
 							}
+							else
+								posX += this._barSpacePx / 2;
 						}
-						else
-							posX += this._barSpacePx / 2;
 					}
-				}
 
-				if ( isLedDisplay ) {
-					const x = posX + width / 2;
-					// draw "unlit" leds
-					if ( this.showBgColor && ! this.overlay ) {
-						const alpha = ctx.globalAlpha;
-						ctx.beginPath();
-						ctx.moveTo( x, 0 );
-						ctx.lineTo( x, analyzerHeight );
-						ctx.strokeStyle = '#7f7f7f22';
-						ctx.globalAlpha = 1;
-						ctx.stroke();
-						// restore properties
-						ctx.strokeStyle = ctx.fillStyle;
-						ctx.globalAlpha = alpha;
-					}
-					ctx.beginPath();
-					ctx.moveTo( x, isLumiBars ? 0 : analyzerHeight );
-					ctx.lineTo( x, isLumiBars ? canvas.height : analyzerHeight - barHeight );
-					ctx.stroke();
-				}
-				else if ( ! this._radial ) {
-					ctx.fillRect( posX, isLumiBars ? 0 : analyzerHeight, adjWidth, isLumiBars ? canvas.height : -barHeight );
-				}
-				else if ( bar.posX >= 0 ) {
-					radialPoly( posX, 0, adjWidth, barHeight );
-				}
-			}
-
-			// Draw peak
-			if ( bar.peak > 0 ) {
-				if ( this.showPeaks && ! isLumiBars ) {
 					if ( isLedDisplay ) {
-						ctx.fillRect(
-							posX,
-							( this._ledOptions.nLeds - bar.peak / ( analyzerHeight + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ),
-							width,
-							this._ledOptions.ledHeight
-						);
+						const x = posX + width / 2;
+						// draw "unlit" leds
+						if ( this.showBgColor && ! this.overlay ) {
+							const alpha = ctx.globalAlpha;
+							ctx.beginPath();
+							ctx.moveTo( x, channelTop );
+							ctx.lineTo( x, analyzerBottom );
+							ctx.strokeStyle = '#7f7f7f22';
+							ctx.globalAlpha = 1;
+							ctx.stroke();
+							// restore properties
+							ctx.strokeStyle = ctx.fillStyle;
+							ctx.globalAlpha = alpha;
+						}
+						ctx.beginPath();
+						ctx.moveTo( x, isLumiBars ? 0 : channelBottom );
+						ctx.lineTo( x, isLumiBars ? channelBottom : channelBottom - barHeight );
+						ctx.stroke();
 					}
 					else if ( ! this._radial ) {
-						ctx.fillRect( posX, analyzerHeight - bar.peak, adjWidth, 2 );
+						ctx.fillRect( posX, isLumiBars ? 0 : analyzerBottom, adjWidth, isLumiBars ? channelBottom : -barHeight );
 					}
-					else if ( this.mode != 10 && bar.posX >= 0 ) { // radial - no peaks for mode 10 or wrap-around frequencies
-						radialPoly( posX, bar.peak, adjWidth, -2 );
+					else if ( bar.posX >= 0 ) {
+						radialPoly( posX, 0, adjWidth, barHeight );
 					}
 				}
 
-				if ( bar.hold )
-					bar.hold--;
-				else {
-					bar.accel++;
-					bar.peak -= bar.accel;
+				// Draw peak
+				if ( bar.peak[ channel ] > 0 ) {
+					if ( this.showPeaks && ! isLumiBars ) {
+						if ( isLedDisplay ) {
+							// convert the bar height to the position of the corresponding led element
+							const fullLeds = bar.peak[ channel ] / ( analyzerHeight + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0,
+								  posY = ( this._ledOptions.nLeds - fullLeds - 1 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV );
+
+							ctx.fillRect( posX,	channelTop + posY, width, this._ledOptions.ledHeight );
+						}
+						else if ( ! this._radial ) {
+							ctx.fillRect( posX, analyzerBottom - bar.peak[ channel ], adjWidth, 2 );
+						}
+						else if ( this.mode != 10 && bar.posX >= 0 ) { // radial - no peaks for mode 10 or wrap-around frequencies
+							radialPoly( posX, bar.peak[ channel ] * ( channel == 1 ? -1 : 1 ), adjWidth, -2 );
+						}
+					}
+
+					if ( bar.hold[ channel ] )
+						bar.hold[ channel ]--;
+					else {
+						bar.accel[ channel ]++;
+						bar.peak[ channel ] -= bar.accel[ channel ];
+					}
+				}
+			} // for ( let i = 0; i < l; i++ )
+
+			// restore global alpha
+			ctx.globalAlpha = 1;
+
+			// Fill/stroke drawing path for mode 10 and radial
+			if ( this._mode == 10 ) {
+				if ( this._radial )
+					ctx.closePath();
+				else
+					ctx.lineTo( canvas.width + this.lineWidth, analyzerBottom );
+
+				if ( this.lineWidth > 0 ) {
+					ctx.lineWidth = this.lineWidth;
+					ctx.stroke();
+				}
+
+				if ( this.fillAlpha > 0 ) {
+					if ( this._radial ) {
+						// exclude the center circle from the fill area
+						ctx.moveTo( centerX + radius, centerY );
+						ctx.arc( centerX, centerY, radius, 0, tau, true );
+					}
+					ctx.globalAlpha = this.fillAlpha;
+					ctx.fill();
+					ctx.globalAlpha = 1;
 				}
 			}
-		} // for ( let i = 0; i < l; i++ )
+			else if ( this._radial ) {
+				ctx.fill();
+			}
 
-		// restore canvas properties
-		ctx.globalAlpha = 1;
-		ctx.setLineDash([]);
+			// Reflex effect
+			if ( this._reflexRatio > 0 && ! isLumiBars ) {
+				let posY, height;
+				if ( this.reflexFit || this._stereo ) { // always fit reflex in stereo mode
+					posY   = this._stereo ? channelHeight * ( 1 - channel ) : 0;
+					height = channelHeight - analyzerHeight;
+				}
+				else {
+					posY   = canvas.height - analyzerHeight * 2;
+					height = analyzerHeight;
+				}
+
+				// set alpha and brightness for the reflection
+				ctx.globalAlpha = this.reflexAlpha;
+				if ( this.reflexBright != 1 )
+					ctx.filter = `brightness(${this.reflexBright})`;
+
+				// create the reflection
+				ctx.setTransform( 1, 0, 0, -1, 0, canvas.height );
+				ctx.drawImage( canvas, 0, channelTop, canvas.width, analyzerHeight, 0, posY, canvas.width, height );
+
+				// reset changed properties
+				ctx.setTransform();
+				ctx.filter = 'none';
+				ctx.globalAlpha = 1;
+			}
+
+		} // for ( let channel = 0; channel < this._stereo + 1; channel++ ) {
 
 		// Update instant and peak energy
-		this._energy.instant = energy / nBars;
+		this._energy.instant = energy / ( nBars << this._stereo );
 		if ( this._energy.instant >= this._energy.peak ) {
 			this._energy.peak = this._energy.instant;
 			this._energy.hold = 30;
@@ -901,58 +1013,8 @@ export default class AudioMotionAnalyzer {
 				this._energy.peak *= ( 30 + this._energy.hold-- ) / 30; // decay (drops to zero in 30 frames)
 		}
 
-		if ( this._mode == 10 ) { // fill area
-			if ( this._radial )
-				ctx.closePath();
-			else
-				ctx.lineTo( bar.posX + this.lineWidth, analyzerHeight );
-
-			if ( this.lineWidth > 0 ) {
-				ctx.lineWidth = this.lineWidth;
-				ctx.stroke();
-			}
-
-			if ( this.fillAlpha > 0 ) {
-				if ( this._radial ) {
-					// exclude the center circle from the fill area
-					ctx.moveTo( centerX + radius, centerY );
-					ctx.arc( centerX, centerY, radius, 0, tau, true );
-				}
-				ctx.globalAlpha = this.fillAlpha;
-				ctx.fill();
-				ctx.globalAlpha = 1;
-			}
-		}
-		else if ( this._radial ) {
-			ctx.fill();
-		}
-
-		// Reflex effect
-		if ( this._reflexRatio > 0 && ! isLumiBars ) {
-			let posY, height;
-			if ( this.reflexFit ) {
-				posY   = 0;
-				height = canvas.height - analyzerHeight;
-			}
-			else {
-				posY   = canvas.height - analyzerHeight * 2;
-				height = analyzerHeight;
-			}
-
-			// set alpha and brightness for the reflection
-			ctx.globalAlpha = this.reflexAlpha;
-			if ( this.reflexBright != 1 )
-				ctx.filter = `brightness(${this.reflexBright})`;
-
-			// create the reflection
-			ctx.setTransform( 1, 0, 0, -1, 0, canvas.height );
-			ctx.drawImage( canvas, 0, 0, canvas.width, analyzerHeight, 0, posY, canvas.width, height );
-
-			// reset changed properties
-			ctx.setTransform();
-			ctx.filter = 'none';
-			ctx.globalAlpha = 1;
-		}
+		// restore solid lines
+		ctx.setLineDash([]);
 
 		// draw frequency scale (X-axis)
 		if ( this.showScale ) {
@@ -961,7 +1023,7 @@ export default class AudioMotionAnalyzer {
 				ctx.translate( centerX, centerY );
 				if ( this._spinSpeed != 0 )
 					ctx.rotate( this._spinAngle + Math.PI / 2 );
-				ctx.drawImage( this._circScale, -radius, -radius );
+				ctx.drawImage( this._circScale, -this._circScale.width >> 1, -this._circScale.width >> 1 );
 				ctx.restore();
 			}
 			else
@@ -1077,7 +1139,7 @@ export default class AudioMotionAnalyzer {
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
 				if ( pos > lastPos ) {
-					this._analyzerBars.push( { posX: pos, dataIdx: i, endIdx: 0, factor: 0, peak: 0, hold: 0, accel: 0 } );
+					this._analyzerBars.push( { posX: pos, dataIdx: i, endIdx: 0, factor: 0, peak: [0,0], hold: [], accel: [] } );
 					lastPos = pos;
 				} // otherwise, add this frequency to the last bar's range
 				else if ( this._analyzerBars.length )
@@ -1170,9 +1232,9 @@ export default class AudioMotionAnalyzer {
 //					freq, // nominal frequency for this band
 //					range: [ this.binToFreq( idx ), this.binToFreq( endIdx || idx ) ], // actual range of frequencies
 					factor: 0,
-					peak: 0,
-					hold: 0,
-					accel: 0
+					peak: [0,0],
+					hold: [],
+					accel: []
 				} );
 
 			} );
@@ -1270,7 +1332,10 @@ export default class AudioMotionAnalyzer {
 		// update dimensions of auxiliary canvases
 		this._labels.width = this._canvas.width;
 		this._labels.height = Math.max( 20 * this._pixelRatio, this._canvas.height / 27 | 0 );
-		this._circScale.width = this._circScale.height = this._canvas.height >> 2;
+
+		// the radius of the radial analyzer is 75% of the (main) canvas height for stereo and 25% for mono
+		// in stereo mode, the scale is positioned exactly between both channels, by adding the bar width (3% of main canvas height) to the scale canvas size
+		this._circScale.width = this._circScale.height = this._canvas.height * ( this._stereo ? .75 : .25 ) + ( this._stereo * this._canvas.height * .03 | 0 );
 
 		// (re)generate gradients
 		this._generateGradients();
@@ -1322,6 +1387,7 @@ export default class AudioMotionAnalyzer {
 			bgAlpha     : 0.7,
 			radial		: false,
 			spinSpeed   : 0,
+			stereo      : false,
 			start       : true
 		};
 
