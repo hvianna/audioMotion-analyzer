@@ -95,7 +95,7 @@ catch( err ) {
 }
 
 // Display package version in the footer
-document.getElementById('version').innerText = audioMotion.version;
+document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 // Event listeners for UI controls
 

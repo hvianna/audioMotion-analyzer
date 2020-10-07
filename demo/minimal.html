@@ -33,6 +33,9 @@
 	<script type="module">
 		import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
 
+		// Display package version in the footer
+		document.getElementById('version').innerText = AudioMotionAnalyzer.version;
+
 		try {
 			var audioMotion = new AudioMotionAnalyzer(
 				document.getElementById('container'),
@@ -52,9 +55,6 @@
 				if ( audioMotion.audioCtx.state == 'suspended' )
 					audioMotion.audioCtx.resume();
 			});
-
-			// Display package version in the footer
-			document.getElementById('version').innerText = audioMotion.version;
 
 			// Handle fullscreen button
 			document.getElementById('btn_fullscreen').addEventListener( 'click', () => audioMotion.toggleFullscreen() );

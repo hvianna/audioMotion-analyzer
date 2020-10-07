@@ -105,7 +105,7 @@ catch( err ) {
 }
 
 // Display package version in the footer
-document.getElementById('version').innerText = audioMotion.version;
+document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 // Create oscillator and gain nodes, and connect them to the analyzer
 
@@ -116,7 +116,7 @@ const audioCtx = audioMotion.audioCtx,
 oscillator.frequency.setValueAtTime( 0, audioCtx.currentTime );
 oscillator.connect( gainNode );
 oscillator.start();
-gainNode.connect( audioMotion.analyzer );
+gainNode.connect( audioMotion.input );
 
 // Event listeners for UI controls
 

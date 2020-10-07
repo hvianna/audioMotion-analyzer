@@ -40,7 +40,7 @@ try {
 			audioSource = audioMotion[0].connectAudio( audioEl );
 		// we then connect the audioSource to the other instances' analyzers
 		else
-			audioSource.connect( audioMotion[ i ].analyzer );
+			audioSource.connect( audioMotion[ i ].input );
 	}
 }
 catch( err ) {
@@ -48,7 +48,7 @@ catch( err ) {
 }
 
 // Display package version in the footer
-document.getElementById('version').innerText = audioMotion[0].version;
+document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 // Set options for each instance
 
