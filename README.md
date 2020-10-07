@@ -1,10 +1,10 @@
 
 ## About
 
-**audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer in a vanilla JavaScript module
-with no dependencies. It's highly customizable and optimized for small size and high performance.
+**audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer in a vanilla JavaScript module (ES6+)
+with no dependencies, built upon Web Audio and Canvas APIs. It's highly customizable and optimized for small size and high performance.
 
-I originally wrote this for my [**audioMotion**](https://audiomotion.me) spectrum analyzer and music player. Check it out too!
+I originally wrote this for my [**audioMotion**](https://audiomotion.me) music player. Check it out too!
 
 ## Features
 
