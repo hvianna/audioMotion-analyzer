@@ -1,6 +1,5 @@
 demo/
 .github/
-webpack.config.js
 CNAME
 index.html
 coverpage.md

@@ -1,1 +1,265 @@
-!function(t){var e={};function i(s){if(e[s])return e[s].exports;var a=e[s]={i:s,l:!1,exports:{}};return t[s].call(a.exports,a,a.exports,i),a.l=!0,a.exports}i.m=t,i.c=e,i.d=function(t,e,s){i.o(t,e)||Object.defineProperty(t,e,{enumerable:!0,get:s})},i.r=function(t){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(t,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(t,"__esModule",{value:!0})},i.t=function(t,e){if(1&e&&(t=i(t)),8&e)return t;if(4&e&&"object"==typeof t&&t&&t.__esModule)return t;var s=Object.create(null);if(i.r(s),Object.defineProperty(s,"default",{enumerable:!0,value:t}),2&e&&"string"!=typeof t)for(var a in t)i.d(s,a,function(e){return t[e]}.bind(null,a));return s},i.n=function(t){var e=t&&t.__esModule?function(){return t.default}:function(){return t};return i.d(e,"a",e),e},i.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)},i.p="",i(i.s=1)}([function(t,e,i){"use strict";i.d(e,"a",(function(){return s}));class s{constructor(t,e={}){this._initDone=!1,this._gradients={classic:{bgColor:"#111",colorStops:["hsl( 0, 100%, 50% )",{pos:.6,color:"hsl( 60, 100%, 50% )"},"hsl( 120, 100%, 50% )"]},prism:{bgColor:"#111",colorStops:["hsl( 0, 100%, 50% )","hsl( 60, 100%, 50% )","hsl( 120, 100%, 50% )","hsl( 180, 100%, 50% )","hsl( 240, 100%, 50% )"]},rainbow:{bgColor:"#111",dir:"h",colorStops:["hsl( 0, 100%, 50% )","hsl( 60, 100%, 50% )","hsl( 120, 100%, 50% )","hsl( 180, 100%, 47% )","hsl( 240, 100%, 58% )","hsl( 300, 100%, 50% )","hsl( 360, 100%, 50% )"]}},this._container=t||document.body,this._defaultWidth=this._container.clientWidth||640,this._defaultHeight=this._container.clientHeight||270;const i=window.AudioContext||window.webkitAudioContext;if(e.hasOwnProperty("audioCtx")){if(!(e.audioCtx instanceof i))throw new a("ERR_INVALID_AUDIO_CONTEXT","Provided audio context is not valid");this._audioCtx=e.audioCtx}else try{this._audioCtx=new i}catch(t){throw new a("ERR_AUDIO_CONTEXT_FAIL","Could not create audio context. Web Audio API not supported?")}this._analyzer=this._audioCtx.createAnalyser(),this._audioSource=e.source?this.connectAudio(e.source):void 0,this._analyzer.connect(this._audioCtx.destination),this._energy={instant:0,peak:0,hold:0},this._canvas=document.createElement("canvas"),this._canvas.style="max-width: 100%;",this._container.appendChild(this._canvas),this._canvasCtx=this._canvas.getContext("2d"),this._labels=document.createElement("canvas"),this._labelsCtx=this._labels.getContext("2d"),this._circScale=document.createElement("canvas"),this._circScaleCtx=this._circScale.getContext("2d"),window.addEventListener("resize",()=>{this._width&&this._height||this._setCanvas("resize")}),this._canvas.addEventListener("fullscreenchange",()=>this._setCanvas("fschange")),this._setProperties(e,!0),this._initDone=!0,this._setCanvas("create")}get barSpace(){return this._barSpace}set barSpace(t){this._barSpace=Number(t)||0,this._calculateBarSpacePx()}get fftSize(){return this._analyzer.fftSize}set fftSize(t){this._analyzer.fftSize=t,this._dataArray=new Uint8Array(this._analyzer.frequencyBinCount),this._precalculateBarPositions()}get gradient(){return this._gradient}set gradient(t){if(!this._gradients.hasOwnProperty(t))throw new a("ERR_UNKNOWN_GRADIENT",`Unknown gradient: '${t}'`);this._gradient=t}get height(){return this._height}set height(t){this._height=t,this._setCanvas("user")}get width(){return this._width}set width(t){this._width=t,this._setCanvas("user")}get mode(){return this._mode}set mode(t){const e=0|t;if(!(e>=0&&e<=10&&9!=e))throw new a("ERR_INVALID_MODE","Invalid mode: "+t);this._mode=e,this._precalculateBarPositions(),this._reflexRatio>0&&this._generateGradients()}get loRes(){return this._loRes}set loRes(t){this._loRes=!!t,this._setCanvas("lores")}get lumiBars(){return this._lumiBars}set lumiBars(t){this._lumiBars=!!t,this._reflexRatio>0&&(this._generateGradients(),this._calculateLedProperties())}get radial(){return this._radial}set radial(t){this._radial=!!t,this._generateGradients()}get spinSpeed(){return this._spinSpeed}set spinSpeed(t){t=Number(t)||0,void 0!==this._spinSpeed&&0!=t||(this._spinAngle=-Math.PI/2),this._spinSpeed=t}get reflexRatio(){return this._reflexRatio}set reflexRatio(t){if((t=Number(t)||0)<0||t>=1)throw new a("ERR_REFLEX_OUT_OF_RANGE","Reflex ratio must be >= 0 and < 1");this._reflexRatio=t,this._generateGradients(),this._calculateLedProperties()}get minFreq(){return this._minFreq}set minFreq(t){if(t<1)throw new a("ERR_FREQUENCY_TOO_LOW","Frequency values must be >= 1");this._minFreq=t,this._precalculateBarPositions()}get maxFreq(){return this._maxFreq}set maxFreq(t){if(t<1)throw new a("ERR_FREQUENCY_TOO_LOW","Frequency values must be >= 1");this._maxFreq=t,this._precalculateBarPositions()}get minDecibels(){return this._analyzer.minDecibels}set minDecibels(t){this._analyzer.minDecibels=t}get maxDecibels(){return this._analyzer.maxDecibels}set maxDecibels(t){this._analyzer.maxDecibels=t}get smoothing(){return this._analyzer.smoothingTimeConstant}set smoothing(t){this._analyzer.smoothingTimeConstant=t}get analyzer(){return this._analyzer}get audioCtx(){return this._audioCtx}get audioSource(){return this._audioSource}get canvas(){return this._canvas}get canvasCtx(){return this._canvasCtx}get dataArray(){return this._dataArray}get energy(){return this._energy.instant}get fsWidth(){return this._fsWidth}get fsHeight(){return this._fsHeight}get fps(){return this._fps}get isFullscreen(){return(document.fullscreenElement||document.webkitFullscreenElement)===this._canvas}get isOn(){return void 0!==this._animationReq}get peakEnergy(){return this._energy.peak}get pixelRatio(){return this._pixelRatio}get version(){return"2.4.0"}connectAudio(t){const e=this._audioCtx.createMediaElementSource(t);return e.connect(this._analyzer),e}binToFreq(t){return t*this._audioCtx.sampleRate/this._analyzer.fftSize}freqToBin(t,e){["floor","ceil"].includes(e)||(e="round");const i=Math[e](t*this._analyzer.fftSize/this._audioCtx.sampleRate);return i<this._analyzer.frequencyBinCount?i:this._analyzer.frequencyBinCount-1}registerGradient(t,e){if("string"!=typeof t||0==t.trim().length)throw new a("ERR_GRADIENT_INVALID_NAME","Gradient name must be a non-empty string");if("object"!=typeof e)throw new a("ERR_GRADIENT_NOT_AN_OBJECT","Gradient options must be an object");if(void 0===e.colorStops||e.colorStops.length<2)throw new a("ERR_GRADIENT_MISSING_COLOR","Gradient must define at least two colors");this._gradients[t]={},void 0!==e.bgColor?this._gradients[t].bgColor=e.bgColor:this._gradients[t].bgColor="#111",void 0!==e.dir&&(this._gradients[t].dir=e.dir),this._gradients[t].colorStops=e.colorStops,this._generateGradients()}setCanvasSize(t,e){this._width=t,this._height=e,this._setCanvas("user")}setFreqRange(t,e){if(t<1||e<1)throw new a("ERR_FREQUENCY_TOO_LOW","Frequency values must be >= 1");this._minFreq=Math.min(t,e),this._maxFreq=Math.max(t,e),this._precalculateBarPositions()}setOptions(t){this._setProperties(t)}setSensitivity(t,e){this._analyzer.minDecibels=Math.min(t,e),this._analyzer.maxDecibels=Math.max(t,e)}toggleAnalyzer(t){const e=this.isOn;return void 0===t&&(t=!e),e&&!t?(cancelAnimationFrame(this._animationReq),this._animationReq=void 0):!e&&t&&(this._frame=this._fps=0,this._time=performance.now(),this._animationReq=requestAnimationFrame(t=>this._draw(t))),this.isOn}toggleFullscreen(){this.isFullscreen?document.exitFullscreen?document.exitFullscreen():document.webkitExitFullscreen&&document.webkitExitFullscreen():this._canvas.requestFullscreen?this._canvas.requestFullscreen():this._canvas.webkitRequestFullscreen&&this._canvas.webkitRequestFullscreen()}_calculateBarSpacePx(){this._barSpacePx=Math.min(this._barWidth-1,this._barSpace>0&&this._barSpace<1?this._barWidth*this._barSpace:this._barSpace)}_calculateLedProperties(){if(this._mode%10==0||!this._initDone)return;const t=this._lumiBars?this._canvas.height:this._canvas.height*(1-this._reflexRatio)|0;let e,i=Math.min(6,t/(90*this._pixelRatio)|0);switch(this._mode){case 8:i=Math.min(16,t/(33*this._pixelRatio)|0),e=24;break;case 7:i=Math.min(8,t/(67*this._pixelRatio)|0),e=48;break;case 6:e=64;break;case 5:case 4:e=80;break;case 3:e=96;break;case 2:i=Math.min(4,t/(135*this._pixelRatio)|0),e=128;break;case 1:i=Math.min(3,Math.max(2,t/(180*this._pixelRatio)|0)),e=128}i*=this._pixelRatio,e=Math.min(e,(t+i)/(2*i)|0),this._ledOptions={nLeds:e,spaceH:this._barWidth*(1==this._mode?.45:this._mode<5?.225:.125),spaceV:i,ledHeight:(t+i)/e-i}}_draw(t){const e=this._canvas,i=this._canvasCtx,s=this._mode%10!=0,a=this.showLeds&&s&&!this._radial,n=this._lumiBars&&s&&!this._radial,r=e.height*(n||this._radial?1:1-this._reflexRatio)|0,h=e.width>>1,l=e.height>>1,o=this._circScale.width>>1,c=2*Math.PI;this._energy.instant>0&&(this._spinAngle+=this._spinSpeed*c/3600);const d=(t,i)=>{const s=o+i,a=c*(t/e.width)+this._spinAngle;return[h+s*Math.cos(a),l+s*Math.sin(a)]},_=(t,e,s,a)=>{i.moveTo(...d(t,e)),i.lineTo(...d(t,e+a)),i.lineTo(...d(t+s,e+a)),i.lineTo(...d(t+s,e))};if(this.overlay&&(i.clearRect(0,0,e.width,e.height),i.globalAlpha=this.bgAlpha),!this.showBgColor||a&&!this.overlay?i.fillStyle="#000":i.fillStyle=this._gradients[this._gradient].bgColor,this.overlay&&!this.showBgColor||i.fillRect(0,0,e.width,this.overlay&&1==this.reflexAlpha?r:e.height),i.globalAlpha=1,this.showScaleY&&!n&&!this._radial){const t=e.height/25|0,s=(this.showScale&&0==this.reflexRatio&&this._labels.height,t>>1),a=r/(this._analyzer.maxDecibels-this._analyzer.minDecibels);i.fillStyle="#888",i.font=s+"px sans-serif",i.textAlign="right",i.lineWidth=1;for(let n=this._analyzer.maxDecibels;n>this._analyzer.minDecibels;n-=5){const r=(this._analyzer.maxDecibels-n)*a,h=n%2==0|0;if(h){const a=0==r?.8*s:r+.35*s;i.fillText(n,.85*t,a),i.fillText(n,e.width-.1*t,a),i.strokeStyle="#888",i.setLineDash([2,4]),i.lineDashOffset=0}else i.strokeStyle="#555",i.setLineDash([2,8]),i.lineDashOffset=1;i.beginPath(),i.moveTo(t*h,r),i.lineTo(e.width-t*h,r),i.stroke()}i.setLineDash([]),i.lineDashOffset=0}this._analyzer.getByteFrequencyData(this._dataArray),i.beginPath(),10!=this._mode||this._radial||i.moveTo(-this.lineWidth,r);let g=this._barWidth-(s?Math.max(a?this._ledOptions.spaceH:0,this._barSpacePx):0);a?(i.setLineDash([this._ledOptions.ledHeight,this._ledOptions.spaceV]),i.lineWidth=g):0==this._barSpace&&(g|=0),i.fillStyle=i.strokeStyle=this._gradients[this._gradient].gradient;let u,f,p=0;const m=this._analyzerBars.length;for(let t=0;t<m;t++){if(u=this._analyzerBars[t],0==u.endIdx)f=this._dataArray[u.dataIdx],u.factor&&(f+=(this._dataArray[u.dataIdx+1]-f)*u.factor);else{f=0;for(let t=u.dataIdx;t<=u.endIdx;t++)f=Math.max(f,this._dataArray[t])}f/=255,p+=f,n&&(i.globalAlpha=f),a?(f=(f*this._ledOptions.nLeds|0)*(this._ledOptions.ledHeight+this._ledOptions.spaceV)-this._ledOptions.spaceV,f<0&&(f=0)):f=f*(this._radial?l-o:r)|0,f>=u.peak&&(u.peak=f,u.hold=30,u.accel=0);let s=u.posX,h=g;if(10==this._mode)this._radial?u.posX>=0&&i.lineTo(...d(u.posX,f)):i.lineTo(u.posX,r-f);else if(this._mode>0&&(a?s+=Math.max(this._ledOptions.spaceH/2,this._barSpacePx/2):0==this._barSpace?(s|=0,t>0&&s>this._analyzerBars[t-1].posX+g&&(s--,h++)):s+=this._barSpacePx/2),a){const t=s+g/2;if(this.showBgColor&&!this.overlay){const e=i.globalAlpha;i.beginPath(),i.moveTo(t,0),i.lineTo(t,r),i.strokeStyle="#7f7f7f22",i.globalAlpha=1,i.stroke(),i.strokeStyle=i.fillStyle,i.globalAlpha=e}i.beginPath(),i.moveTo(t,n?0:r),i.lineTo(t,n?e.height:r-f),i.stroke()}else this._radial?u.posX>=0&&_(s,0,h,f):i.fillRect(s,n?0:r,h,n?e.height:-f);u.peak>0&&(this.showPeaks&&!n&&(a?i.fillRect(s,(this._ledOptions.nLeds-u.peak/(r+this._ledOptions.spaceV)*this._ledOptions.nLeds|0)*(this._ledOptions.ledHeight+this._ledOptions.spaceV),g,this._ledOptions.ledHeight):this._radial?10!=this.mode&&u.posX>=0&&_(s,u.peak,h,-2):i.fillRect(s,r-u.peak,h,2)),u.hold?u.hold--:(u.accel++,u.peak-=u.accel))}if(i.globalAlpha=1,i.setLineDash([]),this._energy.instant=p/m,this._energy.instant>=this._energy.peak?(this._energy.peak=this._energy.instant,this._energy.hold=30):this._energy.hold>0?this._energy.hold--:this._energy.peak>0&&(this._energy.peak*=(30+this._energy.hold--)/30),10==this._mode?(this._radial?i.closePath():i.lineTo(u.posX+this.lineWidth,r),this.lineWidth>0&&(i.lineWidth=this.lineWidth,i.stroke()),this.fillAlpha>0&&(this._radial&&(i.moveTo(h+o,l),i.arc(h,l,o,0,c,!0)),i.globalAlpha=this.fillAlpha,i.fill(),i.globalAlpha=1)):this._radial&&i.fill(),this._reflexRatio>0&&!n){let t,s;this.reflexFit?(t=0,s=e.height-r):(t=e.height-2*r,s=r),i.globalAlpha=this.reflexAlpha,1!=this.reflexBright&&(i.filter=`brightness(${this.reflexBright})`),i.setTransform(1,0,0,-1,0,e.height),i.drawImage(e,0,0,e.width,r,0,t,e.width,s),i.setTransform(),i.filter="none",i.globalAlpha=1}this.showScale&&(this._radial?(i.save(),i.translate(h,l),0!=this._spinSpeed&&i.rotate(this._spinAngle+Math.PI/2),i.drawImage(this._circScale,-o,-o),i.restore()):i.drawImage(this._labels,0,e.height-this._labels.height)),this._frame++;const x=t-this._time;if(x>=1e3&&(this._fps=this._frame/(x/1e3),this._frame=0,this._time=t),this.showFPS){const t=20*this._pixelRatio;i.font=`bold ${t}px sans-serif`,i.fillStyle="#0f0",i.textAlign="right",i.fillText(Math.round(this._fps),e.width-t,2*t)}this.onCanvasDraw&&(i.save(),i.fillStyle=i.strokeStyle=this._gradients[this._gradient].gradient,this.onCanvasDraw(this),i.restore()),this._animationReq=requestAnimationFrame(t=>this._draw(t))}_generateGradients(){const t=this._lumiBars&&this._mode%10?this._canvas.height:this._canvas.height*(1-this._reflexRatio)|0,e=this._canvas.width>>1,i=this._canvas.height>>1,s=this._circScale.width>>1;Object.keys(this._gradients).forEach(a=>{let n;n=this._radial?this._canvasCtx.createRadialGradient(e,i,i,e,i,s):this._gradients[a].dir&&"h"==this._gradients[a].dir?this._canvasCtx.createLinearGradient(0,0,this._canvas.width,0):this._canvasCtx.createLinearGradient(0,0,0,t),this._gradients[a].colorStops&&this._gradients[a].colorStops.forEach((t,e)=>{"object"==typeof t?n.addColorStop(t.pos,t.color):n.addColorStop(e/(this._gradients[a].colorStops.length-1),t)}),this._gradients[a].gradient=n})}_precalculateBarPositions(){if(!this._initDone)return;let t,e;if(this._analyzerBars=[],this._mode%10==0){this._barWidth=1,t=Math.log10(this._minFreq),e=this._canvas.width/(Math.log10(this._maxFreq)-t);const i=this.freqToBin(this._minFreq,"floor"),s=this.freqToBin(this._maxFreq);let a=-999;for(let n=i;n<=s;n++){const i=this.binToFreq(n),s=Math.round(e*(Math.log10(i)-t));s>a?(this._analyzerBars.push({posX:s,dataIdx:n,endIdx:0,factor:0,peak:0,hold:0,accel:0}),a=s):this._analyzerBars.length&&(this._analyzerBars[this._analyzerBars.length-1].endIdx=n)}}else{let i;i=8==this._mode?24:7==this._mode?12:6==this._mode?8:5==this._mode?6:this._mode;const s=2**(1/24),a=440*s**-114;let n,r=[],h=0;for(;(n=a*s**h)<=this._maxFreq;)n>=this._minFreq&&h%i==0&&r.push(n),h++;t=Math.log10(r[0]),e=this._canvas.width/(Math.log10(r[r.length-1])-t),this._barWidth=this._canvas.width/r.length,this._calculateBarSpacePx();let l=0,o=-1,c=0;r.forEach((t,e)=>{const i=this.freqToBin(t);let s,a;if(s=l>0&&l+1<=i?l+1:i,s==o)c++;else{if(c>1)for(let t=1;t<=c;t++)this._analyzerBars[this._analyzerBars.length-t].factor=(c-t)/c;o=s,c=1}l=a=i,void 0!==r[e+1]&&(a=this.freqToBin(r[e+1]),a-i>1&&(l+=Math.round((a-i)/2)));const n=l-s>0?l:0;this._analyzerBars.push({posX:e*this._barWidth,dataIdx:s,endIdx:n,factor:0,peak:0,hold:0,accel:0})})}this._calculateLedProperties();const i=.03*this._canvas.height|0,s=this._circScale.width>>1,a=s-.75*i,n=2*Math.PI,r=[16,31,63,125,250,500,1e3,2e3,4e3,8e3,16e3];this._labels.width|=0,this._circScale.width|=0,this._labelsCtx.fillStyle=this._circScaleCtx.strokeStyle="#000c",this._labelsCtx.fillRect(0,0,this._labels.width,this._labels.height),this._circScaleCtx.arc(s,s,s-i/2,0,n),this._circScaleCtx.lineWidth=i,this._circScaleCtx.stroke(),this._labelsCtx.fillStyle=this._circScaleCtx.fillStyle="#fff",this._labelsCtx.font=(this._labels.height>>1)+"px sans-serif",this._circScaleCtx.font=(i>>1)+"px sans-serif",this._labelsCtx.textAlign=this._circScaleCtx.textAlign="center";for(const i of r){const r=i>=1e3?i/1e3+"k":i,h=e*(Math.log10(i)-t);if(this._labelsCtx.fillText(r,h,.75*this._labels.height),h>0&&h<this._canvas.width){const t=n*(h/this._canvas.width),e=t-Math.PI/2,i=a*Math.cos(e),l=a*Math.sin(e);this._circScaleCtx.save(),this._circScaleCtx.translate(s+i,s+l),this._circScaleCtx.rotate(t),this._circScaleCtx.fillText(r,0,0),this._circScaleCtx.restore()}}}_setCanvas(t){this._initDone&&(this._pixelRatio=window.devicePixelRatio,this._loRes&&(this._pixelRatio/=2),this._fsWidth=Math.max(window.screen.width,window.screen.height)*this._pixelRatio,this._fsHeight=Math.min(window.screen.height,window.screen.width)*this._pixelRatio,this.isFullscreen?(this._canvas.width=this._fsWidth,this._canvas.height=this._fsHeight):(this._canvas.width=(this._width||this._container.clientWidth||this._defaultWidth)*this._pixelRatio,this._canvas.height=(this._height||this._container.clientHeight||this._defaultHeight)*this._pixelRatio),2==this._pixelRatio&&window.screen.height<=540&&(this._pixelRatio=1),this.overlay||(this._canvasCtx.fillStyle="#000",this._canvasCtx.fillRect(0,0,this._canvas.width,this._canvas.height)),this._canvasCtx.lineJoin="bevel",this._labels.width=this._canvas.width,this._labels.height=this._pixelRatio*(this.isFullscreen?40:20),this._circScale.width=this._circScale.height=this._canvas.height>>2,this._generateGradients(),this._precalculateBarPositions(),this.onCanvasResize&&this.onCanvasResize(t,this))}_setProperties(t,e){const i=["onCanvasDraw","onCanvasResize"],s=["audioCtx","start"];(e||void 0===t)&&(t=Object.assign({mode:0,fftSize:8192,minFreq:20,maxFreq:22e3,smoothing:.5,gradient:"classic",minDecibels:-85,maxDecibels:-25,showBgColor:!0,showLeds:!1,showScale:!0,showScaleY:!1,showPeaks:!0,showFPS:!1,lumiBars:!1,loRes:!1,reflexRatio:0,reflexAlpha:.15,reflexBright:1,reflexFit:!0,lineWidth:0,fillAlpha:1,barSpace:.1,overlay:!1,bgAlpha:.7,radial:!1,spinSpeed:0,start:!0},t));for(const e of Object.keys(t))-1!==i.indexOf(e)&&"function"!=typeof t[e]?this[e]=void 0:-1===s.indexOf(e)&&(this[e]=t[e]);void 0!==t.start&&this.toggleAnalyzer(t.start)}}class a extends Error{constructor(t,e){super(e),this.name="AudioMotionError",this.code=t}}},function(t,e,i){"use strict";i.r(e);var s=i(0);const a=document.getElementById("audio"),n=document.getElementById("presets"),r=[{name:"Defaults",options:void 0},{name:"Classic LEDs",options:{mode:3,barSpace:.4,gradient:"classic",lumiBars:!1,radial:!1,reflexRatio:0,showBgColor:!0,showLeds:!0,showPeaks:!0}},{name:"Mirror wave",options:{mode:10,fillAlpha:.6,gradient:"rainbow",lineWidth:2,radial:!1,reflexAlpha:1,reflexBright:1,reflexRatio:.5,showPeaks:!1}},{name:"Radial overlay",options:{mode:5,barSpace:.1,gradient:"prism",radial:!0,showBgColor:!0,showLeds:!1,showPeaks:!0,spinSpeed:1,overlay:!0}},{name:"Reflex Bars",options:{mode:5,barSpace:.25,gradient:"rainbow",lumiBars:!1,radial:!1,reflexAlpha:.25,reflexBright:1,reflexFit:!0,reflexRatio:.3,showBgColor:!1,showLeds:!1,showPeaks:!0,overlay:!1}}],h={showLogo:!1,energyMeter:!1,songProgress:!1};try{var l=new s.a(document.getElementById("container"),{source:a,onCanvasDraw:function(){const t=l.canvas,e=l.canvasCtx,i=e.fillStyle;h.energyMeter&&(e.fillStyle="#fff8",e.fillRect(50,t.height,50,-t.height*l.energy),e.fillStyle="#f008",e.fillRect(50,t.height-t.height*l.peakEnergy,50,2),e.font="16px sans-serif",e.textAlign="left",e.fillText(l.peakEnergy,50,t.height-4-t.height*l.peakEnergy));if(h.showLogo){const i=(l.isFullscreen?40:20)*l.pixelRatio;e.font=i+25*l.energy*l.pixelRatio+"px Orbitron, sans-serif",e.fillStyle="#fff8",e.textAlign="center",e.fillText("audioMotion",t.width-8*i,2*i)}if(h.songProgress&&l.radial){const s=t.height/60,n=t.height/8-s/2-(l.showScale?.03*t.height:0),r=t.width/2,h=t.height/2,o=2*Math.PI*a.currentTime/a.duration-Math.PI/2;e.beginPath(),e.arc(r,h,n,-Math.PI/2,o),e.fillStyle=i,e.lineWidth=s,e.globalAlpha=l.energy,e.stroke()}},onCanvasResize:(t,e)=>{console.log(`[${t}] canvas size is: ${e.canvas.width} x ${e.canvas.height}`),"fschange"==t&&g()}})}catch(t){document.getElementById("container").innerHTML=`<p>audioMotion-analyzer failed with error: <em>${t}</em></p>`}document.getElementById("version").innerText=l.version;const o=l.audioCtx,c=o.createOscillator(),d=o.createGain();function _(t){const e=t.nextElementSibling;e&&"value"==e.className&&(e.innerText=t.value)}function g(){document.querySelectorAll("[data-setting]").forEach(t=>t.value=l[t.dataset.setting]),document.querySelectorAll('input[type="range"]').forEach(t=>_(t)),document.querySelectorAll("button[data-prop]").forEach(t=>{const e=l[t.dataset.prop];t.classList.toggle("active","isOn"==t.dataset.prop?!e:e)}),document.querySelectorAll("button[data-feature]").forEach(t=>t.classList.toggle("active",h[t.dataset.feature]))}c.frequency.setValueAtTime(0,o.currentTime),c.connect(d),c.start(),d.connect(l.analyzer),document.querySelectorAll("[data-prop]").forEach(t=>{t.addEventListener("click",()=>{t.dataset.func?l[t.dataset.func]():l[t.dataset.prop]=!l[t.dataset.prop],t.classList.toggle("active")})}),document.querySelectorAll("[data-feature]").forEach(t=>{t.addEventListener("click",()=>{h[t.dataset.feature]=!h[t.dataset.feature],t.classList.toggle("active")})}),document.querySelectorAll("[data-setting]").forEach(t=>{t.addEventListener("change",()=>l[t.dataset.setting]=t.value)}),document.querySelectorAll('input[type="range"]').forEach(t=>t.addEventListener("change",()=>_(t))),r.forEach((t,e)=>{const i=new Option(t.name,e);n.append(i)}),n.addEventListener("change",()=>{l.setOptions(r[n.value].options),g()}),document.querySelectorAll("#wave, #note, #frequency").forEach(t=>{t.addEventListener("input",()=>{"frequency"==t.id&&(document.getElementById("note").selectedIndex=0),document.getElementById("btn_play").dispatchEvent(new Event("click"))})}),document.getElementById("btn_play").addEventListener("click",()=>{c.type=document.getElementById("wave").value,c.frequency.setValueAtTime(document.getElementById("note").value||document.getElementById("frequency").value,o.currentTime),d.gain.setValueAtTime(.2,o.currentTime)}),document.getElementById("btn_soundoff").addEventListener("click",()=>d.gain.setValueAtTime(0,o.currentTime)),document.getElementById("uploadFile").addEventListener("change",t=>function(t){const e=t.files[0];e&&(a.src=URL.createObjectURL(e),a.play())}(t.target)),g(),window.addEventListener("click",()=>{"suspended"==l.audioCtx.state&&l.audioCtx.resume()})}]);
+/**
+ * audioMotion-analyzer fluid layout demo
+ *
+ * https://github.com/hvianna/audioMotion-analyzer
+ */
+
+import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
+
+const audioEl = document.getElementById('audio'),
+	  presetSelection = document.getElementById('presets');
+
+// Visualization presets
+const presets = [
+	{
+		name: 'Defaults',
+		options: undefined
+	},
+	{
+		name: 'Classic LEDs',
+		options: {
+			mode: 3,
+			barSpace: .4,
+			gradient: 'classic',
+			lumiBars: false,
+			radial: false,
+			reflexRatio: 0,
+			showBgColor: true,
+			showLeds: true,
+			showPeaks: true
+		}
+	},
+	{
+		name: 'Mirror wave',
+		options: {
+			mode: 10,
+			fillAlpha: .6,
+			gradient: 'rainbow',
+			lineWidth: 2,
+			radial: false,
+			reflexAlpha: 1,
+			reflexBright: 1,
+			reflexRatio: .5,
+			showPeaks: false
+		}
+	},
+	{
+		name: 'Radial overlay',
+		options: {
+			mode: 5,
+			barSpace: .1,
+			gradient: 'prism',
+			radial: true,
+			showBgColor: true,
+			showLeds: false,
+			showPeaks: true,
+			spinSpeed: 1,
+			overlay: true
+		}
+	},
+	{
+		name: 'Reflex Bars',
+		options: {
+			mode: 5,
+			barSpace: .25,
+			gradient: 'rainbow',
+			lumiBars: false,
+			radial: false,
+			reflexAlpha: .25,
+			reflexBright: 1,
+			reflexFit: true,
+			reflexRatio: .3,
+			showBgColor: false,
+			showLeds: false,
+			showPeaks: true,
+			overlay: false
+		}
+	}
+];
+
+// Demo-specific features
+const features = {
+	showLogo: false,
+	energyMeter: false,
+	songProgress: false
+}
+
+// Create audioMotion-analyzer object
+
+try {
+	var audioMotion = new AudioMotionAnalyzer(
+		document.getElementById('container'),
+		{
+			source: audioEl, // main audio source is the HTML <audio> element
+			onCanvasDraw: drawCallback, // callback function used to add custom features for this demo
+			onCanvasResize: ( reason, instance ) => {
+				console.log( `[${reason}] canvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
+				if ( reason != 'create' )
+					updateUI();
+			}
+		}
+	);
+}
+catch( err ) {
+	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
+}
+
+// Display package version in the footer
+document.getElementById('version').innerText = audioMotion.version;
+
+// Create oscillator and gain nodes, and connect them to the analyzer
+
+const audioCtx = audioMotion.audioCtx,
+	  oscillator = audioCtx.createOscillator(),
+	  gainNode = audioCtx.createGain();
+
+oscillator.frequency.setValueAtTime( 0, audioCtx.currentTime );
+oscillator.connect( gainNode );
+oscillator.start();
+gainNode.connect( audioMotion.analyzer );
+
+// Event listeners for UI controls
+
+document.querySelectorAll('[data-prop]').forEach( el => {
+	el.addEventListener( 'click', () => {
+		if ( el.dataset.func )
+			audioMotion[ el.dataset.func ]();
+		else
+			audioMotion[ el.dataset.prop ] = ! audioMotion[ el.dataset.prop ];
+		el.classList.toggle( 'active' );
+	});
+});
+
+document.querySelectorAll('[data-feature]').forEach( el => {
+	el.addEventListener( 'click', () => {
+		features[ el.dataset.feature ] = ! features[ el.dataset.feature ];
+		el.classList.toggle( 'active' );
+	});
+});
+
+document.querySelectorAll('[data-setting]').forEach( el => {
+	el.addEventListener( 'change', () => audioMotion[ el.dataset.setting ] = el.value );
+});
+
+// Display value of ranged input elements
+document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
+
+// Populate the UI presets select element
+
+presets.forEach( ( preset, index ) => {
+	const option = new Option( preset.name, index );
+	presetSelection.append( option );
+});
+
+presetSelection.addEventListener( 'change', () => {
+	audioMotion.setOptions( presets[ presetSelection.value ].options );
+	updateUI();
+});
+
+// Test tones playback
+
+document.querySelectorAll('#wave, #note, #frequency').forEach( el => {
+	el.addEventListener( 'input', () => {
+		if ( el.id == 'frequency' )
+			document.getElementById('note').selectedIndex = 0;
+		document.getElementById('btn_play').dispatchEvent( new Event('click') );
+	});
+});
+
+document.getElementById('btn_play').addEventListener( 'click', () => {
+	oscillator.type = document.getElementById('wave').value;
+	oscillator.frequency.setValueAtTime( document.getElementById('note').value || document.getElementById('frequency').value, audioCtx.currentTime );
+	gainNode.gain.setValueAtTime( .2, audioCtx.currentTime );
+});
+
+document.getElementById('btn_soundoff').addEventListener( 'click', () => gainNode.gain.setValueAtTime( 0, audioCtx.currentTime ) );
+
+// File upload
+document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
+
+// Initialize UI elements
+updateUI();
+
+// Resume audio context if in suspended state (browsers' autoplay policy)
+window.addEventListener( 'click', () => {
+	if ( audioMotion.audioCtx.state == 'suspended' )
+		audioMotion.audioCtx.resume();
+});
+
+// Load song from user's computer
+function loadSong( el ) {
+	const fileBlob = el.files[0];
+
+	if ( fileBlob ) {
+		audioEl.src = URL.createObjectURL( fileBlob );
+		audioEl.play();
+	}
+}
+
+// Update value div of range input elements
+function updateRangeElement( el ) {
+	const s = el.nextElementSibling;
+	if ( s && s.className == 'value' )
+		s.innerText = el.value;
+}
+
+// Update UI elements to reflect the analyzer's current settings
+function updateUI() {
+	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
+
+	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
+	document.querySelectorAll('button[data-prop]').forEach( el => {
+		const p = audioMotion[ el.dataset.prop ];
+		el.classList.toggle( 'active', el.dataset.prop == 'isOn' ? ! p : p );
+	});
+
+	document.querySelectorAll('button[data-feature]').forEach( el => el.classList.toggle( 'active', features[ el.dataset.feature ] ) );
+}
+
+// Callback function used to add custom features for this demo
+
+function drawCallback() {
+
+	const canvas   = audioMotion.canvas,
+		  ctx      = audioMotion.canvasCtx,
+		  gradient = ctx.fillStyle; // save the current gradient
+
+	if ( features.energyMeter ) {
+		ctx.fillStyle = '#fff8';
+		ctx.fillRect( 50, canvas.height, 50, -canvas.height * audioMotion.energy );
+
+		ctx.fillStyle = '#f008';
+		ctx.fillRect( 50, canvas.height - canvas.height * audioMotion.peakEnergy, 50, 2 );
+
+		ctx.font = '16px sans-serif';
+		ctx.textAlign = 'left';
+		ctx.fillText( audioMotion.peakEnergy, 50, canvas.height - 4 - canvas.height * audioMotion.peakEnergy);
+	}
+
+	if ( features.showLogo ) {
+		const baseSize = ( audioMotion.isFullscreen ? 40 : 20 ) * audioMotion.pixelRatio;
+
+		// use the 'energy' value to increase the font size and make the logo pulse to the beat
+		ctx.font = `${ baseSize + audioMotion.energy * 25 * audioMotion.pixelRatio }px Orbitron, sans-serif`;
+
+		ctx.fillStyle = '#fff8';
+		ctx.textAlign = 'center';
+		ctx.fillText( 'audioMotion', canvas.width - baseSize * 8, baseSize * 2 );
+	}
+
+	if ( features.songProgress && audioMotion.radial ) {
+		const lineWidth = canvas.height / 60,
+			  radius    = canvas.height / 8 - lineWidth / 2 - ( audioMotion.showScale ? canvas.height * .03 : 0 ),
+			  centerX   = canvas.width / 2,
+			  centerY   = canvas.height / 2,
+			  angle     = ( 2 * Math.PI * audioEl.currentTime / audioEl.duration ) - Math.PI / 2;
+
+		ctx.beginPath();
+		ctx.arc( centerX, centerY, radius, -Math.PI / 2, angle );
+		ctx.fillStyle = gradient;
+		ctx.lineWidth = lineWidth;
+		ctx.globalAlpha = audioMotion.energy;
+		ctx.stroke();
+	}
+
+}

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>audioMotion-analyzer minimal demo</title>
+	<link href="https://fonts.googleapis.com/css?family=Orbitron:900" rel="stylesheet">
+	<link href="styles.css" rel="stylesheet">
+</head>
+
+<body>
+	<header>
+		<h1><a href="https://audiomotion.dev" class="logo">audioMotion-analyzer</a> | minimal demo</h1>
+		<ul class="header-nav">
+			<li><a href="index.html">Demos</a></li>
+            <li><a href="https://audiomotion.dev">Home</a></li>
+			<li><a href="https://github.com/hvianna/audioMotion-analyzer/tree/master/demo/src/fluid.js">View on GitHub</a></li>
+		</ul>
+	</header>
+
+	<div id="container"></div>
+	<audio id="audio" src="https://icecast2.ufpel.edu.br/live" autoplay controls crossorigin="anonymous"></audio>
+
+	<div class="box center">
+		<button id="btn_fullscreen">Fullscreen</button>
+	</div>
+
+	<div class="credits">
+		<strong>audioMotion-analyzer v<span id="version"></span></strong> Copyright &copy; 2018-2020 Henrique Avila Vianna.	Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
+		Live stream: <a href="https://federalfm.ufpel.edu.br">Rádio Federal FM</a>.
+	</div>
+
+	<script type="module">
+		import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
+
+		try {
+			var audioMotion = new AudioMotionAnalyzer(
+				document.getElementById('container'),
+				{
+					source: document.getElementById('audio'),
+					// set your preferred options here
+				}
+			);
+		}
+		catch( err ) {
+			document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
+		}
+
+		if ( audioMotion ) {
+			// Resume audio context if in suspended state (browsers' autoplay policy)
+			window.addEventListener( 'click', () => {
+				if ( audioMotion.audioCtx.state == 'suspended' )
+					audioMotion.audioCtx.resume();
+			});
+
+			// Display package version in the footer
+			document.getElementById('version').innerText = audioMotion.version;
+
+			// Handle fullscreen button
+			document.getElementById('btn_fullscreen').addEventListener( 'click', () => audioMotion.toggleFullscreen() );
+		}
+	</script>
+
+	<script>
+		if ( location.href.startsWith('file://') )
+			alert("This demo won't work when loaded via file:// protocol.\nSee the README file inside the demo folder for more information.");
+	</script>
+
+</body>
+</html>

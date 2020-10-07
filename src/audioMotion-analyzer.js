@@ -1,13 +1,13 @@
-/*!
+/**!
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 2.4.0
+ * @version 2.5.0
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const _VERSION = '2.4.0';
+const _VERSION = '2.5.0';
 
 export default class AudioMotionAnalyzer {
 
@@ -107,20 +107,60 @@ export default class AudioMotionAnalyzer {
 		this._circScale = document.createElement('canvas');
 		this._circScaleCtx = this._circScale.getContext('2d');
 
-		// adjust canvas on window resize
-		window.addEventListener( 'resize', () => {
-			if ( ! this._width || ! this._height ) // fluid width or height
-				this._setCanvas('resize');
-		});
+		// Update canvas size on container / window resize and fullscreen events
 
-		// adjust canvas size on fullscreen change
-		this._canvas.addEventListener( 'fullscreenchange', () => this._setCanvas('fschange') );
+		// Fullscreen changes are handled quite differently across browsers:
+		// 1. Chromium browsers will trigger a `resize` event followed by a `fullscreenchange`
+		// 2. Firefox triggers the `fullscreenchange` first and then the `resize`
+		// 3. Chrome on Android (TV) won't trigger a `resize` event, only `fullscreenchange`
+		// 4. Safari won't trigger `fullscreenchange` events at all, and on iPadOS the `resize`
+		//    event is triggered **on the window** only (last tested on iPadOS 14)
+
+		// helper function for resize events
+		const onResize = () => {
+			if ( ! this._fsTimeout ) {
+				// delay the resize to prioritize a possible following `fullscreenchange` event
+				this._fsTimeout = window.setTimeout( () => {
+					if ( ! this._fsChanging ) {
+						this._setCanvas('resize');
+						this._fsTimeout = 0;
+					}
+				}, 60 );
+			}
+		}
+
+		// if browser supports ResizeObserver, listen for resize on the container
+		if ( window.ResizeObserver ) {
+			const resizeObserver = new ResizeObserver( onResize );
+			resizeObserver.observe( this._container );
+		}
+
+		// listen for resize events on the window - required for fullscreen on iPadOS
+		window.addEventListener( 'resize', onResize );
+
+		// listen for fullscreenchange events on the canvas - not available on Safari
+		this._canvas.addEventListener( 'fullscreenchange', () => {
+			// set flag to indicate a fullscreen change in progress
+			this._fsChanging = true;
+
+			// if there is a scheduled resize event, clear it
+			if ( this._fsTimeout )
+				window.clearTimeout( this._fsTimeout );
+
+			// update the canvas
+			this._setCanvas('fschange');
+
+			// delay clearing the flag to prevent any shortly following resize event
+			this._fsTimeout = window.setTimeout( () => {
+				this._fsChanging = false;
+				this._fsTimeout = 0;
+			}, 60 );
+		});
 
 		// Set configuration options and use defaults for any missing properties
 		this._setProperties( options, true );
 
 		// Finish canvas setup
-
 		this._initDone = true;
 		this._setCanvas('create');
 	}
@@ -371,6 +411,8 @@ export default class AudioMotionAnalyzer {
 	connectAudio( element ) {
 		const audioSource = this._audioCtx.createMediaElementSource( element );
 		audioSource.connect( this._analyzer );
+		if ( this._audioSource === undefined )
+			this._audioSource = audioSource;
 		return audioSource;
 	}
 
@@ -651,7 +693,7 @@ export default class AudioMotionAnalyzer {
 
 		// draw dB scale (Y-axis)
 		if ( this.showScaleY && ! isLumiBars && ! this._radial ) {
-			const scaleWidth  = canvas.height / 25 | 0,
+			const scaleWidth  = this._labels.height,
 				  scaleHeight = analyzerHeight - ( this.showScale && this.reflexRatio == 0 ? this._labels.height : 0 ),
 				  fontSize    = scaleWidth >> 1,
 				  interval    = analyzerHeight / ( this._analyzer.maxDecibels - this._analyzer.minDecibels );
@@ -856,7 +898,7 @@ export default class AudioMotionAnalyzer {
 			if ( this._energy.hold > 0 )
 				this._energy.hold--;
 			else if ( this._energy.peak > 0 )
-				this._energy.peak *= ( 30 + this._energy.hold-- ) / 30; // decay
+				this._energy.peak *= ( 30 + this._energy.hold-- ) / 30; // decay (drops to zero in 30 frames)
 		}
 
 		if ( this._mode == 10 ) { // fill area
@@ -1188,6 +1230,7 @@ export default class AudioMotionAnalyzer {
 	 * Internal function to change canvas dimensions on demand
 	 */
 	_setCanvas( reason ) {
+		// if initialization is not finished, quit
 		if ( ! this._initDone )
 			return;
 
@@ -1199,18 +1242,21 @@ export default class AudioMotionAnalyzer {
 		this._fsWidth = Math.max( window.screen.width, window.screen.height ) * this._pixelRatio;
 		this._fsHeight = Math.min( window.screen.height, window.screen.width ) * this._pixelRatio;
 
-		if ( this.isFullscreen ) {
-			this._canvas.width = this._fsWidth;
-			this._canvas.height = this._fsHeight;
-		}
-		else {
-			this._canvas.width = ( this._width || this._container.clientWidth || this._defaultWidth ) * this._pixelRatio;
-			this._canvas.height = ( this._height || this._container.clientHeight || this._defaultHeight ) * this._pixelRatio;
-		}
+		const isFullscreen = this.isFullscreen,
+			  newWidth  = isFullscreen ? this._fsWidth  : ( this._width  || this._container.clientWidth  || this._defaultWidth )  * this._pixelRatio | 0,
+			  newHeight = isFullscreen ? this._fsHeight : ( this._height || this._container.clientHeight || this._defaultHeight ) * this._pixelRatio | 0;
 
 		// workaround for wrong dPR reported on Android TV
 		if ( this._pixelRatio == 2 && window.screen.height <= 540 )
 			this._pixelRatio = 1;
+
+		// if canvas dimensions haven't changed, quit
+		if ( this._canvas.width == newWidth && this._canvas.height == newHeight )
+			return;
+
+		// apply new dimensions
+		this._canvas.width  = newWidth;
+		this._canvas.height = newHeight;
 
 		// if not in overlay mode, paint the canvas black
 		if ( ! this.overlay ) {
@@ -1221,9 +1267,9 @@ export default class AudioMotionAnalyzer {
 		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
 		this._canvasCtx.lineJoin = 'bevel';
 
-		// update labels canvas dimensions
+		// update dimensions of auxiliary canvases
 		this._labels.width = this._canvas.width;
-		this._labels.height = this._pixelRatio * ( this.isFullscreen ? 40 : 20 );
+		this._labels.height = Math.max( 20 * this._pixelRatio, this._canvas.height / 27 | 0 );
 		this._circScale.width = this._circScale.height = this._canvas.height >> 2;
 
 		// (re)generate gradients
@@ -1232,7 +1278,12 @@ export default class AudioMotionAnalyzer {
 		// calculate bar positions and led options
 		this._precalculateBarPositions();
 
-		// call callback function, if defined
+		// detect fullscreen changes (for Safari)
+		if ( this._fsStatus !== undefined && this._fsStatus !== isFullscreen )
+			reason = 'fschange';
+		this._fsStatus = isFullscreen;
+
+		// call the callback function, if defined
 		if ( this.onCanvasResize )
 			this.onCanvasResize( reason, this );
 	}

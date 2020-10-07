@@ -1,15 +1,10 @@
 
 ## About
 
-I originally wrote this as part of my [audioMotion](https://audiomotion.me) spectrum analyzer and music player.
+**audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer in a vanilla JavaScript module (ES6+)
+with no dependencies, built upon Web Audio and Canvas APIs. It's highly customizable and optimized for small size and high performance.
 
-This package provides only the graphic spectrum analyzer, as a standalone module, for you to use in your own JavaScript projects.
-
-## Online demos
-
-[![demo-animation](demo/media/demo.gif)](https://audiomotion.dev/demo/)
-
-?> https://audiomotion.dev/demo/
+I originally wrote this for my [**audioMotion**](https://audiomotion.me) music player. Check it out too!
 
 ## Features
 
@@ -21,7 +16,15 @@ This package provides only the graphic spectrum analyzer, as a standalone module
 + Comes with 3 predefined color gradients - easily add your own!
 + No dependencies, less than 20kB minified
 
+## Online demos
+
+[![demo-animation](demo/media/demo.gif)](https://audiomotion.dev/demo/)
+
+?> https://audiomotion.dev/demo/
+
 ## Usage
+
+### Using npm and webpack
 
 Install with npm:
 
@@ -29,13 +32,44 @@ Install with npm:
 $ npm install audiomotion-analyzer
 ```
 
-ES6 import:
+Use ES6 import syntax:
 
 ```js
 import AudioMotionAnalyzer from 'audiomotion-analyzer';
 ```
 
-Minimal constructor:
+### As a native JavaScript module (ESM)
+
+Simply copy the `audioMotion-analyzer.js` file from the `src` folder to your project folder and add the line below to your HTML file:
+
+```html
+<body>
+  .
+  .
+	<script src="main.js" type="module"></script>
+</body>
+```
+
+And in your `main.js` file, use:
+
+```js
+import AudioMotionAnalyzer from './audiomotion-analyzer.js';
+```
+
+Please note that JavaScript security requirements don't allow loading modules via `file://` URLs.
+You'll need a web server, such as [http-server](https://github.com/http-party/http-server), to test files locally.
+
+## Constructor
+
+`new AudioMotionAnalyzer( [container], [{options}] )`
+
+Creates a new instance of audioMotion-analyzer.
+
+The analyzer canvas will be created and appended to the HTML element referenced by `container`.
+
+If `container` is undefined, the canvas will be appended to the document's body.
+
+Usage example:
 
 ```js
 const audioMotion = new AudioMotionAnalyzer(
@@ -47,16 +81,6 @@ const audioMotion = new AudioMotionAnalyzer(
 ```
 
 This will insert the analyzer canvas inside the *#container* element and start the visualization of audio coming from the *#audio* element.
-
-## Constructor
-
-`new AudioMotionAnalyzer( [container], [{options}] )`
-
-Creates a new instance of audioMotion-analyzer.
-
-The analyzer canvas will be created and appended to the HTML element referenced by `container`.
-
-If `container` is undefined, the canvas will be appended to the document's body.
 
 ### Options
 
@@ -116,7 +140,7 @@ If `start: false` is specified, the analyzer will be created stopped. You can th
 Defaults to **true**, so the analyzer will start running right after initialization.
 
 
-## Interface objects
+## Interface objects *(read only)*
 
 ### `analyzer` *AnalyserNode object*
 
@@ -151,9 +175,8 @@ Object reference: https://developer.mozilla.org/en-US/docs/Web/API/AudioContext
 
 ### `audioSource` *MediaElementAudioSourceNode object*
 
-Object representing the HTML media element connected using the [`source`](#source-htmlmediaelement-object) property in the [constructor](#constructor) options.
-
-See also the [`connectAudio()`](#connectaudio-element-) method.
+Object representing the HTML media element connected using the [`source`](#source-htmlmediaelement-object) property in the [constructor](#constructor) options,
+or, if that was not provided, **the first** media element connected via the [`connectAudio()`](#connectaudio-element-) method.
 
 Object reference: https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode
 
@@ -556,11 +579,14 @@ Two arguments are passed: a string with the reason why the function was called (
 
 Reason | Description
 -------|------------
-`'create'` | canvas created by the class constructor
+`'create'` | canvas created by the audioMotion-analyzer [constructor](#constructor)
 `'fschange'` | analyzer entered or left fullscreen mode
-`'lores'` | low resolution mode toggled on or off
-`'resize'` | browser window resized (only when [`width`](#width-number) and/or [`height`](#height-number) are undefined)
+`'lores'` | [low resolution option](#lores-boolean) toggled on or off
+`'resize'` | browser window or canvas container element were resized
 `'user'` | canvas dimensions changed by user script, via [`height`](#height-number) and [`width`](#width-number) properties, [`setCanvasSize()`](#setcanvassize-width-height-) or [`setOptions()`](#setoptions-options-) methods
+
+?> As of [version 2.5.0](https://github.com/hvianna/audioMotion-analyzer/releases/tag/2.5.0), the `'resize'` reason is no longer sent on fullscreen changes and
+a callback is triggered only when canvas dimensions *effectively* change from the previous state.
 
 Usage example:
 
@@ -574,7 +600,7 @@ const audioMotion = new AudioMotionAnalyzer(
         }
     }
 );
-````
+```
 
 ## Methods
 
@@ -669,7 +695,7 @@ so you must call this method from within a user-generated event handler.
 
 Also, if you're displaying the analyzer over other content in [overlay](#overlay-boolean) mode,
 you'll probably want to handle fullscreen on the container element instead, using your own code.
-See the [overlay demo](https://audiomotion.dev/demo/overlay.html) for an example.
+See the [overlay demo](/demo/overlay.html) for an example.
 
 ## Custom Errors
 
@@ -693,22 +719,23 @@ ERR_UNKNOWN_GRADIENT       | User tried to [select a gradient](#gradient-string)
 
 ## Known Issues
 
-### reflexBright won't work on some browsers
+### reflexBright won't work on some browsers {docsify-ignore}
 
 [`reflexBright`](#reflexbright-number) feature relies on the [`filter`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter) property of the Canvas API,
 which is [currently not supported in some browsers](https://caniuse.com/#feat=mdn-api_canvasrenderingcontext2d_filter) (notably, Opera and Safari).
 
-### fillAlpha and radial mode on Firefox
+### fillAlpha and radial mode on Firefox {docsify-ignore}
 
-On Firefox, [`fillAlpha`](#fillalpha-number) won't work properly when [`radial`](#radial-boolean) is *true*, due to [this five-year-old bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912) still unaddressed.
+On Firefox, [`fillAlpha`](#fillalpha-number) may not work properly for [`radial`](#radial-boolean) visualization, due to [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912).
 
-## Acknowledgments
+## References and acknowledgments
 
 * Thanks to [Yuji Koike](http://www.ykcircus.com) for his awesome [Soniq Viewer for iOS](https://itunes.apple.com/us/app/soniq-viewer/id448343005), which inspired me to create **audioMotion**
 * [HTML Canvas Reference @W3Schools](https://www.w3schools.com/tags/ref_canvas.asp)
 * [Web Audio API documentation @MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 * [What does the FFT data in the Web Audio API correspond to?](https://stackoverflow.com/a/14789992/2370385)
 * [Equations for equal-tempered scale frequencies](http://pages.mtu.edu/~suits/NoteFreqCalcs.html)
+* [Making Audio Reactive Visuals](https://www.airtightinteractive.com/2013/10/making-audio-reactive-visuals/)
 * The font used in audioMotion's logo is [Orbitron](https://fonts.google.com/specimen/Orbitron) by Matt McInerney
 * This documentation website is powered by [GitHub Pages](https://pages.github.com/), [docsify](https://docsify.js.org/) and [docsify-themeable](https://jhildenbiddle.github.io/docsify-themeable).
 

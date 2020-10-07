@@ -1,6 +1,22 @@
 Changelog
 =========
 
+## version 2.5.0 (2020-10-07)
+
+### Improvements: {docsify-ignore}
+
++ Behavior of the [`onCanvasResize`](README.md#oncanvasresize-function) callback is now consistent across different browsers. Changes worth of note:
+  1. on fullscreen changes, **only a `'fschange'` *reason* will be reported** to the callback function - no more redundant `'resize'` calls;
+  2. the callback function is now executed **only when canvas dimensions effectively change** from the previous state - for example,
+  setting [`loRes`](README.md#lores-boolean) or [`width`](README.md#width-number) to the same value they already have won't trigger a callback;
++ Canvas dimensions are now properly updated whenever the container element is resized, not only on window resize;
++ [`audioSource`](README.md#audiosource-mediaelementaudiosourcenode-object) now returns the first audio source connected via [`connectAudio()`](README.md#connectaudio-element-)
+  method, if no source was provided during instantiation;
++ Size of scale labels on both axes is now scaled relatively to the canvas height;
++ Added a [new demo](https://audiomotion.dev/demo) with only the minimal code required to use audioMotion-analyzer;
++ Demo scripts are now loaded as native ES6 modules and no longer require bundling. See the [README file](demo/README.md) for instructions on running the demos locally.
+
+
 ## version 2.4.0 (2020-07-18)
 
 ### Added: {docsify-ignore}
