@@ -462,7 +462,7 @@ export default class AudioMotionAnalyzer {
 	get pixelRatio() {
 		return this._pixelRatio;
 	}
-	get version() {
+	static get version() {
 		return _VERSION;
 	}
 
