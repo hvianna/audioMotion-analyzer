@@ -585,10 +585,8 @@ Reason | Description
 `'resize'` | browser window or canvas container element were resized
 `'user'` | canvas dimensions changed by user script, via [`height`](#height-number) and [`width`](#width-number) properties, [`setCanvasSize()`](#setcanvassize-width-height-) or [`setOptions()`](#setoptions-options-) methods
 
-?> As of [version 2.5.0](https://github.com/hvianna/audioMotion-analyzer/releases/tag/2.5.0), a callback is triggered only when canvas dimensions *effectively* change
-from the previous state, and the `'resize'` reason is no longer sent on fullscreen changes (except on Safari, see below).
-
-!> On **Safari**, fullscreen changes will be reported as `'resize'` to the callback and `'fschange'` will never be issued, due to lack of support for the [*fullscreenchange* event](https://developer.mozilla.org/en-US/docs/Web/API/Element/fullscreenchange_event).
+?> As of [version 2.5.0](https://github.com/hvianna/audioMotion-analyzer/releases/tag/2.5.0), the `'resize'` reason is no longer sent on fullscreen changes and
+a callback is triggered only when canvas dimensions *effectively* change from the previous state.
 
 Usage example:
 

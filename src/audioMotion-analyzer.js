@@ -1278,6 +1278,11 @@ export default class AudioMotionAnalyzer {
 		// calculate bar positions and led options
 		this._precalculateBarPositions();
 
+		// detect fullscreen changes (for Safari)
+		if ( this._fsStatus !== undefined && this._fsStatus !== isFullscreen )
+			reason = 'fschange';
+		this._fsStatus = isFullscreen;
+
 		// call the callback function, if defined
 		if ( this.onCanvasResize )
 			this.onCanvasResize( reason, this );
