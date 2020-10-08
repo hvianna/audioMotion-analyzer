@@ -107,16 +107,17 @@ catch( err ) {
 // Display package version in the footer
 document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
-// Create oscillator and gain nodes, and connect them to the analyzer
-
-const audioCtx = audioMotion.audioCtx,
+// Create oscillator, gain and stereoPanner nodes in audioMotion's AudioContext
+const audioCtx   = audioMotion.audioCtx,
 	  oscillator = audioCtx.createOscillator(),
-	  gainNode = audioCtx.createGain();
+	  gainNode   = audioCtx.createGain(),
+	  panNode    = audioCtx.createStereoPanner();
 
 oscillator.frequency.setValueAtTime( 0, audioCtx.currentTime );
-oscillator.connect( gainNode );
 oscillator.start();
-gainNode.connect( audioMotion.input );
+
+// Connect nodes: oscillator -> stereo panner -> gain -> audioMotion
+oscillator.connect( panNode ).connect( gainNode ).connect( audioMotion.input );
 
 // Event listeners for UI controls
 
@@ -173,6 +174,9 @@ document.getElementById('btn_play').addEventListener( 'click', () => {
 });
 
 document.getElementById('btn_soundoff').addEventListener( 'click', () => gainNode.gain.setValueAtTime( 0, audioCtx.currentTime ) );
+
+// Stereo pan for test tones
+document.getElementById('pan').addEventListener( 'change', e => panNode.pan.setValueAtTime( e.target.value, audioCtx.currentTime ) );
 
 // File upload
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
