@@ -408,8 +408,11 @@ export default class AudioMotionAnalyzer {
 		else
 			this._merger.connect( this._analyzer[0] ).connect( this._gainNode );
 
-		// resize the circular scale and regenerate gradients (TODO)
-		this._setCanvas();
+		// update properties affected by stereo
+		this._updateRadialSize();
+		this._generateScaleX();
+		this._calculateLedProperties();
+		this._generateGradients(); // TODO - update this for stereo
 	}
 
 	// Read only properties
@@ -1123,6 +1126,54 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Generate the X-axis and radial scales in auxiliary canvases
+	 */
+	_generateScaleX() {
+		const scaleHeight = this._canvas.height * .03 | 0, // circular scale height (radial mode)
+			  radius      = this._circScale.width >> 1,    // this is also used as the center X and Y coordinates of the circScale canvas
+			  radialY     = radius - scaleHeight * .75,    // vertical position of text labels in the circular scale
+			  tau         = 2 * Math.PI,
+			  freqLabels  = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
+
+		// clear canvases
+		this._labels.width |= 0;
+		this._circScale.width |= 0;
+
+		this._labelsCtx.fillStyle = this._circScaleCtx.strokeStyle = '#000c';
+		this._labelsCtx.fillRect( 0, 0, this._labels.width, this._labels.height );
+
+		this._circScaleCtx.arc( radius, radius, radius - scaleHeight / 2, 0, tau );
+		this._circScaleCtx.lineWidth = scaleHeight;
+		this._circScaleCtx.stroke();
+
+		this._labelsCtx.fillStyle = this._circScaleCtx.fillStyle = '#fff';
+		this._labelsCtx.font = `${ this._labels.height >> 1 }px sans-serif`;
+		this._circScaleCtx.font = `${ scaleHeight >> 1 }px sans-serif`;
+		this._labelsCtx.textAlign = this._circScaleCtx.textAlign = 'center';
+
+		for ( const freq of freqLabels ) {
+			const label = ( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
+				  x     = this._bandWidth * ( Math.log10( freq ) - this._minLog );
+
+			this._labelsCtx.fillText( label, x,	this._labels.height * .75 );
+
+			// avoid overlapping wrap-around labels in the circular scale
+			if ( x > 0 && x < this._canvas.width ) {
+				const angle  = tau * ( x / this._canvas.width ),
+					  adjAng = angle - Math.PI / 2, // rotate angles so 0 is at the top
+					  posX   = radialY * Math.cos( adjAng ),
+					  posY   = radialY * Math.sin( adjAng );
+
+				this._circScaleCtx.save();
+				this._circScaleCtx.translate( radius + posX, radius + posY );
+				this._circScaleCtx.rotate( angle );
+				this._circScaleCtx.fillText( label, 0, 0 );
+				this._circScaleCtx.restore();
+			}
+		}
+	}
+
+	/**
 	 * Precalculate the actual X-coordinate on screen for each analyzer bar
 	 *
 	 * Since the frequency scale is logarithmic, each position in the X-axis actually represents a power of 10.
@@ -1268,52 +1319,15 @@ export default class AudioMotionAnalyzer {
 			} );
 		}
 
+		// save these for scale generation
+		this._minLog = minLog;
+		this._bandWidth = bandWidth;
+
+		// generate the X-axis and radial scales
+		this._generateScaleX();
+
+		// update LED properties
 		this._calculateLedProperties();
-
-		// Create the X-axis scale in the auxiliary canvases
-
-		const scaleHeight = this._canvas.height * .03 | 0, // circular scale height (radial mode)
-			  radius      = this._circScale.width >> 1,    // this is also used as the center X and Y coordinates of the circScale canvas
-			  radialY     = radius - scaleHeight * .75,    // vertical position of text labels in the circular scale
-			  tau         = 2 * Math.PI,
-			  freqLabels  = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
-
-		// clear canvases
-		this._labels.width |= 0;
-		this._circScale.width |= 0;
-
-		this._labelsCtx.fillStyle = this._circScaleCtx.strokeStyle = '#000c';
-		this._labelsCtx.fillRect( 0, 0, this._labels.width, this._labels.height );
-
-		this._circScaleCtx.arc( radius, radius, radius - scaleHeight / 2, 0, tau );
-		this._circScaleCtx.lineWidth = scaleHeight;
-		this._circScaleCtx.stroke();
-
-		this._labelsCtx.fillStyle = this._circScaleCtx.fillStyle = '#fff';
-		this._labelsCtx.font = `${ this._labels.height >> 1 }px sans-serif`;
-		this._circScaleCtx.font = `${ scaleHeight >> 1 }px sans-serif`;
-		this._labelsCtx.textAlign = this._circScaleCtx.textAlign = 'center';
-
-		for ( const freq of freqLabels ) {
-			const label = ( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
-				  x     = bandWidth * ( Math.log10( freq ) - minLog );
-
-			this._labelsCtx.fillText( label, x,	this._labels.height * .75 );
-
-			// avoid overlapping wrap-around labels in the circular scale
-			if ( x > 0 && x < this._canvas.width ) {
-				const angle  = tau * ( x / this._canvas.width ),
-					  adjAng = angle - Math.PI / 2, // rotate angles so 0 is at the top
-					  posX   = radialY * Math.cos( adjAng ),
-					  posY   = radialY * Math.sin( adjAng );
-
-				this._circScaleCtx.save();
-				this._circScaleCtx.translate( radius + posX, radius + posY );
-				this._circScaleCtx.rotate( angle );
-				this._circScaleCtx.fillText( label, 0, 0 );
-				this._circScaleCtx.restore();
-			}
-		}
 	}
 
 	/**
@@ -1361,9 +1375,8 @@ export default class AudioMotionAnalyzer {
 		this._labels.width = this._canvas.width;
 		this._labels.height = Math.max( 20 * this._pixelRatio, this._canvas.height / 27 | 0 );
 
-		// the radius of the radial analyzer is 75% of the (main) canvas height for stereo and 25% for mono
-		// in stereo mode, the scale is positioned exactly between both channels, by adding the bar width (3% of main canvas height) to the scale canvas size
-		this._circScale.width = this._circScale.height = this._canvas.height * ( this._stereo ? .75 : .25 ) + ( this._stereo * this._canvas.height * .03 | 0 );
+		// update the radial analyzer size and scale
+		this._updateRadialSize();
 
 		// (re)generate gradients
 		this._generateGradients();
@@ -1439,6 +1452,16 @@ export default class AudioMotionAnalyzer {
 			this.toggleAnalyzer( options.start );
 	}
 
+	/**
+	 * Update the size of the radial analyzer scale (and the radius itself), based on canvas size and stereo mode
+	 */
+	_updateRadialSize() {
+		// the radius of the radial analyzer is 75% of the (main) canvas height for stereo and 25% for mono
+		// in stereo mode, the scale is positioned exactly between both channels, by adding the bar width (3% of main canvas height) to the scale canvas size
+		this._circScale.width = this._circScale.height = this._canvas.height * ( this._stereo ? .75 : .25 ) + ( this._stereo * this._canvas.height * .03 | 0 );
+
+		// _generateScaleX() or _precalculateBarPositions() must be called afterwards to regenerate the scale
+	}
 }
 
 /* Custom error class */
