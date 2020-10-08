@@ -88,37 +88,42 @@ export default class AudioMotionAnalyzer {
 			Connection routing:
 			===================
 
-			for STEREO:                 +--->  analyzer[0]  ---+
-		    	                        |                      |
-			(source) --->  splitter  ---+                      +--->  merger  --->  gainNode  ---> (destination)
-		    	               |        |                      |                       |
-		        	           |        +--->  analyzer[1]  ---+                       |
-			                   |                                                       |
-			for MONO:          |                                                       |
-			                   |                                                       |
-			(source) --->  splitter  ----->  merger  ------>  analyzer[0]  ------>  gainNode  ---> (destination)
-		    	               |                                                       |
-			                   |                                                       |
-			                   v                                                       v
-			           audioMotion.input       <- (interface objects) ->       audioMotion.output
+			for STEREO:                              +--->  analyzer[0]  ---+
+		    	                                     |                      |
+			(source) --->  input  --->  splitter  ---+                      +--->  merger  --->  output  ---> (destination)
+		    	             |                       |                      |                       |
+		        	         |                       +--->  analyzer[1]  ---+                       |
+			                 |                                                                      |
+			for MONO:        |                                                                      |
+			                 |                                                                      |
+			(source) --->  input  ----------------------->  analyzer[0]  --------------------->  output  ---> (destination)
+		    	             |                                                                      |
+			                 |                                                                      |
+			                 |                                                                      |
+			                 +------------------------> (interface objects) <-----------------------+
 		*/
 
 		// create the analyzer nodes, channel splitter and merger, and gain node
-		this._analyzer  = [ this._audioCtx.createAnalyser(), this._audioCtx.createAnalyser() ];
-		this._splitter  = this._audioCtx.createChannelSplitter(2);
- 		this._merger    = this._audioCtx.createChannelMerger(2);
- 		this._gainNode  = this._audioCtx.createGain();
+		this._analyzer = [ this._audioCtx.createAnalyser(), this._audioCtx.createAnalyser() ];
+		this._splitter = this._audioCtx.createChannelSplitter(2);
+ 		this._merger   = this._audioCtx.createChannelMerger(2);
+ 		this._input    = this._audioCtx.createGain();
+ 		this._output   = this._audioCtx.createGain();
 
- 		this._dataArray = []; // TODO - use only one data array for both channels?
+ 		// connect splitter -> analyzers -> merger
+		for ( let i = 0; i < 2; i++ )
+			this._splitter.connect( this._analyzer[ i ], i ).connect( this._merger, 0, i );
 
  		// connect audio source, if provided in the options
 		this._audioSource = options.source ? this.connectAudio( options.source ) : undefined;
 
-		// connect output node to destination (speakers)
-		this._gainNode.connect( this._audioCtx.destination );
+		// connect merger -> output -> destination (speakers)
+		this._merger.connect( this._output ).connect( this._audioCtx.destination );
 
 		// initialize object to save instant and peak energy
 		this._energy = { instant: 0, peak: 0, hold: 0 };
+
+ 		this._dataArray = []; // TODO - use only one data array for both channels?
 
 		// Create canvases
 
@@ -386,27 +391,11 @@ export default class AudioMotionAnalyzer {
 	set stereo( value ) {
 		this._stereo = !! value;
 
-		// update audio node connections
-
-		this._splitter.disconnect();
-		this._merger.disconnect();
-
-		for ( let i = 0; i < 2; i++ ) {
-			this._analyzer[ i ].disconnect();
-			if ( this._stereo ) {
-				// connect splitter -> analyzer[0,1] -> merger
-				this._splitter.connect( this._analyzer[ i ], i ).connect( this._merger, 0, i );
-			}
-			else {
-				// passthru splitter -> merger
-				this._splitter.connect( this._merger, i, i );
-			}
-		}
-
-		if ( this._stereo )
-			this._merger.connect( this._gainNode );
-		else
-			this._merger.connect( this._analyzer[0] ).connect( this._gainNode );
+		// update node connections
+		this._input.disconnect();
+		this._analyzer[0].disconnect();
+		this._input.connect( this._stereo ? this._splitter : this._analyzer[0] );
+		this._analyzer[0].connect( this._stereo ? this._merger : this._output );
 
 		// update properties affected by stereo
 		this._updateRadialSize();
@@ -448,7 +437,7 @@ export default class AudioMotionAnalyzer {
 		return this._fps;
 	}
 	get input() {
-		return this._splitter;
+		return this._input;
 	}
 	get isFullscreen() {
 		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._canvas;
@@ -457,7 +446,7 @@ export default class AudioMotionAnalyzer {
 		return this._animationReq !== undefined;
 	}
 	get output() {
-		return this._gainNode;
+		return this._output;
 	}
 	get peakEnergy() {
 		return this._energy.peak;
@@ -485,7 +474,7 @@ export default class AudioMotionAnalyzer {
 	 */
 	connectAudio( element ) {
 		const audioSource = this._audioCtx.createMediaElementSource( element );
-		audioSource.connect( this._splitter );
+		audioSource.connect( this._input );
 		if ( this._audioSource === undefined )
 			this._audioSource = audioSource;
 		return audioSource;
