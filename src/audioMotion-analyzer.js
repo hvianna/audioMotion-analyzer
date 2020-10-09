@@ -922,12 +922,12 @@ export default class AudioMotionAnalyzer {
 							ctx.globalAlpha = alpha;
 						}
 						ctx.beginPath();
-						ctx.moveTo( x, isLumiBars ? 0 : analyzerBottom );
+						ctx.moveTo( x, isLumiBars ? channelTop : analyzerBottom );
 						ctx.lineTo( x, isLumiBars ? channelBottom : analyzerBottom - barHeight );
 						ctx.stroke();
 					}
 					else if ( ! this._radial ) {
-						ctx.fillRect( posX, isLumiBars ? 0 : analyzerBottom, adjWidth, isLumiBars ? channelBottom : -barHeight );
+						ctx.fillRect( posX, isLumiBars ? channelTop : analyzerBottom, adjWidth, isLumiBars ? channelBottom : -barHeight );
 					}
 					else if ( bar.posX >= 0 ) {
 						radialPoly( posX, 0, adjWidth, barHeight );
