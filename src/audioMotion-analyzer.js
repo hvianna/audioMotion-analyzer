@@ -922,8 +922,8 @@ export default class AudioMotionAnalyzer {
 							ctx.globalAlpha = alpha;
 						}
 						ctx.beginPath();
-						ctx.moveTo( x, isLumiBars ? 0 : channelBottom );
-						ctx.lineTo( x, isLumiBars ? channelBottom : channelBottom - barHeight );
+						ctx.moveTo( x, isLumiBars ? 0 : analyzerBottom );
+						ctx.lineTo( x, isLumiBars ? channelBottom : analyzerBottom - barHeight );
 						ctx.stroke();
 					}
 					else if ( ! this._radial ) {
