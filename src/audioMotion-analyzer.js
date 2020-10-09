@@ -688,7 +688,10 @@ export default class AudioMotionAnalyzer {
 				nLeds = 128;
 		}
 
-		spaceV *= this._pixelRatio;
+		// make sure spaceV is at least 1px
+		spaceV = Math.max( spaceV, 1 ) * this._pixelRatio;
+
+		// recalculate the number of leds, considering the effective spaceV
 		nLeds = Math.min( nLeds, ( analyzerHeight + spaceV ) / ( spaceV * 2 ) | 0 );
 
 		this._ledOptions = {
