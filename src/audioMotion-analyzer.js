@@ -403,9 +403,6 @@ export default class AudioMotionAnalyzer {
 
 	// Read only properties
 
-	get analyzer() {
-		return this._analyzer; // TODO: do we still need this?
-	}
 	get audioCtx() {
 		return this._audioCtx;
 	}
@@ -472,32 +469,6 @@ export default class AudioMotionAnalyzer {
 		if ( this._audioSource === undefined )
 			this._audioSource = audioSource;
 		return audioSource;
-	}
-
-	/**
-	 * Returns the frequency represented by a given FFT bin
-	 *
-	 * @param {number} bin FFT data array index
-	 * @returns {number}   Frequency in hertz
-	 */
-	binToFreq( bin ) {
-		return bin * this._audioCtx.sampleRate / this._analyzer[0].fftSize;
-	}
-
-	/**
-	 * Returns the FFT bin which more closely corresponds to a given frequency
-	 *
-	 * @param {number} freq       Frequency in hertz
-	 * @param {string} [rounding] Rounding function: 'floor', 'round' (default) or 'ceil'
-	 * @returns {number}          FFT data array index (integer)
-	 */
-	freqToBin( freq, rounding ) {
-		if ( ! ['floor','ceil'].includes( rounding ) )
-			rounding = 'round';
-
-		const bin = Math[ rounding ]( freq * this._analyzer[0].fftSize / this._audioCtx.sampleRate );
-
-		return bin < this._analyzer[0].frequencyBinCount ? bin : this._analyzer[0].frequencyBinCount - 1;
 	}
 
 	/**
@@ -631,6 +602,32 @@ export default class AudioMotionAnalyzer {
 	 *
 	 * ==========================================================================
 	 */
+
+	/**
+	 * Returns the frequency represented by a given FFT bin
+	 *
+	 * @param {number} bin FFT data array index
+	 * @returns {number}   Frequency in hertz
+	 */
+	_binToFreq( bin ) {
+		return bin * this._audioCtx.sampleRate / this._analyzer[0].fftSize;
+	}
+
+	/**
+	 * Returns the FFT bin which more closely corresponds to a given frequency
+	 *
+	 * @param {number} freq       Frequency in hertz
+	 * @param {string} [rounding] Rounding function: 'floor', 'round' (default) or 'ceil'
+	 * @returns {number}          FFT data array index (integer)
+	 */
+	_freqToBin( freq, rounding ) {
+		if ( ! ['floor','ceil'].includes( rounding ) )
+			rounding = 'round';
+
+		const bin = Math[ rounding ]( freq * this._analyzer[0].fftSize / this._audioCtx.sampleRate );
+
+		return bin < this._analyzer[0].frequencyBinCount ? bin : this._analyzer[0].frequencyBinCount - 1;
+	}
 
 	/**
 	 * Calculate bar spacing in pixels
@@ -1191,13 +1188,13 @@ export default class AudioMotionAnalyzer {
 			minLog = Math.log10( this._minFreq );
 			bandWidth = this._canvas.width / ( Math.log10( this._maxFreq ) - minLog );
 
-			const minIndex = this.freqToBin( this._minFreq, 'floor' );
-			const maxIndex = this.freqToBin( this._maxFreq );
+			const minIndex = this._freqToBin( this._minFreq, 'floor' );
+			const maxIndex = this._freqToBin( this._maxFreq );
 
 	 		let lastPos = -999;
 
 			for ( let i = minIndex; i <= maxIndex; i++ ) {
-				const freq = this.binToFreq( i ); // frequency represented by this index
+				const freq = this._binToFreq( i ); // frequency represented by this index
 				const pos = Math.round( bandWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
@@ -1254,7 +1251,7 @@ export default class AudioMotionAnalyzer {
 
 			temperedScale.forEach( ( freq, index ) => {
 				// which FFT bin best represents this frequency?
-				const bin = this.freqToBin( freq );
+				const bin = this._freqToBin( freq );
 
 				let idx, nextBin;
 				// start from the last used FFT bin
@@ -1280,7 +1277,7 @@ export default class AudioMotionAnalyzer {
 				prevBin = nextBin = bin;
 				// check if there's another band after this one
 				if ( temperedScale[ index + 1 ] !== undefined ) {
-					nextBin = this.freqToBin( temperedScale[ index + 1 ] );
+					nextBin = this._freqToBin( temperedScale[ index + 1 ] );
 					// and use half the bins in between for this band
 					if ( nextBin - bin > 1 )
 						prevBin += Math.round( ( nextBin - bin ) / 2 );
@@ -1293,7 +1290,7 @@ export default class AudioMotionAnalyzer {
 					dataIdx: idx,
 					endIdx,
 //					freq, // nominal frequency for this band
-//					range: [ this.binToFreq( idx ), this.binToFreq( endIdx || idx ) ], // actual range of frequencies
+//					range: [ this._binToFreq( idx ), this._binToFreq( endIdx || idx ) ], // actual range of frequencies
 					factor: 0,
 					peak: [0,0],
 					hold: [],
