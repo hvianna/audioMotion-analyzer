@@ -6,6 +6,18 @@ with no dependencies, built upon Web Audio and Canvas APIs. It's highly customiz
 
 I originally wrote this for my [**audioMotion**](https://audiomotion.me) music player. Check it out too!
 
+> **version 3.0.0 is in ALPHA STAGE**
+>
+> BREAKING CHANGES:
+>
+> - The `analyzer` object is no longer exposed. Connect audio nodes to `audioMotion.input` instead, and use `audioMotion.output` to connect audioMotion to other nodes (or to disconnect it from the destination);
+> - The `dataArray` property is no longer exposed, nor the `freqToBin()` and `binToFreq()` methods;
+> - `version` is now a **static** property and should always be accessed as `AudioMotionAnalyzer.version`.
+>
+> FEATURES:
+>
+> - Stereo mode.
+
 ## Features
 
 + High-resolution (retina / HiDPI ready) real-time audio spectrum analyzer with fullscreen support
