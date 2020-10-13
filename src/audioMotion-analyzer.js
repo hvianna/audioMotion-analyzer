@@ -380,6 +380,16 @@ export default class AudioMotionAnalyzer {
 			this._analyzer[ i ].smoothingTimeConstant = value;
 	}
 
+	// Split gradient (in stereo mode)
+
+	get splitGradient() {
+		return this._splitGradient;
+	}
+	set splitGradient( value ) {
+		this._splitGradient = !! value;
+		this._generateGradients();
+	}
+
 	// Stereo
 
 	get stereo() {
@@ -398,7 +408,7 @@ export default class AudioMotionAnalyzer {
 		this._updateRadialSize();
 		this._generateScaleX();
 		this._calculateLedProperties();
-		this._generateGradients(); // TODO - update this for stereo
+		this._generateGradients();
 	}
 
 	// Read only properties
@@ -709,7 +719,7 @@ export default class AudioMotionAnalyzer {
 		// radial related constants
 		const centerX        = canvas.width >> 1,
 			  centerY        = canvas.height >> 1,
-			  radius         = ( this._circScale.width >> 1 ) - ( this._stereo * this._canvas.height * .015 | 0 ),
+			  radius         = ( this._canvas.height * ( this._stereo ? .75 : .25 ) ) >> 1,
 			  tau            = 2 * Math.PI;
 
 		if ( this._energy.instant > 0 )
@@ -1082,7 +1092,7 @@ export default class AudioMotionAnalyzer {
 		// for radial mode
 		const centerX = this._canvas.width >> 1,
 			  centerY = this._canvas.height >> 1,
-			  radius  = ( this._circScale.width >> 1 ) - ( this._stereo * this._canvas.height * .015 | 0 );
+			  radius  = ( this._canvas.height * ( this._stereo ? .75 : .25 ) ) >> 1;
 
 		Object.keys( this._gradients ).forEach( key => {
 			let grad;
@@ -1094,12 +1104,23 @@ export default class AudioMotionAnalyzer {
 				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, analyzerHeight );
 
 			if ( this._gradients[ key ].colorStops ) {
-				this._gradients[ key ].colorStops.forEach( ( colorInfo, index ) => {
-					if ( typeof colorInfo == 'object' )
-						grad.addColorStop( colorInfo.pos, colorInfo.color );
-					else
-						grad.addColorStop( index / ( this._gradients[ key ].colorStops.length - 1 ), colorInfo );
-				});
+				const isSplit = this._gradients[ key ].dir != 'h' && this._stereo && this._splitGradient;
+				for ( let i = 0; i < 1 + isSplit; i++ ) {
+					this._gradients[ key ].colorStops.forEach( ( colorInfo, index, colorStops ) => {
+						const maxIndex = colorStops.length - 1;
+						let pos = ( typeof colorInfo == 'object' ) ? colorInfo.pos : index / maxIndex;
+						if ( isSplit )
+							pos /= 2;
+						if ( i == 1 ) {
+							pos += .5;
+							// for the second channel of the radial gradient we need to get the colors in reverse order
+							if ( this._radial )
+								colorInfo = colorStops[ maxIndex - index ];
+						}
+
+						grad.addColorStop( pos, typeof colorInfo == 'object' ? colorInfo.color : colorInfo );
+					});
+				}
 			}
 
 			this._gradients[ key ].gradient = grad; // save the generated gradient back into the gradients array
@@ -1382,35 +1403,36 @@ export default class AudioMotionAnalyzer {
 
 		// settings defaults
 		const defaults = {
-			mode        : 0,
-			fftSize     : 8192,
-			minFreq     : 20,
-			maxFreq     : 22000,
-			smoothing   : 0.5,
-			gradient    : 'classic',
-			minDecibels : -85,
-			maxDecibels : -25,
-			showBgColor : true,
-			showLeds    : false,
-			showScale   : true,
-			showScaleY  : false,
-			showPeaks   : true,
-			showFPS     : false,
-			lumiBars    : false,
-			loRes       : false,
-			reflexRatio : 0,
-			reflexAlpha : 0.15,
-			reflexBright: 1,
-			reflexFit   : true,
-			lineWidth   : 0,
-			fillAlpha   : 1,
-			barSpace    : 0.1,
-			overlay     : false,
-			bgAlpha     : 0.7,
-			radial		: false,
-			spinSpeed   : 0,
-			stereo      : false,
-			start       : true
+			mode         : 0,
+			fftSize      : 8192,
+			minFreq      : 20,
+			maxFreq      : 22000,
+			smoothing    : 0.5,
+			gradient     : 'classic',
+			minDecibels  : -85,
+			maxDecibels  : -25,
+			showBgColor  : true,
+			showLeds     : false,
+			showScale    : true,
+			showScaleY   : false,
+			showPeaks    : true,
+			showFPS      : false,
+			lumiBars     : false,
+			loRes        : false,
+			reflexRatio  : 0,
+			reflexAlpha  : 0.15,
+			reflexBright : 1,
+			reflexFit    : true,
+			lineWidth    : 0,
+			fillAlpha    : 1,
+			barSpace     : 0.1,
+			overlay      : false,
+			bgAlpha      : 0.7,
+			radial		 : false,
+			spinSpeed    : 0,
+			stereo       : false,
+			splitGradient: true,
+			start        : true
 		};
 
 		// callback functions properties
