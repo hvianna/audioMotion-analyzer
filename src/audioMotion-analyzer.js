@@ -123,8 +123,6 @@ export default class AudioMotionAnalyzer {
 		// initialize object to save instant and peak energy
 		this._energy = { instant: 0, peak: 0, hold: 0 };
 
- 		this._dataArray = []; // TODO - use only one data array for both channels?
-
 		// Create canvases
 
 		// main spectrum analyzer canvas
@@ -221,10 +219,9 @@ export default class AudioMotionAnalyzer {
 		return this._analyzer[0].fftSize;
 	}
 	set fftSize( value ) {
-		for ( let i = 0; i < 2; i++ ) {
+		for ( let i = 0; i < 2; i++ )
 			this._analyzer[ i ].fftSize = value;
-			this._dataArray[ i ] = new Uint8Array( this._analyzer[ i ].frequencyBinCount );
-		}
+		this._dataArray = new Uint8Array( this._analyzer[0].frequencyBinCount );
 		this._precalculateBarPositions();
 	}
 
@@ -420,9 +417,6 @@ export default class AudioMotionAnalyzer {
 	}
 	get canvasCtx() {
 		return this._canvasCtx;
-	}
-	get dataArray() {
-		return this._dataArray; // TODO: do we still need this?
 	}
 	get energy() {
 		return this._energy.instant;
@@ -802,10 +796,6 @@ export default class AudioMotionAnalyzer {
 			ctx.lineDashOffset = 0;
 		}
 
-		// get a new array of data from the FFT
-		for ( let i = 0; i < this._stereo + 1; i++ )
-			this._analyzer[ i ].getByteFrequencyData( this._dataArray[ i ] );
-
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing defined by the led options
 		let width = this._barWidth - ( ! isOctaveBands ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
@@ -827,10 +817,12 @@ export default class AudioMotionAnalyzer {
 
 		for ( let channel = 0; channel < this._stereo + 1; channel++ ) {
 
-			const fftData        = this._dataArray[ channel ],
-				  channelTop     = channelHeight * channel,
+			const channelTop     = channelHeight * channel,
 				  channelBottom  = channelHeight << channel,
 				  analyzerBottom = channelTop + analyzerHeight;
+
+			// get a new array of data from the FFT
+			this._analyzer[ channel ].getByteFrequencyData( this._dataArray );
 
 			// start drawing path
 			ctx.beginPath();
@@ -847,15 +839,15 @@ export default class AudioMotionAnalyzer {
 					barHeight = 0;
 
 				if ( bar.endIdx == 0 ) { // single FFT bin
-					barHeight = fftData[ bar.dataIdx ];
+					barHeight = this._dataArray[ bar.dataIdx ];
 					// apply smoothing factor when several bars share the same bin
 					if ( bar.factor )
-						barHeight += ( fftData[ bar.dataIdx + 1 ] - barHeight ) * bar.factor;
+						barHeight += ( this._dataArray[ bar.dataIdx + 1 ] - barHeight ) * bar.factor;
 				}
 				else { 					// range of bins
 					// use the highest value in the range
 					for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
-						barHeight = Math.max( barHeight, fftData[ j ] );
+						barHeight = Math.max( barHeight, this._dataArray[ j ] );
 				}
 
 				barHeight /= 255;
