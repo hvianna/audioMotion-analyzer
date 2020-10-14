@@ -1087,7 +1087,10 @@ export default class AudioMotionAnalyzer {
 	 */
 	_generateGradients() {
 
-		const analyzerHeight = ( this._lumiBars && this._mode % 10 ) ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio ) | 0;
+		const isOctaveBands  = ( this._mode % 10 != 0 ),
+			  isLumiBars     = ( this._lumiBars && isOctaveBands && ! this._radial ),
+			  analyzerHeight = isLumiBars ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio * ! this._stereo ) | 0,
+			  analyzerRatio  = 1 - this._reflexRatio;
 
 		// for radial mode
 		const centerX = this._canvas.width >> 1,
@@ -1095,7 +1098,9 @@ export default class AudioMotionAnalyzer {
 			  radius  = ( this._canvas.height * ( this._stereo ? .75 : .25 ) ) >> 1;
 
 		Object.keys( this._gradients ).forEach( key => {
+
 			let grad;
+
 			if ( this._radial )
 				grad = this._canvasCtx.createRadialGradient( centerX, centerY, centerY, centerX, centerY, radius - ( centerY - radius ) * this._stereo );
 			else if ( this._gradients[ key ].dir && this._gradients[ key ].dir == 'h' )
@@ -1104,21 +1109,38 @@ export default class AudioMotionAnalyzer {
 				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, analyzerHeight );
 
 			if ( this._gradients[ key ].colorStops ) {
+
 				const isSplit = this._gradients[ key ].dir != 'h' && this._stereo && this._splitGradient;
+
 				for ( let i = 0; i < 1 + isSplit; i++ ) {
 					this._gradients[ key ].colorStops.forEach( ( colorInfo, index, colorStops ) => {
+
 						const maxIndex = colorStops.length - 1;
-						let pos = ( typeof colorInfo == 'object' ) ? colorInfo.pos : index / maxIndex;
+
+						let offset = ( typeof colorInfo == 'object' ) ? colorInfo.pos : index / maxIndex;
+
+						// if we're splitting the gradient, use half the original offset for each channel
 						if ( isSplit )
-							pos /= 2;
+							offset /= 2;
+
+						// constrain the offset within the useful analyzer areas (avoid reflex areas)
+						if ( this._stereo && ! isLumiBars && ! this._radial ) {
+							offset *= analyzerRatio;
+							// skip the first reflex area in continuous mode (spliGradient == false)
+							if ( ! isSplit && offset > .5 * analyzerRatio )
+								offset += .5 * this._reflexRatio;
+						}
+
+						// add .5 to the offset for the second channel
 						if ( i == 1 ) {
-							pos += .5;
-							// for the second channel of the radial gradient we need to get the colors in reverse order
+							offset += .5;
+							// for the radial gradient, we need to get the colors in reverse order now
 							if ( this._radial )
 								colorInfo = colorStops[ maxIndex - index ];
 						}
 
-						grad.addColorStop( pos, typeof colorInfo == 'object' ? colorInfo.color : colorInfo );
+						// add gradient color stop
+						grad.addColorStop( offset, typeof colorInfo == 'object' ? colorInfo.color : colorInfo );
 					});
 				}
 			}
