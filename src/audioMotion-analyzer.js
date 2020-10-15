@@ -7,7 +7,7 @@
  * @license AGPL-3.0-or-later
  */
 
-const _VERSION = '3.0.0-alpha';
+const _VERSION = '3.0.0-alpha.1';
 
 export default class AudioMotionAnalyzer {
 
@@ -123,15 +123,13 @@ export default class AudioMotionAnalyzer {
 		// initialize object to save instant and peak energy
 		this._energy = { instant: 0, peak: 0, hold: 0 };
 
-		// Create canvases
-
-		// main spectrum analyzer canvas
+		// create analyzer canvas
 		this._canvas = document.createElement('canvas');
 		this._canvas.style = 'max-width: 100%;';
 		this._container.appendChild( this._canvas );
 		this._canvasCtx = this._canvas.getContext('2d');
 
-		// auxiliary canvases for the X-axis scale labels
+		// create auxiliary canvases for the X-axis and circular scale labels
 		this._labels = document.createElement('canvas');
 		this._labelsCtx = this._labels.getContext('2d');
 		this._circScale = document.createElement('canvas');
@@ -187,6 +185,9 @@ export default class AudioMotionAnalyzer {
 			}, 60 );
 		});
 
+		// initialize internal variables
+		this._calculateInternals();
+
 		// Set configuration options and use defaults for any missing properties
 		this._setProperties( options, true );
 
@@ -210,7 +211,7 @@ export default class AudioMotionAnalyzer {
 	}
 	set barSpace( value ) {
 		this._barSpace = Number( value ) || 0;
-		this._calculateBarSpacePx();
+		this._calculateInternals();
 	}
 
 	// FFT size
@@ -263,6 +264,7 @@ export default class AudioMotionAnalyzer {
 		const mode = value | 0;
 		if ( mode >= 0 && mode <= 10 && mode != 9 ) {
 			this._mode = mode;
+			this._calculateInternals();
 			this._precalculateBarPositions();
 			if ( this._reflexRatio > 0 )
 				this._generateGradients();
@@ -281,11 +283,14 @@ export default class AudioMotionAnalyzer {
 		this._setCanvas('lores');
 	}
 
+	// Luminance bars
+
 	get lumiBars() {
 		return this._lumiBars;
 	}
 	set lumiBars( value ) {
 		this._lumiBars = !! value;
+		this._calculateInternals();
 		if ( this._reflexRatio > 0 ) {
 			this._generateGradients();
 			this._calculateLedProperties();
@@ -299,8 +304,11 @@ export default class AudioMotionAnalyzer {
 	}
 	set radial( value ) {
 		this._radial = !! value;
+		this._calculateInternals();
 		this._generateGradients();
 	}
+
+	// Radial spin speed
 
 	get spinSpeed() {
 		return this._spinSpeed;
@@ -370,6 +378,16 @@ export default class AudioMotionAnalyzer {
 			this._analyzer[ i ].maxDecibels = value;
 	}
 
+	// LEDs effect
+
+	get showLeds() {
+		return this._showLeds;
+	}
+	set showLeds( value ) {
+		this._showLeds = !! value;
+		this._calculateInternals();
+	}
+
 	// Analyzer's smoothing time constant
 
 	get smoothing() {
@@ -405,7 +423,7 @@ export default class AudioMotionAnalyzer {
 		this._analyzer[0].connect( this._stereo ? this._merger : this._output );
 
 		// update properties affected by stereo
-		this._updateRadialSize();
+		this._calculateInternals();
 		this._generateScaleX();
 		this._calculateLedProperties();
 		this._generateGradients();
@@ -442,6 +460,15 @@ export default class AudioMotionAnalyzer {
 	}
 	get isFullscreen() {
 		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._canvas;
+	}
+	get isOctaveBands() {
+		return this._isOctaveBands;
+	}
+	get isLedDisplay() {
+		return this._isLedDisplay;
+	}
+	get isLumiBars() {
+		return this._isLumiBars;
 	}
 	get isOn() {
 		return this._animationReq !== undefined;
@@ -640,22 +667,25 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Calculate bar spacing in pixels
+	 * Calculate internal values and flags used during each frame rendering
 	 */
-	_calculateBarSpacePx() {
-		this._barSpacePx = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
+	_calculateInternals() {
+		this._analyzerRadius = this._canvas.height * ( this._stereo ? .375 : .125 ) | 0;
+		this._barSpacePx     = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
+		this._channelHeight  = this._canvas.height >> this._stereo;
+		this._isOctaveBands  = ( this._mode % 10 != 0 );
+		this._isLedDisplay   = ( this._showLeds && this._isOctaveBands && ! this._radial );
+		this._isLumiBars     = ( this._lumiBars && this._isOctaveBands && ! this._radial );
 	}
 
 	/**
 	 * Calculate attributes for the vintage LEDs effect, based on visualization mode and canvas resolution
 	 */
 	_calculateLedProperties() {
-		// no need for this if in discrete frequencies or area fill modes
-		if ( this._mode % 10 == 0 || ! this._initDone )
+		if ( ! this._isOctaveBands || ! this._initDone )
 			return;
 
-		const canvasHeight   = this._canvas.height >> this._stereo,
-			  analyzerHeight = this._lumiBars ? canvasHeight : canvasHeight * ( 1 - this._reflexRatio ) | 0;
+		const analyzerHeight = this._channelHeight * ( this._lumiBars ? 1 : 1 - this._reflexRatio ) | 0;
 
 		let spaceV = Math.min( 6, analyzerHeight / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
 		let nLeds;
@@ -710,16 +740,16 @@ export default class AudioMotionAnalyzer {
 	_draw( timestamp ) {
 		const canvas         = this._canvas,
 			  ctx            = this._canvasCtx,
-			  isOctaveBands  = ( this._mode % 10 != 0 ),
-			  isLedDisplay   = ( this.showLeds  && isOctaveBands && ! this._radial ),
-			  isLumiBars     = ( this._lumiBars && isOctaveBands && ! this._radial ),
-			  channelHeight  = canvas.height >> this._stereo,
+			  isOctaveBands  = this._isOctaveBands,
+			  isLedDisplay   = this._isLedDisplay,
+			  isLumiBars     = this._isLumiBars,
+			  channelHeight  = this._channelHeight,
 			  analyzerHeight = channelHeight * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0;
 
 		// radial related constants
 		const centerX        = canvas.width >> 1,
 			  centerY        = canvas.height >> 1,
-			  radius         = ( this._canvas.height * ( this._stereo ? .75 : .25 ) ) >> 1,
+			  radius         = this._analyzerRadius,
 			  tau            = 2 * Math.PI;
 
 		if ( this._energy.instant > 0 )
@@ -1087,15 +1117,16 @@ export default class AudioMotionAnalyzer {
 	 */
 	_generateGradients() {
 
-		const isOctaveBands  = ( this._mode % 10 != 0 ),
-			  isLumiBars     = ( this._lumiBars && isOctaveBands && ! this._radial ),
+		const isOctaveBands  = this._isOctaveBands,
+			  isLumiBars     = this._isLumiBars,
 			  analyzerHeight = isLumiBars ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio * ! this._stereo ) | 0,
+			  					// for stereo we keep the full canvas height and handle the reflex areas while generating the color stops
 			  analyzerRatio  = 1 - this._reflexRatio;
 
 		// for radial mode
 		const centerX = this._canvas.width >> 1,
 			  centerY = this._canvas.height >> 1,
-			  radius  = ( this._canvas.height * ( this._stereo ? .75 : .25 ) ) >> 1;
+			  radius  = this._analyzerRadius;
 
 		Object.keys( this._gradients ).forEach( key => {
 
@@ -1153,15 +1184,18 @@ export default class AudioMotionAnalyzer {
 	 * Generate the X-axis and radial scales in auxiliary canvases
 	 */
 	_generateScaleX() {
-		const scaleHeight = this._canvas.height * .03 | 0, // circular scale height (radial mode)
-			  radius      = this._circScale.width >> 1,    // this is also used as the center X and Y coordinates of the circScale canvas
-			  radialY     = radius - scaleHeight * .75,    // vertical position of text labels in the circular scale
-			  tau         = 2 * Math.PI,
-			  freqLabels  = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ];
+		const tau         = 2 * Math.PI,
+			  freqLabels  = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ],
+			  scaleHeight = this._canvas.height * .03 | 0; // circular scale height (radial mode)
 
-		// clear canvases
+		// in radial stereo mode, the scale is positioned exactly between both channels, by making the canvas a bit larger than the central diameter
+		this._circScale.width = this._circScale.height = ( this._analyzerRadius << 1 ) + ( this._stereo * scaleHeight );
+
+		const radius  = this._circScale.width >> 1, // this is also used as the center X and Y coordinates of the circular scale canvas
+			  radialY = radius - scaleHeight * .7;	// vertical position of text labels in the circular scale
+
+		// clear scale canvas
 		this._labels.width |= 0;
-		this._circScale.width |= 0;
 
 		this._labelsCtx.fillStyle = this._circScaleCtx.strokeStyle = '#000c';
 		this._labelsCtx.fillRect( 0, 0, this._labels.width, this._labels.height );
@@ -1224,7 +1258,7 @@ export default class AudioMotionAnalyzer {
 
 		this._analyzerBars = [];
 
-		if ( this._mode % 10 == 0 ) {
+		if ( ! this._isOctaveBands ) {
 		// Discrete frequencies or area fill modes
 			this._barWidth = 1;
 
@@ -1286,7 +1320,6 @@ export default class AudioMotionAnalyzer {
 
 			// divide canvas space by the number of frequencies (bars) to display
 			this._barWidth = this._canvas.width / temperedScale.length;
-			this._calculateBarSpacePx();
 
 			let prevBin = 0;  // last bin included in previous frequency band
 			let prevIdx = -1; // previous bar FFT array index
@@ -1347,6 +1380,9 @@ export default class AudioMotionAnalyzer {
 		this._minLog = minLog;
 		this._bandWidth = bandWidth;
 
+		// update internal variables
+		this._calculateInternals();
+
 		// generate the X-axis and radial scales
 		this._generateScaleX();
 
@@ -1386,6 +1422,9 @@ export default class AudioMotionAnalyzer {
 		this._canvas.width  = newWidth;
 		this._canvas.height = newHeight;
 
+		// update internal variables
+		this._calculateInternals();
+
 		// if not in overlay mode, paint the canvas black
 		if ( ! this.overlay ) {
 			this._canvasCtx.fillStyle = '#000';
@@ -1395,12 +1434,9 @@ export default class AudioMotionAnalyzer {
 		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
 		this._canvasCtx.lineJoin = 'bevel';
 
-		// update dimensions of auxiliary canvases
+		// update dimensions of the scale canvas
 		this._labels.width = this._canvas.width;
 		this._labels.height = Math.max( 20 * this._pixelRatio, this._canvas.height / 27 | 0 );
-
-		// update the radial analyzer size and scale
-		this._updateRadialSize();
 
 		// (re)generate gradients
 		this._generateGradients();
@@ -1477,16 +1513,6 @@ export default class AudioMotionAnalyzer {
 			this.toggleAnalyzer( options.start );
 	}
 
-	/**
-	 * Update the size of the radial analyzer scale (and the radius itself), based on canvas size and stereo mode
-	 */
-	_updateRadialSize() {
-		// the radius of the radial analyzer is 75% of the (main) canvas height for stereo and 25% for mono
-		// in stereo mode, the scale is positioned exactly between both channels, by adding the bar width (3% of main canvas height) to the scale canvas size
-		this._circScale.width = this._circScale.height = this._canvas.height * ( this._stereo ? .75 : .25 ) + ( this._stereo * this._canvas.height * .03 | 0 );
-
-		// _generateScaleX() or _precalculateBarPositions() must be called afterwards to regenerate the scale
-	}
 }
 
 /* Custom error class */
