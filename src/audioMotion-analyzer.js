@@ -772,26 +772,11 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// clear the canvas, if in overlay mode
-		if ( this.overlay ) {
+		if ( this.overlay )
 			ctx.clearRect( 0, 0, canvas.width, canvas.height );
-			ctx.globalAlpha = this.bgAlpha; // set opacity for background paint
-		}
 
 		// select background color
-		if ( ! this.showBgColor || isLedDisplay && ! this.overlay )
-			ctx.fillStyle = '#000';
-		else
-			ctx.fillStyle = this._gradients[ this._gradient ].bgColor;
-
-		// fill the canvas background if needed
-		if ( ! this.overlay || this.showBgColor ) {
-			// exclude the reflection area when overlay is true and reflexAlpha == 1
-			// (avoids alpha over alpha difference, in case bgAlpha < 1)
-			ctx.fillRect( 0, 0, canvas.width, ( this.overlay && this.reflexAlpha == 1 ) ? analyzerHeight : canvas.height );
-		}
-
-		// restore global alpha
-		ctx.globalAlpha = 1;
+		const bgColor = ( ! this.showBgColor || isLedDisplay && ! this.overlay ) ? '#000' : this._gradients[ this._gradient ].bgColor;
 
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing defined by the led options
@@ -810,6 +795,20 @@ export default class AudioMotionAnalyzer {
 			const channelTop     = channelHeight * channel,
 				  channelBottom  = channelHeight << channel,
 				  analyzerBottom = channelTop + analyzerHeight;
+
+			// fill the analyzer background if needed
+			if ( ! this.overlay || this.showBgColor ) {
+				if ( this.overlay )
+					ctx.globalAlpha = this.bgAlpha;
+
+				ctx.fillStyle = bgColor;
+
+				// exclude the reflection area when overlay is true and reflexAlpha == 1 (avoids alpha over alpha difference, in case bgAlpha < 1)
+				if ( ! this._radial || channel == 0 )
+					ctx.fillRect( 0, channelTop, canvas.width, ( this.overlay && this.reflexAlpha == 1 ) ? analyzerHeight : channelHeight );
+
+				ctx.globalAlpha = 1;
+			}
 
 			// draw dB scale (Y-axis)
 			if ( this.showScaleY && ! isLumiBars && ! this._radial ) {
