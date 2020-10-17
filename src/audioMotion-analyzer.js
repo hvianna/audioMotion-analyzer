@@ -793,60 +793,13 @@ export default class AudioMotionAnalyzer {
 		// restore global alpha
 		ctx.globalAlpha = 1;
 
-		// draw dB scale (Y-axis)
-		if ( this.showScaleY && ! isLumiBars && ! this._radial ) {
-			const scaleWidth  = this._labels.height,
-				  scaleHeight = analyzerHeight - ( this.showScale && this.reflexRatio == 0 ? this._labels.height : 0 ),
-				  fontSize    = scaleWidth >> 1,
-				  interval    = analyzerHeight / ( this._analyzer[0].maxDecibels - this._analyzer[0].minDecibels );
-
-			ctx.fillStyle = '#888';
-			ctx.font = `${fontSize}px sans-serif`;
-			ctx.textAlign = 'right';
-			ctx.lineWidth = 1;
-
-			for ( let db = this._analyzer[0].maxDecibels; db > this._analyzer[0].minDecibels; db -= 5 ) {
-				const posY = ( this._analyzer[0].maxDecibels - db ) * interval,
-					  even = ( db % 2 == 0 ) | 0;
-
-				if ( even ) {
-					const labelY = posY == 0 ? fontSize * .8 : posY + fontSize * .35;
-					ctx.fillText( db, scaleWidth * .85, labelY );
-					ctx.fillText( db, canvas.width - scaleWidth * .1, labelY );
-					ctx.strokeStyle = '#888';
-					ctx.setLineDash([2,4]);
-					ctx.lineDashOffset = 0;
-				}
-				else {
-					ctx.strokeStyle = '#555';
-					ctx.setLineDash([2,8]);
-					ctx.lineDashOffset = 1;
-				}
-
-				ctx.beginPath();
-				ctx.moveTo( scaleWidth * even, posY );
-				ctx.lineTo( canvas.width - scaleWidth * even, posY );
-				ctx.stroke();
-			}
-			// restore line properties
-			ctx.setLineDash([]);
-			ctx.lineDashOffset = 0;
-		}
-
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing defined by the led options
 		let width = this._barWidth - ( ! isOctaveBands ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
 
-		// set line width and dash for LEDs effect
-		if ( isLedDisplay ) {
-			ctx.setLineDash( [ this._ledOptions.ledHeight, this._ledOptions.spaceV ] );
-			ctx.lineWidth = width;
-		}
-		else if ( this._barSpace == 0 )
-			width |= 0; // make sure width is integer for pixel accurate calculation, when no bar spacing is required
-
-		// set selected gradient for fill and stroke
-		ctx.fillStyle = ctx.strokeStyle = this._gradients[ this._gradient ].gradient;
+		// make sure width is integer for pixel accurate calculation, when no bar spacing is required
+		if ( this._barSpace == 0 && ! isLedDisplay )
+			width |= 0;
 
 		let energy = 0;
 
@@ -857,6 +810,55 @@ export default class AudioMotionAnalyzer {
 			const channelTop     = channelHeight * channel,
 				  channelBottom  = channelHeight << channel,
 				  analyzerBottom = channelTop + analyzerHeight;
+
+			// draw dB scale (Y-axis)
+			if ( this.showScaleY && ! isLumiBars && ! this._radial ) {
+				const scaleWidth  = this._labels.height,
+					  scaleHeight = analyzerHeight - ( this.showScale && this.reflexRatio == 0 ? this._labels.height : 0 ),
+					  fontSize    = scaleWidth >> 1,
+					  interval    = analyzerHeight / ( this._analyzer[0].maxDecibels - this._analyzer[0].minDecibels );
+
+				ctx.fillStyle = '#888';
+				ctx.font = `${fontSize}px sans-serif`;
+				ctx.textAlign = 'right';
+				ctx.lineWidth = 1;
+
+				for ( let db = this._analyzer[0].maxDecibels; db > this._analyzer[0].minDecibels; db -= 5 ) {
+					const posY = channelTop + ( this._analyzer[0].maxDecibels - db ) * interval,
+						  even = ( db % 2 == 0 ) | 0;
+
+					if ( even ) {
+						const labelY = posY + fontSize * ( posY == channelTop ? .8 : .35 );
+						ctx.fillText( db, scaleWidth * .85, labelY );
+						ctx.fillText( db, canvas.width - scaleWidth * .1, labelY );
+						ctx.strokeStyle = '#888';
+						ctx.setLineDash([2,4]);
+						ctx.lineDashOffset = 0;
+					}
+					else {
+						ctx.strokeStyle = '#555';
+						ctx.setLineDash([2,8]);
+						ctx.lineDashOffset = 1;
+					}
+
+					ctx.beginPath();
+					ctx.moveTo( scaleWidth * even, ~~posY + .5 ); // for sharp 1px line (https://stackoverflow.com/a/13879402/2370385)
+					ctx.lineTo( canvas.width - scaleWidth * even, ~~posY + .5 );
+					ctx.stroke();
+				}
+				// restore line properties
+				ctx.setLineDash([]);
+				ctx.lineDashOffset = 0;
+			}
+
+			// set line width and dash for LEDs effect
+			if ( isLedDisplay ) {
+				ctx.setLineDash( [ this._ledOptions.ledHeight, this._ledOptions.spaceV ] );
+				ctx.lineWidth = width;
+			}
+
+			// set selected gradient for fill and stroke
+			ctx.fillStyle = ctx.strokeStyle = this._gradients[ this._gradient ].gradient;
 
 			// get a new array of data from the FFT
 			this._analyzer[ channel ].getByteFrequencyData( this._dataArray );
@@ -991,7 +993,7 @@ export default class AudioMotionAnalyzer {
 						bar.peak[ channel ] -= bar.accel[ channel ];
 					}
 				}
-			} // for ( let i = 0; i < l; i++ )
+			} // for ( let i = 0; i < nBars; i++ )
 
 			// restore global alpha
 			ctx.globalAlpha = 1;
