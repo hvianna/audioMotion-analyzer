@@ -1140,18 +1140,19 @@ export default class AudioMotionAnalyzer {
 			else
 				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, analyzerHeight );
 
-			if ( this._gradients[ key ].colorStops ) {
+			const colorStops = this._gradients[ key ].colorStops;
 
+			if ( colorStops ) {
 				const isSplit = this._gradients[ key ].dir != 'h' && this._stereo && this._splitGradient;
 
 				for ( let i = 0; i < 1 + isSplit; i++ ) {
-					this._gradients[ key ].colorStops.forEach( ( colorInfo, index, colorStops ) => {
+					colorStops.forEach( ( colorInfo, index ) => {
 
 						const maxIndex = colorStops.length - 1;
 
-						let offset = ( typeof colorInfo == 'object' ) ? colorInfo.pos : index / maxIndex;
+						let offset = colorInfo.pos !== undefined ? colorInfo.pos : index / maxIndex;
 
-						// if we're splitting the gradient, use half the original offset for each channel
+						// in split mode, use half the original offset for each channel
 						if ( isSplit )
 							offset /= 2;
 
@@ -1163,12 +1164,16 @@ export default class AudioMotionAnalyzer {
 								offset += .5 * this._reflexRatio;
 						}
 
-						// add .5 to the offset for the second channel
+						// second channel (when in split mode)
 						if ( i == 1 ) {
-							offset += .5;
-							// for the radial gradient, we need to get the colors in reverse order now
-							if ( this._radial )
-								colorInfo = colorStops[ maxIndex - index ];
+							// for radial gradients, we need to add colors in reverse order now
+							if ( this._radial ) {
+								const revIndex = maxIndex - index;
+								colorInfo = colorStops[ revIndex ];
+								offset = 1 - ( colorInfo.pos !== undefined ? colorInfo.pos : revIndex / maxIndex ) / 2;
+							}
+							else
+								offset += .5; // for linear gradients, just bump the offset to the second half
 						}
 
 						// add gradient color stop
