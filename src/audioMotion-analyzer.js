@@ -1146,6 +1146,9 @@ export default class AudioMotionAnalyzer {
 			if ( colorStops ) {
 				const isSplit = this._gradients[ key ].dir != 'h' && this._stereo && this._splitGradient;
 
+				// helper function
+				const addColorStop = ( offset, colorInfo ) => grad.addColorStop( offset, typeof colorInfo == 'object' ? colorInfo.color : colorInfo );
+
 				for ( let i = 0; i < 1 + isSplit; i++ ) {
 					colorStops.forEach( ( colorInfo, index ) => {
 
@@ -1173,12 +1176,21 @@ export default class AudioMotionAnalyzer {
 								colorInfo = colorStops[ revIndex ];
 								offset = 1 - ( colorInfo.pos !== undefined ? colorInfo.pos : revIndex / maxIndex ) / 2;
 							}
-							else
-								offset += .5; // for linear gradients, just bump the offset to the second half
+							else {
+								// if the first offset is not 0, create an additional color stop to prevent bleeding from the first channel
+								if ( index == 0 && offset > 0 )
+									addColorStop( .5, colorInfo );
+								// bump the offset to the second half of the gradient
+								offset += .5;
+							}
 						}
 
 						// add gradient color stop
-						grad.addColorStop( offset, typeof colorInfo == 'object' ? colorInfo.color : colorInfo );
+						addColorStop( offset, colorInfo );
+
+						// create additional color stop at the end of first channel to prevent bleeding
+						if ( this._stereo && index == maxIndex && offset < .5 )
+							addColorStop( .5, colorInfo );
 					});
 				}
 			}
