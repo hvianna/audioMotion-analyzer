@@ -305,6 +305,7 @@ export default class AudioMotionAnalyzer {
 	set radial( value ) {
 		this._radial = !! value;
 		this._calculateInternals();
+		this._calculateLedProperties();
 		this._generateGradients();
 	}
 
