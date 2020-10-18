@@ -879,9 +879,11 @@ export default class AudioMotionAnalyzer {
 
 				if ( bar.endIdx == 0 ) { // single FFT bin
 					barHeight = this._dataArray[ bar.dataIdx ];
-					// apply smoothing factor when several bars share the same bin
-					if ( bar.factor )
-						barHeight += ( this._dataArray[ bar.dataIdx + 1 ] - barHeight ) * bar.factor;
+					// perform value interpolation when several bars share the same bin, to generate a smooth curve
+					if ( bar.factor ) {
+						const prevBar = bar.dataIdx ? this._dataArray[ bar.dataIdx - 1 ] : barHeight;
+						barHeight = prevBar + ( barHeight - prevBar ) * bar.factor;
+					}
 				}
 				else { 					// range of bins
 					// use the highest value in the range
@@ -1360,10 +1362,10 @@ export default class AudioMotionAnalyzer {
 					nBars++;
 				}
 				else {
-					// update previous bars using the same index with a smoothing factor
+					// update previous bars using the same index with a interpolation factor
 					if ( nBars > 1 ) {
-						for ( let i = 1; i <= nBars; i++ )
-							this._analyzerBars[ this._analyzerBars.length - i ].factor = ( nBars - i ) / nBars;
+						for ( let i = 0; i < nBars; i++ )
+							this._analyzerBars[ this._analyzerBars.length - nBars + i ].factor = ( i + 1 ) / nBars;
 					}
 					prevIdx = idx;
 					nBars = 1;
