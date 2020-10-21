@@ -866,10 +866,6 @@ export default class AudioMotionAnalyzer {
 			// start drawing path
 			ctx.beginPath();
 
-			// in line / graph mode, line starts off screen
-			if ( this._mode == 10 && ! this._radial )
-				ctx.moveTo( -this.lineWidth, analyzerBottom );
-
 			// draw bars / lines
 
 			for ( let i = 0; i < nBars; i++ ) {
@@ -918,12 +914,28 @@ export default class AudioMotionAnalyzer {
 				let posX = bar.posX;
 				let adjWidth = width; // bar width may need small adjustments for some bars, when barSpace == 0
 
-				// Draw line / bar
+				// Draw current bar or line segment
+
 				if ( this._mode == 10 ) {
-					if ( ! this._radial )
+					if ( this._radial ) {
+						// in radial graph mode, use value of previous FFT bin (if available) as the initial amplitude
+						if ( i == 0 && bar.dataIdx && bar.posX )
+							ctx.lineTo( ...radialXY( 0, this._dataArray[ bar.dataIdx - 1 ] / 255 * ( centerY - radius ) * ( channel == 1 ? -1 : 1 ) ) );
+						// draw line to current point, avoiding overlapping wrap-around frequencies
+						if ( bar.posX >= 0 )
+							ctx.lineTo( ...radialXY( bar.posX, barHeight ) );
+					}
+					else {
+						if ( i == 0 ) {
+							// in linear mode, start the line off screen
+							ctx.moveTo( -this.lineWidth, analyzerBottom );
+							// use value of previous FFT bin
+							if ( bar.dataIdx )
+								ctx.lineTo( -this.lineWidth, analyzerBottom - this._dataArray[ bar.dataIdx - 1 ] / 255 * analyzerHeight );
+						}
+						// draw line to current point
 						ctx.lineTo( bar.posX, analyzerBottom - barHeight );
-					else if ( bar.posX >= 0 ) // avoid overlapping wrap-around frequencies
-						ctx.lineTo( ...radialXY( bar.posX, barHeight ) );
+					}
 				}
 				else {
 					if ( this._mode > 0 ) {
