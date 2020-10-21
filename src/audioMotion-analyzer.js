@@ -670,7 +670,7 @@ export default class AudioMotionAnalyzer {
 	_calculateInternals() {
 		this._analyzerRadius = this._canvas.height * ( this._stereo ? .375 : .125 ) | 0;
 		this._barSpacePx     = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
-		this._channelHeight  = this._canvas.height >> ( this._stereo && ! this._radial );
+		this._channelHeight  = this._canvas.height / ( this._stereo && ! this._radial ? 2 : 1 );
 		this._isOctaveBands  = ( this._mode % 10 != 0 );
 		this._isLedDisplay   = ( this._showLeds && this._isOctaveBands && ! this._radial );
 		this._isLumiBars     = ( this._lumiBars && this._isOctaveBands && ! this._radial );
