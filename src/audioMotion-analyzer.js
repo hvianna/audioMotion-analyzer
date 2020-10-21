@@ -266,8 +266,7 @@ export default class AudioMotionAnalyzer {
 			this._mode = mode;
 			this._calculateInternals();
 			this._precalculateBarPositions();
-			if ( this._reflexRatio > 0 )
-				this._generateGradients();
+			this._generateGradients();
 		}
 		else
 			throw new AudioMotionError( 'ERR_INVALID_MODE', `Invalid mode: ${value}` );
@@ -291,10 +290,8 @@ export default class AudioMotionAnalyzer {
 	set lumiBars( value ) {
 		this._lumiBars = !! value;
 		this._calculateInternals();
-		if ( this._reflexRatio > 0 ) {
-			this._generateGradients();
-			this._calculateLedProperties();
-		}
+		this._calculateLedProperties();
+		this._generateGradients();
 	}
 
 	// Radial mode
@@ -1184,8 +1181,8 @@ export default class AudioMotionAnalyzer {
 
 						// second channel (when in split mode)
 						if ( i == 1 ) {
-							// for radial gradients, we need to add colors in reverse order now
-							if ( this._radial ) {
+							// add colors in reverse order if radial or lumi are active
+							if ( this._radial || isLumiBars ) {
 								const revIndex = maxIndex - index;
 								colorInfo = colorStops[ revIndex ];
 								offset = 1 - ( colorInfo.pos !== undefined ? colorInfo.pos : revIndex / maxIndex ) / 2;
