@@ -329,6 +329,7 @@ export default class AudioMotionAnalyzer {
 			throw new AudioMotionError( 'ERR_REFLEX_OUT_OF_RANGE', `Reflex ratio must be >= 0 and < 1` );
 		else {
 			this._reflexRatio = value;
+			this._calculateInternals();
 			this._generateGradients();
 			this._calculateLedProperties();
 		}
@@ -665,7 +666,7 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Calculate internal values and flags used during each frame rendering
+	 * Calculate auxiliary values and flags
 	 */
 	_calculateInternals() {
 		this._analyzerRadius = this._canvas.height * ( this._stereo ? .375 : .125 ) | 0;
@@ -674,6 +675,7 @@ export default class AudioMotionAnalyzer {
 		this._isOctaveBands  = ( this._mode % 10 != 0 );
 		this._isLedDisplay   = ( this._showLeds && this._isOctaveBands && ! this._radial );
 		this._isLumiBars     = ( this._lumiBars && this._isOctaveBands && ! this._radial );
+		this._maximizeLeds   = ! this._stereo || this._reflexRatio > 0 && ! this._isLumiBars;
 	}
 
 	/**
@@ -683,7 +685,7 @@ export default class AudioMotionAnalyzer {
 		if ( ! this._isOctaveBands || ! this._initDone )
 			return;
 
-		const analyzerHeight = this._channelHeight * ( this._lumiBars ? 1 : 1 - this._reflexRatio ) | 0;
+		let analyzerHeight = this._channelHeight * ( this._lumiBars ? 1 : 1 - this._reflexRatio ) | 0;
 
 		let spaceV = Math.min( 6, analyzerHeight / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
 		let nLeds;
@@ -720,14 +722,18 @@ export default class AudioMotionAnalyzer {
 		// make sure spaceV is at least 1px
 		spaceV = Math.max( spaceV, 1 ) * this._pixelRatio;
 
+		// remove the extra spacing at the bottom when single channel or stereo with reflex
+		if ( this._maximizeLeds )
+			analyzerHeight += spaceV;
+
 		// recalculate the number of leds, considering the effective spaceV
-		nLeds = Math.min( nLeds, ( analyzerHeight + spaceV ) / ( spaceV * 2 ) | 0 );
+		nLeds = Math.min( nLeds, analyzerHeight / ( spaceV * 2 ) | 0 );
 
 		this._ledOptions = {
 			nLeds,
 			spaceH: this._barWidth * ( this._mode == 1 ? .45 : this._mode < 5 ? .225 : .125 ),
 			spaceV,
-			ledHeight: ( analyzerHeight + spaceV ) / nLeds - spaceV
+			ledHeight: analyzerHeight / nLeds - spaceV
 		};
 	}
 
@@ -792,7 +798,7 @@ export default class AudioMotionAnalyzer {
 
 			const channelTop     = channelHeight * channel,
 				  channelBottom  = channelHeight << channel,
-				  analyzerBottom = channelTop + analyzerHeight;
+				  analyzerBottom = channelTop + analyzerHeight - ( isLedDisplay && ! this._maximizeLeds ? this._ledOptions.spaceV : 0 );
 
 			// fill the analyzer background if needed
 			if ( ! this.overlay || this.showBgColor ) {
