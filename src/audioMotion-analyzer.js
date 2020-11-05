@@ -91,16 +91,13 @@ export default class AudioMotionAnalyzer {
 			for STEREO:                              +--->  analyzer[0]  ---+
 		    	                                     |                      |
 			(source) --->  input  --->  splitter  ---+                      +--->  merger  --->  output  ---> (destination)
-		    	             |                       |                      |                       |
-		        	         |                       +--->  analyzer[1]  ---+                       |
-			                 |                                                                      |
-			for MONO:        |                                                                      |
-			                 |                                                                      |
+		    	                                     |                      |
+		        	                                 +--->  analyzer[1]  ---+
+
+			for MONO:
+
 			(source) --->  input  ----------------------->  analyzer[0]  --------------------->  output  ---> (destination)
-		    	             |                                                                      |
-			                 |                                                                      |
-			                 |                                                                      |
-			                 +------------------------> (interface objects) <-----------------------+
+
 		*/
 
 		// create the analyzer nodes, channel splitter and merger, and gain node
@@ -453,9 +450,6 @@ export default class AudioMotionAnalyzer {
 	}
 	get fps() {
 		return this._fps;
-	}
-	get input() {
-		return this._input;
 	}
 	get isFullscreen() {
 		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._canvas;
