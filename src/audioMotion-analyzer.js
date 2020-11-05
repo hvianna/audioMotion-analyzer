@@ -427,6 +427,15 @@ export default class AudioMotionAnalyzer {
 		this._generateGradients();
 	}
 
+	// Volume
+
+	get volume() {
+		return this._output.gain.value;
+	}
+	set volume( value ) {
+		this._output.gain.value = value;
+	}
+
 	// Read only properties
 
 	get audioCtx() {
@@ -1533,7 +1542,8 @@ export default class AudioMotionAnalyzer {
 			spinSpeed    : 0,
 			stereo       : false,
 			splitGradient: true,
-			start        : true
+			start        : true,
+			volume       : 1
 		};
 
 		// callback functions properties
