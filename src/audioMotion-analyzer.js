@@ -494,16 +494,26 @@ export default class AudioMotionAnalyzer {
 	 */
 
 	/**
-	 * Connect HTML audio element to analyzer
+	 * Connects an HTML media element or audio node to the analyzer
 	 *
-	 * @param {object} element HTML audio element
-	 * @returns {object} a MediaElementAudioSourceNode object
+	 * @param {object} an instance of HTMLMediaElement or AudioNode
+	 * @returns {object} a MediaElementAudioSourceNode object if created from HTML element, or the same input object otherwise
 	 */
-	connectAudio( element ) {
-		const audioSource = this._audioCtx.createMediaElementSource( element );
+	connectAudio( source ) {
+		const isHTML = source instanceof HTMLMediaElement;
+
+		if ( ! ( isHTML || source instanceof AudioNode ) )
+			throw new AudioMotionError( 'ERR_INVALID_AUDIO_SOURCE', 'Audio source must be an instance of HTMLMediaElement or AudioNode' );
+
+		// if source is an HTML element, create an audio node for it
+		const audioSource = isHTML ? this._audioCtx.createMediaElementSource( source ) : source;
+
+		// connect audio source node to our input node
 		audioSource.connect( this._input );
+
 		if ( this._audioSource === undefined )
 			this._audioSource = audioSource;
+
 		return audioSource;
 	}
 
