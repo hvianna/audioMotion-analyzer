@@ -1096,7 +1096,7 @@ export default class AudioMotionAnalyzer {
 		ctx.setLineDash([]);
 
 		// draw frequency scale (X-axis)
-		if ( this.showScale ) {
+		if ( this.showScaleX ) {
 			if ( this._radial ) {
 				ctx.save();
 				ctx.translate( centerX, centerY );
@@ -1522,7 +1522,7 @@ export default class AudioMotionAnalyzer {
 			maxDecibels  : -25,
 			showBgColor  : true,
 			showLeds     : false,
-			showScale    : true,
+			showScaleX   : true,
 			showScaleY   : false,
 			showPeaks    : true,
 			showFPS      : false,
