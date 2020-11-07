@@ -107,14 +107,14 @@ export default class AudioMotionAnalyzer {
  		this._input    = this._audioCtx.createGain();
  		this._output   = this._audioCtx.createGain();
 
- 		// connect splitter -> analyzers -> merger
-		for ( let i = 0; i < 2; i++ )
-			this._splitter.connect( this._analyzer[ i ], i ).connect( this._merger, 0, i );
-
  		// initialize audioSource array and connect source provided in the options
 		this._audioSource = [];
 		if ( options.source )
-			this.connectAudio( options.source );
+			this.connectInput( options.source );
+
+ 		// connect splitter -> analyzers -> merger
+		for ( let i = 0; i < 2; i++ )
+			this._splitter.connect( this._analyzer[ i ], i ).connect( this._merger, 0, i );
 
 		// connect merger -> output
 		this._merger.connect( this._output );
@@ -504,36 +504,35 @@ export default class AudioMotionAnalyzer {
 	 * @param {object} an instance of HTMLMediaElement or AudioNode
 	 * @returns {object} a MediaElementAudioSourceNode object if created from HTML element, or the same input object otherwise
 	 */
-	connectAudio( source ) {
+	connectInput( source ) {
 		const isHTML = source instanceof HTMLMediaElement;
 
 		if ( ! ( isHTML || source instanceof AudioNode ) )
 			throw new AudioMotionError( 'ERR_INVALID_AUDIO_SOURCE', 'Audio source must be an instance of HTMLMediaElement or AudioNode' );
 
 		// if source is an HTML element, create an audio node for it; otherwise, use the provided audio node
-		const audioSource = isHTML ? this._audioCtx.createMediaElementSource( source ) : source;
+		const node = isHTML ? this._audioCtx.createMediaElementSource( source ) : source;
 
-		if ( ! this._audioSource.includes( audioSource ) ) {
-			audioSource.connect( this._input );
-			this._audioSource.push( audioSource );
+		if ( ! this._audioSource.includes( node ) ) {
+			node.connect( this._input );
+			this._audioSource.push( node );
 		}
 
-		return audioSource;
+		return node;
 	}
 
 	/**
 	 * Disconnects audio sources from the analyzer
 	 *
-	 * @param [{object}] a connected AudioNode object; if not provided, disconnect all connected nodes
+	 * @param [{object|array}] a connected AudioNode object or an array of such objects; if undefined, all connected nodes are disconnected
 	 */
-	disconnectAudio( source ) {
-		if ( ! source )
-			source = this._audioSource;
+	disconnectInput( sources ) {
+		if ( ! sources )
+			sources = Array.from( this._audioSource );
+		else if ( ! Array.isArray( sources ) )
+			sources = [ sources ];
 
-		if ( ! Array.isArray( source ) )
-			source = [ source ];
-
-		for ( const node of source ) {
+		for ( const node of sources ) {
 			const idx = this._audioSource.indexOf( node );
 			if ( idx >= 0 ) {
 				node.disconnect( this._input );
