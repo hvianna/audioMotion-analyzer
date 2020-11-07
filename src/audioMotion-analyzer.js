@@ -116,8 +116,11 @@ export default class AudioMotionAnalyzer {
 		if ( options.source )
 			this.connectAudio( options.source );
 
-		// connect merger -> output -> destination (speakers)
-		this._merger.connect( this._output ).connect( this._audioCtx.destination );
+		// connect merger -> output
+		this._merger.connect( this._output );
+
+		// connect output -> destination (speakers)
+		this.connectOutput();
 
 		// initialize object to save instant and peak energy
 		this._energy = { instant: 0, peak: 0, hold: 0 };
@@ -477,9 +480,6 @@ export default class AudioMotionAnalyzer {
 	get isOn() {
 		return this._animationReq !== undefined;
 	}
-	get output() {
-		return this._output;
-	}
 	get peakEnergy() {
 		return this._energy.peak;
 	}
@@ -540,6 +540,24 @@ export default class AudioMotionAnalyzer {
 				this._audioSource.splice( idx, 1 );
 			}
 		}
+	}
+
+	/**
+	 * Connects the analyzer output to another audio node
+	 *
+	 * @param [{object}] an AudioNode; if undefined, the output is connected to the audio context destination (speakers)
+	 */
+	connectOutput( node = this._audioCtx.destination ) {
+	 	this._output.connect( node );
+	}
+
+	/**
+	 * Disconnects the analyzer output from other audio nodes
+	 *
+	 * @param [{object}] a connected AudioNode object; if undefined, all connected nodes are disconnected
+	 */
+	disconnectOutput( node ) {
+	 	this._output.disconnect( node );
 	}
 
 	/**
