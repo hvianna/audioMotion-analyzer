@@ -825,10 +825,9 @@ export default class AudioMotionAnalyzer {
 
 			// draw dB scale (Y-axis)
 			if ( this.showScaleY && ! isLumiBars && ! this._radial ) {
-				const scaleWidth  = this._labels.height,
-					  scaleHeight = analyzerHeight - ( this.showScale && this.reflexRatio == 0 ? this._labels.height : 0 ),
-					  fontSize    = scaleWidth >> 1,
-					  interval    = analyzerHeight / ( this._analyzer[0].maxDecibels - this._analyzer[0].minDecibels );
+				const scaleWidth = this._labels.height,
+					  fontSize   = scaleWidth >> 1,
+					  interval   = analyzerHeight / ( this._analyzer[0].maxDecibels - this._analyzer[0].minDecibels );
 
 				ctx.fillStyle = '#888';
 				ctx.font = `${fontSize}px sans-serif`;
