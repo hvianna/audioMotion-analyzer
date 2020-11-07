@@ -133,9 +133,7 @@ export default class AudioMotionAnalyzer {
 
 		// create auxiliary canvases for the X-axis and circular scale labels
 		this._labels = document.createElement('canvas');
-		this._labelsCtx = this._labels.getContext('2d');
 		this._circScale = document.createElement('canvas');
-		this._circScaleCtx = this._circScale.getContext('2d');
 
 		// Update canvas size on container / window resize and fullscreen events
 
@@ -1247,6 +1245,8 @@ export default class AudioMotionAnalyzer {
 	_generateScaleX() {
 		const tau         = 2 * Math.PI,
 			  freqLabels  = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ],
+			  labelsCtx   = this._labels.getContext('2d'),
+			  radialCtx   = this._circScale.getContext('2d'),
 			  scaleHeight = this._canvas.height * .03 | 0; // circular scale height (radial mode)
 
 		// in radial stereo mode, the scale is positioned exactly between both channels, by making the canvas a bit larger than the central diameter
@@ -1258,23 +1258,23 @@ export default class AudioMotionAnalyzer {
 		// clear scale canvas
 		this._labels.width |= 0;
 
-		this._labelsCtx.fillStyle = this._circScaleCtx.strokeStyle = '#000c';
-		this._labelsCtx.fillRect( 0, 0, this._labels.width, this._labels.height );
+		labelsCtx.fillStyle = radialCtx.strokeStyle = '#000c';
+		labelsCtx.fillRect( 0, 0, this._labels.width, this._labels.height );
 
-		this._circScaleCtx.arc( radius, radius, radius - scaleHeight / 2, 0, tau );
-		this._circScaleCtx.lineWidth = scaleHeight;
-		this._circScaleCtx.stroke();
+		radialCtx.arc( radius, radius, radius - scaleHeight / 2, 0, tau );
+		radialCtx.lineWidth = scaleHeight;
+		radialCtx.stroke();
 
-		this._labelsCtx.fillStyle = this._circScaleCtx.fillStyle = '#fff';
-		this._labelsCtx.font = `${ this._labels.height >> 1 }px sans-serif`;
-		this._circScaleCtx.font = `${ scaleHeight >> 1 }px sans-serif`;
-		this._labelsCtx.textAlign = this._circScaleCtx.textAlign = 'center';
+		labelsCtx.fillStyle = radialCtx.fillStyle = '#fff';
+		labelsCtx.font = `${ this._labels.height >> 1 }px sans-serif`;
+		radialCtx.font = `${ scaleHeight >> 1 }px sans-serif`;
+		labelsCtx.textAlign = radialCtx.textAlign = 'center';
 
 		for ( const freq of freqLabels ) {
 			const label = ( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
 				  x     = this._bandWidth * ( Math.log10( freq ) - this._minLog );
 
-			this._labelsCtx.fillText( label, x,	this._labels.height * .75 );
+			labelsCtx.fillText( label, x, this._labels.height * .75 );
 
 			// avoid overlapping wrap-around labels in the circular scale
 			if ( x > 0 && x < this._canvas.width ) {
@@ -1283,11 +1283,11 @@ export default class AudioMotionAnalyzer {
 					  posX   = radialY * Math.cos( adjAng ),
 					  posY   = radialY * Math.sin( adjAng );
 
-				this._circScaleCtx.save();
-				this._circScaleCtx.translate( radius + posX, radius + posY );
-				this._circScaleCtx.rotate( angle );
-				this._circScaleCtx.fillText( label, 0, 0 );
-				this._circScaleCtx.restore();
+				radialCtx.save();
+				radialCtx.translate( radius + posX, radius + posY );
+				radialCtx.rotate( angle );
+				radialCtx.fillText( label, 0, 0 );
+				radialCtx.restore();
 			}
 		}
 	}
