@@ -1121,7 +1121,7 @@ export default class AudioMotionAnalyzer {
 				ctx.restore();
 			}
 			else
-				ctx.drawImage( this._labels, 0, channelHeight - this._labels.height );
+				ctx.drawImage( this._labels, 0, canvas.height - this._labels.height );
 		}
 
 		// calculate and update current frame rate
