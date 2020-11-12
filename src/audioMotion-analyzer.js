@@ -107,8 +107,8 @@ export default class AudioMotionAnalyzer {
  		this._input    = this._audioCtx.createGain();
  		this._output   = this._audioCtx.createGain();
 
- 		// initialize audioSource array and connect source provided in the options
-		this._audioSource = [];
+ 		// initialize sources array and connect audio source if provided in the options
+		this._sources = [];
 		if ( options.source )
 			this.connectInput( options.source );
 
@@ -442,14 +442,14 @@ export default class AudioMotionAnalyzer {
 	get audioCtx() {
 		return this._audioCtx;
 	}
-	get audioSource() {
-		return this._audioSource;
-	}
 	get canvas() {
 		return this._canvas;
 	}
 	get canvasCtx() {
 		return this._canvasCtx;
+	}
+	get connectedSources() {
+		return this._sources;
 	}
 	get energy() {
 		return this._energy.instant;
@@ -511,9 +511,9 @@ export default class AudioMotionAnalyzer {
 		// if source is an HTML element, create an audio node for it; otherwise, use the provided audio node
 		const node = isHTML ? this._audioCtx.createMediaElementSource( source ) : source;
 
-		if ( ! this._audioSource.includes( node ) ) {
+		if ( ! this._sources.includes( node ) ) {
 			node.connect( this._input );
-			this._audioSource.push( node );
+			this._sources.push( node );
 		}
 
 		return node;
@@ -526,15 +526,15 @@ export default class AudioMotionAnalyzer {
 	 */
 	disconnectInput( sources ) {
 		if ( ! sources )
-			sources = Array.from( this._audioSource );
+			sources = Array.from( this._sources );
 		else if ( ! Array.isArray( sources ) )
 			sources = [ sources ];
 
 		for ( const node of sources ) {
-			const idx = this._audioSource.indexOf( node );
+			const idx = this._sources.indexOf( node );
 			if ( idx >= 0 ) {
 				node.disconnect( this._input );
-				this._audioSource.splice( idx, 1 );
+				this._sources.splice( idx, 1 );
 			}
 		}
 	}
