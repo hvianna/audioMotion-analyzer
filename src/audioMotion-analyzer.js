@@ -820,8 +820,9 @@ export default class AudioMotionAnalyzer {
 
 		for ( let channel = 0; channel < this._stereo + 1; channel++ ) {
 
-			const channelTop     = channelHeight * channel,
-				  channelBottom  = channelHeight << channel,
+			const channelGap     = ! isLedDisplay | 0, // 1px gap between channels, except for leds (TODO: improve this, make it configurable?)
+			 	  channelTop     = channelHeight * channel + channelGap * channel,
+				  channelBottom  = channelTop + channelHeight,
 				  analyzerBottom = channelTop + analyzerHeight - ( isLedDisplay && ! this._maximizeLeds ? this._ledOptions.spaceV : 0 );
 
 			// fill the analyzer background if needed
@@ -833,7 +834,7 @@ export default class AudioMotionAnalyzer {
 
 				// exclude the reflection area when overlay is true and reflexAlpha == 1 (avoids alpha over alpha difference, in case bgAlpha < 1)
 				if ( ! this._radial || channel == 0 )
-					ctx.fillRect( 0, channelTop, canvas.width, ( this.overlay && this.reflexAlpha == 1 ) ? analyzerHeight : channelHeight );
+					ctx.fillRect( 0, channelTop, canvas.width, ( this.overlay && this.reflexAlpha == 1 ? analyzerHeight : channelHeight ) + channelGap );
 
 				ctx.globalAlpha = 1;
 			}
