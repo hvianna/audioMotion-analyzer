@@ -1177,7 +1177,7 @@ export default class AudioMotionAnalyzer {
 
 			if ( this._radial )
 				grad = this._canvasCtx.createRadialGradient( centerX, centerY, centerY, centerX, centerY, radius - ( centerY - radius ) * this._stereo );
-			else if ( this._gradients[ key ].dir && this._gradients[ key ].dir == 'h' )
+			else if ( this._gradients[ key ].dir == 'h' )
 				grad = this._canvasCtx.createLinearGradient( 0, 0, this._canvas.width, 0 );
 			else
 				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, analyzerHeight );
@@ -1190,7 +1190,7 @@ export default class AudioMotionAnalyzer {
 				// helper function
 				const addColorStop = ( offset, colorInfo ) => grad.addColorStop( offset, typeof colorInfo == 'object' ? colorInfo.color : colorInfo );
 
-				for ( let i = 0; i < 1 + isSplit; i++ ) {
+				for ( let channel = 0; channel < 1 + isSplit; channel++ ) {
 					colorStops.forEach( ( colorInfo, index ) => {
 
 						const maxIndex = colorStops.length - 1;
@@ -1209,8 +1209,8 @@ export default class AudioMotionAnalyzer {
 								offset += .5 * this._reflexRatio;
 						}
 
-						// second channel (when in split mode)
-						if ( i == 1 ) {
+						// only for split mode
+						if ( channel == 1 ) {
 							// add colors in reverse order if radial or lumi are active
 							if ( this._radial || isLumiBars ) {
 								const revIndex = maxIndex - index;
