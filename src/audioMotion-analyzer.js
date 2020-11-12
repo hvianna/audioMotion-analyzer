@@ -1009,7 +1009,7 @@ export default class AudioMotionAnalyzer {
 				}
 
 				// Draw peak
-				if ( bar.peak[ channel ] > 0 ) {
+				if ( bar.peak[ channel ] > 1 ) { // avoid half "negative" peaks on top channel (peak height is 2px)
 					if ( this.showPeaks && ! isLumiBars ) {
 						if ( isLedDisplay ) {
 							// convert the bar height to the position of the corresponding led element
