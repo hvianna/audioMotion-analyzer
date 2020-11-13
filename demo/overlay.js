@@ -166,8 +166,5 @@ function updateUI() {
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
 
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => {
-		const p = audioMotion[ el.dataset.prop ];
-		el.classList.toggle( 'active', el.dataset.prop == 'isOn' ? ! p : p );
-	});
+	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', audioMotion[ el.dataset.prop ] ) );
 }

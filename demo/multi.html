@@ -37,8 +37,8 @@
 			<input type="file" id="uploadFile" accept="audio/*">
 		</div>
 		<div>
-			<button data-prop="isOn" data-func="toggleAnalyzer">Freeze</button>
-			<button data-prop="isFullscreen" data-func="toggleFullscreen">Fullscreen</button>
+			<button data-prop="isOn" data-func="toggleAnalyzer">toggleAnalyzer()</button>
+			<button data-prop="isFullscreen" data-func="toggleFullscreen">toggleFullscreen()</button>
 		</div>
 	</div>
 
@@ -101,6 +101,11 @@
 
 			<label class="label">smoothing
 				<input type="range" min="0" max=".9" step=".1" data-setting="smoothing">
+				<div class="value"></div>
+			</label>
+
+			<label class="label">volume
+				<input type="range" min="0" max="1" step=".1" data-setting="volume">
 				<div class="value"></div>
 			</label>
 		</div>
@@ -170,7 +175,7 @@
 			<button data-prop="showLeds">showLeds</button>
 			<button data-prop="lumiBars">lumiBars</button>
 			<button data-prop="radial">radial</button>
-			<button data-prop="showScale">showScale</button>
+			<button data-prop="showScaleX">showScaleX</button>
 			<button data-prop="showScaleY">showScaleY</button>
 			<button data-prop="stereo">stereo</button>
 			<button data-prop="splitGradient">splitGradient</button>

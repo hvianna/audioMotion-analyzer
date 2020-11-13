@@ -23,7 +23,7 @@
 	</div>
 
 	<p class="center">
-		<button data-prop="isOn" data-func="toggleAnalyzer">Freeze</button>
+		<button data-prop="isOn" data-func="toggleAnalyzer">toggleAnalyzer()</button>
 		<button id="btn_fullscr">Fullscreen</button>
 	</p>
 
@@ -104,6 +104,10 @@
 				<div class="value"></div>
 			</label>
 
+			<label class="label">volume
+				<input type="range" min="0" max="1" step=".1" data-setting="volume">
+				<div class="value"></div>
+			</label>
 		</div>
 
 		<div class="box center">
@@ -179,7 +183,7 @@
 			<button data-prop="showPeaks">showPeaks</button>
 			<button data-prop="showLeds">showLeds</button>
 			<button data-prop="lumiBars">lumiBars</button>
-			<button data-prop="showScale">showScale</button>
+			<button data-prop="showScaleX">showScaleX</button>
 			<button data-prop="showScaleY">showScaleY</button>
 			<button data-prop="stereo">stereo</button>
 			<button data-prop="splitGradient">splitGradient</button>
