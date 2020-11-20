@@ -1203,7 +1203,7 @@ export default class AudioMotionAnalyzer {
 							offset /= 2;
 
 						// constrain the offset within the useful analyzer areas (avoid reflex areas)
-						if ( this._stereo && ! isLumiBars && ! this._radial ) {
+						if ( this._stereo && ! isLumiBars && ! this._radial && ! isHorizontal ) {
 							offset *= analyzerRatio;
 							// skip the first reflex area in split mode
 							if ( ! dual && offset > .5 * analyzerRatio )
