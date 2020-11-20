@@ -1173,11 +1173,12 @@ export default class AudioMotionAnalyzer {
 
 		Object.keys( this._gradients ).forEach( key => {
 
+			const isHorizontal = this._gradients[ key ].dir == 'h';
 			let grad;
 
 			if ( this._radial )
 				grad = this._canvasCtx.createRadialGradient( centerX, centerY, centerY, centerX, centerY, radius - ( centerY - radius ) * this._stereo );
-			else if ( this._gradients[ key ].dir == 'h' )
+			else if ( isHorizontal )
 				grad = this._canvasCtx.createLinearGradient( 0, 0, this._canvas.width, 0 );
 			else
 				grad = this._canvasCtx.createLinearGradient( 0, 0, 0, analyzerHeight );
@@ -1185,27 +1186,27 @@ export default class AudioMotionAnalyzer {
 			const colorStops = this._gradients[ key ].colorStops;
 
 			if ( colorStops ) {
-				const isSplit = this._gradients[ key ].dir != 'h' && this._stereo && this._splitGradient;
+				const dual = this._stereo && ! this._splitGradient && ! isHorizontal;
 
 				// helper function
 				const addColorStop = ( offset, colorInfo ) => grad.addColorStop( offset, typeof colorInfo == 'object' ? colorInfo.color : colorInfo );
 
-				for ( let channel = 0; channel < 1 + isSplit; channel++ ) {
+				for ( let channel = 0; channel < 1 + dual; channel++ ) {
 					colorStops.forEach( ( colorInfo, index ) => {
 
 						const maxIndex = colorStops.length - 1;
 
 						let offset = colorInfo.pos !== undefined ? colorInfo.pos : index / maxIndex;
 
-						// in split mode, use half the original offset for each channel
-						if ( isSplit )
+						// in dual mode (not split), use half the original offset for each channel
+						if ( dual )
 							offset /= 2;
 
 						// constrain the offset within the useful analyzer areas (avoid reflex areas)
 						if ( this._stereo && ! isLumiBars && ! this._radial ) {
 							offset *= analyzerRatio;
-							// skip the first reflex area in continuous mode (spliGradient == false)
-							if ( ! isSplit && offset > .5 * analyzerRatio )
+							// skip the first reflex area in split mode
+							if ( ! dual && offset > .5 * analyzerRatio )
 								offset += .5 * this._reflexRatio;
 						}
 
@@ -1558,7 +1559,7 @@ export default class AudioMotionAnalyzer {
 			radial		 : false,
 			spinSpeed    : 0,
 			stereo       : false,
-			splitGradient: true,
+			splitGradient: false,
 			start        : true,
 			volume       : 1
 		};

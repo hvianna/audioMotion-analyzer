@@ -149,7 +149,7 @@ options = {<br>
 &emsp;&emsp;[smoothing](#smoothing-number): **0.5**,<br>
 &emsp;&emsp;[source](#source-htmlmediaelement-or-audionode-object): *undefined*,<br>
 &emsp;&emsp;[spinSpeed](#spinspeed-number): **0**,<br>
-&emsp;&emsp;[splitGradient](#splitgradient-boolean): **true**,<br>
+&emsp;&emsp;[splitGradient](#splitgradient-boolean): **false**,<br>
 &emsp;&emsp;[start](#start-boolean): **true**,<br>
 &emsp;&emsp;[stereo](#stereo-boolean): **false**,<br>
 &emsp;&emsp;[volume](#volume-number): **1**,<br>
@@ -561,11 +561,11 @@ Defaults to **0**.
 
 *Available since v3.0.0*
 
-When *true*, the gradient will be split so both channels have the same colors. If set to *false*, each channel will get a different part of the gradient.
+When *true*, the gradient will be split between both channels, so each channel will have different colors. If *false*, both channels will use the full gradient.
 
 This option has no effect if [`stereo`](#stereo-boolean) is set to *false*.
 
-Defaults to **true**.
+Defaults to **false**.
 
 ### `stereo` *boolean*
 
