@@ -695,11 +695,16 @@ export default class AudioMotionAnalyzer {
 	_calculateInternals() {
 		this._analyzerRadius = this._canvas.height * ( this._stereo ? .375 : .125 ) | 0;
 		this._barSpacePx     = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
-		this._channelHeight  = this._canvas.height >> ( this._stereo && ! this._radial );
 		this._isOctaveBands  = ( this._mode % 10 != 0 );
 		this._isLedDisplay   = ( this._showLeds && this._isOctaveBands && ! this._radial );
 		this._isLumiBars     = ( this._lumiBars && this._isOctaveBands && ! this._radial );
 		this._maximizeLeds   = ! this._stereo || this._reflexRatio > 0 && ! this._isLumiBars;
+
+		const dualChannel = this._stereo && ! this._radial;
+		this._channelHeight = this._canvas.height - ( dualChannel && ! this._isLedDisplay ? .5 : 0 ) >> dualChannel;
+		this._channelGap    = dualChannel ? this._canvas.height - this._channelHeight * 2 : 0;
+		// channelGap is **0** if isLedDisplay == true (LEDs already have spacing); **1** if canvas height is odd (windowed); **2** if it's even
+		// TODO: improve this, make it configurable?
 	}
 
 	/**
@@ -772,6 +777,7 @@ export default class AudioMotionAnalyzer {
 			  isLedDisplay   = this._isLedDisplay,
 			  isLumiBars     = this._isLumiBars,
 			  channelHeight  = this._channelHeight,
+			  channelGap     = this._channelGap,
 			  analyzerHeight = channelHeight * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0;
 
 		// radial related constants
@@ -799,10 +805,6 @@ export default class AudioMotionAnalyzer {
 			ctx.lineTo( ...radialXY( x + w, y ) );
 		}
 
-		// clear the canvas, if in overlay mode
-		if ( this.overlay )
-			ctx.clearRect( 0, 0, canvas.width, canvas.height );
-
 		// select background color
 		const bgColor = ( ! this.showBgColor || isLedDisplay && ! this.overlay ) ? '#000' : this._gradients[ this._gradient ].bgColor;
 
@@ -820,12 +822,16 @@ export default class AudioMotionAnalyzer {
 
 		for ( let channel = 0; channel < this._stereo + 1; channel++ ) {
 
-			const channelGap     = ! isLedDisplay | 0, // 1px gap between channels, except for leds (TODO: improve this, make it configurable?)
-			 	  channelTop     = channelHeight * channel + channelGap * channel,
+			const channelTop     = channelHeight * channel + channelGap * channel,
 				  channelBottom  = channelTop + channelHeight,
 				  analyzerBottom = channelTop + analyzerHeight - ( isLedDisplay && ! this._maximizeLeds ? this._ledOptions.spaceV : 0 );
 
-			// fill the analyzer background if needed
+			// clear the channel area, if in overlay mode
+			// this is done per channel to clear any residue below 0 off the top channel (especially in line graph mode with lineWidth > 1)
+			if ( this.overlay )
+				ctx.clearRect( 0, channelTop - channelGap, canvas.width, channelHeight + channelGap );
+
+			// fill the analyzer background if needed (not overlay or overlay + showBgColor)
 			if ( ! this.overlay || this.showBgColor ) {
 				if ( this.overlay )
 					ctx.globalAlpha = this.bgAlpha;
@@ -834,7 +840,7 @@ export default class AudioMotionAnalyzer {
 
 				// exclude the reflection area when overlay is true and reflexAlpha == 1 (avoids alpha over alpha difference, in case bgAlpha < 1)
 				if ( ! this._radial || channel == 0 )
-					ctx.fillRect( 0, channelTop, canvas.width, ( this.overlay && this.reflexAlpha == 1 ? analyzerHeight : channelHeight ) + channelGap );
+					ctx.fillRect( 0, channelTop - channelGap, canvas.width, ( this.overlay && this.reflexAlpha == 1 ? analyzerHeight : channelHeight ) + channelGap );
 
 				ctx.globalAlpha = 1;
 			}
@@ -1070,7 +1076,7 @@ export default class AudioMotionAnalyzer {
 			if ( this._reflexRatio > 0 && ! isLumiBars ) {
 				let posY, height;
 				if ( this.reflexFit || this._stereo ) { // always fit reflex in stereo mode
-					posY   = this._stereo ? channelHeight * ( 1 - channel ) : 0;
+					posY   = this._stereo && channel == 0 ? channelHeight + channelGap : 0;
 					height = channelHeight - analyzerHeight;
 				}
 				else {
