@@ -114,8 +114,12 @@ const audioCtx   = audioMotion.audioCtx,
 oscillator.frequency.setValueAtTime( 0, audioCtx.currentTime );
 oscillator.start();
 
-// Connect audio nodes: oscillator -> stereo panner -> gain ---> audioMotion
-audioMotion.connectInput( oscillator.connect( panNode ).connect( gainNode ) );
+// Connect audio nodes: oscillator -> panNode -> gainNode
+oscillator.connect( panNode );
+panNode.connect( gainNode );
+
+// Connect gainNode to audioMotion's input
+audioMotion.connectInput( gainNode );
 
 // Event listeners for UI controls
 

@@ -113,8 +113,10 @@ export default class AudioMotionAnalyzer {
 			this.connectInput( options.source );
 
  		// connect splitter -> analyzers -> merger
-		for ( let i = 0; i < 2; i++ )
-			this._splitter.connect( this._analyzer[ i ], i ).connect( this._merger, 0, i );
+		for ( let i = 0; i < 2; i++ ) {
+			this._splitter.connect( this._analyzer[ i ], i );
+			this._analyzer[ i ].connect( this._merger, 0, i );
+		}
 
 		// connect merger -> output
 		this._merger.connect( this._output );
