@@ -3,36 +3,55 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>audioMotion-analyzer overlay demo</title>
+	<title>audioMotion-analyzer multi-instance demo</title>
 	<link href="https://fonts.googleapis.com/css?family=Orbitron:900" rel="stylesheet">
 	<link href="styles.css" rel="stylesheet">
 </head>
 
 <body>
 	<header>
-		<h1><a href="https://audiomotion.dev" class="logo">audioMotion-analyzer</a> | overlay demo</h1>
+		<h1><a href="https://audiomotion.dev" class="logo">audioMotion-analyzer</a> | multi-instance demo</h1>
 		<ul class="header-nav">
 			<li><a href="index.html">Demos</a></li>
             <li><a href="https://audiomotion.dev">Home</a></li>
-			<li><a href="https://github.com/hvianna/audioMotion-analyzer/tree/master/demo/src/overlay.js">View on GitHub</a></li>
+			<li><a href="https://github.com/hvianna/audioMotion-analyzer/tree/master/demo/src/multi.js">View on GitHub</a></li>
 		</ul>
 	</header>
 
-	<div id="container" class="overlay">
-		<video id="video" src="media/night-mist.mp4" controls></video>
+	<p>&nbsp;</p>
+
+	<div id="analyzer-block">
+		<div class="main">
+			<div id="container0"></div>
+			<audio id="audio" controls crossorigin="anonymous"></audio>
+		</div>
+		<div class="aside">
+			<div id="container1"></div>
+			<div id="container2"></div>
+		</div>
 	</div>
 
-	<p class="center">
-		<button data-prop="isOn" data-func="toggleAnalyzer">toggleAnalyzer()</button>
-		<button id="btn_fullscr">Fullscreen</button>
-	</p>
+	<div class="flex">
+		<div>
+			Load audio file:
+			<input type="file" id="uploadFile" accept="audio/*">
+		</div>
+		<div>
+			<button data-prop="isOn" data-func="toggleAnalyzer">toggleAnalyzer()</button>
+			<button data-prop="isFullscreen" data-func="toggleFullscreen">toggleFullscreen()</button>
+		</div>
+	</div>
 
-	<div class="analyzer-configuration">
-		<div class="box center">
-			<label class="label">Load a preset
-				<select id="presets"></select>
-			</label>
+	<div class="analyzer-configuration center">
 
+		<div class="selector">
+			Selected analyzer:
+			<label><input type="radio" name="analyzer" value="0" checked> Main &nbsp;</label>
+			<label><input type="radio" name="analyzer" value="1"> Top &nbsp;</label>
+			<label><input type="radio" name="analyzer" value="2"> Bottom</label>
+		</div>
+
+		<div class="box">
 			<label class="label">mode
 				<select data-setting="mode">
 					<option value="0">0 - Discrete frequencies</option>
@@ -67,35 +86,16 @@
 				</select>
 			</label>
 
-			<label class="label">minFreq
-				<select data-setting="minFreq">
-					<option value="10">10</option>
-					<option value="20">20</option>
-					<option value="30">30</option>
-					<option value="40">40</option>
-					<option value="60">60</option>
-					<option value="100">100</option>
+			<label class="label">Frequency range
+				<select id="range">
+					<option data-min="20" data-max="22000">20Hz - 22KHz</option>
+					<option data-min="30" data-max="16000">30Hz - 16KHz</option>
+					<option data-min="100" data-max="10000">100Hz - 10KHz</option>
 				</select>
 			</label>
 
-			<label class="label">maxFreq
-				<select data-setting="maxFreq">
-					<option value="8000">8000</option>
-					<option value="10000">10000</option>
-					<option value="12000">12000</option>
-					<option value="16000">16000</option>
-					<option value="20000">20000</option>
-					<option value="22000">22000</option>
-				</select>
-			</label>
-
-			<label class="label">minDecibels
-				<input type="range" min="-100" max="-60" step="5" data-setting="minDecibels">
-				<div class="value"></div>
-			</label>
-
-			<label class="label">maxDecibels
-				<input type="range" min="-40" max="0" step="5" data-setting="maxDecibels">
+			<label class="label">Sensitivity
+				<input type="range" id="sensitivity" min="0" max="4">
 				<div class="value"></div>
 			</label>
 
@@ -167,22 +167,14 @@
 
 				<button data-prop="reflexFit">reflexFit</button>
 			</fieldset>
-
-			<fieldset>
-				<legend>Overlay mode</legend>
-				<button data-prop="overlay">overlay</button>
-				<label class="label">bgAlpha
-					<input type="range" id="bg_alpha" min="0" max="1" step=".1" data-setting="bgAlpha">
-					<div class="value"></div>
-				</label>
-			</fieldset>
 		</div>
 
-		<div class="box center">
+		<div class="box">
 			<button data-prop="showBgColor">showBgColor</button>
 			<button data-prop="showPeaks">showPeaks</button>
 			<button data-prop="showLeds">showLeds</button>
 			<button data-prop="lumiBars">lumiBars</button>
+			<button data-prop="radial">radial</button>
 			<button data-prop="showScaleX">showScaleX</button>
 			<button data-prop="showScaleY">showScaleY</button>
 			<button data-prop="stereo">stereo</button>
@@ -190,20 +182,14 @@
 			<button data-prop="loRes">loRes</button>
 			<button data-prop="showFPS">showFPS</button>
 		</div>
+
 	</div>
 
 	<div class="credits">
 		<strong>audioMotion-analyzer v<span id="version"></span></strong> Copyright &copy; 2018-2020 Henrique Avila Vianna.	Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
-		Video: <a href="https://www.youtube.com/watch?v=Trh6syrA8qU">"Night Mist" by NuSan & Valden</a>
 	</div>
 
-	<script src="../dist/audioMotion-analyzer.min.js"></script>
-	<script src="overlay.js"></script>
-
-	<script>
-		if ( location.href.startsWith('file://') )
-			alert("This demo won't work when loaded via file:// protocol.\nSee the note in the demos index page for more information.");
-	</script>
+	<script src="multi-dev.js" type="module"></script>
 
 </body>
 </html>

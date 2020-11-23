@@ -35,6 +35,12 @@ canvas {
 	width: 100%;
 }
 
+code {
+	background: #fff2;
+	border-radius: 4px;
+	padding: 1px 4px;
+}
+
 fieldset {
 	border: 1px dotted #666;
 	display: inline-block;
