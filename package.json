@@ -2,9 +2,11 @@
   "name": "audiomotion-analyzer",
   "description": "High-resolution real-time graphic audio spectrum analyzer JavaScript module with no dependencies.",
   "version": "3.0.0-beta.0",
-  "main": "./src/audioMotion-analyzer.js",
+  "main": "./dist/audioMotion-analyzer.min.js",
+  "module": "./src/audioMotion-analyzer.js",
   "scripts": {
-    "start": "npx http-server"
+    "start": "npx http-server",
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
@@ -22,5 +24,9 @@
   "bugs": {
     "url": "https://github.com/hvianna/audioMotion-analyzer/issues"
   },
-  "homepage": "https://audiomotion.dev"
+  "homepage": "https://audiomotion.dev",
+  "devDependencies": {
+    "webpack": "^5.6.0",
+    "webpack-cli": "^4.2.0"
+  }
 }
