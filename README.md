@@ -563,6 +563,11 @@ Defaults to **0**.
 
 When *true*, the gradient will be split between both channels, so each channel will have different colors. If *false*, both channels will use the full gradient.
 
+| splitGradient: *true* | splitGradient: *false* |
+|:--:|:--:|
+| ![split-on](demo/media/splitGradient_on.png) | ![split-off](demo/media/splitGradient_off.png) |
+
+
 This option has no effect if [`stereo`](#stereo-boolean) is set to *false*.
 
 Defaults to **false**.
@@ -812,7 +817,7 @@ On Firefox, [`fillAlpha`](#fillalpha-number) may not work properly for [`radial`
 
 ### Visualization of live streams won't work on Safari {docsify-ignore}
 
-Safari's implementation of Web Audio won't return analyzer data for live streams, as documented on [this bug report](https://bugs.webkit.org/show_bug.cgi?id=195043)
+Safari's implementation of Web Audio won't return analyzer data for live streams, as documented in [this bug report](https://bugs.webkit.org/show_bug.cgi?id=195043).
 
 
 ## References and acknowledgments
