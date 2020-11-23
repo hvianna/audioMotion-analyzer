@@ -1094,7 +1094,7 @@ export default class AudioMotionAnalyzer {
 				ctx.drawImage( canvas, 0, channelTop, canvas.width, analyzerHeight, 0, posY, canvas.width, height );
 
 				// reset changed properties
-				ctx.setTransform();
+				ctx.setTransform( 1, 0, 0, 1, 0, 0 );
 				ctx.filter = 'none';
 				ctx.globalAlpha = 1;
 			}
