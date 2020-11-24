@@ -2,12 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 3.0.0-beta.1
+ * @version 3.0.0-beta.2
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const _VERSION = '3.0.0-beta.1';
+const _VERSION = '3.0.0-beta.2';
 
 export default class AudioMotionAnalyzer {
 
