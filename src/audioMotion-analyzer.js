@@ -187,6 +187,14 @@ export default class AudioMotionAnalyzer {
 			}, 60 );
 		});
 
+		// Resume audio context if in suspended state (browsers' autoplay policy)
+		const unlockContext = () => {
+			if ( this._audioCtx.state == 'suspended' )
+				this._audioCtx.resume();
+			window.removeEventListener( 'click', unlockContext );
+		}
+		window.addEventListener( 'click', unlockContext );
+
 		// initialize internal variables
 		this._calculateInternals();
 
