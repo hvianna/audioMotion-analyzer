@@ -44,7 +44,7 @@ I originally wrote this for my [**audioMotion**](https://audiomotion.me) music p
 + Optional effects: vintage LEDs, luminance bars, customizable reflection, radial visualization
 + Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing constant
 + Comes with 3 predefined color gradients - easily add your own!
-+ No dependencies, less than 20kB minified
++ No dependencies, \~20kB minified file
 
 ## Online demos
 
@@ -54,12 +54,26 @@ I originally wrote this for my [**audioMotion**](https://audiomotion.me) music p
 
 ## Usage
 
-### Using npm and webpack
+### HTML file
 
-Install with npm:
+Load from CDN:
+
+```html
+<script src="https://unpkg.com/audiomotion-analyzer"></script>
+```
+
+Or download the [latest version](https://github.com/hvianna/audioMotion-analyzer/releases) and copy the `audioMotion-analyzer.min.js` file from the `dist/` folder to your project's folder.
+
+See the [demos](https://audiomotion.dev/demo/) for full code examples.
+
+NOTE: due to CORS restrictions, you'll need a web server, such as [http-server](https://github.com/http-party/http-server), to test files locally.
+
+### npm project
+
+Install as a dependency:
 
 ```console
-$ npm install audiomotion-analyzer
+$ npm i --save audiomotion-analyzer
 ```
 
 Use ES6 import syntax:
@@ -68,26 +82,19 @@ Use ES6 import syntax:
 import AudioMotionAnalyzer from 'audiomotion-analyzer';
 ```
 
-### As a native JavaScript module (ESM)
+### Native ES6 module (ESM)
 
-Simply copy the `audioMotion-analyzer.js` file from the `src` folder to your project folder and add the line below to your HTML file:
+Download the [latest version](https://github.com/hvianna/audioMotion-analyzer/releases) and copy the `audioMotion-analyzer.js` file from the `src/` folder to your project's folder.
 
+`index.html:`
 ```html
-<body>
-  .
-  .
-	<script src="main.js" type="module"></script>
-</body>
+<script src="main.js" type="module"></script>
 ```
 
-And in your `main.js` file, use:
-
+`main.js:`
 ```js
 import AudioMotionAnalyzer from './audiomotion-analyzer.js';
 ```
-
-Please note that JavaScript security requirements don't allow loading modules via `file://` URLs.
-You'll need a web server, such as [http-server](https://github.com/http-party/http-server), to test files locally.
 
 ## Constructor
 
