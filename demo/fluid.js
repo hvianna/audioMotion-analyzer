@@ -104,7 +104,7 @@ catch( err ) {
 	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
 }
 
-// Display package version in the footer
+// Display package version at the footer
 document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 // Create oscillator, gain and stereoPanner nodes in audioMotion's AudioContext
@@ -187,12 +187,6 @@ document.getElementById('uploadFile').addEventListener( 'change', e => loadSong(
 
 // Initialize UI elements
 updateUI();
-
-// Resume audio context if in suspended state (browsers' autoplay policy)
-window.addEventListener( 'click', () => {
-	if ( audioMotion.audioCtx.state == 'suspended' )
-		audioMotion.audioCtx.resume();
-});
 
 // Load song from user's computer
 function loadSong( el ) {
