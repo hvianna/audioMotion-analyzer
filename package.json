@@ -4,6 +4,9 @@
   "version": "3.0.0-beta.2",
   "main": "./src/audioMotion-analyzer.js",
   "module": "./src/audioMotion-analyzer.js",
+  "exports": {
+    ".": "./src/audioMotion-analyzer.js"
+  },
   "scripts": {
     "start": "npx http-server"
   },
