@@ -4,6 +4,8 @@
  * https://github.com/hvianna/audioMotion-analyzer
  */
 
+import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
+
 const videoEl = document.getElementById('video'),
 	  container = document.getElementById('container'),
 	  presetSelection = document.getElementById('presets');

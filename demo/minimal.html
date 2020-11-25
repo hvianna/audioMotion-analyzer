@@ -30,8 +30,9 @@
 		Live stream: <a href="https://federalfm.ufpel.edu.br">Rádio Federal FM</a>.
 	</div>
 
-	<script src="../dist/audioMotion-analyzer.min.js"></script>
-	<script>
+	<script type="module">
+		import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
+
 		// Display package version in the footer
 		document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
@@ -59,5 +60,11 @@
 			document.getElementById('btn_fullscreen').addEventListener( 'click', () => audioMotion.toggleFullscreen() );
 		}
 	</script>
+
+	<script>
+		if ( location.href.startsWith('file://') )
+			alert("This demo won't work when loaded via file:// protocol.\nSee the README file inside the demo folder for more information.");
+	</script>
+
 </body>
 </html>
