@@ -15,7 +15,7 @@
 >
 > **NEW FEATURES:**
 >
-> - Stereo analyzer option;
+> - Stereo (dual channel) analyzer option;
 > - Built-in volume control;
 > - New methods:
 >   - [`connectInput()`](#connectinput-source-)
@@ -30,6 +30,16 @@
 >   - [`splitGradient`](#splitgradient-boolean)
 >   - [`volume`](#volume-number)
 >
+> **IMPROVEMENTS:**
+>
+> - Built-in code to unlock/resume the AudioContext on first user click, so you don't need to do it in your code anymore;
+> - Improved FFT data interpolation on low frequencies (especially noticeable in 1/12th and 1/24th octave bands);
+> - Corrected initial amplitude of line / area graph.
+>
+> **FIXED:**
+>
+> - A compatibility issue that could cause `reflexRatio` not to work in some environments.
+
 
 **audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer in a vanilla JavaScript module (ES6+)
 with no dependencies, built upon Web Audio and Canvas APIs. It's highly customizable and optimized for small size and high performance.
@@ -44,7 +54,7 @@ I originally wrote this for my [**audioMotion**](https://audiomotion.me) music p
 + Optional effects: vintage LEDs, luminance bars, customizable reflection, radial visualization
 + Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing constant
 + Comes with 3 predefined color gradients - easily add your own!
-+ No dependencies, \~20kB minified file
++ No dependencies, around 20kB minified
 
 ## Online demos
 
@@ -52,19 +62,26 @@ I originally wrote this for my [**audioMotion**](https://audiomotion.me) music p
 
 ?> https://audiomotion.dev/demo/
 
+**You can also try it live on Codepen:**
+
+- [Quick and easy spectrum analyzer](https://codepen.io/hvianna/pen/pobMLNL)
+- [Microphone input](https://codepen.io/hvianna/pen/VwKZgEE)
+- [Custom callback function](https://codepen.io/hvianna/pen/LYZwdvG)
+
 ## Usage
 
-### HTML file
+### Native ES6 module (ESM)
 
-Load from CDN:
+Load from Skypack CDN:
 
 ```html
-<script src="https://unpkg.com/audiomotion-analyzer"></script>
+<script type="module">
+  import AudioMotionAnalyzer from 'https://cdn.skypack.dev/audiomotion-analyzer?min';
+  // your code here
+</script>
 ```
 
-Or download the [latest version](https://github.com/hvianna/audioMotion-analyzer/releases) and copy the `audioMotion-analyzer.min.js` file from the `dist/` folder to your project's folder.
-
-See the [demos](https://audiomotion.dev/demo/) for full code examples.
+Or download the [latest version](https://github.com/hvianna/audioMotion-analyzer/releases) and copy the `audioMotion-analyzer.js` file from the `src/` folder to your project folder.
 
 NOTE: due to CORS restrictions, you'll need a web server, such as [http-server](https://github.com/http-party/http-server), to test files locally.
 
@@ -80,20 +97,6 @@ Use ES6 import syntax:
 
 ```js
 import AudioMotionAnalyzer from 'audiomotion-analyzer';
-```
-
-### Native ES6 module (ESM)
-
-Download the [latest version](https://github.com/hvianna/audioMotion-analyzer/releases) and copy the `audioMotion-analyzer.js` file from the `src/` folder to your project's folder.
-
-`index.html:`
-```html
-<script src="main.js" type="module"></script>
-```
-
-`main.js:`
-```js
-import AudioMotionAnalyzer from './audiomotion-analyzer.js';
 ```
 
 ## Constructor
@@ -598,7 +601,7 @@ Read or set the output volume.
 A value of **0** (zero) will mute the sound output, while a value of **1** will keep the same input volume.
 Higher values can be used to amplify the input, but it may cause distortion.
 
-Please note that this property does not affect the amplitude of analyzer graphs, but changes to the system's or audio element volume will.
+Please note that changing the audio element volume directly will affect the amplitude of analyzer graphs, while this property does not.
 
 Defaults to **1**.
 
