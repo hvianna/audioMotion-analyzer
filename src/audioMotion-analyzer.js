@@ -703,18 +703,20 @@ export default class AudioMotionAnalyzer {
 	 * Calculate auxiliary values and flags
 	 */
 	_calcAux() {
-		this._radius        = this._canvas.height * ( this._stereo ? .375 : .125 ) | 0;
-		this._barSpacePx    = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
-		this._isOctaveBands = ( this._mode % 10 != 0 );
-		this._isLedDisplay  = ( this._showLeds && this._isOctaveBands && ! this._radial );
-		this._isLumiBars    = ( this._lumiBars && this._isOctaveBands && ! this._radial );
-		this._maximizeLeds  = ! this._stereo || this._reflexRatio > 0 && ! this._isLumiBars;
+		this._radius         = this._canvas.height * ( this._stereo ? .375 : .125 ) | 0;
+		this._barSpacePx     = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
+		this._isOctaveBands  = ( this._mode % 10 != 0 );
+		this._isLedDisplay   = ( this._showLeds && this._isOctaveBands && ! this._radial );
+		this._isLumiBars     = ( this._lumiBars && this._isOctaveBands && ! this._radial );
+		this._maximizeLeds   = ! this._stereo || this._reflexRatio > 0 && ! this._isLumiBars;
 
 		const isDual = this._stereo && ! this._radial;
-		this._channelHeight = this._canvas.height - ( isDual && ! this._isLedDisplay ? .5 : 0 ) >> isDual;
-		this._channelGap    = isDual ? this._canvas.height - this._channelHeight * 2 : 0;
+		this._channelHeight  = this._canvas.height - ( isDual && ! this._isLedDisplay ? .5 : 0 ) >> isDual;
+		this._analyzerHeight = this._channelHeight * ( this._isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0;
+
 		// channelGap is **0** if isLedDisplay == true (LEDs already have spacing); **1** if canvas height is odd (windowed); **2** if it's even
 		// TODO: improve this, make it configurable?
+		this._channelGap     = isDual ? this._canvas.height - this._channelHeight * 2 : 0;
 	}
 
 	/**
@@ -724,7 +726,7 @@ export default class AudioMotionAnalyzer {
 		if ( ! this._isOctaveBands || ! this._ready )
 			return;
 
-		let analyzerHeight = this._channelHeight * ( this._lumiBars ? 1 : 1 - this._reflexRatio ) | 0;
+		let analyzerHeight = this._analyzerHeight;
 
 		let spaceV = Math.min( 6, analyzerHeight / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
 		let nLeds;
@@ -788,7 +790,7 @@ export default class AudioMotionAnalyzer {
 			  isLumiBars     = this._isLumiBars,
 			  channelHeight  = this._channelHeight,
 			  channelGap     = this._channelGap,
-			  analyzerHeight = channelHeight * ( isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0;
+			  analyzerHeight = this._analyzerHeight;
 
 		// radial related constants
 		const centerX        = canvas.width >> 1,
