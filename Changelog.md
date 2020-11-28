@@ -1,6 +1,46 @@
 Changelog
 =========
 
+## version 3.0.0 (2020-11-28)
+
+### BREAKING CHANGES: {docsify-ignore}
+
++ The `analyzer` object is no longer exposed - use the new [`connectInput()`](README.md#connectinput-source-) method to connect all audio sources and [`connectOutput()`](README.md#connectoutput-node-) to connect the analyzer output to other nodes;
++ `audioSource` property has been renamed to [`connectedSources`](README.md#connectedsources-array), which now returns an **array** of all connected audio sources;
++ `binToFreq()` and `freqToBin()` methods have been removed;
++ `connectAudio()` method has been replaced by [`connectInput()`](README.md#connectinput-source-), which now accepts either an HTML media element or any instance of AudioNode;
++ `dataArray` property is no longer exposed;
++ `showScale` property has been renamed to [`showScaleX`](README.md#showscalex-boolean);
++ `version` is now a **static** property and should always be accessed as [`AudioMotionAnalyzer.version`](README.md#audiomotionanalyzerversion-string-read-only).
+
+### New features: {docsify-ignore}
+
++ Dual channel (stereo) analyzer option;
++ Built-in volume control;
++ New methods for easy connection/disconnection of input and output nodes:
+  + [`connectInput()`](README.md#connectinput-source-)
+  + [`disconnectInput()`](README.md#disconnectinput-node-)
+  + [`connectOutput()`](README.md#connectoutput-node-)
+  + [`disconnectOutput()`](README.md#disconnectoutput-node-)
++ New properties:
+  + [`isOctaveBands`](README.md#isoctavebands-boolean-read-only) (read only)
+  + [`isLedDisplay`](README.md#isleddisplay-boolean-read-only) (read only)
+  + [`isLumiBars`](README.md#islumibars-boolean-read-only) (read only)
+  + [`stereo`](README.md#stereo-boolean)
+  + [`splitGradient`](README.md#splitgradient-boolean)
+  + [`volume`](README.md#volume-number)
+
+### Improvements: {docsify-ignore}
+
++ Automatically unlock/resume the AudioContext on first user click, so you don't need to handle this in your code anymore;
++ Improved FFT data interpolation on low frequencies (especially noticeable in 1/12th and 1/24th octave bands);
++ Corrected initial amplitude of line / area graph.
+
+### Fixed: {docsify-ignore}
+
++ A compatibility issue that could cause `reflexRatio` not to work in some environments.
+
+
 ## version 2.5.0 (2020-10-07)
 
 ### Improvements: {docsify-ignore}
