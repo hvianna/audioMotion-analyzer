@@ -770,7 +770,7 @@ export default class AudioMotionAnalyzer {
 		// recalculate the number of leds, considering the effective spaceV
 		nLeds = Math.min( nLeds, analyzerHeight / ( spaceV * 2 ) | 0 );
 
-		this._ledOptions = {
+		this._leds = {
 			nLeds,
 			spaceH: this._barWidth * ( this._mode == 1 ? .45 : this._mode < 5 ? .225 : .125 ),
 			spaceV,
@@ -821,8 +821,8 @@ export default class AudioMotionAnalyzer {
 		const bgColor = ( ! this.showBgColor || isLedDisplay && ! this.overlay ) ? '#000' : this._gradients[ this._gradient ].bgColor;
 
 		// compute the effective bar width, considering the selected bar spacing
-		// if led effect is active, ensure at least the spacing defined by the led options
-		let width = this._barWidth - ( ! isOctaveBands ? 0 : Math.max( isLedDisplay ? this._ledOptions.spaceH : 0, this._barSpacePx ) );
+		// if led effect is active, ensure at least the spacing from led definitions
+		let width = this._barWidth - ( ! isOctaveBands ? 0 : Math.max( isLedDisplay ? this._leds.spaceH : 0, this._barSpacePx ) );
 
 		// make sure width is integer for pixel accurate calculation, when no bar spacing is required
 		if ( this._barSpace == 0 && ! isLedDisplay )
@@ -836,7 +836,7 @@ export default class AudioMotionAnalyzer {
 
 			const channelTop     = channelHeight * channel + channelGap * channel,
 				  channelBottom  = channelTop + channelHeight,
-				  analyzerBottom = channelTop + analyzerHeight - ( isLedDisplay && ! this._maximizeLeds ? this._ledOptions.spaceV : 0 );
+				  analyzerBottom = channelTop + analyzerHeight - ( isLedDisplay && ! this._maximizeLeds ? this._leds.spaceV : 0 );
 
 			// clear the channel area, if in overlay mode
 			// this is done per channel to clear any residue below 0 off the top channel (especially in line graph mode with lineWidth > 1)
@@ -898,7 +898,7 @@ export default class AudioMotionAnalyzer {
 
 			// set line width and dash for LEDs effect
 			if ( isLedDisplay ) {
-				ctx.setLineDash( [ this._ledOptions.ledHeight, this._ledOptions.spaceV ] );
+				ctx.setLineDash( [ this._leds.ledHeight, this._leds.spaceV ] );
 				ctx.lineWidth = width;
 			}
 
@@ -940,7 +940,7 @@ export default class AudioMotionAnalyzer {
 					ctx.globalAlpha = barHeight;
 
 				if ( isLedDisplay ) { // normalize barHeight to match one of the "led" elements
-					barHeight = ( barHeight * this._ledOptions.nLeds | 0 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV ) - this._ledOptions.spaceV;
+					barHeight = ( barHeight * this._leds.nLeds | 0 ) * ( this._leds.ledHeight + this._leds.spaceV ) - this._leds.spaceV;
 					if ( barHeight < 0 )
 						barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
 				}
@@ -985,7 +985,7 @@ export default class AudioMotionAnalyzer {
 				else {
 					if ( this._mode > 0 ) {
 						if ( isLedDisplay )
-							posX += Math.max( this._ledOptions.spaceH / 2, this._barSpacePx / 2 );
+							posX += Math.max( this._leds.spaceH / 2, this._barSpacePx / 2 );
 						else {
 							if ( this._barSpace == 0 ) {
 								posX |= 0;
@@ -1032,10 +1032,10 @@ export default class AudioMotionAnalyzer {
 					if ( this.showPeaks && ! isLumiBars ) {
 						if ( isLedDisplay ) {
 							// convert the bar height to the position of the corresponding led element
-							const fullLeds = bar.peak[ channel ] / ( analyzerHeight + this._ledOptions.spaceV ) * this._ledOptions.nLeds | 0,
-								  posY = ( this._ledOptions.nLeds - fullLeds - 1 ) * ( this._ledOptions.ledHeight + this._ledOptions.spaceV );
+							const fullLeds = bar.peak[ channel ] / ( analyzerHeight + this._leds.spaceV ) * this._leds.nLeds | 0,
+								  posY = ( this._leds.nLeds - fullLeds - 1 ) * ( this._leds.ledHeight + this._leds.spaceV );
 
-							ctx.fillRect( posX,	channelTop + posY, width, this._ledOptions.ledHeight );
+							ctx.fillRect( posX,	channelTop + posY, width, this._leds.ledHeight );
 						}
 						else if ( ! this._radial ) {
 							ctx.fillRect( posX, analyzerBottom - bar.peak[ channel ], adjWidth, 2 );
