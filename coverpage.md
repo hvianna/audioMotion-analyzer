@@ -2,12 +2,12 @@
 
 # audioMotion-analyzer
 
-> A high-resolution real-time graphic audio spectrum analyzer JavaScript module with no dependencies
+> A high-resolution real-time audio spectrum analyzer JavaScript module with no dependencies
 
 - Visualize discrete frequencies or octave bands
 - High-resolution (retina / HiDPI ready) fullscreen support
-- Lots of customization options
-- No dependencies, less than 20kB minified
+- Easy to use, yet very customizable
+- No dependencies, \~20kB minified file
 
 [Demos](/demo/)
 [About](#about)

@@ -1,60 +1,26 @@
 
 ## About
 
-> **version 3.0.0 is in BETA STAGE**
+> **version 3.0.0 is OUT!**
 >
-> :mega: **BREAKING CHANGES:**
->
-> - The `analyzer` object is no longer exposed - use the new [`connectInput()`](#connectinput-source-) method for connecting all audio sources and [`connectOutput()`](#connectoutput-node-) to connect the analyzer output to other nodes;
-> - `audioSource` property has been renamed to [`connectedSources`](#connectedsources-array) and now returns an **array** of all connected audio sources;
-> - `binToFreq()` and `freqToBin()` methods have been removed;
-> - `connectAudio()` method has been replaced by [`connectInput()`](#connectinput-source-), which now accepts either an HTML media element or any instance of AudioNode;
-> - `dataArray` property is no longer exposed;
-> - `showScale` property has been renamed to [`showScaleX`](#showscalex-boolean);
-> - `version` is now a **static** property and should always be accessed as [`AudioMotionAnalyzer.version`](#audiomotionanalyzerversion-string-read-only).
->
-> **NEW FEATURES:**
->
-> - Stereo (dual channel) analyzer option;
-> - Built-in volume control;
-> - New methods:
->   - [`connectInput()`](#connectinput-source-)
->   - [`disconnectInput()`](#disconnectinput-node-)
->   - [`connectOutput()`](#connectoutput-node-)
->   - [`disconnectOutput()`](#disconnectoutput-node-)
-> - New properties:
->   - [`isOctaveBands`](#isoctavebands-boolean-read-only) (read only)
->   - [`isLedDisplay`](#isleddisplay-boolean-read-only) (read only)
->   - [`isLumiBars`](#islumibars-boolean-read-only) (read only)
->   - [`stereo`](#stereo-boolean)
->   - [`splitGradient`](#splitgradient-boolean)
->   - [`volume`](#volume-number)
->
-> **IMPROVEMENTS:**
->
-> - Built-in code to unlock/resume the AudioContext on first user click, so you don't need to do it in your code anymore;
-> - Improved FFT data interpolation on low frequencies (especially noticeable in 1/12th and 1/24th octave bands);
-> - Corrected initial amplitude of line / area graph.
->
-> **FIXED:**
->
-> - A compatibility issue that could cause `reflexRatio` not to work in some environments.
+> **Before updating, please check the [release notes](https://github.com/hvianna/audioMotion-analyzer/releases/tag/3.0.0) for BREAKING CHANGES!**
 
+**audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer module built upon Web Audio and Canvas JavaScript APIs.
 
-**audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer in a vanilla JavaScript module (ES6+)
-with no dependencies, built upon Web Audio and Canvas APIs. It's highly customizable and optimized for small size and high performance.
+It's highly customizable, and optimized for high performance and a small file size.
 
-I originally wrote this for my [**audioMotion**](https://audiomotion.me) music player. Check it out too!
+I originally wrote it as part of my [**audioMotion**](https://audiomotion.me) music player. Check it out too!
 
 ## Features
 
-+ High-resolution (retina / HiDPI ready) real-time audio spectrum analyzer with fullscreen support
++ High-resolution real-time dual channel audio spectrum analyzer
 + Logarithmic frequency scale with customizable range
-+ Visualize discrete frequencies with full FFT resolution, or octave bands based on the equal tempered scale
++ Visualize discrete frequencies or octave bands based on the equal tempered scale
 + Optional effects: vintage LEDs, luminance bars, customizable reflection, radial visualization
 + Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing constant
 + Comes with 3 predefined color gradients - easily add your own!
-+ No dependencies, around 20kB minified
++ Fullscreen support, ready for retina / HiDPI displays
++ Zero-dependency native ES6+ module (ESM), \~20kB minified
 
 ## Online demos
 
@@ -82,8 +48,6 @@ Load from Skypack CDN:
 ```
 
 Or download the [latest version](https://github.com/hvianna/audioMotion-analyzer/releases) and copy the `audioMotion-analyzer.js` file from the `src/` folder to your project folder.
-
-NOTE: due to CORS restrictions, you'll need a web server, such as [http-server](https://github.com/http-party/http-server), to test files locally.
 
 ### npm project
 
@@ -169,7 +133,7 @@ options = {<br>
 ### `source` *HTMLMediaElement or AudioNode object*
 
 If `source` is specified, connects an [*HTMLMediaElement*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) object (an `<audio>` or `<video>` HTML tag)
-or, since version 3.0.0, any instance of [*AudioNode*](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) to the analyzer.
+or any instance of [*AudioNode*](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) to the analyzer.
 
 At least one audio source is required for the analyzer to work. You can also connect audio sources after instantiation, using the [`connectInput()`](#connectinput-source-) method.
 
@@ -185,7 +149,7 @@ Defaults to **true**, so the analyzer will start running right after initializat
 ### `audioCtx` *AudioContext object*
 
 [*AudioContext*](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) used by audioMotion-analyzer.
-If not provided by the user in the [constructor](#constructor) options, it will be created automatically.
+If not provided in the [constructor](#constructor) options, it will be created.
 
 Use this object to create additional audio sources to be connected to the analyzer, like oscillator nodes, gain nodes and media streams.
 
@@ -323,13 +287,13 @@ See [`toggleFullscreen()`](#togglefullscreen).
 
 *Available since v3.0.0*
 
-*true* when the LED effect is effectively being displayed, i.e., [`showLeds`](#showleds-boolean) is set to *true* and [`mode`](#mode-number) is set to one of the octave bands modes.
+*true* when the LED effect is effectively being displayed, i.e., [`showLeds`](#showleds-boolean) is set to *true* and [`mode`](#mode-number) is set to one of the octave bands modes and [`radial`](#radial-boolean) is *false*.
 
 ### `isLumiBars` *boolean* *(Read only)*
 
 *Available since v3.0.0*
 
-*true* when the luminance bars effect is effectively being displayed, i.e., [`lumiBars`](#lumibars-boolean) is set to *true* and [`mode`](#mode-number) is set to one of the octave bands modes.
+*true* when the luminance bars effect is effectively being displayed, i.e., [`lumiBars`](#lumibars-boolean) is set to *true* and [`mode`](#mode-number) is set to one of the octave bands modes and [`radial`](#radial-boolean) is *false*.
 
 ### `isOctaveBands` *boolean* *(Read only)*
 
@@ -362,7 +326,8 @@ Low resolution mode halves the effective pixel ratio, resulting in four times le
 ?> If you want to allow users to interactively toggle low resolution mode, you may need to set a fixed size for the canvas via CSS, like so:
 
 ```css
-#container canvas {
+canvas {
+    display: block;
     width: 100%;
 }
 ```
@@ -537,6 +502,8 @@ Defaults to **true**.
 
 ### `showScaleX` *boolean*
 
+*Available since v3.0.0*
+
 *true* to display the frequency (Hz) scale on the X axis. Defaults to **true**.
 
 *NOTE: this property was named `showScale` in versions prior to v3.0.0*
@@ -577,8 +544,7 @@ When *true*, the gradient will be split between both channels, so each channel w
 |:--:|:--:|
 | ![split-on](demo/media/splitGradient_on.png) | ![split-off](demo/media/splitGradient_off.png) |
 
-
-This option has no effect if [`stereo`](#stereo-boolean) is set to *false*.
+This option has no effect in horizontal gradients, or when [`stereo`](#stereo-boolean) is set to *false*.
 
 Defaults to **false**.
 
@@ -587,6 +553,11 @@ Defaults to **false**.
 *Available since v3.0.0*
 
 When *true*, the spectrum analyzer will display separate graphs for the left and right audio channels.
+
+Notes:
+- Stereo tracks will always output stereo audio, even if `stereo` is set to *false* (in such case the analyzer graph will represent both channels combined);
+- Mono (single channel) tracks will output audio only on the left channel when `stereo` is *true*, unless you have another stereo source simultaneously
+connected to the analyzer, which will force the mono source to be upmixed to stereo.
 
 See also [`splitGradient`](#splitgradient-boolean).
 
@@ -650,7 +621,7 @@ function drawCallback( instance ) {
 }
 ```
 
-For more examples, see the fluid demo [source code](https://github.com/hvianna/audioMotion-analyzer/blob/master/demo/src/fluid.js#L221).
+For more examples, see the fluid demo [source code](https://github.com/hvianna/audioMotion-analyzer/blob/master/demo/fluid.js) or [this pen](https://codepen.io/hvianna/pen/LYZwdvG).
 
 ### `onCanvasResize` *function*
 
