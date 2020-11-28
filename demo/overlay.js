@@ -94,8 +94,8 @@ catch( err ) {
 	container.innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
 }
 
-// Display package version in the footer
-document.getElementById('version').innerText = audioMotion.version;
+// Display package version at the footer
+document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 // Event listeners for UI controls
 
@@ -148,12 +148,6 @@ presetSelection.value = 3;
 audioMotion.setOptions( presets[ presetSelection.value ].options );
 updateUI();
 
-// Resume audio context if in suspended state (browsers' autoplay policy)
-window.addEventListener( 'click', () => {
-	if ( audioMotion.audioCtx.state == 'suspended' )
-		audioMotion.audioCtx.resume();
-});
-
 // Update value div of range input elements
 function updateRangeElement( el ) {
 	const s = el.nextElementSibling;
@@ -166,8 +160,5 @@ function updateUI() {
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
 
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => {
-		const p = audioMotion[ el.dataset.prop ];
-		el.classList.toggle( 'active', el.dataset.prop == 'isOn' ? ! p : p );
-	});
+	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', audioMotion[ el.dataset.prop ] ) );
 }

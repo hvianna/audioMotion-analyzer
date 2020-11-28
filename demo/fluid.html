@@ -27,8 +27,8 @@
 			<input type="file" id="uploadFile" accept="audio/*">
 		</div>
 		<div>
-			<button data-prop="isOn" data-func="toggleAnalyzer">Freeze</button>
-			<button data-prop="isFullscreen" data-func="toggleFullscreen">Fullscreen</button>
+			<button data-prop="isOn" data-func="toggleAnalyzer">toggleAnalyzer()</button>
+			<button data-prop="isFullscreen" data-func="toggleFullscreen">toggleFullscreen()</button>
 		</div>
 	</div>
 
@@ -106,6 +106,11 @@
 
 			<label class="label">smoothing
 				<input type="range" min="0" max=".9" step=".1" data-setting="smoothing">
+				<div class="value"></div>
+			</label>
+
+			<label class="label">volume
+				<input type="range" min="0" max="1" step=".1" data-setting="volume">
 				<div class="value"></div>
 			</label>
 
@@ -187,8 +192,10 @@
 			<button data-prop="showPeaks">showPeaks</button>
 			<button data-prop="showLeds">showLeds</button>
 			<button data-prop="lumiBars">lumiBars</button>
-			<button data-prop="showScale">showScale</button>
+			<button data-prop="showScaleX">showScaleX</button>
 			<button data-prop="showScaleY">showScaleY</button>
+			<button data-prop="stereo">stereo</button>
+			<button data-prop="splitGradient">splitGradient</button>
 			<button data-prop="loRes">loRes</button>
 			<button data-prop="showFPS">showFPS</button>
 		</div>
@@ -198,7 +205,7 @@
 				<legend>Features added via callback</legend>
 				<button data-feature="showLogo">Logo</button>
 				<button data-feature="energyMeter">Energy meter</button>
-				<button data-feature="songProgress">Progress bar (radial)</button>
+				<button data-feature="songProgress">Progress bar</button>
 			</fieldset>
 
 			<fieldset>
@@ -231,6 +238,11 @@
 
 				<label class="label">Custom freq. (Hz)
 					<input id="frequency" type="text">
+				</label>
+
+				<label class="label">L - Pan - R
+					<input id="pan" type="range" min="-1" max="1" step=".2">
+					<div class="value"></div>
 				</label>
 
 				<button id="btn_play">Play</button>

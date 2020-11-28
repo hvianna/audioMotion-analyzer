@@ -7,13 +7,12 @@
 import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
 
 const mindB = [ -70, -80, -85, -90, -100 ], // for sensitivity presets
-	  maxdB = [ -10, -20, -25, -30, -40 ],
-	  audioEl = document.getElementById('audio');
+	  maxdB = [ -10, -20, -25, -30, -40 ];
 
 var audioMotion = [],
 	selectedAnalyzer = 0,
 	audioCtx,
-	audioSource;
+	node;
 
 // Create three audioMotion-analyzer instances and connect them to the audio element
 
@@ -35,20 +34,24 @@ try {
 			}
 		);
 
-		// after creating the first instance, we connect the audio element to it and get the audioSource reference
-		if ( i == 0 )
-			audioSource = audioMotion[0].connectAudio( audioEl );
-		// we then connect the audioSource to the other instances' analyzers
-		else
-			audioSource.connect( audioMotion[ i ].analyzer );
+		if ( i == 0 ) {
+			// connect the <audio> element to the first analyzer instance and save the audio node created for it
+			node = audioMotion[0].connectInput( document.getElementById('audio') );
+		}
+		else {
+			// connect the created audio node to the other instances of audioMotion-analyzer
+			audioMotion[ i ].connectInput( node );
+			// mute the volume of additional instances, to avoid sound distortion due to output saturation
+			audioMotion[ i ].volume = 0;
+		}
 	}
 }
 catch( err ) {
 	document.getElementById('container0').innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
 }
 
-// Display package version in the footer
-document.getElementById('version').innerText = audioMotion[0].version;
+// Display package version at the footer
+document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 // Set options for each instance
 
@@ -66,7 +69,7 @@ audioMotion[1].setOptions({
 	gradient: 'rainbow',
 	minFreq: 30,
 	maxFreq: 16000,
-	showScale: false,
+	showScaleX: false,
 	showPeaks: false,
 	lineWidth: 2,
 	fillAlpha: .3,
@@ -80,7 +83,7 @@ audioMotion[2].setOptions({
 	minFreq: 30,
 	maxFreq: 16000,
 	showBgColor: false,
-	showScale: false,
+	showScaleX: false,
 	showPeaks: false,
 	lumiBars: true,
 	minDecibels: -80,
@@ -139,15 +142,10 @@ document.getElementById('uploadFile').addEventListener( 'change', e => loadSong(
 // Initialize UI elements
 updateUI();
 
-// Resume audio context if in suspended state (browsers' autoplay policy)
-window.addEventListener( 'click', () => {
-	if ( audioMotion[0].audioCtx.state == 'suspended' )
-		audioMotion[0].audioCtx.resume();
-});
-
 // Load song from user's computer
 function loadSong( el ) {
-	const fileBlob = el.files[0];
+	const fileBlob = el.files[0],
+		  audioEl  = document.getElementById('audio');
 
 	if ( fileBlob ) {
 		audioEl.src = URL.createObjectURL( fileBlob );
@@ -172,8 +170,5 @@ function updateUI() {
 	document.getElementById('sensitivity').value = maxdB.indexOf( audioMotion[ selectedAnalyzer ].maxDecibels );
 
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => {
-		const p = audioMotion[ selectedAnalyzer ][ el.dataset.prop ];
-		el.classList.toggle( 'active', el.dataset.prop == 'isOn' ? ! p : p );
-	});
+	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', audioMotion[ selectedAnalyzer ][ el.dataset.prop ] ) );
 }

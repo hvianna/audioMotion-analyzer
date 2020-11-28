@@ -1,20 +1,26 @@
 
 ## About
 
-**audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer in a vanilla JavaScript module (ES6+)
-with no dependencies, built upon Web Audio and Canvas APIs. It's highly customizable and optimized for small size and high performance.
+> **version 3.0.0 is OUT!**
+>
+> **Before updating, please check the [release notes](https://github.com/hvianna/audioMotion-analyzer/releases/tag/3.0.0) for BREAKING CHANGES!**
 
-I originally wrote this for my [**audioMotion**](https://audiomotion.me) music player. Check it out too!
+**audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer module built upon Web Audio and Canvas JavaScript APIs.
+
+It's highly customizable, and optimized for high performance and a small file size.
+
+I originally wrote it as part of my [**audioMotion**](https://audiomotion.me) music player. Check it out too!
 
 ## Features
 
-+ High-resolution (retina / HiDPI ready) real-time audio spectrum analyzer with fullscreen support
++ High-resolution real-time dual channel audio spectrum analyzer
 + Logarithmic frequency scale with customizable range
-+ Visualize discrete frequencies with full FFT resolution, or octave bands based on the equal tempered scale
++ Visualize discrete frequencies or octave bands based on the equal tempered scale
 + Optional effects: vintage LEDs, luminance bars, customizable reflection, radial visualization
 + Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing constant
 + Comes with 3 predefined color gradients - easily add your own!
-+ No dependencies, less than 20kB minified
++ Fullscreen support, ready for retina / HiDPI displays
++ Zero-dependency native ES6+ module (ESM), \~20kB minified
 
 ## Online demos
 
@@ -22,14 +28,33 @@ I originally wrote this for my [**audioMotion**](https://audiomotion.me) music p
 
 ?> https://audiomotion.dev/demo/
 
+**You can also try it live on Codepen:**
+
+- [Quick and easy spectrum analyzer](https://codepen.io/hvianna/pen/pobMLNL)
+- [Microphone input](https://codepen.io/hvianna/pen/VwKZgEE)
+- [Custom callback function](https://codepen.io/hvianna/pen/LYZwdvG)
+
 ## Usage
 
-### Using npm and webpack
+### Native ES6 module (ESM)
 
-Install with npm:
+Load from Skypack CDN:
+
+```html
+<script type="module">
+  import AudioMotionAnalyzer from 'https://cdn.skypack.dev/audiomotion-analyzer?min';
+  // your code here
+</script>
+```
+
+Or download the [latest version](https://github.com/hvianna/audioMotion-analyzer/releases) and copy the `audioMotion-analyzer.js` file from the `src/` folder to your project folder.
+
+### npm project
+
+Install as a dependency:
 
 ```console
-$ npm install audiomotion-analyzer
+$ npm i --save audiomotion-analyzer
 ```
 
 Use ES6 import syntax:
@@ -37,27 +62,6 @@ Use ES6 import syntax:
 ```js
 import AudioMotionAnalyzer from 'audiomotion-analyzer';
 ```
-
-### As a native JavaScript module (ESM)
-
-Simply copy the `audioMotion-analyzer.js` file from the `src` folder to your project folder and add the line below to your HTML file:
-
-```html
-<body>
-  .
-  .
-	<script src="main.js" type="module"></script>
-</body>
-```
-
-And in your `main.js` file, use:
-
-```js
-import AudioMotionAnalyzer from './audiomotion-analyzer.js';
-```
-
-Please note that JavaScript security requirements don't allow loading modules via `file://` URLs.
-You'll need a web server, such as [http-server](https://github.com/http-party/http-server), to test files locally.
 
 ## Constructor
 
@@ -117,21 +121,21 @@ options = {<br>
 &emsp;&emsp;[showScale](#showscale-boolean): **true**,<br>
 &emsp;&emsp;[showScaleY](#showscaley-boolean): **false**,<br>
 &emsp;&emsp;[smoothing](#smoothing-number): **0.5**,<br>
-&emsp;&emsp;[source](#source-htmlmediaelement-object): *undefined*,<br>
+&emsp;&emsp;[source](#source-htmlmediaelement-or-audionode-object): *undefined*,<br>
 &emsp;&emsp;[spinSpeed](#spinspeed-number): **0**,<br>
+&emsp;&emsp;[splitGradient](#splitgradient-boolean): **false**,<br>
 &emsp;&emsp;[start](#start-boolean): **true**,<br>
+&emsp;&emsp;[stereo](#stereo-boolean): **false**,<br>
+&emsp;&emsp;[volume](#volume-number): **1**,<br>
 &emsp;&emsp;[width](#width-number): *undefined*<br>
 }
 
-### `source` *HTMLMediaElement object*
+### `source` *HTMLMediaElement or AudioNode object*
 
-If `source` is specified, the media element (`<audio>` or `<video>`) referenced by the object will be connected to the analyzer.
+If `source` is specified, connects an [*HTMLMediaElement*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) object (an `<audio>` or `<video>` HTML tag)
+or any instance of [*AudioNode*](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) to the analyzer.
 
-You can later disconnect it by referring to the [`audioSource`](#audiosource-mediaelementaudiosourcenode-object) object.
-
-At least one audio source is required for the analyzer to work. You can also connect audio sources with the [`connectAudio()`](#connectaudio-element-) method.
-
-Object reference: https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement
+At least one audio source is required for the analyzer to work. You can also connect audio sources after instantiation, using the [`connectInput()`](#connectinput-source-) method.
 
 ### `start` *boolean*
 
@@ -142,19 +146,14 @@ Defaults to **true**, so the analyzer will start running right after initializat
 
 ## Interface objects *(read only)*
 
-### `analyzer` *AnalyserNode object*
-
-Connect any additional audio sources to this object, so their output is displayed in the graphic analyzer.
-
-Object reference: https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode
-
 ### `audioCtx` *AudioContext object*
 
-AudioContext used by audioMotion-analyzer. If not provided by the user in the [constructor](#constructor) options, it will be created automatically.
+[*AudioContext*](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) used by audioMotion-analyzer.
+If not provided in the [constructor](#constructor) options, it will be created.
 
 Use this object to create additional audio sources to be connected to the analyzer, like oscillator nodes, gain nodes and media streams.
 
-The code fragment below creates an oscillator and a gain node using audioMotion's audioContext, and then connects them to the analyzer:
+The code fragment below creates an oscillator and a gain node using audioMotion's *AudioContext*, and then connects them to the analyzer:
 
 ```js
 const audioMotion = new AudioMotionAnalyzer( document.getElementById('container') ),
@@ -162,35 +161,22 @@ const audioMotion = new AudioMotionAnalyzer( document.getElementById('container'
       oscillator  = audioCtx.createOscillator(),
       gainNode    = audioCtx.createGain();
 
-oscillator.frequency.setValueAtTime( 440, audioCtx.currentTime ); // play 440Hz tone
-oscillator.connect( gainNode );
+oscillator.frequency.value = 440; // set 440Hz frequency
+oscillator.connect( gainNode ); // connect oscillator -> gainNode
 
-gainNode.gain.setValueAtTime( .5, audioCtx.currentTime );
-gainNode.connect( audioMotion.analyzer );
+gainNode.gain.value = .5; // set volume to 50%
+audioMotion.connectInput( gainNode ); // connect gainNode -> audioMotion
 
-oscillator.start();
+oscillator.start(); // play tone
 ```
-
-Object reference: https://developer.mozilla.org/en-US/docs/Web/API/AudioContext
-
-### `audioSource` *MediaElementAudioSourceNode object*
-
-Object representing the HTML media element connected using the [`source`](#source-htmlmediaelement-object) property in the [constructor](#constructor) options,
-or, if that was not provided, **the first** media element connected via the [`connectAudio()`](#connectaudio-element-) method.
-
-Object reference: https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode
 
 ### `canvas` *HTMLCanvasElement object*
 
-Canvas element created by audioMotion.
-
-Object reference: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement
+[*Canvas*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement) element created by audioMotion.
 
 ### `canvasCtx` *CanvasRenderingContext2D object*
 
-2D rendering context for drawing in audioMotion's canvas.
-
-Object reference: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
+[2D rendering context](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D) used for drawing in audioMotion's *Canvas*.
 
 
 ## Properties
@@ -220,15 +206,11 @@ It must be a number between 0 (completely transparent) and 1 (completely opaque)
 
 Defaults to **0.7**.
 
-### `dataArray` *UInt8Array array* *(Read only)*
+### `connectedSources` *array*
 
-Data array updated by the analyzer's [`getByteFrequencyData()`](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getByteFrequencyData) method on every animation frame (ideally 60 times per second).
+*Available since v3.0.0*
 
-Array size is defined by `analyzer.frequencyBinCount` (which should be half the current [FFT size](#fftsize-number)), with element values ranging from 0 to 255.
-
-Each array element represents a discrete value in the frequency domain, such that: *frequency = index * [audioCtx](#audioctx-audiocontext-object).sampleRate / fftSize*.
-
-See also [`binToFreq()`](#bintofreq-bin-) and [`freqToBin()`](#freqtobin-frequency-rounding-) methods.
+An array of *AudioNode* objects connected via the [`source`](#source-htmlmediaelement-or-audionode-object) constructor option, or by using the [`connectInput()`](#connectinput-source-) method.
 
 ### `energy` *number* *(Read only)*
 
@@ -244,7 +226,8 @@ See also [`peakEnergy`](#peakenergy-number-read-only).
 
 ### `fftSize` *number*
 
-Number of samples used for the FFT performed by the analyzer node. It must be a power of 2 between 32 and 32768, so valid values are: 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, and 32768.
+Number of samples used for the FFT performed by the [*AnalyzerNode*](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode).
+It must be a power of 2 between 32 and 32768, so valid values are: 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, and 32768.
 
 Higher values provide more detail in the frequency domain, but less detail in the time domain (slower response), so you may need to adjust [`smoothing`](#smoothing-number) accordingly.
 
@@ -275,7 +258,7 @@ Canvas dimensions used during fullscreen mode. These take the current pixel rati
 
 ### `gradient` *string*
 
-Currently selected color gradient used for analyzer graphics.
+Currently selected color gradient used for analyzer graphs.
 
 It must be the name of a built-in or [registered](#registergradient-name-options-) gradient. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*.
 
@@ -299,6 +282,24 @@ You can set both values at once using the [`setCanvasSize()`](#setcanvassize-wid
 *true* when the analyzer is being displayed in fullscreen, or *false* otherwise.
 
 See [`toggleFullscreen()`](#togglefullscreen).
+
+### `isLedDisplay` *boolean* *(Read only)*
+
+*Available since v3.0.0*
+
+*true* when the LED effect is effectively being displayed, i.e., [`showLeds`](#showleds-boolean) is set to *true* and [`mode`](#mode-number) is set to one of the octave bands modes and [`radial`](#radial-boolean) is *false*.
+
+### `isLumiBars` *boolean* *(Read only)*
+
+*Available since v3.0.0*
+
+*true* when the luminance bars effect is effectively being displayed, i.e., [`lumiBars`](#lumibars-boolean) is set to *true* and [`mode`](#mode-number) is set to one of the octave bands modes and [`radial`](#radial-boolean) is *false*.
+
+### `isOctaveBands` *boolean* *(Read only)*
+
+*Available since v3.0.0*
+
+*true* when [`mode`](#mode-number) is set to one of the octave bands modes.
 
 ### `isOn` *boolean* *(Read only)*
 
@@ -325,7 +326,8 @@ Low resolution mode halves the effective pixel ratio, resulting in four times le
 ?> If you want to allow users to interactively toggle low resolution mode, you may need to set a fixed size for the canvas via CSS, like so:
 
 ```css
-#container canvas {
+canvas {
+    display: block;
     width: 100%;
 }
 ```
@@ -388,21 +390,6 @@ mode | description | notes
 
 Defaults to **0**.
 
-### `radial` *boolean*
-
-*Available since v2.4.0*
-
-When *true*, the spectrum analyzer is rendered as a circle, with radial frequency bars spreading from the center of the canvas.
-
-When radial mode is active, [`lumiBars`](#lumibars-boolean) and [`showLeds`](#showleds-boolean) have no effect, and
-also [`showPeaks`](#showpeaks-boolean) has no effect in **Line / Area graph** mode.
-
-See also [`spinSpeed`](#spinspeed-number).
-
-Defaults to **false**.
-
-!> [See related known issue](#fillalpha-and-radial-mode-on-firefox)
-
 ### `overlay` *boolean*
 
 *Available since v2.2.0*
@@ -427,6 +414,21 @@ This is usually **1** for standard displays and **2** for retina / Hi-DPI screen
 You can refer to this value to adjust any additional drawings done in the canvas (via [callback function](#oncanvasdraw-function)).
 
 When [`loRes`](#lores-boolean) is *true* `pixelRatio` is halved, i.e. **0.5** for standard displays and **1** for retina / Hi-DPI.
+
+### `radial` *boolean*
+
+*Available since v2.4.0*
+
+When *true*, the spectrum analyzer is rendered as a circle, with radial frequency bars spreading from the center of the canvas.
+
+When radial mode is active, [`lumiBars`](#lumibars-boolean) and [`showLeds`](#showleds-boolean) have no effect, and
+also [`showPeaks`](#showpeaks-boolean) has no effect in **Line / Area graph** mode.
+
+See also [`spinSpeed`](#spinspeed-number).
+
+Defaults to **false**.
+
+!> [See related known issue](#fillalpha-and-radial-mode-on-firefox)
 
 ### `reflexAlpha` *number*
 
@@ -498,9 +500,13 @@ Defaults to **true**.
 
 *true* to show amplitude peaks for each frequency. Defaults to **true**.
 
-### `showScale` *boolean*
+### `showScaleX` *boolean*
+
+*Available since v3.0.0*
 
 *true* to display the frequency (Hz) scale on the X axis. Defaults to **true**.
+
+*NOTE: this property was named `showScale` in versions prior to v3.0.0*
 
 ### `showScaleY` *boolean*
 
@@ -528,11 +534,57 @@ Positive values will make the analyzer rotate clockwise, while negative values w
 
 Defaults to **0**.
 
-### `version` *string* *(Read only)*
+### `splitGradient` *boolean*
 
-*Available since v2.0.0*
+*Available since v3.0.0*
+
+When *true*, the gradient will be split between both channels, so each channel will have different colors. If *false*, both channels will use the full gradient.
+
+| splitGradient: *true* | splitGradient: *false* |
+|:--:|:--:|
+| ![split-on](demo/media/splitGradient_on.png) | ![split-off](demo/media/splitGradient_off.png) |
+
+This option has no effect in horizontal gradients, or when [`stereo`](#stereo-boolean) is set to *false*.
+
+Defaults to **false**.
+
+### `stereo` *boolean*
+
+*Available since v3.0.0*
+
+When *true*, the spectrum analyzer will display separate graphs for the left and right audio channels.
+
+Notes:
+- Stereo tracks will always output stereo audio, even if `stereo` is set to *false* (in such case the analyzer graph will represent both channels combined);
+- Mono (single channel) tracks will output audio only on the left channel when `stereo` is *true*, unless you have another stereo source simultaneously
+connected to the analyzer, which will force the mono source to be upmixed to stereo.
+
+See also [`splitGradient`](#splitgradient-boolean).
+
+Defaults to **false**.
+
+### `volume` *number*
+
+*Available since v3.0.0*
+
+Read or set the output volume.
+
+A value of **0** (zero) will mute the sound output, while a value of **1** will keep the same input volume.
+Higher values can be used to amplify the input, but it may cause distortion.
+
+Please note that changing the audio element volume directly will affect the amplitude of analyzer graphs, while this property does not.
+
+Defaults to **1**.
+
+## Static properties
+
+### `AudioMotionAnalyzer.version` *string* *(Read only)*
+
+*Available since v3.0.0*
 
 Returns the version of the **audioMotion-analyzer** package.
+
+Since this is a static property, you should always access it as `AudioMotionAnalyzer.version` - this allows you to check the package version even before instantiating your object.
 
 
 ## Callback functions
@@ -569,7 +621,7 @@ function drawCallback( instance ) {
 }
 ```
 
-For more examples, see the fluid demo [source code](https://github.com/hvianna/audioMotion-analyzer/blob/master/demo/src/fluid.js#L221).
+For more examples, see the fluid demo [source code](https://github.com/hvianna/audioMotion-analyzer/blob/master/demo/fluid.js) or [this pen](https://codepen.io/hvianna/pen/LYZwdvG).
 
 ### `onCanvasResize` *function*
 
@@ -604,37 +656,51 @@ const audioMotion = new AudioMotionAnalyzer(
 
 ## Methods
 
-### `binToFreq( bin )`
+### `connectInput( source )`
 
-*Available since v2.3.0*
+*Available since v3.0.0*
 
-Returns the frequency (in hertz) represented by a given FFT bin (a [`dataArray`](#dataarray-uint8array-array-read-only) index).
+Connects an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) or an [AudioNode](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode)
+(or any of its descendants) to the analyzer.
 
-`bin` must be a **number** equal or greater than 0 and less than `analyzer.frequencyBinCount` (the same as `dataArray.length`).
+If `source` is an *HTMLMediaElement*, the method returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) created
+for that element; if `source` is an *AudioNode* instance, it returns the `source` object itself; if it's neither an [ERR_INVALID_AUDIO_SOURCE](#custom-errors) error is thrown.
 
-### `connectAudio( element )`
+See also [`disconnectInput()`](#disconnectinput-node-).
 
-Connects an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) (`<audio>` or `<video>` HTML element) to the analyzer.
+### `connectOutput( [node] )`
 
-Returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) which can be used for later disconnection.
+*Available since v3.0.0*
 
-For connecting other audio sources, like oscillators and streams, use the [`audioCtx`](#audioctx-audiocontext-object) and [`analyzer`](#analyzer-analysernode-object) objects.
+This method allows connecting **audioMotion-analyzer** to other audio nodes, e.g. other audio processing modules that use the Web Audio API.
 
-### `freqToBin( frequency, [rounding] )`
+`node` must be a connected *AudioNode*; if not specified, the analyzer output is connected to the *AudioContext* [**destination**](https://developer.mozilla.org/en-US/docs/Web/API/AudioDestinationNode)
+(usually the speakers) - this is already done by the construtor, and you should only need to do it again if you disconnect the output.
 
-*Available since v2.3.0*
+See also [`disconnectOutput()`](#disconnectoutput-node-).
 
-Returns the [`dataArray`](#dataarray-uint8array-array-read-only) index which more closely corresponds to a given frequency.
+### `disconnectInput( [node] )`
 
-`frequency` must be a **number** equal or greater than zero, representing a frequency in hertz.
+*Available since v3.0.0*
 
-`rounding` is an optional **string** indicating the method to be used for rounding the index value to an integer.
-Valid options are `'floor'`, `'round'` (default) and `'ceil'`.
+Disconnects audio source nodes previously connected to the analyzer.
 
-See [Math static methods](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math#Static_methods).
+`node` may be an *AudioNode* instance or an **array** of such objects; if not specified, all connected nodes are disconnected.
 
-Please note that the returned value will cap at the highest valid index (`analyzer.frequencyBinCount - 1`) for any frequency higher
-than **half** the current sampling rate (`audioCtx.sampleRate`).
+Please note that if you have connected an `<audio>` or `<video>` element, you should disconnect the respective [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode)
+created for it.
+
+See also [`connectInput()`](#connectinput-source-).
+
+### `disconnectOutput( [node] )`
+
+*Available since v3.0.0*
+
+Disconnects the analyzer output from previously connected audio nodes.
+
+`node` must be an *AudioNode* instance; if not specified, the output is disconnected from all nodes (note that this includes the speakers).
+
+See also [`connectOutput()`](#connectoutput-node-).
 
 ### `registerGradient( name, options )`
 
@@ -709,6 +775,7 @@ code                       | Error description
 ---------------------------|--------------------
 ERR_AUDIO_CONTEXT_FAIL     | Could not create audio context. The user agent may lack support for the Web Audio API.
 ERR_INVALID_AUDIO_CONTEXT  | [Audio context](#audioctx-audiocontext-object) provided by user is not valid.
+ERR_INVALID_AUDIO_SOURCE   | Audio source provided in [`source`](#source-htmlmediaelement-or-audionode-object) option or [`connectInput()`](#connectinput-source-) method is not an instance of HTMLMediaElement or AudioNode.
 ERR_INVALID_MODE           | User tried to set the visualization [`mode`](#mode-number) to an invalid value.
 ERR_FREQUENCY_TOO_LOW      | User tried to set the [`minFreq`](#minfreq-number) or [`maxFreq`](#maxfreq-number) properties to a value lower than 1.
 ERR_GRADIENT_INVALID_NAME  | The `name` parameter for [`registerGradient()`](#registergradient-name-options-) must be a non-empty string.
@@ -716,6 +783,7 @@ ERR_GRADIENT_NOT_AN_OBJECT | The `options` parameter for [`registerGradient()`](
 ERR_GRADIENT_MISSING_COLOR | The `options` parameter for [`registerGradient()`](#registergradient-name-options-) must define at least two color-stops.
 ERR_REFLEX_OUT_OF_RANGE    | Tried to assign a value < 0 or >= 1 to [`reflexRatio`](#reflexratio-number) property.
 ERR_UNKNOWN_GRADIENT       | User tried to [select a gradient](#gradient-string) not previously registered.
+
 
 ## Known Issues
 
@@ -728,6 +796,11 @@ which is [currently not supported in some browsers](https://caniuse.com/#feat=md
 
 On Firefox, [`fillAlpha`](#fillalpha-number) may not work properly for [`radial`](#radial-boolean) visualization, due to [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912).
 
+### Visualization of live streams won't work on Safari {docsify-ignore}
+
+Safari's implementation of Web Audio won't return analyzer data for live streams, as documented in [this bug report](https://bugs.webkit.org/show_bug.cgi?id=195043).
+
+
 ## References and acknowledgments
 
 * Thanks to [Yuji Koike](http://www.ykcircus.com) for his awesome [Soniq Viewer for iOS](https://itunes.apple.com/us/app/soniq-viewer/id448343005), which inspired me to create **audioMotion**
@@ -739,9 +812,11 @@ On Firefox, [`fillAlpha`](#fillalpha-number) may not work properly for [`radial`
 * The font used in audioMotion's logo is [Orbitron](https://fonts.google.com/specimen/Orbitron) by Matt McInerney
 * This documentation website is powered by [GitHub Pages](https://pages.github.com/), [docsify](https://docsify.js.org/) and [docsify-themeable](https://jhildenbiddle.github.io/docsify-themeable).
 
+
 ## Changelog
 
 See [Changelog.md](Changelog.md)
+
 
 ## Get in touch!
 
@@ -752,6 +827,7 @@ If you have a feature request or code suggestion, please see [CONTRIBUTING.md](C
 And if you're feeling generous you can [buy me a coffee on Ko-fi](https://ko-fi.com/Q5Q6157GZ) :grin::coffee:
 
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q6157GZ)
+
 
 ## License
 

@@ -79,7 +79,7 @@ const presets = [
 
 // Demo-specific features
 const features = {
-	showLogo: false,
+	showLogo: true,
 	energyMeter: false,
 	songProgress: false
 }
@@ -104,19 +104,24 @@ catch( err ) {
 	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
 }
 
-// Display package version in the footer
-document.getElementById('version').innerText = audioMotion.version;
+// Display package version at the footer
+document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
-// Create oscillator and gain nodes, and connect them to the analyzer
-
-const audioCtx = audioMotion.audioCtx,
+// Create oscillator, gain and stereoPanner nodes in audioMotion's AudioContext
+const audioCtx   = audioMotion.audioCtx,
 	  oscillator = audioCtx.createOscillator(),
-	  gainNode = audioCtx.createGain();
+	  gainNode   = audioCtx.createGain(),
+	  panNode    = audioCtx.createStereoPanner();
 
 oscillator.frequency.setValueAtTime( 0, audioCtx.currentTime );
-oscillator.connect( gainNode );
 oscillator.start();
-gainNode.connect( audioMotion.analyzer );
+
+// Connect audio nodes: oscillator -> panNode -> gainNode
+oscillator.connect( panNode );
+panNode.connect( gainNode );
+
+// Connect gainNode to audioMotion's input
+audioMotion.connectInput( gainNode );
 
 // Event listeners for UI controls
 
@@ -174,17 +179,14 @@ document.getElementById('btn_play').addEventListener( 'click', () => {
 
 document.getElementById('btn_soundoff').addEventListener( 'click', () => gainNode.gain.setValueAtTime( 0, audioCtx.currentTime ) );
 
+// Stereo pan for test tones
+document.getElementById('pan').addEventListener( 'change', e => panNode.pan.setValueAtTime( e.target.value, audioCtx.currentTime ) );
+
 // File upload
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
 
 // Initialize UI elements
 updateUI();
-
-// Resume audio context if in suspended state (browsers' autoplay policy)
-window.addEventListener( 'click', () => {
-	if ( audioMotion.audioCtx.state == 'suspended' )
-		audioMotion.audioCtx.resume();
-});
 
 // Load song from user's computer
 function loadSong( el ) {
@@ -206,13 +208,8 @@ function updateRangeElement( el ) {
 // Update UI elements to reflect the analyzer's current settings
 function updateUI() {
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
-
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => {
-		const p = audioMotion[ el.dataset.prop ];
-		el.classList.toggle( 'active', el.dataset.prop == 'isOn' ? ! p : p );
-	});
-
+	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', audioMotion[ el.dataset.prop ] ) );
 	document.querySelectorAll('button[data-feature]').forEach( el => el.classList.toggle( 'active', features[ el.dataset.feature ] ) );
 }
 
@@ -221,8 +218,7 @@ function updateUI() {
 function drawCallback() {
 
 	const canvas   = audioMotion.canvas,
-		  ctx      = audioMotion.canvasCtx,
-		  gradient = ctx.fillStyle; // save the current gradient
+		  ctx      = audioMotion.canvasCtx;
 
 	if ( features.energyMeter ) {
 		ctx.fillStyle = '#fff8';
@@ -239,7 +235,7 @@ function drawCallback() {
 	if ( features.showLogo ) {
 		const baseSize = ( audioMotion.isFullscreen ? 40 : 20 ) * audioMotion.pixelRatio;
 
-		// use the 'energy' value to increase the font size and make the logo pulse to the beat
+		// use the song energy to increase the font size and make the logo pulsate to the beat
 		ctx.font = `${ baseSize + audioMotion.energy * 25 * audioMotion.pixelRatio }px Orbitron, sans-serif`;
 
 		ctx.fillStyle = '#fff8';
@@ -247,18 +243,16 @@ function drawCallback() {
 		ctx.fillText( 'audioMotion', canvas.width - baseSize * 8, baseSize * 2 );
 	}
 
-	if ( features.songProgress && audioMotion.radial ) {
-		const lineWidth = canvas.height / 60,
-			  radius    = canvas.height / 8 - lineWidth / 2 - ( audioMotion.showScale ? canvas.height * .03 : 0 ),
-			  centerX   = canvas.width / 2,
-			  centerY   = canvas.height / 2,
-			  angle     = ( 2 * Math.PI * audioEl.currentTime / audioEl.duration ) - Math.PI / 2;
+	if ( features.songProgress ) {
+		const lineWidth = canvas.height / 40,
+			  posY = lineWidth >> 1;
 
 		ctx.beginPath();
-		ctx.arc( centerX, centerY, radius, -Math.PI / 2, angle );
-		ctx.fillStyle = gradient;
+		ctx.moveTo( 0, posY );
+		ctx.lineTo( canvas.width * audioEl.currentTime / audioEl.duration, posY );
+		ctx.lineCap = 'round';
 		ctx.lineWidth = lineWidth;
-		ctx.globalAlpha = audioMotion.energy;
+		ctx.globalAlpha = audioMotion.energy; // use the song energy to control the bar opacity
 		ctx.stroke();
 	}
 
