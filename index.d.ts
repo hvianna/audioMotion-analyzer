@@ -1,148 +1,183 @@
 type OnCanvasDrawFunction = (instance: AudioMotionAnalyzer) => unknown;
-type OnCanvasResizeFunction = (reason: CanvasResizeReason, instance: AudioMotionAnalyzer) => unknown;
+type OnCanvasResizeFunction = (
+  reason: CanvasResizeReason,
+  instance: AudioMotionAnalyzer
+) => unknown;
 
 type CanvasResizeReason = "create" | "fschange" | "lores" | "resize" | "user";
 
-interface RectRadiusOptions {
-    tl?: number; // Top-left
-    tr?: number; // Top-right
-    br?: number; // Bottom-right
-    bl?: number; // Bottom-left
-}
-
 export interface Options {
-    audioCtx?: AudioContext;
-    barSpace?: number;
-    fftSize?: number;
-    gradient?: string;
-    height?: number;
-    lineWidth?: number;
-    loRes?: boolean;
-    lumiBars?: boolean;
-    maxDecibels?: number;
-    maxFreq?: number;
-    minDecibels?: number;
-    minFreq?: number;
-    mode?: number;
-    onCanvasDraw?: OnCanvasDrawFunction;
-    onCanvasResize?: OnCanvasResizeFunction;
-    reflexAlpha?: number;
-    reflexFit?: boolean;
-    reflexRatio?: number;
-    showBgColor?: boolean;
-    showFPS?: boolean;
-    showLeds?: boolean;
-    showPeaks?: boolean;
-    showScale?: boolean;
-    smoothing?: number;
-    source?: HTMLMediaElement;
-    start?: boolean;
-    width?: number;
-    useAlpha?: boolean;
-    rectRadius?: RectRadiusOptions;
+  audioCtx?: AudioContext;
+  barSpace?: number;
+  bgAlpha?: number;
+  fftSize?: number;
+  fillAlpha?: number;
+  gradient?: string;
+  height?: number;
+  lineWidth?: number;
+  loRes?: boolean;
+  lumiBars?: boolean;
+  maxDecibels?: number;
+  maxFreq?: number;
+  minDecibels?: number;
+  minFreq?: number;
+  mode?: number;
+  onCanvasDraw?: OnCanvasDrawFunction;
+  onCanvasResize?: OnCanvasResizeFunction;
+  overlay?: boolean;
+  radial?: boolean;
+  reflexAlpha?: number;
+  reflexBright?: number;
+  reflexFit?: boolean;
+  reflexRatio?: number;
+  showBgColor?: boolean;
+  showFPS?: boolean;
+  showLeds?: boolean;
+  showPeaks?: boolean;
+  showScale?: boolean;
+  showScaleY?: boolean;
+  smoothing?: number;
+  source?: HTMLMediaElement | AudioNode;
+  spinSpeed?: number;
+  splitGradient?: boolean;
+  start?: boolean;
+  stereo?: boolean;
+  volume?: number;
+  width?: number;
 }
 
-type GradientColorStop = string | { pos: number; color: string};
+type GradientColorStop = string | { pos: number; color: string };
 
 interface GradientOptions {
-    bgColor: string;
-    dir?: 'h';
-    colorStops: [GradientColorStop, GradientColorStop, ...GradientColorStop[]];
+  bgColor: string;
+  dir?: "h";
+  colorStops: [GradientColorStop, GradientColorStop, ...GradientColorStop[]];
 }
 
 declare class AudioMotionAnalyzer {
-    constructor(container?: HTMLElement, options?: Options);
+  constructor(container?: HTMLElement, options?: Options);
 
-    get analyzer(): AnalyserNode;
-    get audioCtx(): AudioContext;
-    get audioSource(): MediaElementAudioSourceNode;
-    get canvas(): HTMLCanvasElement;
-    get canvasCtx(): CanvasRenderingContext2D;
+  get audioCtx(): AudioContext;
+  get canvas(): HTMLCanvasElement;
+  get canvasCtx(): CanvasRenderingContext2D;
 
-    get barSpace(): number;
-    set barSpace(value: number);
+  get barSpace(): number;
+  set barSpace(value: number);
 
-    get dataArray(): Uint8Array;
+  public bgAlpha: number;
 
-    get fftSize(): number;
-    set fftSize(value: number);
+  get connectedSources(): AudioNode[];
 
-    public fillAlpha: number;
+  get energy(): number;
 
-    get fps(): number;
-    
-    get fsHeight(): number;
-    get fsWidth(): number;
+  get fftSize(): number;
+  set fftSize(value: number);
 
-    get gradient(): string;
-    set gradient(value: string);
+  public fillAlpha: number;
 
-    get height(): number;
-    set height(h: number);
+  get fps(): number;
 
-    get width(): number;
-    set width(w: number);
+  get fsHeight(): number;
+  get fsWidth(): number;
 
-    get isFullscreen(): boolean;
+  get gradient(): string;
+  set gradient(value: string);
 
-    get isOn(): boolean;
+  get height(): number;
+  set height(h: number);
 
-    public linewidth: number;
+  get width(): number;
+  set width(w: number);
 
-    get loRes(): boolean;
-    set loRes(value: boolean);
+  get isFullscreen(): boolean;
+  get isLedDisplay(): boolean;
+  get isLumiBars(): boolean;
+  get isOctaveBands(): boolean;
 
-    get lumiBars(): boolean;
-    set lumiBars(value: boolean);
+  get isOn(): boolean;
 
-    get maxDecibels(): number;
-    set maxDecibels(value: number);
+  public lineWidth: number;
 
-    get minDecibels(): number;
-    set minDecibels(value: number);
+  get loRes(): boolean;
+  set loRes(value: boolean);
 
-    get maxFreq(): number;
-    set maxFreq(value: number);
+  get lumiBars(): boolean;
+  set lumiBars(value: boolean);
 
-    get minFreq(): number;
-    set minFreq(value: number);
+  get maxDecibels(): number;
+  set maxDecibels(value: number);
 
-    get mode(): number;
-    set mode(value: number);
+  get minDecibels(): number;
+  set minDecibels(value: number);
 
-    get pixelRatio(): number;
+  get maxFreq(): number;
+  set maxFreq(value: number);
 
-    public reflexAlpha: number;
-    public reflexFit: boolean;
+  get minFreq(): number;
+  set minFreq(value: number);
 
-    get reflexRatio(): number;
-    set reflexRatio(value: number);
+  get mode(): number;
+  set mode(value: number);
 
-    public showBgColor: boolean;
-    public showFPS: boolean;
-    public showLeds: boolean;
-    public showPeaks: boolean;
-    public showScale: boolean;
+  public overlay: boolean;
 
-    get smoothing(): number;
-    set smoothing(value: number);
+  get peakEnergy(): number;
+  get pixelRatio(): number;
 
-    get version(): string;
+  get radial(): number;
+  set radial(value: number);
 
-    public readonly useAlpha: boolean;
-    public rectRadius: RectRadiusOptions;
+  public reflexAlpha: number;
+  public reflexBright: number;
+  public reflexFit: boolean;
 
-    public onCanvasDraw: OnCanvasDrawFunction;
-    public onCanvasResize: OnCanvasResizeFunction;
+  get reflexRatio(): number;
+  set reflexRatio(value: number);
 
-    public connectAudio(element: HTMLMediaElement): MediaElementAudioSourceNode;
-    public registerGradient(name: string, options: GradientOptions): void;
-    public setCanvasSize(width: number, height: number): void;
-    public setFreqRange(minFreq: number, maxFreq: number): void;
-    public setOptions(options: Options): void;
-    public setSensitivity(minDecibels: number, maxDecibels: number): void;
-    public toggleAnalyzer(value?: boolean): void;
-    public toggleFullscreen(): void;
+  public showBgColor: boolean;
+  public showFPS: boolean;
+
+  get showLeds(): boolean;
+  set showLeds(value: boolean);
+
+  public showPeaks: boolean;
+  public showScaleX: boolean;
+  public showScaleY: boolean;
+
+  get smoothing(): number;
+  set smoothing(value: number);
+
+  get spinSpeed(): number;
+  set spinSpeed(value: number);
+
+  get splitGradient(): boolean;
+  set splitGradient(value: boolean);
+
+  get stereo(): boolean;
+  set stereo(value: boolean);
+
+  get volume(): number;
+  set volume(value: number);
+
+  static get version(): string;
+
+  public onCanvasDraw: OnCanvasDrawFunction | undefined;
+  public onCanvasResize: OnCanvasResizeFunction | undefined;
+
+  public connectInput(source: HTMLMediaElement): MediaElementAudioSourceNode;
+  public connectInput(source: AudioNode): AudioNode;
+  public connectOutput(node?: AudioNode): void;
+
+  public disconnectInput(node?: AudioNode): void;
+  public disconnectOutput(node?: AudioNode): void;
+
+  public registerGradient(name: string, options: GradientOptions): void;
+
+  public setCanvasSize(width: number, height: number): void;
+  public setFreqRange(minFreq: number, maxFreq: number): void;
+  public setSensitivity(minDecibels: number, maxDecibels: number): void;
+
+  public toggleFullscreen(): void;
 }
 
 export default AudioMotionAnalyzer;
