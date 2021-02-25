@@ -7,7 +7,6 @@ type OnCanvasResizeFunction = (
 type CanvasResizeReason = "create" | "fschange" | "lores" | "resize" | "user";
 
 export interface Options {
-  audioCtx?: AudioContext;
   barSpace?: number;
   bgAlpha?: number;
   fftSize?: number;
@@ -37,13 +36,17 @@ export interface Options {
   showScaleX?: boolean;
   showScaleY?: boolean;
   smoothing?: number;
-  source?: HTMLMediaElement | AudioNode;
   spinSpeed?: number;
   splitGradient?: boolean;
   start?: boolean;
   stereo?: boolean;
   volume?: number;
   width?: number;
+}
+
+interface ConstructorOptions extends Options {
+  audioCtx?: AudioContext;
+  source?: HTMLMediaElement | AudioNode;
 }
 
 type GradientColorStop = string | { pos: number; color: string };
@@ -55,7 +58,7 @@ interface GradientOptions {
 }
 
 declare class AudioMotionAnalyzer {
-  constructor(container?: HTMLElement, options?: Options);
+  constructor(container?: HTMLElement, options?: ConstructorOptions);
 
   get audioCtx(): AudioContext;
   get canvas(): HTMLCanvasElement;
@@ -175,8 +178,10 @@ declare class AudioMotionAnalyzer {
 
   public setCanvasSize(width: number, height: number): void;
   public setFreqRange(minFreq: number, maxFreq: number): void;
+  public setOptions(options?: Options): void;
   public setSensitivity(minDecibels: number, maxDecibels: number): void;
 
+  public toggleAnalyzer(value?: boolean): boolean;
   public toggleFullscreen(): void;
 }
 
