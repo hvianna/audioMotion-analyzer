@@ -1,16 +1,23 @@
 body {
-	font: 13px Arial,sans-serif;
+	background: #222;
+	color: #ccc;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+	font-size: 13px;
 	margin: 0 auto;
 	max-width: 100%;
 	width: 1000px;
 }
 
 a {
-	color: #090;
+	color: #b5c6d0;
+}
+a:not([class]):hover {
+	color: #fff;
+	filter: drop-shadow(.07em .07em .14em #f0fc) drop-shadow( -.07em -.07em .14em #f0fc);
 }
 
 button {
-	margin: 6px;
+	margin: 5px;
 	padding: 6px;
 	vertical-align: bottom;
 }
@@ -18,8 +25,9 @@ button.active {
 	background: #444;
 	border: none;
 	box-shadow: inset 1px 1px 0 #000;
-	color: #eee;
+	color: #0f0;
 	padding: 8px;
+	text-shadow: 2px 2px 10px #0f08, -2px -2px 10px #0f08;
 }
 
 canvas {
@@ -27,19 +35,39 @@ canvas {
 	width: 100%;
 }
 
+code {
+	background: #fff2;
+	border-radius: 4px;
+	padding: 1px 4px;
+}
+
 fieldset {
-	border: none;
+	border: 1px dotted #666;
 	display: inline-block;
-	margin: 0;
-	padding: 0;
+	height: 70px;
 	vertical-align: top;
 }
 fieldset:disabled {
 	display: none;
 }
+fieldset legend {
+	font-size: 12px;
+}
 
 header {
 	position: relative;
+}
+h1 {
+	color: #dfe6eb;
+	filter: drop-shadow(2px 2px 0 #000);
+}
+h2 {
+	margin: 1.5em 0 1em;
+}
+
+hr {
+	border-color: #8888;
+	border-width: 0 0 1px;
 }
 
 img {
@@ -47,13 +75,17 @@ img {
 }
 
 input[type="range"] {
-	width: 60px;
+	width: 50px;
 }
 
 input[type="text"],
 select {
 	margin: 6px 0;
 	padding: 6px;
+}
+
+ul {
+	line-height: 1.6;
 }
 
 .big {
@@ -70,6 +102,7 @@ select {
 }
 
 .label {
+	color: #fff;
 	display: inline-block;
 	font-size: 12px;
 	margin: 0 6px;
@@ -80,21 +113,51 @@ select {
 	display: block;
 }
 
-#audio {
+.logo {
+	background: linear-gradient(to bottom, #f2f6f8 0%, #d8e1e7 50%, #b5c6d0 51%, #e0eff9 100%);
+	background-clip: text;
+	font-family: Orbitron, sans-serif;
+	padding-right: .5em;
+	position: relative;
+	text-decoration: none;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.logo:hover::after {
+	animation: shine .5s ease-in-out;
+	color: #fff;
+	content: 'audioMotion-analyzer';
+	left: 0;
+	position: absolute;
+	top: 0;
+	-webkit-mask-image: linear-gradient(-75deg, transparent 45%, #000 50%, transparent 55%);
+	-webkit-text-fill-color: #fff;
+	-webkit-mask-position: -50%;
+	-webkit-mask-size: 200%;
+}
+
+@keyframes shine {
+	0% { -webkit-mask-position: 110%; }
+	100% { -webkit-mask-position: -10%; }
+}
+
+#audio,
+#video {
+	display: block;
 	width: 100%;
 }
 
 .analyzer-configuration {
-	background: #f5f5f5;
-	border: 1px solid #ccc;
+	background: #fff1;
+	border: 1px solid #ccc8;
 	margin-bottom: 20px;
 	padding: 10px 0;
 }
 
 .credits {
-	color: #030;
 	font-size: 12px;
-	margin: 40px 0;
+	margin: 10px 0;
 	text-align: center;
 }
 
@@ -112,18 +175,40 @@ select {
 	margin-left: .5em;
 }
 
-/* fluid full-width analyzer (single instance demo) */
+/* minimal demo */
 #container {
+	height: 60vh;
+}
+
+/* fluid full-width analyzer (single instance demo) */
+#container.fluid {
 	height: 45vh;
-	margin: 0 calc( 50% - 50vw );
+	margin: 0 calc( 50% - 50vw + 9px );
+}
+
+/* background animation for overlay test on fluid demo */
+.fluid canvas {
+	background-image: url(media/sealoop.gif);
+	background-size: cover;
 }
 
 #container1 {
 	margin-bottom: 15px;
 }
 
+#frequency {
+	width: 100px;
+}
+
 .center {
 	text-align: center;
+}
+
+.flex {
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+	margin: 10px 0;
 }
 
 .main {
@@ -144,4 +229,56 @@ select {
 
 .selected {
 	outline: 3px solid #c00;
+}
+
+/* overlay */
+#container.overlay {
+	height: 563px;
+	margin: 0 auto;
+	position: relative;
+	width: 100%;
+}
+
+.overlay canvas {
+	bottom: 0;
+	pointer-events: none; /* let mouse clicks pass to the underlying video element */
+	position: absolute;
+	touch-action: none; /* ditto for touch events */
+}
+
+.overlay:not(:fullscreen):hover canvas {
+	opacity: .5;
+}
+
+/* Image gallery on index page */
+
+.gallery {
+	height: 280px;
+	margin: 0 calc( 50% - 50vw );
+	overflow: hidden;
+	position: relative;
+}
+.gallery:hover .gallery-internal {
+	animation-play-state: paused;
+}
+.gallery img {
+	width: 500px;
+}
+
+.gallery-internal {
+	animation: rotate 45s linear infinite;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	width: 9999px;
+}
+.gallery-internal li {
+	display: inline-block;
+	padding: 0 2px;
+}
+
+@keyframes rotate {
+	0%   { left: 0; }
+	100% { left: -3024px; }
 }
