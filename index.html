@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>audioMotion-analyzer</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<meta name="description" content="High-resolution real-time audio spectrum analyzer JavaScript module with no dependencies">
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<meta property="og:url" content="https://audiomotion.dev">
+	<meta property="og:title" content="audioMotion-analyzer">
+	<meta property="og:image" content="https://audiomotion.dev/cover.png">
+	<meta property="og:site_name" content="audioMotion-analyzer">
+	<meta property="og:description" content="High-resolution real-time audio spectrum analyzer JavaScript module with no dependencies">
+	<meta property="og:type" content="website">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:site" content="@HenriqueVianna">
+	<!-- docsify-themeable -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css">
+	<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@800&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--cover-background-color: hsl(var(--theme-hue), 25%, 10%);
+			--cover-background-image: radial-gradient(ellipse at center 115%, rgba(255, 255, 255, 0.2), transparent);
+			--cover-blockquote-color: #f0f0f0;
+			--cover-color: #ccc;
+			--cover-button-color: hsl( var(--theme-hue), var(--theme-saturation), 80% );
+			--cover-button-border: 1px solid var(--cover-button-color);
+			--emoji-size: 1.2em;
+			--sidebar-name-font-family: Orbitron, var(--base-font-family);
+			--sidebar-name-font-weight: 800;
+		}
+
+		@media (min-width: 1200px) {
+			:root {
+				--cover-max-width: 1200px;
+				--content-max-width: 1200px;
+			}
+		}
+
+		.sidebar > h1 .app-name-link {
+			font-size: 82%;
+		}
+
+		h3 code {
+			font-size: inherit !important;
+		}
+
+		img {
+			max-width: 100%;
+		}
+
+		.cover h1 span {
+			background: linear-gradient(to bottom, #f2f6f8 0%, #d8e1e7 50%, #b5c6d0 51%, #e0eff9 100%);
+			background-clip: text;
+			filter: drop-shadow(.05em .05em 0 #0004);
+			font-family: Orbitron, var(--base-font-family);
+			font-weight: 800;
+			position: relative;
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+		}
+
+		.cover ul {
+			margin: 2em 0;
+		}
+
+		.markdown-section h3 ~ h3 {
+			margin-top: 0;
+		}
+
+		p ~ .table-wrapper table {
+			margin-top: 0;
+		}
+	</style>
+</head>
+<body>
+	<div id="app"></div>
+	<script>
+		window.$docsify = {
+			name: 'audioMotion-analyzer',
+			repo: 'https://github.com/hvianna/audioMotion-analyzer',
+			auto2top: true,
+			noCompileLinks: ['/demo/.*'],
+			coverpage: 'coverpage.md'
+		}
+	</script>
+	<script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
+	<!-- docsify-themeable -->
+	<script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0"></script>
+</body>
+</html>
