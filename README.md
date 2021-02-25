@@ -831,5 +831,5 @@ And if you're feeling generous you can [buy me a coffee on Ko-fi](https://ko-fi.
 
 ## License
 
-audioMotion-analyzer copyright (c) 2018-2020 [Henrique Avila Vianna](https://henriquevianna.com)<br>
+audioMotion-analyzer copyright (c) 2018-2021 [Henrique Avila Vianna](https://henriquevianna.com)<br>
 Licensed under the [GNU Affero General Public License, version 3 or later](https://www.gnu.org/licenses/agpl.html).
