@@ -1,6 +1,17 @@
 Changelog
 =========
 
+## version 3.1.0-beta.0 (2021-02-25)
+
+### Added: {docsify-ignore}
+
++ TypeScript definition file (props to [@alex-greff](https://github.com/alex-greff])).
+
+### Improvements: {docsify-ignore}
+
++ Generate only the current gradient on mode changes.
+
+
 ## version 3.0.0 (2020-11-28)
 
 ### BREAKING CHANGES: {docsify-ignore}
