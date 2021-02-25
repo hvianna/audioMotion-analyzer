@@ -124,8 +124,8 @@ declare class AudioMotionAnalyzer {
   get peakEnergy(): number;
   get pixelRatio(): number;
 
-  get radial(): number;
-  set radial(value: number);
+  get radial(): boolean;
+  set radial(value: boolean);
 
   public reflexAlpha: number;
   public reflexBright: number;
