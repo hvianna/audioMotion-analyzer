@@ -34,7 +34,7 @@ export interface Options {
   showFPS?: boolean;
   showLeds?: boolean;
   showPeaks?: boolean;
-  showScale?: boolean;
+  showScaleX?: boolean;
   showScaleY?: boolean;
   smoothing?: number;
   source?: HTMLMediaElement | AudioNode;
