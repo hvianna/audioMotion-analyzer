@@ -8,6 +8,14 @@
   "exports": {
     ".": "./src/audioMotion-analyzer.js"
   },
+  "files": [
+    "src/**/*.js",
+    "src/**/*.d.ts"
+  ],
+  "funding": {
+    "type": "Ko-fi",
+    "url": "https://ko-fi.com/hvianna"
+  },
   "scripts": {
     "start": "npx http-server"
   },
