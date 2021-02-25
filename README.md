@@ -118,7 +118,7 @@ options = {<br>
 &emsp;&emsp;[showFPS](#showfps-boolean): **false**,<br>
 &emsp;&emsp;[showLeds](#showleds-boolean): **false**,<br>
 &emsp;&emsp;[showPeaks](#showpeaks-boolean): **true**,<br>
-&emsp;&emsp;[showScale](#showscale-boolean): **true**,<br>
+&emsp;&emsp;[showScaleX](#showscalex-boolean): **true**,<br>
 &emsp;&emsp;[showScaleY](#showscaley-boolean): **false**,<br>
 &emsp;&emsp;[smoothing](#smoothing-number): **0.5**,<br>
 &emsp;&emsp;[source](#source-htmlmediaelement-or-audionode-object): *undefined*,<br>
