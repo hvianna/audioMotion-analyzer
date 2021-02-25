@@ -4,6 +4,7 @@
   "version": "3.0.0",
   "main": "./src/audioMotion-analyzer.js",
   "module": "./src/audioMotion-analyzer.js",
+  "types": "./src/index.d.ts",
   "exports": {
     ".": "./src/audioMotion-analyzer.js"
   },
