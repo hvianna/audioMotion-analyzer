@@ -1,10 +1,6 @@
 
 ## About
 
-> **version 3.0.0 is OUT!**
->
-> **Before updating, please check the [release notes](https://github.com/hvianna/audioMotion-analyzer/releases/tag/3.0.0) for BREAKING CHANGES!**
-
 **audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer module built upon Web Audio and Canvas JavaScript APIs.
 
 It's highly customizable, and optimized for high performance and a small file size.
@@ -28,11 +24,13 @@ I originally wrote it as part of my [**audioMotion**](https://audiomotion.me) mu
 
 ?> https://audiomotion.dev/demo/
 
-**You can also try it live on Codepen:**
+## Live code examples
 
 - [Quick and easy spectrum analyzer](https://codepen.io/hvianna/pen/pobMLNL)
-- [Microphone input](https://codepen.io/hvianna/pen/VwKZgEE)
+- [Complete visualization options](https://codepen.io/hvianna/pen/LYREBYQ)
+- [Using microphone input](https://codepen.io/hvianna/pen/VwKZgEE)
 - [Custom callback function](https://codepen.io/hvianna/pen/LYZwdvG)
+- [Integration with Pizzicato library](https://codesandbox.io/s/9y6qb) - see [related issue](https://github.com/hvianna/audioMotion-analyzer/issues/10) for more info
 
 ## Usage
 
