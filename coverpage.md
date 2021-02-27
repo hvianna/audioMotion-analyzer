@@ -11,4 +11,4 @@
 
 [Demos](/demo/)
 [About](#about)
-[Get Started](#usage)
+[Get Started](#live-code-examples)

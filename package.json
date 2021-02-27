@@ -1,11 +1,20 @@
 {
   "name": "audiomotion-analyzer",
   "description": "High-resolution real-time graphic audio spectrum analyzer JavaScript module with no dependencies.",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "main": "./src/audioMotion-analyzer.js",
   "module": "./src/audioMotion-analyzer.js",
+  "types": "./src/index.d.ts",
   "exports": {
     ".": "./src/audioMotion-analyzer.js"
+  },
+  "files": [
+    "src/**/*.js",
+    "src/**/*.d.ts"
+  ],
+  "funding": {
+    "type": "Ko-fi",
+    "url": "https://ko-fi.com/hvianna"
   },
   "scripts": {
     "start": "npx http-server"
