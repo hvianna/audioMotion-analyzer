@@ -1496,10 +1496,6 @@ export default class AudioMotionAnalyzer {
 			  newWidth  = isFullscreen ? this._fsWidth  : ( this._width  || this._container.clientWidth  || this._defaultWidth )  * this._pixelRatio | 0,
 			  newHeight = isFullscreen ? this._fsHeight : ( this._height || this._container.clientHeight || this._defaultHeight ) * this._pixelRatio | 0;
 
-		// workaround for wrong dPR reported on Android TV
-		if ( this._pixelRatio == 2 && window.screen.height <= 540 )
-			this._pixelRatio = 1;
-
 		// if canvas dimensions haven't changed, quit
 		if ( this._canvas.width == newWidth && this._canvas.height == newHeight )
 			return;
