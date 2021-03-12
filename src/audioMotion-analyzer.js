@@ -2,12 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 3.1.0
+ * @version 3.2.0-beta.0
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const _VERSION = '3.1.0';
+const _VERSION = '3.2.0-beta.0';
 
 export default class AudioMotionAnalyzer {
 
@@ -70,7 +70,7 @@ export default class AudioMotionAnalyzer {
 		const AudioContext = window.AudioContext || window.webkitAudioContext;
 
 		if ( options.hasOwnProperty( 'audioCtx' ) ) {
-			if ( options.audioCtx instanceof AudioContext )
+			if ( options.audioCtx.createGain )
 				this._audioCtx = options.audioCtx;
 			else
 				throw new AudioMotionError( 'ERR_INVALID_AUDIO_CONTEXT', 'Provided audio context is not valid' );
@@ -516,7 +516,7 @@ export default class AudioMotionAnalyzer {
 	connectInput( source ) {
 		const isHTML = source instanceof HTMLMediaElement;
 
-		if ( ! ( isHTML || source instanceof AudioNode ) )
+		if ( ! ( isHTML || source.connect ) )
 			throw new AudioMotionError( 'ERR_INVALID_AUDIO_SOURCE', 'Audio source must be an instance of HTMLMediaElement or AudioNode' );
 
 		// if source is an HTML element, create an audio node for it; otherwise, use the provided audio node
