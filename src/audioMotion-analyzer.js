@@ -731,21 +731,25 @@ export default class AudioMotionAnalyzer {
 		const dPR = this._pixelRatio / ( window.devicePixelRatio > 1 && window.screen.height <= 540 ? 2 : 1 );
 
 		const params = [ [],
-			[ 128,  3, 180, .45  ], // mode 1
-			[ 128,  4, 135, .225 ], // mode 2
-			[  96,  6,  90, .225 ], // mode 3
-			[  80,  6,  90, .225 ], // mode 4
-			[  80,  6,  90, .125 ], // mode 5
-			[  64,  6,  90, .125 ], // mode 6
-			[  48,  8,  67, .125 ], // mode 7
-			[  24, 16,  33, .125 ], // mode 8
+			[ 128,  3, .45  ], // mode 1
+			[ 128,  4, .225 ], // mode 2
+			[  96,  6, .225 ], // mode 3
+			[  80,  6, .225 ], // mode 4
+			[  80,  6, .125 ], // mode 5
+			[  64,  6, .125 ], // mode 6
+			[  48,  8, .125 ], // mode 7
+			[  24, 16, .125 ], // mode 8
 		];
 
 		// get parameters for current mode
-		const [ maxLeds, maxSpaceV, spaceVRatio, spaceHRatio ] = params[ this._mode ];
+		const [ maxLeds, maxSpaceV, spaceHRatio ] = params[ this._mode ];
 
-		// calculate vertical spacing, making sure it's at least 1px (or 2px on HiDPI)
-		const spaceV = Math.max( Math.min( maxSpaceV * dPR, Math.round( analyzerHeight / spaceVRatio ) ), dPR );
+		// `maxLeds` and `maxSpaceV` are target values based on a 1080px height - we may need
+		// to scale them down to fit the actual `analyzerHeight`
+		const refRatio = 540 / maxSpaceV;
+
+		// calculate vertical spacing - try to keep the desired ratio, but make sure it's at least 1px (2px on HiDPI)
+		const spaceV = Math.max( Math.min( maxSpaceV * dPR, Math.round( analyzerHeight / refRatio ) ), dPR );
 
 		// remove the extra spacing at the bottom when single channel or stereo with reflex
 		if ( this._maximizeLeds )
