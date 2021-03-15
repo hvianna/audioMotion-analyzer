@@ -626,6 +626,15 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Set custom parameters for LED effect
+	 */
+	setLedParams( params ) {
+		this._ledParams = params ? [ params.maxLeds | 0, params.maxSpaceV | 0, Number( params.ledRatio ), Number( params.spaceHRatio ) ] : undefined;
+//		this._ledParams = params ? [ params.maxLeds | 0, params.maxSpaceV | 0, Number( params.spaceHRatio ) ] : undefined;
+		this._calcLeds();
+	}
+
+	/**
 	 * Shorthand function for setting several options at once
 	 *
 	 * @param {object} options
@@ -730,6 +739,8 @@ export default class AudioMotionAnalyzer {
 		// adjustment for high pixel-ratio values on low-resolution screens (Android TV)
 		const dPR = this._pixelRatio / ( window.devicePixelRatio > 1 && window.screen.height <= 540 ? 2 : 1 );
 
+	// Refactor 2:
+
 		const params = [ [],
 			[ 128,  3, .45  ], // mode 1
 			[ 128,  4, .225 ], // mode 2
@@ -741,8 +752,8 @@ export default class AudioMotionAnalyzer {
 			[  24, 16, .125 ], // mode 8
 		];
 
-		// get parameters for current mode
-		const [ maxLeds, maxSpaceV, spaceHRatio ] = params[ this._mode ];
+		// use custom LED parameters if set, or the default parameters for the current mode
+		const [ maxLeds, maxSpaceV, spaceHRatio ] = this._ledParams || params[ this._mode ];
 
 		// `maxLeds` and `maxSpaceV` are target values based on a 1080px height - we may need
 		// to scale them down to fit the actual `analyzerHeight`
@@ -764,6 +775,48 @@ export default class AudioMotionAnalyzer {
 			spaceV,
 			analyzerHeight / ledCount - spaceV // ledHeight
 		];
+
+/*
+	// Refactor 3:
+
+		const params = [ [],
+			[ 128,  3, 1.82, .45  ], // mode 1
+			[ 128,  4, 1.117875, .225 ], // mode 2
+			[  96,  6, 1.0111, .225 ], // mode 3
+			[  80,  6, 1.262, .225 ], // mode 4
+			[  80,  6, 1.262, .125 ], // mode 5
+			[  64,  6, 1.828125, .125 ], // mode 6
+			[  48,  8, 1.83, .125 ], // mode 7
+			[  24, 16, 1.85, .125 ], // mode 8
+		];
+
+		// use custom LED parameters if set, or the default parameters for the current mode
+		const [ maxLeds, maxSpaceV, ledRatio, spaceHRatio ] = this._ledParams || params[ this._mode ];
+
+		// Vertical spacing is key, because we need to make sure there's a visible spacing
+		// (at least 1px, or 2px on Hi-DPI) to create the LED effect.
+
+		const nLeds = maxLeds * analyzerHeight / 1080;
+
+		// calculate vertical spacing - try to keep the desired ratio, but make sure it's at least 1px (2px on HiDPI)
+//		const spaceV = Math.max( Math.min( maxSpaceV * dPR, analyzerHeight / maxLeds * ( 1 / ledRatio ) + .25 | 0 ), dPR );
+//		const spaceV = Math.max( Math.min( maxSpaceV / 1080 * analyzerHeight | 0, analyzerHeight / ( maxLeds * ( 1 + ledRatio ) ) + .25 | 0 ), dPR );
+		const spaceV = Math.max( Math.min( maxSpaceV, analyzerHeight / ( nLeds * ( 1 + ledRatio ) ) + .25 | 0 ), dPR );
+
+		// remove the extra spacing at the bottom when single channel or stereo with reflex
+		if ( this._maximizeLeds )
+			analyzerHeight += spaceV;
+
+		// recalculate the number of leds, considering the effective spaceV
+		const ledCount = Math.min( nLeds, analyzerHeight / ( spaceV * ( 1 + ledRatio ) ) | 0 );
+
+		this._ledAtts = [
+			ledCount,
+			this._barWidth * spaceHRatio, // spaceH
+			spaceV,
+			analyzerHeight / ledCount - spaceV // ledHeight
+		];
+*/
 	}
 
 	/**

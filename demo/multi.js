@@ -28,8 +28,10 @@ try {
 				audioCtx,
 				onCanvasResize: ( reason, instance ) => {
 					console.log( `[${instance.canvas.parentElement.id.slice(-1)}] ${reason}: ${instance.canvas.width} x ${instance.canvas.height}` );
-					if ( reason != 'create' )
+					if ( reason != 'create' ) {
 						updateUI();
+						console.log( `${ instance.mode }: `, instance._ledAtts );
+					}
 				}
 			}
 		);
@@ -123,7 +125,11 @@ document.querySelectorAll('button[data-prop]').forEach( el => {
 });
 
 document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'change', () => audioMotion[ selectedAnalyzer ][ el.dataset.setting ] = el.value );
+	el.addEventListener( 'change', () => {
+		audioMotion[ selectedAnalyzer ][ el.dataset.setting ] = el.value;
+		if ( el.dataset.setting == 'mode' )
+			console.log( `${ audioMotion[ selectedAnalyzer ].mode }: `, audioMotion[ selectedAnalyzer ]._ledAtts );
+	});
 });
 
 document.getElementById('range').addEventListener( 'change', e => {
