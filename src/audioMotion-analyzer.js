@@ -1141,7 +1141,7 @@ export default class AudioMotionAnalyzer {
 			this._time = timestamp;
 		}
 		if ( this.showFPS ) {
-			const size = 20 * this._pixelRatio;
+			const size = this._scaleX.height;
 			ctx.font = `bold ${size}px sans-serif`;
 			ctx.fillStyle = '#0f0';
 			ctx.textAlign = 'right';
