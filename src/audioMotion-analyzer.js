@@ -745,7 +745,7 @@ export default class AudioMotionAnalyzer {
 		const [ maxLeds, maxSpaceV, spaceVRatio, spaceHRatio ] = params[ this._mode ];
 
 		// calculate vertical spacing, making sure it's at least 1px (or 2px on HiDPI)
-		const spaceV = Math.max( Math.min( maxSpaceV * dPR, analyzerHeight / spaceVRatio | 0 ), dPR );
+		const spaceV = Math.max( Math.min( maxSpaceV * dPR, Math.round( analyzerHeight / spaceVRatio ) ), dPR );
 
 		// remove the extra spacing at the bottom when single channel or stereo with reflex
 		if ( this._maximizeLeds )
