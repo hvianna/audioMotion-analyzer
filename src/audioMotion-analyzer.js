@@ -727,54 +727,39 @@ export default class AudioMotionAnalyzer {
 
 		let analyzerHeight = this._analyzerHeight;
 
-		let spaceV = Math.min( 6, analyzerHeight / ( 90 * this._pixelRatio ) | 0 ); // for modes 3, 4, 5 and 6
-		let nLeds;
+		// adjustment for high pixel-ratio values on low-resolution screens (Android TV)
+		const dPR = this._pixelRatio / ( window.devicePixelRatio > 1 && window.screen.height <= 540 ? 2 : 1 );
 
-		switch ( this._mode ) {
-			case 8:
-				spaceV = Math.min( 16, analyzerHeight / ( 33 * this._pixelRatio ) | 0 );
-				nLeds = 24;
-				break;
-			case 7:
-				spaceV = Math.min( 8, analyzerHeight / ( 67 * this._pixelRatio ) | 0 );
-				nLeds = 48;
-				break;
-			case 6:
-				nLeds = 64;
-				break;
-			case 5:
-				// fall through
-			case 4:
-				nLeds = 80;
-				break;
-			case 3:
-				nLeds = 96;
-				break;
-			case 2:
-				spaceV = Math.min( 4, analyzerHeight / ( 135 * this._pixelRatio ) | 0 );
-				nLeds = 128;
-				break;
-			case 1:
-				spaceV = Math.min( 3, Math.max( 2, analyzerHeight / ( 180 * this._pixelRatio ) | 0 ) );
-				nLeds = 128;
-		}
+		const params = [ [],
+			[ 128,  3, 180, .45  ], // mode 1
+			[ 128,  4, 135, .225 ], // mode 2
+			[  96,  6,  90, .225 ], // mode 3
+			[  80,  6,  90, .225 ], // mode 4
+			[  80,  6,  90, .125 ], // mode 5
+			[  64,  6,  90, .125 ], // mode 6
+			[  48,  8,  67, .125 ], // mode 7
+			[  24, 16,  33, .125 ], // mode 8
+		];
 
-		// make sure spaceV is at least 1px
-		spaceV = Math.max( spaceV, 1 ) * this._pixelRatio;
+		// get parameters for current mode
+		const [ maxLeds, maxSpaceV, spaceVRatio, spaceHRatio ] = params[ this._mode ];
+
+		// calculate vertical spacing, making sure it's at least 1px (or 2px on HiDPI)
+		const spaceV = Math.max( Math.min( maxSpaceV * dPR, Math.round( analyzerHeight / spaceVRatio ) ), dPR );
 
 		// remove the extra spacing at the bottom when single channel or stereo with reflex
 		if ( this._maximizeLeds )
 			analyzerHeight += spaceV;
 
 		// recalculate the number of leds, considering the effective spaceV
-		nLeds = Math.min( nLeds, analyzerHeight / ( spaceV * 2 ) | 0 );
+		const ledCount = Math.min( maxLeds, analyzerHeight / ( spaceV * 2 ) | 0 );
 
-		this._leds = {
-			nLeds,
-			spaceH: this._barWidth * ( this._mode == 1 ? .45 : this._mode < 5 ? .225 : .125 ),
+		this._ledAtts = [
+			ledCount,
+			this._barWidth * spaceHRatio, // spaceH
 			spaceV,
-			ledHeight: analyzerHeight / nLeds - spaceV
-		};
+			analyzerHeight / ledCount - spaceV // ledHeight
+		];
 	}
 
 	/**
@@ -816,12 +801,15 @@ export default class AudioMotionAnalyzer {
 			ctx.lineTo( ...radialXY( x + w, y ) );
 		}
 
+		// LED attributes
+		const [ ledCount, ledSpaceH, ledSpaceV, ledHeight ] = this._ledAtts || [];
+
 		// select background color
 		const bgColor = ( ! this.showBgColor || isLedDisplay && ! this.overlay ) ? '#000' : this._gradients[ this._gradient ].bgColor;
 
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing from led definitions
-		let width = this._barWidth - ( ! isOctaveBands ? 0 : Math.max( isLedDisplay ? this._leds.spaceH : 0, this._barSpacePx ) );
+		let width = this._barWidth - ( ! isOctaveBands ? 0 : Math.max( isLedDisplay ? ledSpaceH : 0, this._barSpacePx ) );
 
 		// make sure width is integer for pixel accurate calculation, when no bar spacing is required
 		if ( this._barSpace == 0 && ! isLedDisplay )
@@ -835,7 +823,7 @@ export default class AudioMotionAnalyzer {
 
 			const channelTop     = channelHeight * channel + channelGap * channel,
 				  channelBottom  = channelTop + channelHeight,
-				  analyzerBottom = channelTop + analyzerHeight - ( isLedDisplay && ! this._maximizeLeds ? this._leds.spaceV : 0 );
+				  analyzerBottom = channelTop + analyzerHeight - ( isLedDisplay && ! this._maximizeLeds ? ledSpaceV : 0 );
 
 			// clear the channel area, if in overlay mode
 			// this is done per channel to clear any residue below 0 off the top channel (especially in line graph mode with lineWidth > 1)
@@ -897,7 +885,7 @@ export default class AudioMotionAnalyzer {
 
 			// set line width and dash for LEDs effect
 			if ( isLedDisplay ) {
-				ctx.setLineDash( [ this._leds.ledHeight, this._leds.spaceV ] );
+				ctx.setLineDash( [ ledHeight, ledSpaceV ] );
 				ctx.lineWidth = width;
 			}
 
@@ -939,7 +927,7 @@ export default class AudioMotionAnalyzer {
 					ctx.globalAlpha = barHeight;
 
 				if ( isLedDisplay ) { // normalize barHeight to match one of the "led" elements
-					barHeight = ( barHeight * this._leds.nLeds | 0 ) * ( this._leds.ledHeight + this._leds.spaceV ) - this._leds.spaceV;
+					barHeight = ( barHeight * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV;
 					if ( barHeight < 0 )
 						barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
 				}
@@ -984,7 +972,7 @@ export default class AudioMotionAnalyzer {
 				else {
 					if ( this._mode > 0 ) {
 						if ( isLedDisplay )
-							posX += Math.max( this._leds.spaceH / 2, this._barSpacePx / 2 );
+							posX += Math.max( ledSpaceH / 2, this._barSpacePx / 2 );
 						else {
 							if ( this._barSpace == 0 ) {
 								posX |= 0;
@@ -1031,10 +1019,10 @@ export default class AudioMotionAnalyzer {
 					if ( this.showPeaks && ! isLumiBars ) {
 						if ( isLedDisplay ) {
 							// convert the bar height to the position of the corresponding led element
-							const fullLeds = bar.peak[ channel ] / ( analyzerHeight + this._leds.spaceV ) * this._leds.nLeds | 0,
-								  posY = ( this._leds.nLeds - fullLeds - 1 ) * ( this._leds.ledHeight + this._leds.spaceV );
+							const fullLeds = bar.peak[ channel ] / ( analyzerHeight + ledSpaceV ) * ledCount | 0,
+								  posY = ( ledCount - fullLeds - 1 ) * ( ledHeight + ledSpaceV );
 
-							ctx.fillRect( posX,	channelTop + posY, width, this._leds.ledHeight );
+							ctx.fillRect( posX,	channelTop + posY, width, ledHeight );
 						}
 						else if ( ! this._radial ) {
 							ctx.fillRect( posX, analyzerBottom - bar.peak[ channel ], adjWidth, 2 );
@@ -1495,10 +1483,6 @@ export default class AudioMotionAnalyzer {
 		const isFullscreen = this.isFullscreen,
 			  newWidth  = isFullscreen ? this._fsWidth  : ( this._width  || this._container.clientWidth  || this._defaultWidth )  * this._pixelRatio | 0,
 			  newHeight = isFullscreen ? this._fsHeight : ( this._height || this._container.clientHeight || this._defaultHeight ) * this._pixelRatio | 0;
-
-		// workaround for wrong dPR reported on Android TV
-		if ( this._pixelRatio == 2 && window.screen.height <= 540 )
-			this._pixelRatio = 1;
 
 		// if canvas dimensions haven't changed, quit
 		if ( this._canvas.width == newWidth && this._canvas.height == newHeight )
