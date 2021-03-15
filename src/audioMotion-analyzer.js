@@ -232,7 +232,8 @@ export default class AudioMotionAnalyzer {
 	set fftSize( value ) {
 		for ( let i = 0; i < 2; i++ )
 			this._analyzer[ i ].fftSize = value;
-		this._dataArray = new Uint8Array( this._analyzer[0].frequencyBinCount );
+		const binCount = this._analyzer[0].frequencyBinCount;
+		this._fftData = [ new Uint8Array( binCount ), new Uint8Array( binCount ) ];
 		this._calcBars();
 	}
 
@@ -893,7 +894,8 @@ export default class AudioMotionAnalyzer {
 			ctx.fillStyle = ctx.strokeStyle = this._canvasGradient;
 
 			// get a new array of data from the FFT
-			this._analyzer[ channel ].getByteFrequencyData( this._dataArray );
+			const fftData = this._fftData[ channel ];
+			this._analyzer[ channel ].getByteFrequencyData( fftData );
 
 			// start drawing path
 			ctx.beginPath();
@@ -906,17 +908,17 @@ export default class AudioMotionAnalyzer {
 					barHeight = 0;
 
 				if ( bar.endIdx == 0 ) { // single FFT bin
-					barHeight = this._dataArray[ bar.dataIdx ];
+					barHeight = fftData[ bar.dataIdx ];
 					// perform value interpolation when several bars share the same bin, to generate a smooth curve
 					if ( bar.factor ) {
-						const prevBar = bar.dataIdx ? this._dataArray[ bar.dataIdx - 1 ] : barHeight;
+						const prevBar = bar.dataIdx ? fftData[ bar.dataIdx - 1 ] : barHeight;
 						barHeight = prevBar + ( barHeight - prevBar ) * bar.factor;
 					}
 				}
 				else { 					// range of bins
 					// use the highest value in the range
 					for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
-						barHeight = Math.max( barHeight, this._dataArray[ j ] );
+						barHeight = Math.max( barHeight, fftData[ j ] );
 				}
 
 				barHeight /= 255;
@@ -952,7 +954,7 @@ export default class AudioMotionAnalyzer {
 					if ( this._radial ) {
 						// in radial graph mode, use value of previous FFT bin (if available) as the initial amplitude
 						if ( i == 0 && bar.dataIdx && bar.posX )
-							ctx.lineTo( ...radialXY( 0, this._dataArray[ bar.dataIdx - 1 ] / 255 * ( centerY - radius ) * ( channel == 1 ? -1 : 1 ) ) );
+							ctx.lineTo( ...radialXY( 0, fftData[ bar.dataIdx - 1 ] / 255 * ( centerY - radius ) * ( channel == 1 ? -1 : 1 ) ) );
 						// draw line to current point, avoiding overlapping wrap-around frequencies
 						if ( bar.posX >= 0 )
 							ctx.lineTo( ...radialXY( bar.posX, barHeight ) );
@@ -963,7 +965,7 @@ export default class AudioMotionAnalyzer {
 							ctx.moveTo( -this.lineWidth, analyzerBottom );
 							// use value of previous FFT bin
 							if ( bar.dataIdx )
-								ctx.lineTo( -this.lineWidth, analyzerBottom - this._dataArray[ bar.dataIdx - 1 ] / 255 * analyzerHeight );
+								ctx.lineTo( -this.lineWidth, analyzerBottom - fftData[ bar.dataIdx - 1 ] / 255 * analyzerHeight );
 						}
 						// draw line to current point
 						ctx.lineTo( bar.posX, analyzerBottom - barHeight );
