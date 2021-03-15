@@ -1,6 +1,13 @@
 Changelog
 =========
 
+## version NEXT
+
+### Improvements: {docsify-ignore}
+
++ Change validation checks for user-provided AudioContext and input AudioNodes (adds compatibility with standardized-audio-context library) - thanks [@richclingman](https://github.com/richclingman).
+
+
 ## version 3.1.0 (2021-02-27)
 
 ### Added: {docsify-ignore}
