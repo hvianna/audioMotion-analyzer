@@ -49,6 +49,8 @@ interface ConstructorOptions extends Options {
   source?: HTMLMediaElement | AudioNode;
 }
 
+type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "treble";
+
 type GradientColorStop = string | { pos: number; color: string };
 
 interface GradientOptions {
@@ -173,6 +175,9 @@ declare class AudioMotionAnalyzer {
 
   public disconnectInput(node?: AudioNode | AudioNode[]): void;
   public disconnectOutput(node?: AudioNode): void;
+
+  public getEnergy(preset?: EnergyPreset): number;
+  public getEnergy(startFreq: number, endFreq?: number): number;
 
   public registerGradient(name: string, options: GradientOptions): void;
 
