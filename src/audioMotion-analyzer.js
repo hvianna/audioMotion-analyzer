@@ -2,12 +2,17 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 3.2.0-beta.0
+ * @version 3.2.0-beta.1
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const _VERSION = '3.2.0-beta.0';
+const VERSION = '3.2.0-beta.1';
+
+const TAU     = 2 * Math.PI,
+	  HALF_PI = Math.PI / 2,
+	  ROOT24  = 2 ** ( 1 / 24 ),      // 24th root of 2
+	  C0      = 440 * ROOT24 ** -114; // ~16.35 Hz
 
 export default class AudioMotionAnalyzer {
 
@@ -326,7 +331,7 @@ export default class AudioMotionAnalyzer {
 	set spinSpeed( value ) {
 		value = Number( value ) || 0;
 		if ( this._spinSpeed === undefined || value == 0 )
-			this._spinAngle = -Math.PI / 2; // initialize or reset the rotation angle
+			this._spinAngle = -HALF_PI; // initialize or reset the rotation angle
 		this._spinSpeed = value;
 	}
 
@@ -499,7 +504,7 @@ export default class AudioMotionAnalyzer {
 		return this._pixelRatio;
 	}
 	static get version() {
-		return _VERSION;
+		return VERSION;
 	}
 
 	/**
@@ -825,16 +830,15 @@ export default class AudioMotionAnalyzer {
 		// radial related constants
 		const centerX        = canvas.width >> 1,
 			  centerY        = canvas.height >> 1,
-			  radius         = this._radius,
-			  tau            = 2 * Math.PI;
+			  radius         = this._radius;
 
 		if ( this._energy.val > 0 )
-			this._spinAngle += this._spinSpeed * tau / 3600;
+			this._spinAngle += this._spinSpeed * TAU / 3600;
 
 		// helper function - convert planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y ) => {
 			const height = radius + y,
-				  angle  = tau * ( x / canvas.width ) + this._spinAngle;
+				  angle  = TAU * ( x / canvas.width ) + this._spinAngle;
 
 			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
 		}
@@ -1107,7 +1111,7 @@ export default class AudioMotionAnalyzer {
 					if ( this._radial ) {
 						// exclude the center circle from the fill area
 						ctx.moveTo( centerX + radius, centerY );
-						ctx.arc( centerX, centerY, radius, 0, tau, true );
+						ctx.arc( centerX, centerY, radius, 0, TAU, true );
 					}
 					ctx.globalAlpha = this.fillAlpha;
 					ctx.fill();
@@ -1169,7 +1173,7 @@ export default class AudioMotionAnalyzer {
 				ctx.save();
 				ctx.translate( centerX, centerY );
 				if ( this._spinSpeed != 0 )
-					ctx.rotate( this._spinAngle + Math.PI / 2 );
+					ctx.rotate( this._spinAngle + HALF_PI );
 				ctx.drawImage( this._scaleR, -this._scaleR.width >> 1, -this._scaleR.width >> 1 );
 				ctx.restore();
 			}
@@ -1215,8 +1219,7 @@ export default class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const isOctaveBands  = this._isOctaveBands,
-			  isLumiBars     = this._isLumiBars,
+		const isLumiBars     = this._isLumiBars,
 			  gradientHeight = isLumiBars ? this._canvas.height : this._canvas.height * ( 1 - this._reflexRatio * ! this._stereo ) | 0,
 			  					// for stereo we keep the full canvas height and handle the reflex areas while generating the color stops
 			  analyzerRatio  = 1 - this._reflexRatio;
@@ -1296,8 +1299,7 @@ export default class AudioMotionAnalyzer {
 	 * Generate the X-axis and radial scales in auxiliary canvases
 	 */
 	_createScales() {
-		const tau         = 2 * Math.PI,
-			  freqLabels  = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ],
+		const freqLabels  = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ],
 			  ctxScaleX   = this._scaleX.getContext('2d'),
 			  ctxScaleR   = this._scaleR.getContext('2d'),
 			  scaleHeight = this._canvas.height * .03 | 0; // circular scale height (radial mode)
@@ -1314,7 +1316,7 @@ export default class AudioMotionAnalyzer {
 		ctxScaleX.fillStyle = ctxScaleR.strokeStyle = '#000c';
 		ctxScaleX.fillRect( 0, 0, this._scaleX.width, this._scaleX.height );
 
-		ctxScaleR.arc( radius, radius, radius - scaleHeight / 2, 0, tau );
+		ctxScaleR.arc( radius, radius, radius - scaleHeight / 2, 0, TAU );
 		ctxScaleR.lineWidth = scaleHeight;
 		ctxScaleR.stroke();
 
@@ -1331,8 +1333,8 @@ export default class AudioMotionAnalyzer {
 
 			// avoid overlapping wrap-around labels in the circular scale
 			if ( x > 0 && x < this._canvas.width ) {
-				const angle  = tau * ( x / this._canvas.width ),
-					  adjAng = angle - Math.PI / 2, // rotate angles so 0 is at the top
+				const angle  = TAU * ( x / this._canvas.width ),
+					  adjAng = angle - HALF_PI, // rotate angles so 0 is at the top
 					  posX   = radialY * Math.cos( adjAng ),
 					  posY   = radialY * Math.sin( adjAng );
 
@@ -1419,14 +1421,11 @@ export default class AudioMotionAnalyzer {
 
 			// generate a table of frequencies based on the equal tempered scale
 
-			const root24 = 2 ** ( 1 / 24 );
-			const c0 = 440 * root24 ** -114; // ~16.35 Hz
-
 			let temperedScale = [];
 			let i = 0;
 			let freq;
 
-			while ( ( freq = c0 * root24 ** i ) <= this._maxFreq ) {
+			while ( ( freq = C0 * ROOT24 ** i ) <= this._maxFreq ) {
 				if ( freq >= this._minFreq && i % groupNotes == 0 )
 					temperedScale.push( freq );
 				i++;
