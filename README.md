@@ -212,15 +212,9 @@ An array of *AudioNode* objects connected via the [`source`](#source-htmlmediael
 
 ### `energy` *number* *(Read only)*
 
-*Available since v2.4.0*
+**DEPRECATED - will be removed in version 4.0.0**
 
-Returns a number between 0 and 1, representing the instant "energy" of the frequency spectrum. Updated on every animation frame.
-
-The energy value is obtained by a simple average of the amplitudes of currently displayed frequency bands, and roughly represents how loud/busy the spectrum is at a given moment.
-
-You can use this inside your callback function to create additional visual effects. For usage example see the [*onCanvasDraw* documentation](#oncanvasdraw-function).
-
-See also [`peakEnergy`](#peakenergy-number-read-only).
+Use [`getEnergy()`](#getenergy-preset-startfreq-endfreq-) instead.
 
 ### `fftSize` *number*
 
@@ -400,9 +394,9 @@ Defaults to **false**.
 
 ### `peakEnergy` *number* *(Read only)*
 
-*Available since v2.4.0*
+**DEPRECATED - will be removed in version 4.0.0**
 
-Returns a number between 0 and 1, representing the peak [energy](#energy-number-read-only) value of the last 30 frames (approximately 0.5s). Updated on every animation frame.
+Use [`getEnergy('peak')`](#getenergy-preset-startfreq-endfreq-) instead.
 
 ### `pixelRatio` *number* *(Read only)*
 
@@ -611,7 +605,7 @@ function drawCallback( instance ) {
     	  baseSize = ( instance.isFullscreen ? 40 : 20 ) * instance.pixelRatio;
 
     // use the 'energy' value to increase the font size and make the logo pulse to the beat
-    ctx.font = `${ baseSize + instance.energy * 25 * instance.pixelRatio }px Orbitron, sans-serif`;
+    ctx.font = `${ baseSize + instance.getEnergy() * 25 * instance.pixelRatio }px Orbitron, sans-serif`;
 
     ctx.fillStyle = '#fff8';
     ctx.textAlign = 'center';
@@ -699,6 +693,31 @@ Disconnects the analyzer output from previously connected audio nodes.
 `node` must be an *AudioNode* instance; if not specified, the output is disconnected from all nodes (note that this includes the speakers).
 
 See also [`connectOutput()`](#connectoutput-node-).
+
+### `getEnergy( [preset | startFreq], [endFreq] )`
+
+*Available since v3.2.0*
+
+Returns a number between 0 and 1, representing the amplitude of a specific frequency, or the average energy of a frequency range.
+
+**If called with no parameters, it returns the overall spectrum energy** obtained by the average of amplitudes of the *currently displayed frequency bands*.
+
+Preset strings are available for predefined ranges plus the "peak" functionality (see table below), or you can specify the desired frequency and an optional ending frequency for a range.
+Frequency values must be specified in Hz.
+
+preset    | description
+----------|-------------
+'peak'    | peak overall energy value of the last 30 frames (approximately 0.5s)
+'bass'    | average energy between 20 and 250 Hz
+'lowMid'  | average energy between 250 and 500 Hz
+'mid'     | average energy between 500 and 2000 Hz
+'highMid' | average energy between 2000 and 4000 Hz
+'treble'  | average energy between 4000 and 16000 Hz
+
+Please note that preset names are case-sensitive. If the specified preset is not recognized the method will return *null*.
+
+Use this method inside your callback function to create additional visual effects. See the [fluid demo](/demo/fluid.html) (activate the **Energy meters** feature) for an example.
+
 
 ### `registerGradient( name, options )`
 

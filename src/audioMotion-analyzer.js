@@ -232,7 +232,8 @@ export default class AudioMotionAnalyzer {
 	set fftSize( value ) {
 		for ( let i = 0; i < 2; i++ )
 			this._analyzer[ i ].fftSize = value;
-		this._dataArray = new Uint8Array( this._analyzer[0].frequencyBinCount );
+		const binCount = this._analyzer[0].frequencyBinCount;
+		this._fftData = [ new Uint8Array( binCount ), new Uint8Array( binCount ) ];
 		this._calcBars();
 	}
 
@@ -463,7 +464,8 @@ export default class AudioMotionAnalyzer {
 		return this._sources;
 	}
 	get energy() {
-		return this._energy.val;
+		// DEPRECATED - use getEnergy() instead
+		return this.getEnergy();
 	}
 	get fsWidth() {
 		return this._fsWidth;
@@ -490,7 +492,8 @@ export default class AudioMotionAnalyzer {
 		return this._runId !== undefined;
 	}
 	get peakEnergy() {
-		return this._energy.peak;
+		// DEPRECATED - use getEnergy('peak') instead
+		return this.getEnergy('peak');
 	}
 	get pixelRatio() {
 		return this._pixelRatio;
@@ -566,6 +569,49 @@ export default class AudioMotionAnalyzer {
 	 */
 	disconnectOutput( node ) {
 	 	this._output.disconnect( node );
+	}
+
+	/**
+	 * Returns the energy of a frequency, or average energy of a range of frequencies
+	 *
+	 * @param [{number|string}] single or initial frequency (Hz), or preset name; if undefined, returns the overall energy
+	 * @param [{number}] ending frequency (Hz)
+	 * @returns {number|null} energy value (0 to 1) or null, if the specified preset is unknown
+	 */
+	getEnergy( startFreq, endFreq ) {
+		if ( startFreq === undefined )
+			return this._energy.val;
+
+		// if startFreq is a string, check for presets
+		if ( startFreq != ( startFreq | 0 ) ) {
+			if ( startFreq == 'peak' )
+				return this._energy.peak;
+
+			const presets = {
+				bass:    [ 20, 250 ],
+				lowMid:  [ 250, 500 ],
+				mid:     [ 500, 2e3 ],
+				highMid: [ 2e3, 4e3 ],
+				treble:  [ 4e3, 16e3 ]
+			}
+
+			if ( ! presets[ startFreq ] )
+				return null;
+
+			[ startFreq, endFreq ] = presets[ startFreq ];
+		}
+
+		const startBin = this._freqToBin( startFreq ),
+		      endBin   = endFreq ? this._freqToBin( endFreq ) : startBin,
+		      chnCount = this._stereo + 1;
+
+		let energy = 0;
+		for ( let channel = 0; channel < chnCount; channel++ ) {
+			for ( let i = startBin; i <= endBin; i++ )
+				energy += this._fftData[ channel ][ i ];
+		}
+
+		return energy / ( endBin - startBin + 1 ) / chnCount / 255;
 	}
 
 	/**
@@ -893,7 +939,8 @@ export default class AudioMotionAnalyzer {
 			ctx.fillStyle = ctx.strokeStyle = this._canvasGradient;
 
 			// get a new array of data from the FFT
-			this._analyzer[ channel ].getByteFrequencyData( this._dataArray );
+			const fftData = this._fftData[ channel ];
+			this._analyzer[ channel ].getByteFrequencyData( fftData );
 
 			// start drawing path
 			ctx.beginPath();
@@ -906,17 +953,17 @@ export default class AudioMotionAnalyzer {
 					barHeight = 0;
 
 				if ( bar.endIdx == 0 ) { // single FFT bin
-					barHeight = this._dataArray[ bar.dataIdx ];
+					barHeight = fftData[ bar.dataIdx ];
 					// perform value interpolation when several bars share the same bin, to generate a smooth curve
 					if ( bar.factor ) {
-						const prevBar = bar.dataIdx ? this._dataArray[ bar.dataIdx - 1 ] : barHeight;
+						const prevBar = bar.dataIdx ? fftData[ bar.dataIdx - 1 ] : barHeight;
 						barHeight = prevBar + ( barHeight - prevBar ) * bar.factor;
 					}
 				}
 				else { 					// range of bins
 					// use the highest value in the range
 					for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
-						barHeight = Math.max( barHeight, this._dataArray[ j ] );
+						barHeight = Math.max( barHeight, fftData[ j ] );
 				}
 
 				barHeight /= 255;
@@ -952,7 +999,7 @@ export default class AudioMotionAnalyzer {
 					if ( this._radial ) {
 						// in radial graph mode, use value of previous FFT bin (if available) as the initial amplitude
 						if ( i == 0 && bar.dataIdx && bar.posX )
-							ctx.lineTo( ...radialXY( 0, this._dataArray[ bar.dataIdx - 1 ] / 255 * ( centerY - radius ) * ( channel == 1 ? -1 : 1 ) ) );
+							ctx.lineTo( ...radialXY( 0, fftData[ bar.dataIdx - 1 ] / 255 * ( centerY - radius ) * ( channel == 1 ? -1 : 1 ) ) );
 						// draw line to current point, avoiding overlapping wrap-around frequencies
 						if ( bar.posX >= 0 )
 							ctx.lineTo( ...radialXY( bar.posX, barHeight ) );
@@ -963,7 +1010,7 @@ export default class AudioMotionAnalyzer {
 							ctx.moveTo( -this.lineWidth, analyzerBottom );
 							// use value of previous FFT bin
 							if ( bar.dataIdx )
-								ctx.lineTo( -this.lineWidth, analyzerBottom - this._dataArray[ bar.dataIdx - 1 ] / 255 * analyzerHeight );
+								ctx.lineTo( -this.lineWidth, analyzerBottom - fftData[ bar.dataIdx - 1 ] / 255 * analyzerHeight );
 						}
 						// draw line to current point
 						ctx.lineTo( bar.posX, analyzerBottom - barHeight );
@@ -1321,12 +1368,8 @@ export default class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		// helper functions
+		// helper function
 		const binToFreq = bin => bin * this._audioCtx.sampleRate / this._analyzer[0].fftSize;
-		const freqToBin = ( freq, rounding = 'round' ) => {
-			const bin = Math[ rounding ]( freq * this._analyzer[0].fftSize / this._audioCtx.sampleRate );
-			return bin < this._analyzer[0].frequencyBinCount ? bin : this._analyzer[0].frequencyBinCount - 1;
-		}
 
 		let minLog, logWidth;
 
@@ -1339,8 +1382,8 @@ export default class AudioMotionAnalyzer {
 			minLog = Math.log10( this._minFreq );
 			logWidth = this._canvas.width / ( Math.log10( this._maxFreq ) - minLog );
 
-			const minIndex = freqToBin( this._minFreq, 'floor' );
-			const maxIndex = freqToBin( this._maxFreq );
+			const minIndex = this._freqToBin( this._minFreq, 'floor' );
+			const maxIndex = this._freqToBin( this._maxFreq );
 
 	 		let lastPos = -999;
 
@@ -1401,7 +1444,7 @@ export default class AudioMotionAnalyzer {
 
 			temperedScale.forEach( ( freq, index ) => {
 				// which FFT bin best represents this frequency?
-				const bin = freqToBin( freq );
+				const bin = this._freqToBin( freq );
 
 				let idx, nextBin;
 				// start from the last used FFT bin
@@ -1427,7 +1470,7 @@ export default class AudioMotionAnalyzer {
 				prevBin = nextBin = bin;
 				// check if there's another band after this one
 				if ( temperedScale[ index + 1 ] !== undefined ) {
-					nextBin = freqToBin( temperedScale[ index + 1 ] );
+					nextBin = this._freqToBin( temperedScale[ index + 1 ] );
 					// and use half the bins in between for this band
 					if ( nextBin - bin > 1 )
 						prevBin += Math.round( ( nextBin - bin ) / 2 );
@@ -1462,6 +1505,16 @@ export default class AudioMotionAnalyzer {
 
 		// update LED properties
 		this._calcLeds();
+	}
+
+	/**
+	 * Return the FFT data bin (array index) which represents a given frequency
+	 */
+	_freqToBin( freq, rounding = 'round' ) {
+		const max = this._analyzer[0].frequencyBinCount - 1,
+			  bin = Math[ rounding ]( freq * this._analyzer[0].fftSize / this._audioCtx.sampleRate );
+
+		return bin < max ? bin : max;
 	}
 
 	/**
