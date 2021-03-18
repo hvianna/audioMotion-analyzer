@@ -11,6 +11,7 @@ const VERSION = '3.2.0-beta.1';
 
 const TAU     = 2 * Math.PI,
 	  HALF_PI = Math.PI / 2,
+	  RPM     = TAU / 3600,
 	  ROOT24  = 2 ** ( 1 / 24 ),      // 24th root of 2
 	  C0      = 440 * ROOT24 ** -114; // ~16.35 Hz
 
@@ -838,7 +839,7 @@ export default class AudioMotionAnalyzer {
 			  radius         = this._radius;
 
 		if ( this._energy.val > 0 )
-			this._spinAngle += this._spinSpeed * TAU / 3600;
+			this._spinAngle += this._spinSpeed * RPM;
 
 		// helper function - convert planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y ) => {
