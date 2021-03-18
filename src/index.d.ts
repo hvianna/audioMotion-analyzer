@@ -53,7 +53,7 @@ type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "treble";
 
 type GradientColorStop = string | { pos: number; color: string };
 
-interface GradientOptions {
+export interface GradientOptions {
   bgColor: string;
   dir?: "h";
   colorStops: [GradientColorStop, GradientColorStop, ...GradientColorStop[]];
