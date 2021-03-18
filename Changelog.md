@@ -1,11 +1,16 @@
 Changelog
 =========
 
-## version NEXT
+## version 3.2.0-beta.0 (2021-03-17)
 
-### Improvements: {docsify-ignore}
+### Added: {docsify-ignore}
 
-+ Change validation checks for user-provided AudioContext and input AudioNodes (adds compatibility with standardized-audio-context library) - thanks [@richclingman](https://github.com/richclingman).
++ [`getEnergy()`](README.md#getenergy-preset-startfreq-endfreq-) method - see it in action in [this pen](https://codepen.io/hvianna/pen/poNmVYo) - thanks [@Staijn1](https://github.com/Staijn1) for suggesting this feature;
++ Added compatibility with *standardized-audio-context* library - thanks [@richclingman](https://github.com/richclingman) for reporting this issue.
+
+### Changed: {docsify-ignore}
+
++ `energy` and `peakEnergy` properties have been deprecated - use `getEnergy()` and `getEnergy('peak')` instead.
 
 
 ## version 3.1.0 (2021-02-27)
