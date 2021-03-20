@@ -94,10 +94,8 @@ try {
 			onCanvasDraw: drawCallback, // callback function used to add custom features for this demo
 			onCanvasResize: ( reason, instance ) => {
 				console.log( `[${reason}] canvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
-				if ( reason != 'create' ) {
+				if ( reason != 'create' )
 					updateUI();
-					console.log( `${ audioMotion.mode }:`, audioMotion._ledAtts );
-				}
 			}
 		}
 	);
@@ -145,10 +143,16 @@ document.querySelectorAll('[data-feature]').forEach( el => {
 });
 
 document.querySelectorAll('[data-setting]').forEach( el => {
+	el.addEventListener( 'change', () => audioMotion[ el.dataset.setting ] = el.value );
+});
+
+document.querySelectorAll('[data-custom]').forEach( el => {
 	el.addEventListener( 'change', () => {
-		audioMotion[ el.dataset.setting ] = el.value;
-		if ( el.dataset.setting == 'mode' )
-			console.log( audioMotion._ledAtts );
+		const active      = document.getElementById('customLeds').checked,
+			  maxLeds     = document.getElementById('maxLeds').value,
+			  spaceVRatio = document.getElementById('spaceVRatio').value,
+			  spaceHRatio = document.getElementById('spaceHRatio').value;
+		audioMotion.setLedParams( active ? { maxLeds, spaceVRatio, spaceHRatio } : undefined );
 	});
 });
 
