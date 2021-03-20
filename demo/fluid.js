@@ -146,6 +146,16 @@ document.querySelectorAll('[data-setting]').forEach( el => {
 	el.addEventListener( 'change', () => audioMotion[ el.dataset.setting ] = el.value );
 });
 
+document.querySelectorAll('[data-custom]').forEach( el => {
+	el.addEventListener( 'change', () => {
+		const active      = document.getElementById('customLeds').checked,
+			  maxLeds     = document.getElementById('maxLeds').value,
+			  spaceVRatio = document.getElementById('spaceVRatio').value,
+			  spaceHRatio = document.getElementById('spaceHRatio').value;
+		audioMotion.setLedParams( active ? { maxLeds, spaceVRatio, spaceHRatio } : undefined );
+	});
+});
+
 // Display value of ranged input elements
 document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
 

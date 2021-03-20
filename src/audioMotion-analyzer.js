@@ -678,6 +678,26 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Set custom parameters for LED effect
+	 * If called with no arguments or if any property is invalid, clears any previous custom parameters
+	 *
+	 * @param {object} [params]
+	 */
+	setLedParams( params ) {
+		let maxLeds, spaceVRatio, spaceHRatio;
+
+		// coerce parameters to Number; `NaN` results are rejected in the condition below
+		if ( params ) {
+			maxLeds = params.maxLeds | 0, // ensure integer
+			spaceVRatio = +params.spaceVRatio,
+			spaceHRatio = +params.spaceHRatio;
+		}
+
+		this._ledParams = maxLeds > 0 && spaceVRatio > 0 && spaceHRatio >= 0 ? [ maxLeds, spaceVRatio, spaceHRatio ] : undefined;
+		this._calcLeds();
+	}
+
+	/**
 	 * Shorthand function for setting several options at once
 	 *
 	 * @param {object} options
@@ -780,38 +800,54 @@ export default class AudioMotionAnalyzer {
 		if ( ! this._isOctaveBands || ! this._ready )
 			return;
 
-		let analyzerHeight = this._analyzerHeight;
-
 		// adjustment for high pixel-ratio values on low-resolution screens (Android TV)
 		const dPR = this._pixelRatio / ( window.devicePixelRatio > 1 && window.screen.height <= 540 ? 2 : 1 );
 
 		const params = [ [],
-			[ 128,  3, 180, .45  ], // mode 1
-			[ 128,  4, 135, .225 ], // mode 2
-			[  96,  6,  90, .225 ], // mode 3
-			[  80,  6,  90, .225 ], // mode 4
-			[  80,  6,  90, .125 ], // mode 5
-			[  64,  6,  90, .125 ], // mode 6
-			[  48,  8,  67, .125 ], // mode 7
-			[  24, 16,  33, .125 ], // mode 8
+			[ 128,  3, .45  ], // mode 1
+			[ 128,  4, .225 ], // mode 2
+			[  96,  6, .225 ], // mode 3
+			[  80,  6, .225 ], // mode 4
+			[  80,  6, .125 ], // mode 5
+			[  64,  6, .125 ], // mode 6
+			[  48,  8, .125 ], // mode 7
+			[  24, 16, .125 ], // mode 8
 		];
 
-		// get parameters for current mode
-		const [ maxLeds, maxSpaceV, spaceVRatio, spaceHRatio ] = params[ this._mode ];
+		// use custom LED parameters if set, or the default parameters for the current mode
+		const customParams = this._ledParams,
+			  [ maxLeds, spaceVRatio, spaceHRatio ] = customParams || params[ this._mode ];
 
-		// calculate vertical spacing, making sure it's at least 1px (or 2px on HiDPI)
-		const spaceV = Math.max( Math.min( maxSpaceV * dPR, Math.round( analyzerHeight / spaceVRatio ) ), dPR );
+		let ledCount, spaceV,
+			analyzerHeight = this._analyzerHeight;
 
-		// remove the extra spacing at the bottom when single channel or stereo with reflex
+		if ( customParams ) {
+			const minHeight = 2 * dPR;
+			let blockHeight;
+			ledCount = maxLeds + 1;
+			do {
+				ledCount--;
+				blockHeight = analyzerHeight / ledCount / ( 1 + spaceVRatio );
+				spaceV = blockHeight * spaceVRatio;
+			} while ( ( blockHeight < minHeight || spaceV < minHeight ) && ledCount > 1 );
+		}
+		else {
+			// calculate vertical spacing - aim for the reference ratio, but make sure it's at least 2px
+			const refRatio = 540 / spaceVRatio;
+			spaceV = Math.min( spaceVRatio * dPR, Math.max( 2, analyzerHeight / refRatio + .1 | 0 ) );
+		}
+
+		// remove the extra spacing below the last line of LEDs
 		if ( this._maximizeLeds )
 			analyzerHeight += spaceV;
 
 		// recalculate the number of leds, considering the effective spaceV
-		const ledCount = Math.min( maxLeds, analyzerHeight / ( spaceV * 2 ) | 0 );
+		if ( ! customParams )
+			ledCount = Math.min( maxLeds, analyzerHeight / ( spaceV * 2 ) | 0 );
 
-		this._ledAtts = [
+		this._leds = [
 			ledCount,
-			this._barWidth * spaceHRatio, // spaceH
+			spaceHRatio >= 1 ? spaceHRatio : this._barWidth * spaceHRatio, // spaceH
 			spaceV,
 			analyzerHeight / ledCount - spaceV // ledHeight
 		];
@@ -858,7 +894,7 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// LED attributes
-		const [ ledCount, ledSpaceH, ledSpaceV, ledHeight ] = this._ledAtts || [];
+		const [ ledCount, ledSpaceH, ledSpaceV, ledHeight ] = this._leds || [];
 
 		// select background color
 		const bgColor = ( ! this.showBgColor || isLedDisplay && ! this.overlay ) ? '#000' : this._gradients[ this._gradient ].bgColor;

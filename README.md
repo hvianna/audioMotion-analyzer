@@ -749,6 +749,35 @@ Sets the analyzer nominal dimensions in pixels. See [`height`](#height-number) a
 
 Sets the desired frequency range. Values are expressed in Hz (Hertz).
 
+### `setLedParams( [params] )`
+
+*Available since v3.2.0*
+
+Customize parameters used to create the [LEDs display effect](#showleds-boolean).
+
+`params` should be an object with the following structure:
+
+```js
+const params = {
+    maxLeds: 128,   // integer, > 0
+    spaceVRatio: 1, // > 0
+    spaceHRatio: .5 // >= 0
+}
+```
+
+property | description
+---------|-------------
+`maxLeds`     | maximum desired number of LED elements per analyzer bar
+`spaceVRatio` | vertical spacing ratio, relative to the LED height (**1** means spacing is the same as the LED height)
+`spaceHRatio` | **minimum** horizontal spacing ratio, relative to the available width (**0.5** means half of the width is used for spacing and half for the bar); this behaves exactly like [barSpace](#barspace-number) and will override it if larger
+
+The available canvas height is initially divided by `maxLeds` and vertical spacing is calculated observing the `spaceVRatio`;
+if necessary, the led count is decreased until both the led segment and the vertical spacing are at least 2px tall.
+
+You can try different values in the [fluid demo](/demo/fluid.html).
+
+**If called with no arguments or any invalid property, disables previously set parameters.**
+
 ### `setOptions( [options] )`
 
 Shorthand method for setting several options at once.
