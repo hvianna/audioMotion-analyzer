@@ -226,7 +226,7 @@ export default class AudioMotionAnalyzer {
 		return this._barSpace;
 	}
 	set barSpace( value ) {
-		this._barSpace = Number( value ) || 0;
+		this._barSpace = +value || 0;
 		this._calcAux();
 	}
 
@@ -330,7 +330,7 @@ export default class AudioMotionAnalyzer {
 		return this._spinSpeed;
 	}
 	set spinSpeed( value ) {
-		value = Number( value ) || 0;
+		value = +value || 0;
 		if ( this._spinSpeed === undefined || value == 0 )
 			this._spinAngle = -HALF_PI; // initialize or reset the rotation angle
 		this._spinSpeed = value;
@@ -342,7 +342,7 @@ export default class AudioMotionAnalyzer {
 		return this._reflexRatio;
 	}
 	set reflexRatio( value ) {
-		value = Number( value ) || 0;
+		value = +value || 0;
 		if ( value < 0 || value >= 1 )
 			throw new AudioMotionError( 'ERR_REFLEX_OUT_OF_RANGE', `Reflex ratio must be >= 0 and < 1` );
 		else {
@@ -470,7 +470,7 @@ export default class AudioMotionAnalyzer {
 		return this._sources;
 	}
 	get energy() {
-		// DEPRECATED - use getEnergy() instead
+		// DEPRECATED - to be removed in v4.0.0
 		return this.getEnergy();
 	}
 	get fsWidth() {
@@ -498,7 +498,7 @@ export default class AudioMotionAnalyzer {
 		return this._runId !== undefined;
 	}
 	get peakEnergy() {
-		// DEPRECATED - use getEnergy('peak') instead
+		// DEPRECATED - to be removed in v4.0.0
 		return this.getEnergy('peak');
 	}
 	get pixelRatio() {
@@ -862,9 +862,13 @@ export default class AudioMotionAnalyzer {
 			  canvas         = ctx.canvas,
 			  canvasX        = this._scaleX.canvas,
 			  canvasR        = this._scaleR.canvas,
+			  energy         = this._energy,
 			  isOctaveBands  = this._isOctaveBands,
 			  isLedDisplay   = this._isLedDisplay,
 			  isLumiBars     = this._isLumiBars,
+			  isRadial       = this._radial,
+			  isStereo       = this._stereo,
+			  mode           = this._mode,
 			  channelHeight  = this._channelHeight,
 			  channelGap     = this._channelGap,
 			  analyzerHeight = this._analyzerHeight;
@@ -874,7 +878,7 @@ export default class AudioMotionAnalyzer {
 			  centerY        = canvas.height >> 1,
 			  radius         = this._radius;
 
-		if ( this._energy.val > 0 )
+		if ( energy.val > 0 )
 			this._spinAngle += this._spinSpeed * RPM;
 
 		// helper function - convert planar X,Y coordinates to radial coordinates
@@ -907,11 +911,11 @@ export default class AudioMotionAnalyzer {
 		if ( this._barSpace == 0 && ! isLedDisplay )
 			width |= 0;
 
-		let energy = 0;
+		let currentEnergy = 0;
 
 		const nBars = this._bars.length;
 
-		for ( let channel = 0; channel < this._stereo + 1; channel++ ) {
+		for ( let channel = 0; channel < isStereo + 1; channel++ ) {
 
 			const channelTop     = channelHeight * channel + channelGap * channel,
 				  channelBottom  = channelTop + channelHeight,
@@ -930,25 +934,27 @@ export default class AudioMotionAnalyzer {
 				ctx.fillStyle = bgColor;
 
 				// exclude the reflection area when overlay is true and reflexAlpha == 1 (avoids alpha over alpha difference, in case bgAlpha < 1)
-				if ( ! this._radial || channel == 0 )
+				if ( ! isRadial || channel == 0 )
 					ctx.fillRect( 0, channelTop - channelGap, canvas.width, ( this.overlay && this.reflexAlpha == 1 ? analyzerHeight : channelHeight ) + channelGap );
 
 				ctx.globalAlpha = 1;
 			}
 
 			// draw dB scale (Y-axis)
-			if ( this.showScaleY && ! isLumiBars && ! this._radial ) {
+			if ( this.showScaleY && ! isLumiBars && ! isRadial ) {
 				const scaleWidth = canvasX.height,
 					  fontSize   = scaleWidth >> 1,
-					  interval   = analyzerHeight / ( this._analyzer[0].maxDecibels - this._analyzer[0].minDecibels );
+					  mindB      = this._analyzer[0].minDecibels,
+					  maxdB      = this._analyzer[0].maxDecibels,
+					  interval   = analyzerHeight / ( maxdB - mindB );
 
 				ctx.fillStyle = '#888';
 				ctx.font = `${fontSize}px sans-serif`;
 				ctx.textAlign = 'right';
 				ctx.lineWidth = 1;
 
-				for ( let db = this._analyzer[0].maxDecibels; db > this._analyzer[0].minDecibels; db -= 5 ) {
-					const posY = channelTop + ( this._analyzer[0].maxDecibels - db ) * interval,
+				for ( let db = maxdB; db > mindB; db -= 5 ) {
+					const posY = channelTop + ( maxdB - db ) * interval,
 						  even = ( db % 2 == 0 ) | 0;
 
 					if ( even ) {
@@ -1013,7 +1019,7 @@ export default class AudioMotionAnalyzer {
 				}
 
 				barHeight /= 255;
-				energy += barHeight;
+				currentEnergy += barHeight;
 
 				// set opacity for lumi bars before barHeight value is normalized
 				if ( isLumiBars )
@@ -1025,7 +1031,7 @@ export default class AudioMotionAnalyzer {
 						barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
 				}
 				else
-					barHeight = barHeight * ( this._radial ? centerY - radius : analyzerHeight ) | 0;
+					barHeight = barHeight * ( isRadial ? centerY - radius : analyzerHeight ) | 0;
 
 				if ( barHeight >= bar.peak[ channel ] ) {
 					bar.peak[ channel ] = barHeight;
@@ -1033,7 +1039,7 @@ export default class AudioMotionAnalyzer {
 					bar.accel[ channel ] = 0;
 				}
 
-				if ( this._radial && channel == 1 )
+				if ( isRadial && channel == 1 )
 					barHeight *= -1;
 
 				let posX = bar.posX;
@@ -1041,8 +1047,8 @@ export default class AudioMotionAnalyzer {
 
 				// Draw current bar or line segment
 
-				if ( this._mode == 10 ) {
-					if ( this._radial ) {
+				if ( mode == 10 ) {
+					if ( isRadial ) {
 						// in radial graph mode, use value of previous FFT bin (if available) as the initial amplitude
 						if ( i == 0 && bar.dataIdx && bar.posX )
 							ctx.lineTo( ...radialXY( 0, fftData[ bar.dataIdx - 1 ] / 255 * ( centerY - radius ) * ( channel == 1 ? -1 : 1 ) ) );
@@ -1063,7 +1069,7 @@ export default class AudioMotionAnalyzer {
 					}
 				}
 				else {
-					if ( this._mode > 0 ) {
+					if ( mode > 0 ) {
 						if ( isLedDisplay )
 							posX += Math.max( ledSpaceH / 2, this._barSpacePx / 2 );
 						else {
@@ -1099,7 +1105,7 @@ export default class AudioMotionAnalyzer {
 						ctx.lineTo( x, isLumiBars ? channelBottom : analyzerBottom - barHeight );
 						ctx.stroke();
 					}
-					else if ( ! this._radial ) {
+					else if ( ! isRadial ) {
 						ctx.fillRect( posX, isLumiBars ? channelTop : analyzerBottom, adjWidth, isLumiBars ? channelBottom : -barHeight );
 					}
 					else if ( bar.posX >= 0 ) {
@@ -1117,10 +1123,10 @@ export default class AudioMotionAnalyzer {
 
 							ctx.fillRect( posX,	channelTop + posY, width, ledHeight );
 						}
-						else if ( ! this._radial ) {
+						else if ( ! isRadial ) {
 							ctx.fillRect( posX, analyzerBottom - bar.peak[ channel ], adjWidth, 2 );
 						}
-						else if ( this.mode != 10 && bar.posX >= 0 ) { // radial - no peaks for mode 10 or wrap-around frequencies
+						else if ( mode != 10 && bar.posX >= 0 ) { // radial - no peaks for mode 10 or wrap-around frequencies
 							radialPoly( posX, bar.peak[ channel ] * ( channel == 1 ? -1 : 1 ), adjWidth, -2 );
 						}
 					}
@@ -1138,8 +1144,8 @@ export default class AudioMotionAnalyzer {
 			ctx.globalAlpha = 1;
 
 			// Fill/stroke drawing path for mode 10 and radial
-			if ( this._mode == 10 ) {
-				if ( this._radial )
+			if ( mode == 10 ) {
+				if ( isRadial )
 					ctx.closePath();
 				else
 					ctx.lineTo( canvas.width + this.lineWidth, analyzerBottom );
@@ -1150,7 +1156,7 @@ export default class AudioMotionAnalyzer {
 				}
 
 				if ( this.fillAlpha > 0 ) {
-					if ( this._radial ) {
+					if ( isRadial ) {
 						// exclude the center circle from the fill area
 						ctx.moveTo( centerX + radius, centerY );
 						ctx.arc( centerX, centerY, radius, 0, TAU, true );
@@ -1160,15 +1166,15 @@ export default class AudioMotionAnalyzer {
 					ctx.globalAlpha = 1;
 				}
 			}
-			else if ( this._radial ) {
+			else if ( isRadial ) {
 				ctx.fill();
 			}
 
 			// Reflex effect
 			if ( this._reflexRatio > 0 && ! isLumiBars ) {
 				let posY, height;
-				if ( this.reflexFit || this._stereo ) { // always fit reflex in stereo mode
-					posY   = this._stereo && channel == 0 ? channelHeight + channelGap : 0;
+				if ( this.reflexFit || isStereo ) { // always fit reflex in stereo mode
+					posY   = isStereo && channel == 0 ? channelHeight + channelGap : 0;
 					height = channelHeight - analyzerHeight;
 				}
 				else {
@@ -1191,19 +1197,19 @@ export default class AudioMotionAnalyzer {
 				ctx.globalAlpha = 1;
 			}
 
-		} // for ( let channel = 0; channel < this._stereo + 1; channel++ ) {
+		} // for ( let channel = 0; channel < isStereo + 1; channel++ ) {
 
 		// Update energy
-		this._energy.val = energy / ( nBars << this._stereo );
-		if ( this._energy.val >= this._energy.peak ) {
-			this._energy.peak = this._energy.val;
-			this._energy.hold = 30;
+		energy.val = currentEnergy / ( nBars << isStereo );
+		if ( energy.val >= energy.peak ) {
+			energy.peak = energy.val;
+			energy.hold = 30;
 		}
 		else {
-			if ( this._energy.hold > 0 )
-				this._energy.hold--;
-			else if ( this._energy.peak > 0 )
-				this._energy.peak *= ( 30 + this._energy.hold-- ) / 30; // decay (drops to zero in 30 frames)
+			if ( energy.hold > 0 )
+				energy.hold--;
+			else if ( energy.peak > 0 )
+				energy.peak *= ( 30 + energy.hold-- ) / 30; // decay (drops to zero in 30 frames)
 		}
 
 		// restore solid lines
@@ -1211,7 +1217,7 @@ export default class AudioMotionAnalyzer {
 
 		// draw frequency scale (X-axis)
 		if ( this.showScaleX ) {
-			if ( this._radial ) {
+			if ( isRadial ) {
 				ctx.save();
 				ctx.translate( centerX, centerY );
 				if ( this._spinSpeed != 0 )
