@@ -75,7 +75,7 @@ export default class AudioMotionAnalyzer {
 
 		const AudioContext = window.AudioContext || window.webkitAudioContext;
 
-		if ( options.hasOwnProperty( 'audioCtx' ) ) {
+		if ( options.audioCtx ) {
 			if ( options.audioCtx.createGain )
 				this._audioCtx = options.audioCtx;
 			else
