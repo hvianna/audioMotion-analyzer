@@ -148,11 +148,11 @@ document.querySelectorAll('[data-setting]').forEach( el => {
 
 document.querySelectorAll('[data-custom]').forEach( el => {
 	el.addEventListener( 'change', () => {
-		const active      = document.getElementById('customLeds').checked,
-			  maxLeds     = document.getElementById('maxLeds').value,
-			  spaceVRatio = document.getElementById('spaceVRatio').value,
-			  spaceHRatio = document.getElementById('spaceHRatio').value;
-		audioMotion.setLedParams( active ? { maxLeds, spaceVRatio, spaceHRatio } : undefined );
+		const active  = document.getElementById('customLeds').checked,
+			  maxLeds = document.getElementById('maxLeds').value,
+			  spaceV  = document.getElementById('spaceV').value,
+			  spaceH  = document.getElementById('spaceH').value;
+		audioMotion.setLedParams( active ? { maxLeds, spaceV, spaceH } : undefined );
 	});
 });
 

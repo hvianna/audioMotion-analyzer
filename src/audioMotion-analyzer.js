@@ -9,9 +9,10 @@
 
 const VERSION = '3.2.0-beta.1';
 
+// internal constants
 const TAU     = 2 * Math.PI,
 	  HALF_PI = Math.PI / 2,
-	  RPM     = TAU / 3600,
+	  RPM     = TAU / 3600,           // angle increment per frame for one revolution per minute @60fps
 	  ROOT24  = 2 ** ( 1 / 24 ),      // 24th root of 2
 	  C0      = 440 * ROOT24 ** -114; // ~16.35 Hz
 
@@ -684,16 +685,16 @@ export default class AudioMotionAnalyzer {
 	 * @param {object} [params]
 	 */
 	setLedParams( params ) {
-		let maxLeds, spaceVRatio, spaceHRatio;
+		let maxLeds, spaceV, spaceH;
 
 		// coerce parameters to Number; `NaN` results are rejected in the condition below
 		if ( params ) {
 			maxLeds = params.maxLeds | 0, // ensure integer
-			spaceVRatio = +params.spaceVRatio,
-			spaceHRatio = +params.spaceHRatio;
+			spaceV  = +params.spaceV,
+			spaceH  = +params.spaceH;
 		}
 
-		this._ledParams = maxLeds > 0 && spaceVRatio > 0 && spaceHRatio >= 0 ? [ maxLeds, spaceVRatio, spaceHRatio ] : undefined;
+		this._ledParams = maxLeds > 0 && spaceV > 0 && spaceH >= 0 ? [ maxLeds, spaceV, spaceH ] : undefined;
 		this._calcLeds();
 	}
 
@@ -1001,7 +1002,7 @@ export default class AudioMotionAnalyzer {
 
 			for ( let i = 0; i < nBars; i++ ) {
 
-				let bar = this._bars[ i ],
+				let bar       = this._bars[ i ],
 					barHeight = 0;
 
 				if ( bar.endIdx == 0 ) { // single FFT bin
@@ -1042,8 +1043,8 @@ export default class AudioMotionAnalyzer {
 				if ( isRadial && channel == 1 )
 					barHeight *= -1;
 
-				let posX = bar.posX;
-				let adjWidth = width; // bar width may need small adjustments for some bars, when barSpace == 0
+				let adjWidth = width,    // bar width may need small adjustments for some bars, when barSpace == 0
+					posX     = bar.posX;
 
 				// Draw current bar or line segment
 
@@ -1119,7 +1120,7 @@ export default class AudioMotionAnalyzer {
 						if ( isLedDisplay ) {
 							// convert the bar height to the position of the corresponding led element
 							const fullLeds = bar.peak[ channel ] / ( analyzerHeight + ledSpaceV ) * ledCount | 0,
-								  posY = ( ledCount - fullLeds - 1 ) * ( ledHeight + ledSpaceV );
+								  posY     = ( ledCount - fullLeds - 1 ) * ( ledHeight + ledSpaceV );
 
 							ctx.fillRect( posX,	channelTop + posY, width, ledHeight );
 						}
@@ -1426,61 +1427,52 @@ export default class AudioMotionAnalyzer {
 		// helper function
 		const binToFreq = bin => bin * this._audioCtx.sampleRate / this._analyzer[0].fftSize;
 
-		let minLog, logWidth;
-		const canvas = this._canvasCtx.canvas;
+		const canvas  = this._canvasCtx.canvas,
+			  maxFreq = this._maxFreq,
+			  minFreq = this._minFreq;
 
-		this._bars = [];
+		let minLog,
+			logWidth,
+			bars = [];
 
 		if ( ! this._isOctaveBands ) {
 		// Discrete frequencies or area fill modes
 			this._barWidth = 1;
 
-			minLog = Math.log10( this._minFreq );
-			logWidth = canvas.width / ( Math.log10( this._maxFreq ) - minLog );
+			minLog = Math.log10( minFreq );
+			logWidth = canvas.width / ( Math.log10( maxFreq ) - minLog );
 
-			const minIndex = this._freqToBin( this._minFreq, 'floor' );
-			const maxIndex = this._freqToBin( this._maxFreq );
+			const minIndex = this._freqToBin( minFreq, 'floor' ),
+				  maxIndex = this._freqToBin( maxFreq );
 
 	 		let lastPos = -999;
 
 			for ( let i = minIndex; i <= maxIndex; i++ ) {
-				const freq = binToFreq( i ); // frequency represented by this index
-				const pos  = Math.round( logWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
+				const freq = binToFreq( i ), // frequency represented by this index
+					  pos  = Math.round( logWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
 				if ( pos > lastPos ) {
-					this._bars.push( { posX: pos, dataIdx: i, endIdx: 0, factor: 0, peak: [0,0], hold: [], accel: [] } );
+					bars.push( { posX: pos, dataIdx: i, endIdx: 0, factor: 0, peak: [0,0], hold: [], accel: [] } );
 					lastPos = pos;
 				} // otherwise, add this frequency to the last bar's range
-				else if ( this._bars.length )
-					this._bars[ this._bars.length - 1 ].endIdx = i;
+				else if ( bars.length )
+					bars[ bars.length - 1 ].endIdx = i;
 			}
 		}
 		else {
 		// Octave bands modes
 
-			// how many notes grouped in each band?
-			let groupNotes;
-
-			if ( this._mode == 8 )
-				groupNotes = 24;
-			else if ( this._mode == 7 )
-				groupNotes = 12;
-			else if ( this._mode == 6 )
-				groupNotes = 8;
-			else if ( this._mode == 5 )
-				groupNotes = 6;
-			else
-				groupNotes = this._mode; // for modes 1, 2, 3 and 4
-
 			// generate a table of frequencies based on the equal tempered scale
 
-			let temperedScale = [];
-			let i = 0;
-			let freq;
+			const notesPerBand = [0,1,2,3,4,6,8,12,24][ this._mode ];
 
-			while ( ( freq = C0 * ROOT24 ** i ) <= this._maxFreq ) {
-				if ( freq >= this._minFreq && i % groupNotes == 0 )
+			let i = 0,
+				freq,
+				temperedScale = [];
+
+			while ( ( freq = C0 * ROOT24 ** i ) <= maxFreq ) {
+				if ( freq >= minFreq && i % notesPerBand == 0 )
 					temperedScale.push( freq );
 				i++;
 			}
@@ -1491,9 +1483,9 @@ export default class AudioMotionAnalyzer {
 			// divide canvas space by the number of frequencies (bars) to display
 			this._barWidth = canvas.width / temperedScale.length;
 
-			let prevBin = 0;  // last bin included in previous frequency band
-			let prevIdx = -1; // previous bar FFT array index
-			let nBars   = 0;  // count of bars with the same index
+			let prevBin = 0,  // last bin included in previous frequency band
+				prevIdx = -1, // previous bar FFT array index
+				nBars   = 0;  // count of bars with the same index
 
 			temperedScale.forEach( ( freq, index ) => {
 				// which FFT bin best represents this frequency?
@@ -1514,7 +1506,7 @@ export default class AudioMotionAnalyzer {
 					// update previous bars using the same index with a interpolation factor
 					if ( nBars > 1 ) {
 						for ( let i = 0; i < nBars; i++ )
-							this._bars[ this._bars.length - nBars + i ].factor = ( i + 1 ) / nBars;
+							bars[ bars.length - nBars + i ].factor = ( i + 1 ) / nBars;
 					}
 					prevIdx = idx;
 					nBars = 1;
@@ -1522,7 +1514,7 @@ export default class AudioMotionAnalyzer {
 
 				prevBin = nextBin = bin;
 				// check if there's another band after this one
-				if ( temperedScale[ index + 1 ] !== undefined ) {
+				if ( index < temperedScale.length - 1 ) {
 					nextBin = this._freqToBin( temperedScale[ index + 1 ] );
 					// and use half the bins in between for this band
 					if ( nextBin - bin > 1 )
@@ -1531,12 +1523,10 @@ export default class AudioMotionAnalyzer {
 
 				const endIdx = prevBin - idx > 0 ? prevBin : 0;
 
-				this._bars.push( {
+				bars.push( {
 					posX: index * this._barWidth,
 					dataIdx: idx,
 					endIdx,
-//					freq, // nominal frequency for this band
-//					range: [ binToFreq( idx ), binToFreq( endIdx || idx ) ], // actual range of frequencies
 					factor: 0,
 					peak: [0,0],
 					hold: [],
@@ -1545,6 +1535,9 @@ export default class AudioMotionAnalyzer {
 
 			} );
 		}
+
+		// update bars
+		this._bars = bars;
 
 		// save these for scale generation
 		this._minLog = minLog;
@@ -1681,7 +1674,7 @@ export default class AudioMotionAnalyzer {
 		const ignore = [ 'audioCtx', 'start' ];
 
 		if ( useDefaults || options === undefined )
-			options = Object.assign( defaults, options );
+			options = Object.assign( defaults, options ); // NOTE: defaults is modified!
 
 		for ( const prop of Object.keys( options ) ) {
 			if ( callbacks.indexOf( prop ) !== -1 && typeof options[ prop ] !== 'function' ) // check invalid callback
