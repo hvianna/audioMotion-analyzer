@@ -118,7 +118,7 @@ document.querySelectorAll('button[data-prop]').forEach( el => {
 			audioMotion[ selectedAnalyzer ][ el.dataset.func ]();
 		else
 			audioMotion[ selectedAnalyzer ][ el.dataset.prop ] = ! audioMotion[ selectedAnalyzer ][ el.dataset.prop ];
-		el.classList.toggle( 'active' );
+		el.classList.toggle( 'active', audioMotion[ selectedAnalyzer ][ el.dataset.prop ] );
 	});
 });
 
