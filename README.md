@@ -16,7 +16,7 @@ I originally wrote it as part of my [**audioMotion**](https://audiomotion.me) mu
 + Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing constant
 + Comes with 3 predefined color gradients - easily add your own!
 + Fullscreen support, ready for retina / HiDPI displays
-+ Zero-dependency native ES6+ module (ESM), \~20kB minified
++ Zero-dependency native ES6+ module (ESM), less than 20kB minified
 
 ## Online demos
 
@@ -30,6 +30,7 @@ I originally wrote it as part of my [**audioMotion**](https://audiomotion.me) mu
 - [Complete visualization options](https://codepen.io/hvianna/pen/LYREBYQ)
 - [Using microphone input](https://codepen.io/hvianna/pen/VwKZgEE)
 - [Custom callback function](https://codepen.io/hvianna/pen/LYZwdvG)
+- [Creating additional effects with `getEnergy()`](https://codepen.io/hvianna/pen/poNmVYo)
 - [Integration with Pizzicato library](https://codesandbox.io/s/9y6qb) - see [related issue](https://github.com/hvianna/audioMotion-analyzer/issues/10) for more info
 
 ## Usage
@@ -185,12 +186,14 @@ oscillator.start(); // play tone
 
 Customize the spacing between bars in [octave bands modes](#mode-number).
 
-Use a value between 0 and 1 for spacing proportional to the bar width. Values >= 1 will be considered as a literal number of pixels.
+Use a value between 0 and 1 for spacing proportional to the band width. Values >= 1 will be considered as a literal number of pixels.
 
-For example, `barSpace = 0.5` will use half of the bar width for spacing, while `barSpace = 2` will set a fixed spacing of 2 pixels, independent of the width of bars.
+For example, `barSpace = 0.5` will use half the width available to each band for spacing and half for the bar itself.
+On the other hand, `barSpace = 2` will set a fixed spacing of 2 pixels, independent of the width of bars.
 Prefer proportional spacing to obtain consistent results among different resolutions and screen sizes.
 
-`barSpace = 0` will effectively show contiguous bars, except when [`showLeds`](#showleds-boolean) is *true*, in which case a minimum spacing is enforced.
+`barSpace = 0` will effectively show contiguous bars, except when [`showLeds`](#showleds-boolean) is *true*, in which case a minimum spacing is enforced
+(this can be customized via [`setLedParams()`](#setledparams-params-) method).
 
 Defaults to **0.1**.
 
@@ -214,7 +217,7 @@ An array of *AudioNode* objects connected via the [`source`](#source-htmlmediael
 
 **DEPRECATED - will be removed in version 4.0.0**
 
-Use [`getEnergy()`](#getenergy-preset-startfreq-endfreq-) instead.
+Use [`getEnergy()`](#getenergy-preset--startfreq-endfreq-) instead.
 
 ### `fftSize` *number*
 
@@ -396,7 +399,7 @@ Defaults to **false**.
 
 **DEPRECATED - will be removed in version 4.0.0**
 
-Use [`getEnergy('peak')`](#getenergy-preset-startfreq-endfreq-) instead.
+Use [`getEnergy('peak')`](#getenergy-preset--startfreq-endfreq-) instead.
 
 ### `pixelRatio` *number* *(Read only)*
 
@@ -486,7 +489,11 @@ Defaults to **true**.
 
 ### `showLeds` *boolean*
 
-*true* to activate LED display effect. Only effective for [visualization modes](#mode-number) 1 to 8 (octave bands). Defaults to **false**.
+*true* to activate a vintage LEDs display effect. Only effective for [visualization modes](#mode-number) 1 to 8 (octave bands).
+
+This effect can be customized via [`setLedParams()`](#setledparams-params-) method.
+
+Defaults to **false**.
 
 ### `showPeaks` *boolean*
 
@@ -716,7 +723,7 @@ preset    | description
 
 Please note that preset names are case-sensitive. If the specified preset is not recognized the method will return *null*.
 
-Use this method inside your callback function to create additional visual effects. See the [fluid demo](/demo/fluid.html) (activate the **Energy meters** feature) for an example.
+Use this method inside your callback function to create additional visual effects. See the [fluid demo](/demo/fluid.html) or [this pen](https://codepen.io/hvianna/pen/poNmVYo) for examples.
 
 
 ### `registerGradient( name, options )`
@@ -759,22 +766,22 @@ Customize parameters used to create the [LEDs display effect](#showleds-boolean)
 
 ```js
 const params = {
-    maxLeds: 128,   // integer, > 0
-    spaceVRatio: 1, // > 0
-    spaceHRatio: .5 // >= 0
+    maxLeds: 128, // integer, > 0
+    spaceV: 1,    // > 0
+    spaceH: .5    // >= 0
 }
 ```
 
-property | description
----------|-------------
-`maxLeds`     | maximum desired number of LED elements per analyzer bar
-`spaceVRatio` | vertical spacing ratio, relative to the LED height (**1** means spacing is the same as the LED height)
-`spaceHRatio` | **minimum** horizontal spacing ratio, relative to the available width (**0.5** means half of the width is used for spacing and half for the bar); this behaves exactly like [barSpace](#barspace-number) and will override it if larger
+property  | description
+----------|-------------
+`maxLeds` | maximum desired number of LED elements per analyzer bar
+`spaceV`  | vertical spacing ratio, relative to the LED height (**1** means spacing is the same as the LED height)
+`spaceH`  | **minimum** horizontal spacing ratio, relative to the available width (**0.5** means half of the width is used for spacing and half for the LED); behaves exactly like [barSpace](#barspace-number) (values >= 1 are considered as literal pixel values) and will override it if larger
 
-The available canvas height is initially divided by `maxLeds` and vertical spacing is calculated observing the `spaceVRatio`;
+The available canvas height is initially divided by `maxLeds` and vertical spacing is calculated observing the `spaceV` ratio;
 if necessary, the led count is decreased until both the led segment and the vertical spacing are at least 2px tall.
 
-You can try different values in the [fluid demo](/demo/fluid.html).
+You can try different values in the [fluid demo](https://audiomotion.dev/demo/fluid.html).
 
 **If called with no arguments or any invalid property, disables previously set parameters.**
 
