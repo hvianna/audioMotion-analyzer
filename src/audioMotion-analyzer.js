@@ -1690,16 +1690,16 @@ export default class AudioMotionAnalyzer {
 		// callback functions properties
 		const callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
 
-		// audioCtx is set only at initialization; we handle 'start' after setting all other properties
-		const ignore = [ 'audioCtx', 'start' ];
+		// compile valid properties; `start` is not an actual property and is handled after setting everything else
+		const validProps = Object.keys( defaults ).concat( callbacks, ['height', 'width'] ).filter( e => e != 'start' );
 
 		if ( useDefaults || options === undefined )
 			options = Object.assign( defaults, options ); // NOTE: defaults is modified!
 
 		for ( const prop of Object.keys( options ) ) {
-			if ( callbacks.indexOf( prop ) !== -1 && typeof options[ prop ] !== 'function' ) // check invalid callback
+			if ( callbacks.includes( prop ) && typeof options[ prop ] !== 'function' ) // check invalid callback
 				this[ prop ] = undefined;
-			else if ( ignore.indexOf( prop ) === -1 ) // skip ignored properties
+			else if ( validProps.includes( prop ) ) // set only valid properties
 				this[ prop ] = options[ prop ];
 		}
 
