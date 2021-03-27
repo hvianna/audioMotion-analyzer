@@ -107,29 +107,30 @@ export default class AudioMotionAnalyzer {
 
 		*/
 
+		const audioCtx = this._audioCtx;
+
 		// create the analyzer nodes, channel splitter and merger, and gain nodes for input/output connections
-		this._analyzer = [ this._audioCtx.createAnalyser(), this._audioCtx.createAnalyser() ];
-		this._splitter = this._audioCtx.createChannelSplitter(2);
- 		this._merger   = this._audioCtx.createChannelMerger(2);
- 		this._input    = this._audioCtx.createGain();
- 		this._output   = this._audioCtx.createGain();
+		const analyzer = this._analyzer = [ audioCtx.createAnalyser(), audioCtx.createAnalyser() ];
+		const splitter = this._splitter = audioCtx.createChannelSplitter(2);
+ 		const merger   = this._merger   = audioCtx.createChannelMerger(2);
+ 		this._input    = audioCtx.createGain();
+ 		this._output   = audioCtx.createGain();
 
  		// initialize sources array and connect audio source if provided in the options
 		this._sources = [];
 		if ( options.source )
 			this.connectInput( options.source );
 
- 		// connect splitter -> analyzers -> merger
-		for ( let i = 0; i < 2; i++ ) {
-			this._splitter.connect( this._analyzer[ i ], i );
-			this._analyzer[ i ].connect( this._merger, 0, i );
-		}
+ 		// connect splitter -> analyzers
+ 		for ( const i of [0,1] )
+			splitter.connect( analyzer[ i ], i );
 
 		// connect merger -> output
-		this._merger.connect( this._output );
+		merger.connect( this._output );
 
 		// connect output -> destination (speakers)
-		this.connectOutput();
+		if ( this._spkOn = options.connectSpeakers !== false )
+			this.connectOutput();
 
 		// initialize object to save energy
 		this._energy = { val: 0, peak: 0, hold: 0 };
@@ -196,8 +197,8 @@ export default class AudioMotionAnalyzer {
 
 		// Resume audio context if in suspended state (browsers' autoplay policy)
 		const unlockContext = () => {
-			if ( this._audioCtx.state == 'suspended' )
-				this._audioCtx.resume();
+			if ( audioCtx.state == 'suspended' )
+				audioCtx.resume();
 			window.removeEventListener( 'click', unlockContext );
 		}
 		window.addEventListener( 'click', unlockContext );
@@ -436,9 +437,10 @@ export default class AudioMotionAnalyzer {
 
 		// update node connections
 		this._input.disconnect();
-		this._analyzer[0].disconnect();
 		this._input.connect( this._stereo ? this._splitter : this._analyzer[0] );
-		this._analyzer[0].connect( this._stereo ? this._merger : this._output );
+		this._analyzer[0].disconnect();
+		if ( this._spkOn ) // connect analyzer only if audioMotion is connected to the speakers
+			this._analyzer[0].connect( this._stereo ? this._merger : this._output );
 
 		// update properties affected by stereo
 		this._calcAux();
@@ -482,6 +484,9 @@ export default class AudioMotionAnalyzer {
 	}
 	get fps() {
 		return this._fps;
+	}
+	get isConnectedToSpeakers() {
+		return this._spkOn;
 	}
 	get isFullscreen() {
 		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this.canvas;
@@ -566,7 +571,14 @@ export default class AudioMotionAnalyzer {
 	 * @param [{object}] an AudioNode; if undefined, the output is connected to the audio context destination (speakers)
 	 */
 	connectOutput( node = this._audioCtx.destination ) {
-	 	this._output.connect( node );
+		this._output.connect( node );
+
+		// when (re)connecting to the destination, also connect the analyzer nodes to the merger / output nodes
+		if ( node == this._audioCtx.destination ) {
+			for ( const i of [0,1] )
+				this._analyzer[ i ].connect( ( ! this._stereo && ! i ? this._output : this._merger ), 0, i );
+			this._spkOn = true;
+		}
 	}
 
 	/**
@@ -575,7 +587,15 @@ export default class AudioMotionAnalyzer {
 	 * @param [{object}] a connected AudioNode object; if undefined, all connected nodes are disconnected
 	 */
 	disconnectOutput( node ) {
-	 	this._output.disconnect( node );
+		this._output.disconnect( node );
+
+		// if disconnecting from the destination, also disconnect the analyzer nodes so they keep working on Chromium
+		// see https://github.com/hvianna/audioMotion-analyzer/issues/13#issuecomment-808764848
+		if ( ! node || node == this._audioCtx.destination ) {
+			for ( const i of [0,1] )
+				this._analyzer[ i ].disconnect();
+			this._spkOn = false;
+		}
 	}
 
 	/**
