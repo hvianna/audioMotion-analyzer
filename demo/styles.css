@@ -74,7 +74,8 @@ img {
 	max-width: 100%;
 }
 
-input[type="range"] {
+input[type="range"],
+input[type="number"] {
 	width: 50px;
 }
 
