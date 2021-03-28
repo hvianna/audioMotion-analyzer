@@ -1,16 +1,28 @@
 Changelog
 =========
 
-## version 3.2.0-beta.0 (2021-03-17)
+## version 3.2.0-beta.1 (2021-03-28)
 
 ### Added: {docsify-ignore}
 
-+ [`getEnergy()`](README.md#getenergy-preset-startfreq-endfreq-) method - see it in action in [this pen](https://codepen.io/hvianna/pen/poNmVYo) - thanks [@Staijn1](https://github.com/Staijn1) for suggesting this feature;
++ [`getEnergy()`](README.md#getenergy-preset--startfreq-endfreq-) method - see it in action on [this pen](https://codepen.io/hvianna/pen/poNmVYo) - thanks [@Staijn1](https://github.com/Staijn1) for suggesting this feature;
++ [`setLedParams()`](README.md#setledparams-params-) method, which allows you to customize the look of the LEDs - you can try it in the [fluid demo](https://audiomotion.dev/demo/fluid.html);
++ [`connectSpeakers`](README.md#connectspeakers-boolean) constructor option - thanks [@evoyy](https://github.com/evoyy) for the suggestion;
++ [`connectedTo`](README.md#connectedto-array-read-only) read only property.
+
+### Improvements: {docsify-ignore}
+
++ Disconnecting the output from the speakers no longer prevents the analyzer from working on Chromium-based browsers;
++ Expose the `GradientOptions` interface (TypeScript) for user scripts (props to [@Staijn1](https://github.com/Staijn1));
++ Improved the look of the LEDs effect in very small containers (like in the [multi-instance demo](https://audiomotion.dev/demo/multi.html)), especially when `loRes` is active;
++ Refactored some code for improved legibility, performance and file size;
 + Added compatibility with *standardized-audio-context* library - thanks [@richclingman](https://github.com/richclingman) for reporting this issue.
 
 ### Changed: {docsify-ignore}
 
-+ `energy` and `peakEnergy` properties have been deprecated - use `getEnergy()` and `getEnergy('peak')` instead.
++ `energy` and `peakEnergy` properties have been **deprecated and will be removed in the next major release** - use `getEnergy()` and `getEnergy('peak')` instead;
++ FPS display font size is now scaled relatively to the canvas height;
++ `pixelRatio` is now correctly reported for HiDPI devices with screen heights <= 1080px.
 
 
 ## version 3.1.0 (2021-02-27)
