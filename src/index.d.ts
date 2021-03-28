@@ -46,6 +46,7 @@ export interface Options {
 
 interface ConstructorOptions extends Options {
   audioCtx?: AudioContext;
+  connectSpeakers?: boolean;
   source?: HTMLMediaElement | AudioNode;
 }
 
@@ -78,6 +79,7 @@ declare class AudioMotionAnalyzer {
   public bgAlpha: number;
 
   get connectedSources(): AudioNode[];
+  get connectedTo(): AudioNode[];
 
   get energy(): number;
 
