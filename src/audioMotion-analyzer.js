@@ -238,7 +238,7 @@ export default class AudioMotionAnalyzer {
 		return this._analyzer[0].fftSize;
 	}
 	set fftSize( value ) {
-		for ( let i = 0; i < 2; i++ )
+		for ( const i of [0,1] )
 			this._analyzer[ i ].fftSize = value;
 		const binCount = this._analyzer[0].frequencyBinCount;
 		this._fftData = [ new Uint8Array( binCount ), new Uint8Array( binCount ) ];
@@ -386,14 +386,14 @@ export default class AudioMotionAnalyzer {
 		return this._analyzer[0].minDecibels;
 	}
 	set minDecibels( value ) {
-		for ( let i = 0; i < 2; i++ )
+		for ( const i of [0,1] )
 			this._analyzer[ i ].minDecibels = value;
 	}
 	get maxDecibels() {
 		return this._analyzer[0].maxDecibels;
 	}
 	set maxDecibels( value ) {
-		for ( let i = 0; i < 2; i++ )
+		for ( const i of [0,1] )
 			this._analyzer[ i ].maxDecibels = value;
 	}
 
@@ -413,7 +413,7 @@ export default class AudioMotionAnalyzer {
 		return this._analyzer[0].smoothingTimeConstant;
 	}
 	set smoothing( value ) {
-		for ( let i = 0; i < 2; i++ )
+		for ( const i of [0,1] )
 			this._analyzer[ i ].smoothingTimeConstant = value;
 	}
 
@@ -734,7 +734,7 @@ export default class AudioMotionAnalyzer {
 	 * @param {number} max maximum decibels value
 	 */
 	setSensitivity( min, max ) {
-		for ( let i = 0; i < 2; i++ ) {
+		for ( const i of [0,1] ) {
 			this._analyzer[ i ].minDecibels = Math.min( min, max );
 			this._analyzer[ i ].maxDecibels = Math.max( min, max );
 		}
