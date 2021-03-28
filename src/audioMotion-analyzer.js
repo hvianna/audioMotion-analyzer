@@ -129,7 +129,8 @@ export default class AudioMotionAnalyzer {
 		merger.connect( this._output );
 
 		// connect output -> destination (speakers)
-		if ( this._spkOn = options.connectSpeakers !== false )
+		this._outNodes = [];
+		if ( options.connectSpeakers !== false )
 			this.connectOutput();
 
 		// initialize object to save energy
@@ -439,7 +440,7 @@ export default class AudioMotionAnalyzer {
 		this._input.disconnect();
 		this._input.connect( this._stereo ? this._splitter : this._analyzer[0] );
 		this._analyzer[0].disconnect();
-		if ( this._spkOn ) // connect analyzer only if audioMotion is connected to the speakers
+		if ( this._outNodes.length ) // connect analyzer only if the output is connected to other nodes
 			this._analyzer[0].connect( this._stereo ? this._merger : this._output );
 
 		// update properties affected by stereo
@@ -472,6 +473,9 @@ export default class AudioMotionAnalyzer {
 	get connectedSources() {
 		return this._sources;
 	}
+	get connectedTo() {
+		return this._outNodes;
+	}
 	get energy() {
 		// DEPRECATED - to be removed in v4.0.0
 		return this.getEnergy();
@@ -484,9 +488,6 @@ export default class AudioMotionAnalyzer {
 	}
 	get fps() {
 		return this._fps;
-	}
-	get isConnectedToSpeakers() {
-		return this._spkOn;
 	}
 	get isFullscreen() {
 		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this.canvas;
@@ -571,13 +572,16 @@ export default class AudioMotionAnalyzer {
 	 * @param [{object}] an AudioNode; if undefined, the output is connected to the audio context destination (speakers)
 	 */
 	connectOutput( node = this._audioCtx.destination ) {
-		this._output.connect( node );
+		if ( this._outNodes.includes( node ) )
+			return;
 
-		// when (re)connecting to the destination, also connect the analyzer nodes to the merger / output nodes
-		if ( node == this._audioCtx.destination ) {
+		this._output.connect( node );
+		this._outNodes.push( node );
+
+		// when connecting the first node, also connect the analyzer nodes to the merger / output nodes
+		if ( this._outNodes.length == 1 ) {
 			for ( const i of [0,1] )
 				this._analyzer[ i ].connect( ( ! this._stereo && ! i ? this._output : this._merger ), 0, i );
-			this._spkOn = true;
 		}
 	}
 
@@ -587,14 +591,17 @@ export default class AudioMotionAnalyzer {
 	 * @param [{object}] a connected AudioNode object; if undefined, all connected nodes are disconnected
 	 */
 	disconnectOutput( node ) {
-		this._output.disconnect( node );
+		if ( node && ! this._outNodes.includes( node ) )
+			return;
 
-		// if disconnecting from the destination, also disconnect the analyzer nodes so they keep working on Chromium
+		this._output.disconnect( node );
+		this._outNodes = node ? this._outNodes.filter( e => e !== node ) : [];
+
+		// if disconnected from all nodes, also disconnect the analyzer nodes so they keep working on Chromium
 		// see https://github.com/hvianna/audioMotion-analyzer/issues/13#issuecomment-808764848
-		if ( ! node || node == this._audioCtx.destination ) {
+		if ( this._outNodes.length == 0 ) {
 			for ( const i of [0,1] )
 				this._analyzer[ i ].disconnect();
-			this._spkOn = false;
 		}
 	}
 
