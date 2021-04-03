@@ -31,7 +31,7 @@ I originally wrote it as part of my [**audioMotion**](https://audiomotion.me) mu
 - [Using microphone input](https://codepen.io/hvianna/pen/VwKZgEE)
 - [Custom callback function](https://codepen.io/hvianna/pen/LYZwdvG)
 - [Creating additional effects with `getEnergy()`](https://codepen.io/hvianna/pen/poNmVYo)
-- [Integration with Pizzicato library](https://codesandbox.io/s/9y6qb) - see [related issue](https://github.com/hvianna/audioMotion-analyzer/issues/10) for more info
+- [Integration with Pizzicato library](https://codesandbox.io/s/9y6qb) - see [this discussion](https://github.com/hvianna/audioMotion-analyzer/issues/10) for more info
 
 ## Usage
 
@@ -167,7 +167,8 @@ Defaults to **true**, so the analyzer will start running right after initializat
 ### `audioCtx` *AudioContext object* *(Read only)*
 
 [*AudioContext*](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) used by **audioMotion-analyzer**.
-If not provided in the [constructor](#constructor) options, it will be created.
+It can be provided in the [constructor](#constructor) options, explicitly via the `audioCtx` property, or implicitly (since v3.2.0) when the [`source`](#source-htmlmediaelement-or-audionode-object) property is an AudioNode.
+Otherwise, a new context will be created upon instantiation.
 
 Use this object to create additional audio sources to be connected to the analyzer, like oscillator nodes, gain nodes and media streams.
 
