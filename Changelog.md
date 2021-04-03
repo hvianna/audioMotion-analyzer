@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## version 3.2.1 (2021-04-03)
+
++ Fixes an undefined property error.
+
+
 ## version 3.2.0 (2021-04-03)
 
 ### Added: {docsify-ignore}
