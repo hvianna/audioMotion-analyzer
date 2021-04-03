@@ -1450,6 +1450,8 @@ export default class AudioMotionAnalyzer {
 	 */
 	_calcBars() {
 
+		const bars = this._bars = []; // initialize object property
+
 		if ( ! this._ready )
 			return;
 
@@ -1460,9 +1462,7 @@ export default class AudioMotionAnalyzer {
 			  maxFreq = this._maxFreq,
 			  minFreq = this._minFreq;
 
-		let minLog,
-			logWidth,
-			bars = [];
+		let minLog,	logWidth;
 
 		if ( ! this._isOctaveBands ) {
 		// Discrete frequencies or area fill modes
@@ -1564,9 +1564,6 @@ export default class AudioMotionAnalyzer {
 
 			} );
 		}
-
-		// update bars
-		this._bars = bars;
 
 		// save these for scale generation
 		this._minLog = minLog;
