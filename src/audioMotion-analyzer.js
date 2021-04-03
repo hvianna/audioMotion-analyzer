@@ -74,22 +74,26 @@ export default class AudioMotionAnalyzer {
 
 		// Use audio context provided by user, or create a new one
 
-		const AudioContext = window.AudioContext || window.webkitAudioContext;
+		let audioCtx;
 
-		if ( options.audioCtx ) {
-			if ( options.audioCtx.createGain )
-				this._audioCtx = options.audioCtx;
-			else
-				throw new AudioMotionError( 'ERR_INVALID_AUDIO_CONTEXT', 'Provided audio context is not valid' );
+		if ( options.source && ( audioCtx = options.source.context ) ) {
+			// get audioContext from provided source audioNode
+		}
+		else if ( audioCtx = options.audioCtx ) {
+			// use audioContext provided by user
 		}
 		else {
 			try {
-				this._audioCtx = new AudioContext();
+				audioCtx = new ( window.AudioContext || window.webkitAudioContext )();
 			}
 			catch( err ) {
 				throw new AudioMotionError( 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create audio context. Web Audio API not supported?' );
 			}
 		}
+
+		// make sure audioContext is valid
+		if ( ! audioCtx.createGain )
+			throw new AudioMotionError( 'ERR_INVALID_AUDIO_CONTEXT', 'Provided audio context is not valid' );
 
 		/*
 			Connection routing:
@@ -106,8 +110,6 @@ export default class AudioMotionAnalyzer {
 			(source) --->  input  ----------------------->  analyzer[0]  --------------------->  output  ---> (destination)
 
 		*/
-
-		const audioCtx = this._audioCtx;
 
 		// create the analyzer nodes, channel splitter and merger, and gain nodes for input/output connections
 		const analyzer = this._analyzer = [ audioCtx.createAnalyser(), audioCtx.createAnalyser() ];
@@ -462,7 +464,7 @@ export default class AudioMotionAnalyzer {
 	// Read only properties
 
 	get audioCtx() {
-		return this._audioCtx;
+		return this._input.context;
 	}
 	get canvas() {
 		return this._canvasCtx.canvas;
@@ -536,7 +538,7 @@ export default class AudioMotionAnalyzer {
 			throw new AudioMotionError( 'ERR_INVALID_AUDIO_SOURCE', 'Audio source must be an instance of HTMLMediaElement or AudioNode' );
 
 		// if source is an HTML element, create an audio node for it; otherwise, use the provided audio node
-		const node = isHTML ? this._audioCtx.createMediaElementSource( source ) : source;
+		const node = isHTML ? this.audioCtx.createMediaElementSource( source ) : source;
 
 		if ( ! this._sources.includes( node ) ) {
 			node.connect( this._input );
@@ -571,7 +573,7 @@ export default class AudioMotionAnalyzer {
 	 *
 	 * @param [{object}] an AudioNode; if undefined, the output is connected to the audio context destination (speakers)
 	 */
-	connectOutput( node = this._audioCtx.destination ) {
+	connectOutput( node = this.audioCtx.destination ) {
 		if ( this._outNodes.includes( node ) )
 			return;
 
@@ -1452,7 +1454,7 @@ export default class AudioMotionAnalyzer {
 			return;
 
 		// helper function
-		const binToFreq = bin => bin * this._audioCtx.sampleRate / this._analyzer[0].fftSize;
+		const binToFreq = bin => bin * this.audioCtx.sampleRate / this._analyzer[0].fftSize;
 
 		const canvas  = this._canvasCtx.canvas,
 			  maxFreq = this._maxFreq,
@@ -1585,7 +1587,7 @@ export default class AudioMotionAnalyzer {
 	 */
 	_freqToBin( freq, rounding = 'round' ) {
 		const max = this._analyzer[0].frequencyBinCount - 1,
-			  bin = Math[ rounding ]( freq * this._analyzer[0].fftSize / this._audioCtx.sampleRate );
+			  bin = Math[ rounding ]( freq * this._analyzer[0].fftSize / this.audioCtx.sampleRate );
 
 		return bin < max ? bin : max;
 	}
