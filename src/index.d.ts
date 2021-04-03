@@ -46,15 +46,24 @@ export interface Options {
 
 interface ConstructorOptions extends Options {
   audioCtx?: AudioContext;
+  connectSpeakers?: boolean;
   source?: HTMLMediaElement | AudioNode;
 }
 
+type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "treble";
+
 type GradientColorStop = string | { pos: number; color: string };
 
-interface GradientOptions {
+export interface GradientOptions {
   bgColor: string;
   dir?: "h";
   colorStops: [GradientColorStop, GradientColorStop, ...GradientColorStop[]];
+}
+
+export interface LedParameters {
+  maxLeds: number;
+  spaceVRatio: number;
+  spaceHRatio: number;
 }
 
 declare class AudioMotionAnalyzer {
@@ -70,6 +79,7 @@ declare class AudioMotionAnalyzer {
   public bgAlpha: number;
 
   get connectedSources(): AudioNode[];
+  get connectedTo(): AudioNode[];
 
   get energy(): number;
 
@@ -174,10 +184,14 @@ declare class AudioMotionAnalyzer {
   public disconnectInput(node?: AudioNode | AudioNode[]): void;
   public disconnectOutput(node?: AudioNode): void;
 
+  public getEnergy(preset?: EnergyPreset): number;
+  public getEnergy(startFreq: number, endFreq?: number): number;
+
   public registerGradient(name: string, options: GradientOptions): void;
 
   public setCanvasSize(width: number, height: number): void;
   public setFreqRange(minFreq: number, maxFreq: number): void;
+  public setLedParams(params?: LedParameters): void;
   public setOptions(options?: Options): void;
   public setSensitivity(minDecibels: number, maxDecibels: number): void;
 

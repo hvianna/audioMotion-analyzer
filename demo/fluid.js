@@ -131,7 +131,7 @@ document.querySelectorAll('[data-prop]').forEach( el => {
 			audioMotion[ el.dataset.func ]();
 		else
 			audioMotion[ el.dataset.prop ] = ! audioMotion[ el.dataset.prop ];
-		el.classList.toggle( 'active' );
+		el.classList.toggle( 'active', audioMotion[ el.dataset.prop ] );
 	});
 });
 
@@ -144,6 +144,16 @@ document.querySelectorAll('[data-feature]').forEach( el => {
 
 document.querySelectorAll('[data-setting]').forEach( el => {
 	el.addEventListener( 'change', () => audioMotion[ el.dataset.setting ] = el.value );
+});
+
+document.querySelectorAll('[data-custom]').forEach( el => {
+	el.addEventListener( 'change', () => {
+		const active  = document.getElementById('customLeds').checked,
+			  maxLeds = document.getElementById('maxLeds').value,
+			  spaceV  = document.getElementById('spaceV').value,
+			  spaceH  = document.getElementById('spaceH').value;
+		audioMotion.setLedParams( active ? { maxLeds, spaceV, spaceH } : undefined );
+	});
 });
 
 // Display value of ranged input elements
@@ -217,26 +227,84 @@ function updateUI() {
 
 function drawCallback() {
 
-	const canvas   = audioMotion.canvas,
-		  ctx      = audioMotion.canvasCtx;
+	const canvas     = audioMotion.canvas,
+		  ctx        = audioMotion.canvasCtx,
+		  pixelRatio = audioMotion.pixelRatio, // for scaling the size of things drawn on canvas, on Hi-DPI screens or loRes mode
+		  baseSize   = Math.max( 20 * pixelRatio, canvas.height / 27 | 0 ),
+		  centerX    = canvas.width >> 1,
+		  centerY    = canvas.height >> 1;
 
 	if ( features.energyMeter ) {
-		ctx.fillStyle = '#fff8';
-		ctx.fillRect( 50, canvas.height, 50, -canvas.height * audioMotion.energy );
+		const energy     = audioMotion.getEnergy(),
+			  peakEnergy = audioMotion.getEnergy('peak');
 
+		// overall energy peak
+		const width = 50 * pixelRatio;
+		const peakY = -canvas.height * ( peakEnergy - 1 );
 		ctx.fillStyle = '#f008';
-		ctx.fillRect( 50, canvas.height - canvas.height * audioMotion.peakEnergy, 50, 2 );
+		ctx.fillRect( width, peakY, width, 2 );
 
-		ctx.font = '16px sans-serif';
+		ctx.font = `${ 16 * pixelRatio }px sans-serif`;
 		ctx.textAlign = 'left';
-		ctx.fillText( audioMotion.peakEnergy, 50, canvas.height - 4 - canvas.height * audioMotion.peakEnergy);
+		ctx.fillText( peakEnergy.toFixed(4), width, peakY - 4 );
+
+		// overall energy bar
+		ctx.fillStyle = '#fff8';
+		ctx.fillRect( width, canvas.height, width, -canvas.height * energy );
+
+		// bass, midrange and treble meters
+
+		const drawLight = ( posX, color, alpha ) => {
+			const halfWidth   = width >> 1,
+				  doubleWidth = width << 1;
+
+			const grad = ctx.createLinearGradient( 0, 0, 0, canvas.height );
+			grad.addColorStop( 0, color );
+			grad.addColorStop( .75, `${color}0` );
+
+			ctx.beginPath();
+			ctx.moveTo( posX - halfWidth, 0 );
+			ctx.lineTo( posX - doubleWidth, canvas.height );
+			ctx.lineTo( posX + doubleWidth, canvas.height );
+			ctx.lineTo( posX + halfWidth, 0 );
+
+			ctx.save();
+			ctx.fillStyle = grad;
+			ctx.shadowColor = color;
+			ctx.shadowBlur = 40;
+			ctx.globalCompositeOperation = 'screen';
+			ctx.globalAlpha = alpha;
+			ctx.fill();
+			ctx.restore();
+		}
+
+		ctx.textAlign = 'center';
+		const growSize = baseSize * 4;
+
+		const bassEnergy = audioMotion.getEnergy('bass');
+		ctx.font = `bold ${ baseSize + growSize * bassEnergy }px sans-serif`;
+		ctx.fillText( 'BASS', canvas.width * .15, centerY );
+		drawLight( canvas.width * .15, '#f00', bassEnergy );
+
+		drawLight( canvas.width * .325, '#f80', audioMotion.getEnergy('lowMid') );
+
+		const midEnergy = audioMotion.getEnergy('mid');
+		ctx.font = `bold ${ baseSize + growSize * midEnergy }px sans-serif`;
+		ctx.fillText( 'MIDRANGE', centerX, centerY );
+		drawLight( centerX, '#ff0', midEnergy );
+
+		drawLight( canvas.width * .675, '#0f0', audioMotion.getEnergy('highMid') );
+
+		const trebleEnergy = audioMotion.getEnergy('treble');
+		ctx.font = `bold ${ baseSize + growSize * trebleEnergy }px sans-serif`;
+		ctx.fillText( 'TREBLE', canvas.width * .85, centerY );
+		drawLight( canvas.width * .85, '#0ff', trebleEnergy );
 	}
 
 	if ( features.showLogo ) {
-		const baseSize = ( audioMotion.isFullscreen ? 40 : 20 ) * audioMotion.pixelRatio;
-
-		// use the song energy to increase the font size and make the logo pulsate to the beat
-		ctx.font = `${ baseSize + audioMotion.energy * 25 * audioMotion.pixelRatio }px Orbitron, sans-serif`;
+		// the overall energy provides a simple way to sync a pulsating text/image to the beat
+		// it usually works best than specific frequency ranges, for a wider range of music styles
+		ctx.font = `${ baseSize + audioMotion.getEnergy() * 25 * pixelRatio }px Orbitron, sans-serif`;
 
 		ctx.fillStyle = '#fff8';
 		ctx.textAlign = 'center';
@@ -252,7 +320,7 @@ function drawCallback() {
 		ctx.lineTo( canvas.width * audioEl.currentTime / audioEl.duration, posY );
 		ctx.lineCap = 'round';
 		ctx.lineWidth = lineWidth;
-		ctx.globalAlpha = audioMotion.energy; // use the song energy to control the bar opacity
+		ctx.globalAlpha = audioMotion.getEnergy(); // use the song energy to control the bar opacity
 		ctx.stroke();
 	}
 

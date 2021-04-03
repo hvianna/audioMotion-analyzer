@@ -16,7 +16,7 @@ I originally wrote it as part of my [**audioMotion**](https://audiomotion.me) mu
 + Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing constant
 + Comes with 3 predefined color gradients - easily add your own!
 + Fullscreen support, ready for retina / HiDPI displays
-+ Zero-dependency native ES6+ module (ESM), \~20kB minified
++ Zero-dependency native ES6+ module (ESM), less than 20kB minified
 
 ## Online demos
 
@@ -30,7 +30,8 @@ I originally wrote it as part of my [**audioMotion**](https://audiomotion.me) mu
 - [Complete visualization options](https://codepen.io/hvianna/pen/LYREBYQ)
 - [Using microphone input](https://codepen.io/hvianna/pen/VwKZgEE)
 - [Custom callback function](https://codepen.io/hvianna/pen/LYZwdvG)
-- [Integration with Pizzicato library](https://codesandbox.io/s/9y6qb) - see [related issue](https://github.com/hvianna/audioMotion-analyzer/issues/10) for more info
+- [Creating additional effects with `getEnergy()`](https://codepen.io/hvianna/pen/poNmVYo)
+- [Integration with Pizzicato library](https://codesandbox.io/s/9y6qb) - see [this discussion](https://github.com/hvianna/audioMotion-analyzer/issues/10) for more info
 
 ## Usage
 
@@ -65,7 +66,7 @@ import AudioMotionAnalyzer from 'audiomotion-analyzer';
 
 `new AudioMotionAnalyzer( [container], [{options}] )`
 
-Creates a new instance of audioMotion-analyzer.
+Creates a new instance of **audioMotion-analyzer**.
 
 The analyzer canvas will be created and appended to the HTML element referenced by `container`.
 
@@ -89,9 +90,10 @@ This will insert the analyzer canvas inside the *#container* element and start t
 Available options and default values:
 
 options = {<br>
-&emsp;&emsp;[audioCtx](#audioctx-audiocontext-object): *undefined*,<br>
+&emsp;&emsp;[audioCtx](#audioctx-audiocontext-object-read-only): *undefined*, // constructor only<br>
 &emsp;&emsp;[barSpace](#barspace-number): **0.1**,<br>
 &emsp;&emsp;[bgAlpha](#bgalpha-number): **0.7**,<br>
+&emsp;&emsp;[connectSpeakers](#connectspeakers-boolean): **true**, // constructor only<br>
 &emsp;&emsp;[fftSize](#fftsize-number): **8192**,<br>
 &emsp;&emsp;[fillAlpha](#fillalpha-number): **1**,<br>
 &emsp;&emsp;[gradient](#gradient-string): **'classic'**,<br>
@@ -119,7 +121,7 @@ options = {<br>
 &emsp;&emsp;[showScaleX](#showscalex-boolean): **true**,<br>
 &emsp;&emsp;[showScaleY](#showscaley-boolean): **false**,<br>
 &emsp;&emsp;[smoothing](#smoothing-number): **0.5**,<br>
-&emsp;&emsp;[source](#source-htmlmediaelement-or-audionode-object): *undefined*,<br>
+&emsp;&emsp;[source](#source-htmlmediaelement-or-audionode-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[spinSpeed](#spinspeed-number): **0**,<br>
 &emsp;&emsp;[splitGradient](#splitgradient-boolean): **false**,<br>
 &emsp;&emsp;[start](#start-boolean): **true**,<br>
@@ -127,6 +129,25 @@ options = {<br>
 &emsp;&emsp;[volume](#volume-number): **1**,<br>
 &emsp;&emsp;[width](#width-number): *undefined*<br>
 }
+
+### `connectSpeakers` *boolean*
+
+*Available since v3.2.0*
+
+Whether or not to connect the analyzer output to the speakers (technically, the *AudioContext* `destination` node).
+
+Some scenarios where you may want to set this to `false`:
+
+1. when running multiple instances of **audioMotion-analyzer** sharing the same audio input (see the [multi demo](/demo/multi.html)),
+only one of them needs to be connected to the speakers, otherwise the volume will be amplified due to multiple outputs;
+1. when audio input comes from the microphone and you're not using headphones, to prevent a feedback loop from the speakers;
+1. when you're using **audioMotion-analyzer** with an audio player which already outputs sound to the speakers (same reason as 1).
+
+After instantiation, use [`connectOutput()`](#connectoutput-node-) and [`disconnectOutput()`](#disconnectoutput-node-) to connect or disconnect the output from the speakers (or other nodes).
+
+Defaults to **true**.
+
+See also [`connectedTo`](#connectedto-array-read-only).
 
 ### `source` *HTMLMediaElement or AudioNode object*
 
@@ -141,13 +162,13 @@ If `start: false` is specified, the analyzer will be created stopped. You can th
 
 Defaults to **true**, so the analyzer will start running right after initialization.
 
+## Properties
 
-## Interface objects *(read only)*
+### `audioCtx` *AudioContext object* *(Read only)*
 
-### `audioCtx` *AudioContext object*
-
-[*AudioContext*](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) used by audioMotion-analyzer.
-If not provided in the [constructor](#constructor) options, it will be created.
+[*AudioContext*](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) used by **audioMotion-analyzer**.
+It can be provided in the [constructor](#constructor) options, explicitly via the `audioCtx` property, or implicitly (since v3.2.0) when the [`source`](#source-htmlmediaelement-or-audionode-object) property is an AudioNode.
+Otherwise, a new context will be created upon instantiation.
 
 Use this object to create additional audio sources to be connected to the analyzer, like oscillator nodes, gain nodes and media streams.
 
@@ -168,29 +189,20 @@ audioMotion.connectInput( gainNode ); // connect gainNode -> audioMotion
 oscillator.start(); // play tone
 ```
 
-### `canvas` *HTMLCanvasElement object*
-
-[*Canvas*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement) element created by audioMotion.
-
-### `canvasCtx` *CanvasRenderingContext2D object*
-
-[2D rendering context](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D) used for drawing in audioMotion's *Canvas*.
-
-
-## Properties
-
 ### `barSpace` *number*
 
 *Available since v2.0.0*
 
 Customize the spacing between bars in [octave bands modes](#mode-number).
 
-Use a value between 0 and 1 for spacing proportional to the bar width. Values >= 1 will be considered as a literal number of pixels.
+Use a value between 0 and 1 for spacing proportional to the band width. Values >= 1 will be considered as a literal number of pixels.
 
-For example, `barSpace = 0.5` will use half of the bar width for spacing, while `barSpace = 2` will set a fixed spacing of 2 pixels, independent of the width of bars.
+For example, `barSpace = 0.5` will use half the width available to each band for spacing and half for the bar itself.
+On the other hand, `barSpace = 2` will set a fixed spacing of 2 pixels, independent of the width of bars.
 Prefer proportional spacing to obtain consistent results among different resolutions and screen sizes.
 
-`barSpace = 0` will effectively show contiguous bars, except when [`showLeds`](#showleds-boolean) is *true*, in which case a minimum spacing is enforced.
+`barSpace = 0` will effectively show contiguous bars, except when [`showLeds`](#showleds-boolean) is *true*, in which case a minimum spacing is enforced
+(this can be customized via [`setLedParams()`](#setledparams-params-) method).
 
 Defaults to **0.1**.
 
@@ -204,23 +216,35 @@ It must be a number between 0 (completely transparent) and 1 (completely opaque)
 
 Defaults to **0.7**.
 
-### `connectedSources` *array*
+### `canvas` *HTMLCanvasElement object* *(Read only)*
+
+[*Canvas*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement) element created by audioMotion.
+
+### `canvasCtx` *CanvasRenderingContext2D object* *(Read only)*
+
+[2D rendering context](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D) used for drawing in audioMotion's *Canvas*.
+
+### `connectedSources` *array* *(Read only)*
 
 *Available since v3.0.0*
 
-An array of *AudioNode* objects connected via the [`source`](#source-htmlmediaelement-or-audionode-object) constructor option, or by using the [`connectInput()`](#connectinput-source-) method.
+An array of *AudioNode* objects connected to the analyzer **input** via the [`source`](#source-htmlmediaelement-or-audionode-object) constructor option, or by using the [`connectInput()`](#connectinput-source-) method.
+
+### `connectedTo` *array* *(Read only)*
+
+*Available since v3.2.0*
+
+An array of *AudioNode* objects to which the analyzer **output** is connected.
+
+By default, **audioMotion-analyzer** is connected to the *AudioContext* `destination` node (the speakers) upon instantiation, unless you set [`connectSpeakers: false`](#connectspeakers-boolean) in the constructor options.
+
+See also [`connectOutput()`](#connectoutput-node-).
 
 ### `energy` *number* *(Read only)*
 
-*Available since v2.4.0*
+**DEPRECATED - will be removed in version 4.0.0**
 
-Returns a number between 0 and 1, representing the instant "energy" of the frequency spectrum. Updated on every animation frame.
-
-The energy value is obtained by a simple average of the amplitudes of currently displayed frequency bands, and roughly represents how loud/busy the spectrum is at a given moment.
-
-You can use this inside your callback function to create additional visual effects. For usage example see the [*onCanvasDraw* documentation](#oncanvasdraw-function).
-
-See also [`peakEnergy`](#peakenergy-number-read-only).
+Use [`getEnergy()`](#getenergy-preset-startfreq-endfreq-) instead.
 
 ### `fftSize` *number*
 
@@ -273,7 +297,7 @@ This should be considered the minimum dimensions for proper visualization of all
 
 You can set both values at once using the [`setCanvasSize()`](#setcanvassize-width-height-) method.
 
-?> You can read the actual canvas dimensions at any time directly from the [`canvas`](#canvas-htmlcanvaselement-object) object.
+?> You can read the actual canvas dimensions at any time directly from the [`canvas`](#canvas-htmlcanvaselement-object-read-only) object.
 
 ### `isFullscreen` *boolean* *(Read only)*
 
@@ -360,7 +384,7 @@ Highest and lowest frequencies represented in the X-axis of the analyzer. Values
 
 The minimum allowed value is **1**. Trying to set a lower value will throw an `ERR_FREQUENCY_TOO_LOW` [error](#custom-errors).
 
-The maximum practical value is half the sampling rate ([`audioCtx.sampleRate`](#audioctx-audiocontext-object)), although this is not enforced by audioMotion-analyzer.
+The maximum practical value is half the sampling rate ([`audioCtx.sampleRate`](#audioctx-audiocontext-object-read-only)), although this is not enforced by **audioMotion-analyzer**.
 
 It is preferable to use the [`setFreqRange()`](#setfreqrange-minfreq-maxfreq-) method and set both values at once, to prevent `minFreq` being higher than the current `maxFreq` or vice-versa at a given moment.
 
@@ -400,9 +424,9 @@ Defaults to **false**.
 
 ### `peakEnergy` *number* *(Read only)*
 
-*Available since v2.4.0*
+**DEPRECATED - will be removed in version 4.0.0**
 
-Returns a number between 0 and 1, representing the peak [energy](#energy-number-read-only) value of the last 30 frames (approximately 0.5s). Updated on every animation frame.
+Use [`getEnergy('peak')`](#getenergy-preset-startfreq-endfreq-) instead.
 
 ### `pixelRatio` *number* *(Read only)*
 
@@ -492,7 +516,11 @@ Defaults to **true**.
 
 ### `showLeds` *boolean*
 
-*true* to activate LED display effect. Only effective for [visualization modes](#mode-number) 1 to 8 (octave bands). Defaults to **false**.
+*true* to activate a vintage LEDs display effect. Only effective for [visualization modes](#mode-number) 1 to 8 (octave bands).
+
+This effect can be customized via [`setLedParams()`](#setledparams-params-) method.
+
+Defaults to **false**.
 
 ### `showPeaks` *boolean*
 
@@ -611,7 +639,7 @@ function drawCallback( instance ) {
     	  baseSize = ( instance.isFullscreen ? 40 : 20 ) * instance.pixelRatio;
 
     // use the 'energy' value to increase the font size and make the logo pulse to the beat
-    ctx.font = `${ baseSize + instance.energy * 25 * instance.pixelRatio }px Orbitron, sans-serif`;
+    ctx.font = `${ baseSize + instance.getEnergy() * 25 * instance.pixelRatio }px Orbitron, sans-serif`;
 
     ctx.fillStyle = '#fff8';
     ctx.textAlign = 'center';
@@ -629,7 +657,7 @@ Two arguments are passed: a string with the reason why the function was called (
 
 Reason | Description
 -------|------------
-`'create'` | canvas created by the audioMotion-analyzer [constructor](#constructor)
+`'create'` | canvas created by the **audioMotion-analyzer** [constructor](#constructor)
 `'fschange'` | analyzer entered or left fullscreen mode
 `'lores'` | [low resolution option](#lores-boolean) toggled on or off
 `'resize'` | browser window or canvas container element were resized
@@ -664,18 +692,19 @@ Connects an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/
 If `source` is an *HTMLMediaElement*, the method returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) created
 for that element; if `source` is an *AudioNode* instance, it returns the `source` object itself; if it's neither an [ERR_INVALID_AUDIO_SOURCE](#custom-errors) error is thrown.
 
-See also [`disconnectInput()`](#disconnectinput-node-).
+See also [`disconnectInput()`](#disconnectinput-node-) and [`connectedSources`](#connectedsources-array-read-only).
 
 ### `connectOutput( [node] )`
 
 *Available since v3.0.0*
 
-This method allows connecting **audioMotion-analyzer** to other audio nodes, e.g. other audio processing modules that use the Web Audio API.
+This method allows connecting the analyzer **output** to other audio processing modules that use the Web Audio API.
 
-`node` must be a connected *AudioNode*; if not specified, the analyzer output is connected to the *AudioContext* [**destination**](https://developer.mozilla.org/en-US/docs/Web/API/AudioDestinationNode)
-(usually the speakers) - this is already done by the construtor, and you should only need to do it again if you disconnect the output.
+`node` must be an [*AudioNode*](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) instance; **if not specified, the analyzer output is connected to the speakers** (the *AudioContext* `destination` node).
 
-See also [`disconnectOutput()`](#disconnectoutput-node-).
+By default, the analyzer is connected to the speakers upon instantiation, unless you set [`connectSpeakers: false`](#connectspeakers-boolean) in the constructor options.
+
+See also [`disconnectOutput()`](#disconnectoutput-node-) and [`connectedTo`](#connectedto-array-read-only).
 
 ### `disconnectInput( [node] )`
 
@@ -683,7 +712,7 @@ See also [`disconnectOutput()`](#disconnectoutput-node-).
 
 Disconnects audio source nodes previously connected to the analyzer.
 
-`node` may be an *AudioNode* instance or an **array** of such objects; if not specified, all connected nodes are disconnected.
+`node` may be an *AudioNode* instance or an **array** of such objects; **if not specified, all connected nodes are disconnected.**
 
 Please note that if you have connected an `<audio>` or `<video>` element, you should disconnect the respective [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode)
 created for it.
@@ -696,9 +725,34 @@ See also [`connectInput()`](#connectinput-source-).
 
 Disconnects the analyzer output from previously connected audio nodes.
 
-`node` must be an *AudioNode* instance; if not specified, the output is disconnected from all nodes (note that this includes the speakers).
+`node` must be a connected *AudioNode*; **if not specified, the output is disconnected from all nodes, including the speakers!**
 
 See also [`connectOutput()`](#connectoutput-node-).
+
+### `getEnergy( [preset | startFreq], [endFreq] )`
+
+*Available since v3.2.0*
+
+Returns a number between 0 and 1, representing the amplitude of a specific frequency, or the average energy of a frequency range.
+
+**If called with no parameters, it returns the overall spectrum energy** obtained by the average of amplitudes of the *currently displayed frequency bands*.
+
+Preset strings are available for predefined ranges plus the "peak" functionality (see table below), or you can specify the desired frequency and an optional ending frequency for a range.
+Frequency values must be specified in Hz.
+
+preset    | description
+----------|-------------
+'peak'    | peak overall energy value of the last 30 frames (approximately 0.5s)
+'bass'    | average energy between 20 and 250 Hz
+'lowMid'  | average energy between 250 and 500 Hz
+'mid'     | average energy between 500 and 2000 Hz
+'highMid' | average energy between 2000 and 4000 Hz
+'treble'  | average energy between 4000 and 16000 Hz
+
+Please note that preset names are case-sensitive. If the specified preset is not recognized the method will return *null*.
+
+Use this method inside your callback function to create additional visual effects. See the [fluid demo](/demo/fluid.html) or [this pen](https://codepen.io/hvianna/pen/poNmVYo) for examples.
+
 
 ### `registerGradient( name, options )`
 
@@ -730,11 +784,40 @@ Sets the analyzer nominal dimensions in pixels. See [`height`](#height-number) a
 
 Sets the desired frequency range. Values are expressed in Hz (Hertz).
 
+### `setLedParams( [params] )`
+
+*Available since v3.2.0*
+
+Customize parameters used to create the [LEDs display effect](#showleds-boolean).
+
+`params` should be an object with the following structure:
+
+```js
+const params = {
+    maxLeds: 128, // integer, > 0
+    spaceV: 1,    // > 0
+    spaceH: .5    // >= 0
+}
+```
+
+property  | description
+----------|-------------
+`maxLeds` | maximum desired number of LED elements per analyzer bar
+`spaceV`  | vertical spacing ratio, relative to the LED height (**1** means spacing is the same as the LED height)
+`spaceH`  | **minimum** horizontal spacing ratio, relative to the available width (**0.5** means half of the width is used for spacing and half for the LED); behaves exactly like [barSpace](#barspace-number) (values >= 1 are considered as literal pixel values) and will override it if larger
+
+The available canvas height is initially divided by `maxLeds` and vertical spacing is calculated observing the `spaceV` ratio;
+if necessary, the led count is decreased until both the led segment and the vertical spacing are at least 2px tall.
+
+You can try different values in the [fluid demo](https://audiomotion.dev/demo/fluid.html).
+
+**If called with no arguments or any invalid property, disables previously set parameters.**
+
 ### `setOptions( [options] )`
 
 Shorthand method for setting several options at once.
 
-`options` should be an object as defined in the class [constructor](#options), except for the `audioCtx` and `source` properties.
+[`options`](#options) should be an object as defined in the class constructor.
 
 **If called with no argument (or `options` is *undefined*), resets all configuration options to their default values.**
 
@@ -765,14 +848,14 @@ See the [overlay demo](/demo/overlay.html) for an example.
 
 *Available since v2.0.0*
 
-audioMotion-analyzer uses a custom error object to throw errors for some critical operations.
+**audioMotion-analyzer** uses a custom error object to throw errors for some critical operations.
 
 The `code` property is a string label that can be checked to identify the specific error in a reliable way.
 
 code                       | Error description
 ---------------------------|--------------------
 ERR_AUDIO_CONTEXT_FAIL     | Could not create audio context. The user agent may lack support for the Web Audio API.
-ERR_INVALID_AUDIO_CONTEXT  | [Audio context](#audioctx-audiocontext-object) provided by user is not valid.
+ERR_INVALID_AUDIO_CONTEXT  | [Audio context](#audioctx-audiocontext-object-read-only) provided by user is not valid.
 ERR_INVALID_AUDIO_SOURCE   | Audio source provided in [`source`](#source-htmlmediaelement-or-audionode-object) option or [`connectInput()`](#connectinput-source-) method is not an instance of HTMLMediaElement or AudioNode.
 ERR_INVALID_MODE           | User tried to set the visualization [`mode`](#mode-number) to an invalid value.
 ERR_FREQUENCY_TOO_LOW      | User tried to set the [`minFreq`](#minfreq-number) or [`maxFreq`](#maxfreq-number) properties to a value lower than 1.

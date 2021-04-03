@@ -105,7 +105,7 @@ document.querySelectorAll('button[data-prop]').forEach( el => {
 			audioMotion[ el.dataset.func ]();
 		else
 			audioMotion[ el.dataset.prop ] = ! audioMotion[ el.dataset.prop ];
-		el.classList.toggle( 'active' );
+		el.classList.toggle( 'active', audioMotion[ el.dataset.prop ] );
 	});
 });
 

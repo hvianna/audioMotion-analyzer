@@ -7,7 +7,7 @@
 - Visualize discrete frequencies or octave bands
 - High-resolution (retina / HiDPI ready) fullscreen support
 - Easy to use, yet very customizable
-- No dependencies, \~20kB minified file
+- No dependencies, less than 20kB minified file
 
 [Demos](/demo/)
 [About](#about)

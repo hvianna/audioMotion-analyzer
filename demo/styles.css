@@ -44,7 +44,7 @@ code {
 fieldset {
 	border: 1px dotted #666;
 	display: inline-block;
-	height: 70px;
+	min-height: 70px;
 	vertical-align: top;
 }
 fieldset:disabled {
@@ -74,13 +74,15 @@ img {
 	max-width: 100%;
 }
 
-input[type="range"] {
+input[type="range"],
+input[type="number"] {
 	width: 50px;
 }
 
 input[type="text"],
+input[type="number"],
 select {
-	margin: 6px 0;
+	margin-top: 6px;
 	padding: 6px;
 }
 

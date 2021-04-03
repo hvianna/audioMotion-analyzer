@@ -9,41 +9,35 @@ import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
 const mindB = [ -70, -80, -85, -90, -100 ], // for sensitivity presets
 	  maxdB = [ -10, -20, -25, -30, -40 ];
 
-var audioMotion = [],
-	selectedAnalyzer = 0,
-	audioCtx,
-	node;
+let audioMotion = [],
+	selectedAnalyzer = 0;
 
-// Create three audioMotion-analyzer instances and connect them to the audio element
+// Creating three audioMotion-analyzer instances that share the same input:
+//
+// A media element (<audio> or <video> tag) can only be connected to a single AudioNode, but the node
+// itself can be connected to multiple other nodes.
+//
+// In the loop below, the first instance of audioMotion-analyzer takes the <audio> element as source,
+// creating an audio node which is stored in connectedSources[0].
+// The 2nd and 3rd instances will then take the created audio node as source.
+//
+// Only the first instance is connected to the speakers, to avoid unintended output amplification.
 
 try {
-	// create the audio context that will be shared by all instances
-	const AudioContext = window.AudioContext || window.webkitAudioContext;
-	audioCtx = new AudioContext();
-
 	for ( let i = 0; i < 3; i++ ) {
-		audioMotion[ i ] = new AudioMotionAnalyzer(
-			document.getElementById( `container${i}` ),
-			{
-				audioCtx,
-				onCanvasResize: ( reason, instance ) => {
-					console.log( `[${instance.canvas.parentElement.id.slice(-1)}] ${reason}: ${instance.canvas.width} x ${instance.canvas.height}` );
-					if ( reason != 'create' )
-						updateUI();
-				}
-			}
-		);
+		const isFirst = ( i == 0 );
 
-		if ( i == 0 ) {
-			// connect the <audio> element to the first analyzer instance and save the audio node created for it
-			node = audioMotion[0].connectInput( document.getElementById('audio') );
-		}
-		else {
-			// connect the created audio node to the other instances of audioMotion-analyzer
-			audioMotion[ i ].connectInput( node );
-			// mute the volume of additional instances, to avoid sound distortion due to output saturation
-			audioMotion[ i ].volume = 0;
-		}
+		audioMotion[ i ] = new AudioMotionAnalyzer(	document.getElementById( `container${i}` ), {
+			source: isFirst ? document.getElementById('audio') : audioMotion[0].connectedSources[0],
+			connectSpeakers: isFirst,
+
+			onCanvasResize: ( reason, instance ) => {
+				const instNo = instance.canvas.parentElement.id.slice(-1); // get instance number from container id
+				console.log( `[#${instNo}] ${reason}: ${instance.canvas.width} x ${instance.canvas.height}` );
+				if ( reason != 'create' )
+					updateUI();
+			}
+		});
 	}
 }
 catch( err ) {
@@ -118,7 +112,7 @@ document.querySelectorAll('button[data-prop]').forEach( el => {
 			audioMotion[ selectedAnalyzer ][ el.dataset.func ]();
 		else
 			audioMotion[ selectedAnalyzer ][ el.dataset.prop ] = ! audioMotion[ selectedAnalyzer ][ el.dataset.prop ];
-		el.classList.toggle( 'active' );
+		el.classList.toggle( 'active', audioMotion[ selectedAnalyzer ][ el.dataset.prop ] );
 	});
 });
 
