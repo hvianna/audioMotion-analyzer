@@ -15,11 +15,11 @@ let audioMotion = [],
 // Creating three audioMotion-analyzer instances that share the same input:
 //
 // A media element (<audio> or <video> tag) can only be connected to a single AudioNode, but the node
-// itself can be connected to multiple other nodes, as long as they all exist in the same AudioContext.
+// itself can be connected to multiple other nodes.
 //
-// In the loop below, the first instance of audioMotion-analyzer creates the audio context (audioCtx)
-// and makes the connection to the <audio> element, creating an audio node for it, which is stored in
-// connectedSources[0]; the 2nd and 3rd instances then use the created audioCtx and audio node as source.
+// In the loop below, the first instance of audioMotion-analyzer takes the <audio> element as source,
+// creating an audio node which is stored in connectedSources[0].
+// The 2nd and 3rd instances will then take the created audio node as source.
 //
 // Only the first instance is connected to the speakers, to avoid unintended output amplification.
 
@@ -28,7 +28,6 @@ try {
 		const isFirst = ( i == 0 );
 
 		audioMotion[ i ] = new AudioMotionAnalyzer(	document.getElementById( `container${i}` ), {
-			audioCtx: isFirst ? undefined : audioMotion[0].audioCtx,
 			source: isFirst ? document.getElementById('audio') : audioMotion[0].connectedSources[0],
 			connectSpeakers: isFirst,
 
