@@ -278,6 +278,16 @@ export default class AudioMotionAnalyzer {
 		this._setCanvas('user');
 	}
 
+	// Mirror
+
+	get mirror() {
+		return this._mirror;
+	}
+	set mirror( value ) {
+		this._mirror = +value;
+		this._calcBars();
+	}
+
 	// Visualization mode
 
 	get mode() {
@@ -1259,6 +1269,15 @@ export default class AudioMotionAnalyzer {
 				ctx.drawImage( canvasX, 0, canvas.height - canvasX.height );
 		}
 
+		// mirror
+		if ( this._mirror ) {
+			const width    = canvas.width >> 1,
+				  initialX = this._mirror == 1 ? 0 : width;
+			ctx.setTransform( -1, 0, 0, 1, canvas.width - initialX, 0 );
+			ctx.drawImage( canvas, initialX, 0, width, canvas.height, 0, 0, width, canvas.height );
+			ctx.setTransform( 1, 0, 0, 1, 0, 0 );
+		}
+
 		// calculate and update current frame rate
 
 		this._frame++;
@@ -1458,9 +1477,12 @@ export default class AudioMotionAnalyzer {
 		// helper function
 		const binToFreq = bin => bin * this.audioCtx.sampleRate / this._analyzer[0].fftSize;
 
-		const canvas  = this._canvasCtx.canvas,
-			  maxFreq = this._maxFreq,
-			  minFreq = this._minFreq;
+		const canvas        = this._canvasCtx.canvas,
+			  mirrorMode    = this._mirror,
+			  analyzerWidth = canvas.width >> ( mirrorMode != 0 ),
+			  initialX      = mirrorMode == -1 ? analyzerWidth : 0,
+			  maxFreq       = this._maxFreq,
+			  minFreq       = this._minFreq;
 
 		let minLog,	logWidth;
 
@@ -1469,7 +1491,7 @@ export default class AudioMotionAnalyzer {
 			this._barWidth = 1;
 
 			minLog = Math.log10( minFreq );
-			logWidth = canvas.width / ( Math.log10( maxFreq ) - minLog );
+			logWidth = analyzerWidth / ( Math.log10( maxFreq ) - minLog );
 
 			const minIndex = this._freqToBin( minFreq, 'floor' ),
 				  maxIndex = this._freqToBin( maxFreq );
@@ -1478,7 +1500,7 @@ export default class AudioMotionAnalyzer {
 
 			for ( let i = minIndex; i <= maxIndex; i++ ) {
 				const freq = binToFreq( i ), // frequency represented by this index
-					  pos  = Math.round( logWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
+					  pos  = initialX + Math.round( logWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
 				if ( pos > lastPos ) {
@@ -1507,10 +1529,10 @@ export default class AudioMotionAnalyzer {
 			}
 
 			minLog = Math.log10( temperedScale[0] );
-			logWidth = canvas.width / ( Math.log10( temperedScale[ temperedScale.length - 1 ] ) - minLog );
+			logWidth = analyzerWidth / ( Math.log10( temperedScale[ temperedScale.length - 1 ] ) - minLog );
 
 			// divide canvas space by the number of frequencies (bars) to display
-			this._barWidth = canvas.width / temperedScale.length;
+			this._barWidth = analyzerWidth / temperedScale.length;
 
 			let prevBin = 0,  // last bin included in previous frequency band
 				prevIdx = -1, // previous bar FFT array index
@@ -1553,7 +1575,7 @@ export default class AudioMotionAnalyzer {
 				const endIdx = prevBin - idx > 0 ? prevBin : 0;
 
 				bars.push( {
-					posX: index * this._barWidth,
+					posX: initialX + index * this._barWidth,
 					dataIdx: idx,
 					endIdx,
 					factor: 0,
@@ -1690,7 +1712,8 @@ export default class AudioMotionAnalyzer {
 			stereo       : false,
 			splitGradient: false,
 			start        : true,
-			volume       : 1
+			volume       : 1,
+			mirror       : 0
 		};
 
 		// callback functions properties
