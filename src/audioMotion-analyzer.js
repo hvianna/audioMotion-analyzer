@@ -285,6 +285,7 @@ export default class AudioMotionAnalyzer {
 	}
 	set mirror( value ) {
 		this._mirror = +value;
+		this._calcAux();
 		this._calcBars();
 	}
 
@@ -831,6 +832,10 @@ export default class AudioMotionAnalyzer {
 		// channelGap is **0** if isLedDisplay == true (LEDs already have spacing); **1** if canvas height is odd (windowed); **2** if it's even
 		// TODO: improve this, make it configurable?
 		this._channelGap     = isDual ? canvas.height - this._channelHeight * 2 : 0;
+
+		const halfWidth = canvas.width >> 1;
+		this._analyzerWidth  = canvas.width - halfWidth * ( this._mirror != 0 );
+		this._initialX       = halfWidth * ( this._mirror == -1 );
 	}
 
 	/**
@@ -911,10 +916,12 @@ export default class AudioMotionAnalyzer {
 			  mode           = this._mode,
 			  channelHeight  = this._channelHeight,
 			  channelGap     = this._channelGap,
-			  analyzerHeight = this._analyzerHeight;
+			  analyzerHeight = this._analyzerHeight,
+			  analyzerWidth  = this._analyzerWidth,
+			  initialX       = this._initialX;
 
 		// radial related constants
-		const centerX        = canvas.width >> 1,
+		const centerX        = canvas.width >> 1, // also for mirror effect
 			  centerY        = canvas.height >> 1,
 			  radius         = this._radius;
 
@@ -975,7 +982,7 @@ export default class AudioMotionAnalyzer {
 
 				// exclude the reflection area when overlay is true and reflexAlpha == 1 (avoids alpha over alpha difference, in case bgAlpha < 1)
 				if ( ! isRadial || channel == 0 )
-					ctx.fillRect( 0, channelTop - channelGap, canvas.width, ( this.overlay && this.reflexAlpha == 1 ? analyzerHeight : channelHeight ) + channelGap );
+					ctx.fillRect( initialX, channelTop - channelGap, analyzerWidth, ( this.overlay && this.reflexAlpha == 1 ? analyzerHeight : channelHeight ) + channelGap );
 
 				ctx.globalAlpha = 1;
 			}
@@ -1239,6 +1246,13 @@ export default class AudioMotionAnalyzer {
 
 		} // for ( let channel = 0; channel < isStereo + 1; channel++ ) {
 
+		// mirror
+		if ( this._mirror && ! isRadial ) {
+			ctx.setTransform( -1, 0, 0, 1, canvas.width - initialX, 0 );
+			ctx.drawImage( canvas, initialX, 0, centerX, canvas.height, 0, 0, centerX, canvas.height );
+			ctx.setTransform( 1, 0, 0, 1, 0, 0 );
+		}
+
 		// Update energy
 		energy.val = currentEnergy / ( nBars << isStereo );
 		if ( energy.val >= energy.peak ) {
@@ -1267,15 +1281,6 @@ export default class AudioMotionAnalyzer {
 			}
 			else
 				ctx.drawImage( canvasX, 0, canvas.height - canvasX.height );
-		}
-
-		// mirror
-		if ( this._mirror ) {
-			const width    = canvas.width >> 1,
-				  initialX = this._mirror == 1 ? 0 : width;
-			ctx.setTransform( -1, 0, 0, 1, canvas.width - initialX, 0 );
-			ctx.drawImage( canvas, initialX, 0, width, canvas.height, 0, 0, width, canvas.height );
-			ctx.setTransform( 1, 0, 0, 1, 0, 0 );
 		}
 
 		// calculate and update current frame rate
@@ -1431,20 +1436,24 @@ export default class AudioMotionAnalyzer {
 			const label = ( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
 				  x     = this._logWidth * ( Math.log10( freq ) - this._minLog );
 
-			scaleX.fillText( label, x, canvasX.height * .75 );
+			if ( x > 0 ) {
+				scaleX.fillText( label, this._initialX + x, canvasX.height * .75 );
+				if ( this._mirror )
+					scaleX.fillText( label, ( this._initialX || canvas.width ) - x, canvasX.height * .75 );
 
-			// avoid overlapping wrap-around labels in the circular scale
-			if ( x > 0 && x < canvas.width ) {
-				const angle  = TAU * ( x / canvas.width ),
-					  adjAng = angle - HALF_PI, // rotate angles so 0 is at the top
-					  posX   = radialY * Math.cos( adjAng ),
-					  posY   = radialY * Math.sin( adjAng );
+				// avoid overlapping wrap-around labels in the circular scale
+				if ( x < canvas.width ) {
+					const angle  = TAU * ( x / canvas.width ),
+						  adjAng = angle - HALF_PI, // rotate angles so 0 is at the top
+						  posX   = radialY * Math.cos( adjAng ),
+						  posY   = radialY * Math.sin( adjAng );
 
-				scaleR.save();
-				scaleR.translate( radius + posX, radius + posY );
-				scaleR.rotate( angle );
-				scaleR.fillText( label, 0, 0 );
-				scaleR.restore();
+					scaleR.save();
+					scaleR.translate( radius + posX, radius + posY );
+					scaleR.rotate( angle );
+					scaleR.fillText( label, 0, 0 );
+					scaleR.restore();
+				}
 			}
 		}
 	}
@@ -1479,8 +1488,8 @@ export default class AudioMotionAnalyzer {
 
 		const canvas        = this._canvasCtx.canvas,
 			  mirrorMode    = this._mirror,
-			  analyzerWidth = canvas.width >> ( mirrorMode != 0 ),
-			  initialX      = mirrorMode == -1 ? analyzerWidth : 0,
+			  analyzerWidth = this._analyzerWidth,
+			  initialX      = this._initialX,
 			  maxFreq       = this._maxFreq,
 			  minFreq       = this._minFreq;
 
