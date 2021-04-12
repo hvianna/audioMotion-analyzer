@@ -336,7 +336,7 @@ export default class AudioMotionAnalyzer {
 	set radial( value ) {
 		this._radial = !! value;
 		this._calcAux();
-		this._calcLeds();
+		this._calcBars();
 		this._makeGrad();
 	}
 
@@ -816,26 +816,27 @@ export default class AudioMotionAnalyzer {
 	 * Calculate auxiliary values and flags
 	 */
 	_calcAux() {
-		const canvas = this.canvas;
+		const canvas   = this.canvas,
+			  isRadial = this._radial,
+			  isDual   = this._stereo && ! isRadial,
+			  centerX  = canvas.width >> 1;
 
 		this._radius         = canvas.height * ( this._stereo ? .375 : .125 ) | 0;
 		this._barSpacePx     = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
 		this._isOctaveBands  = ( this._mode % 10 != 0 );
-		this._isLedDisplay   = ( this._showLeds && this._isOctaveBands && ! this._radial );
-		this._isLumiBars     = ( this._lumiBars && this._isOctaveBands && ! this._radial );
+		this._isLedDisplay   = ( this._showLeds && this._isOctaveBands && ! isRadial );
+		this._isLumiBars     = ( this._lumiBars && this._isOctaveBands && ! isRadial );
 		this._maximizeLeds   = ! this._stereo || this._reflexRatio > 0 && ! this._isLumiBars;
 
-		const isDual = this._stereo && ! this._radial;
 		this._channelHeight  = canvas.height - ( isDual && ! this._isLedDisplay ? .5 : 0 ) >> isDual;
-		this._analyzerHeight = this._channelHeight * ( this._isLumiBars || this._radial ? 1 : 1 - this._reflexRatio ) | 0;
+		this._analyzerHeight = this._channelHeight * ( this._isLumiBars || isRadial ? 1 : 1 - this._reflexRatio ) | 0;
 
 		// channelGap is **0** if isLedDisplay == true (LEDs already have spacing); **1** if canvas height is odd (windowed); **2** if it's even
 		// TODO: improve this, make it configurable?
 		this._channelGap     = isDual ? canvas.height - this._channelHeight * 2 : 0;
 
-		const halfWidth = canvas.width >> 1;
-		this._analyzerWidth  = canvas.width - halfWidth * ( this._mirror != 0 );
-		this._initialX       = halfWidth * ( this._mirror == -1 );
+		this._analyzerWidth  = canvas.width - centerX * ( this._mirror != 0 );
+		this._initialX       = centerX * ( this._mirror == -1 || this._mirror && isRadial );
 	}
 
 	/**
@@ -917,7 +918,7 @@ export default class AudioMotionAnalyzer {
 			  channelHeight  = this._channelHeight,
 			  channelGap     = this._channelGap,
 			  analyzerHeight = this._analyzerHeight,
-			  analyzerWidth  = this._analyzerWidth,
+			  analyzerWidth  = isRadial ? canvas.width : this._analyzerWidth,
 			  initialX       = this._initialX;
 
 		// radial related constants
@@ -1246,8 +1247,8 @@ export default class AudioMotionAnalyzer {
 
 		} // for ( let channel = 0; channel < isStereo + 1; channel++ ) {
 
-		// mirror
-		if ( this._mirror && ! isRadial ) {
+		// Mirror effect
+		if ( this._mirror ) {
 			ctx.setTransform( -1, 0, 0, 1, canvas.width - initialX, 0 );
 			ctx.drawImage( canvas, initialX, 0, centerX, canvas.height, 0, 0, centerX, canvas.height );
 			ctx.setTransform( 1, 0, 0, 1, 0, 0 );
@@ -1489,7 +1490,7 @@ export default class AudioMotionAnalyzer {
 		const canvas        = this._canvasCtx.canvas,
 			  mirrorMode    = this._mirror,
 			  analyzerWidth = this._analyzerWidth,
-			  initialX      = this._initialX,
+			  initialX      = this._initialX * ! this._radial, // always 0 in radial mode
 			  maxFreq       = this._maxFreq,
 			  minFreq       = this._minFreq;
 
