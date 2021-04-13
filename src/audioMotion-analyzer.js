@@ -287,6 +287,7 @@ export default class AudioMotionAnalyzer {
 		this._mirror = +value;
 		this._calcAux();
 		this._calcBars();
+		this._makeGrad();
 	}
 
 	// Visualization mode
@@ -1328,7 +1329,8 @@ export default class AudioMotionAnalyzer {
 			  isLumiBars     = this._isLumiBars,
 			  gradientHeight = isLumiBars ? canvas.height : canvas.height * ( 1 - this._reflexRatio * ! this._stereo ) | 0,
 			  					// for stereo we keep the full canvas height and handle the reflex areas while generating the color stops
-			  analyzerRatio  = 1 - this._reflexRatio;
+			  analyzerRatio  = 1 - this._reflexRatio,
+			  initialX       = this._initialX;
 
 		// for radial mode
 		const centerX = canvas.width >> 1,
@@ -1344,7 +1346,7 @@ export default class AudioMotionAnalyzer {
 		if ( this._radial )
 			grad = ctx.createRadialGradient( centerX, centerY, centerY, centerX, centerY, radius - ( centerY - radius ) * this._stereo );
 		else
-			grad = ctx.createLinearGradient( 0, 0, isHorizontal ? canvas.width : 0, isHorizontal ? 0 : gradientHeight );
+			grad = ctx.createLinearGradient( ...( isHorizontal ? [ initialX, 0, initialX + this._analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
 
 		if ( colorStops ) {
 			const dual = this._stereo && ! this._splitGradient && ! isHorizontal;
