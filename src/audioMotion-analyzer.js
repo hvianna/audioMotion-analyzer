@@ -912,6 +912,7 @@ export default class AudioMotionAnalyzer {
 			  isOctaveBands  = this._isOctaveBands,
 			  isLedDisplay   = this._isLedDisplay,
 			  isLumiBars     = this._isLumiBars,
+			  isMirror       = this._mirror,
 			  isRadial       = this._radial,
 			  isStereo       = this._stereo,
 			  mode           = this._mode,
@@ -932,7 +933,7 @@ export default class AudioMotionAnalyzer {
 		// helper function - convert planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y ) => {
 			const height = radius + y,
-				  angle  = TAU * ( x / canvas.width ) + this._spinAngle;
+				  angle  = TAU * ( x / canvas.width ) + ( isMirror ? -HALF_PI : this._spinAngle );
 
 			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
 		}
@@ -1248,7 +1249,7 @@ export default class AudioMotionAnalyzer {
 		} // for ( let channel = 0; channel < isStereo + 1; channel++ ) {
 
 		// Mirror effect
-		if ( this._mirror ) {
+		if ( isMirror ) {
 			ctx.setTransform( -1, 0, 0, 1, canvas.width - initialX, 0 );
 			ctx.drawImage( canvas, initialX, 0, centerX, canvas.height, 0, 0, centerX, canvas.height );
 			ctx.setTransform( 1, 0, 0, 1, 0, 0 );
@@ -1275,7 +1276,7 @@ export default class AudioMotionAnalyzer {
 			if ( isRadial ) {
 				ctx.save();
 				ctx.translate( centerX, centerY );
-				if ( this._spinSpeed != 0 )
+				if ( this._spinSpeed != 0 && ! isMirror )
 					ctx.rotate( this._spinAngle + HALF_PI );
 				ctx.drawImage( canvasR, -canvasR.width >> 1, -canvasR.width >> 1 );
 				ctx.restore();
