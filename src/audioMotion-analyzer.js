@@ -1419,6 +1419,20 @@ export default class AudioMotionAnalyzer {
 		const radius  = canvasR.width >> 1, // this is also used as the center X and Y coordinates of the circular scale canvas
 			  radialY = radius - scaleHeight * .7;	// vertical position of text labels in the circular scale
 
+		// helper function
+		const radialLabel = ( x, label ) => {
+			const angle  = TAU * ( x / canvas.width ),
+				  adjAng = angle - HALF_PI, // rotate angles so 0 is at the top
+				  posX   = radialY * Math.cos( adjAng ),
+				  posY   = radialY * Math.sin( adjAng );
+
+			scaleR.save();
+			scaleR.translate( radius + posX, radius + posY );
+			scaleR.rotate( angle );
+			scaleR.fillText( label, 0, 0 );
+			scaleR.restore();
+		}
+
 		// clear scale canvas
 		canvasX.width |= 0;
 
@@ -1438,24 +1452,17 @@ export default class AudioMotionAnalyzer {
 			const label = ( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
 				  x     = this._logWidth * ( Math.log10( freq ) - this._minLog );
 
-			if ( x > 0 ) {
+			if ( x >= 0 && x <= this._analyzerWidth ) {
 				scaleX.fillText( label, this._initialX + x, canvasX.height * .75 );
-				if ( this._mirror )
+				if ( x < this._analyzerWidth ) // avoid wrapping-around the last label and overlapping the first one
+					radialLabel( x, label );
+
+				if ( this._mirror ) {
 					scaleX.fillText( label, ( this._initialX || canvas.width ) - x, canvasX.height * .75 );
-
-				// avoid overlapping wrap-around labels in the circular scale
-				if ( x < canvas.width ) {
-					const angle  = TAU * ( x / canvas.width ),
-						  adjAng = angle - HALF_PI, // rotate angles so 0 is at the top
-						  posX   = radialY * Math.cos( adjAng ),
-						  posY   = radialY * Math.sin( adjAng );
-
-					scaleR.save();
-					scaleR.translate( radius + posX, radius + posY );
-					scaleR.rotate( angle );
-					scaleR.fillText( label, 0, 0 );
-					scaleR.restore();
+					if ( x > 10 ) // avoid overlapping of first labels on mirror mode
+						radialLabel( -x, label );
 				}
+
 			}
 		}
 	}
