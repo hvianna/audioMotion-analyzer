@@ -913,9 +913,9 @@ export default class AudioMotionAnalyzer {
 			  isOctaveBands  = this._isOctaveBands,
 			  isLedDisplay   = this._isLedDisplay,
 			  isLumiBars     = this._isLumiBars,
-			  isMirror       = this._mirror,
 			  isRadial       = this._radial,
 			  isStereo       = this._stereo,
+			  mirrorMode     = this._mirror,
 			  mode           = this._mode,
 			  channelHeight  = this._channelHeight,
 			  channelGap     = this._channelGap,
@@ -934,7 +934,7 @@ export default class AudioMotionAnalyzer {
 		// helper function - convert planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y ) => {
 			const height = radius + y,
-				  angle  = TAU * ( x / canvas.width ) + ( isMirror ? -HALF_PI : this._spinAngle );
+				  angle  = TAU * ( x / canvas.width ) + ( mirrorMode ? -HALF_PI : this._spinAngle );
 
 			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
 		}
@@ -1009,8 +1009,10 @@ export default class AudioMotionAnalyzer {
 
 					if ( even ) {
 						const labelY = posY + fontSize * ( posY == channelTop ? .8 : .35 );
-						ctx.fillText( db, scaleWidth * .85, labelY );
-						ctx.fillText( db, canvas.width - scaleWidth * .1, labelY );
+						if ( mirrorMode != -1 )
+							ctx.fillText( db, scaleWidth * .85, labelY );
+						if ( mirrorMode != 1 )
+							ctx.fillText( db, canvas.width - scaleWidth * .1, labelY );
 						ctx.strokeStyle = '#888';
 						ctx.setLineDash([2,4]);
 						ctx.lineDashOffset = 0;
@@ -1022,8 +1024,8 @@ export default class AudioMotionAnalyzer {
 					}
 
 					ctx.beginPath();
-					ctx.moveTo( scaleWidth * even, ~~posY + .5 ); // for sharp 1px line (https://stackoverflow.com/a/13879402/2370385)
-					ctx.lineTo( canvas.width - scaleWidth * even, ~~posY + .5 );
+					ctx.moveTo( initialX + scaleWidth * even * ( mirrorMode != -1 ), ~~posY + .5 ); // for sharp 1px line (https://stackoverflow.com/a/13879402/2370385)
+					ctx.lineTo( initialX + analyzerWidth - scaleWidth * even * ( mirrorMode != 1 ), ~~posY + .5 );
 					ctx.stroke();
 				}
 				// restore line properties
@@ -1250,7 +1252,7 @@ export default class AudioMotionAnalyzer {
 		} // for ( let channel = 0; channel < isStereo + 1; channel++ ) {
 
 		// Mirror effect
-		if ( isMirror ) {
+		if ( mirrorMode ) {
 			ctx.setTransform( -1, 0, 0, 1, canvas.width - initialX, 0 );
 			ctx.drawImage( canvas, initialX, 0, centerX, canvas.height, 0, 0, centerX, canvas.height );
 			ctx.setTransform( 1, 0, 0, 1, 0, 0 );
@@ -1277,7 +1279,7 @@ export default class AudioMotionAnalyzer {
 			if ( isRadial ) {
 				ctx.save();
 				ctx.translate( centerX, centerY );
-				if ( this._spinSpeed != 0 && ! isMirror )
+				if ( this._spinSpeed != 0 && ! mirrorMode )
 					ctx.rotate( this._spinAngle + HALF_PI );
 				ctx.drawImage( canvasR, -canvasR.width >> 1, -canvasR.width >> 1 );
 				ctx.restore();
