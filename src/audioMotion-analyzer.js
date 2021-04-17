@@ -837,7 +837,7 @@ export default class AudioMotionAnalyzer {
 		this._channelGap     = isDual ? canvas.height - this._channelHeight * 2 : 0;
 
 		this._analyzerWidth  = canvas.width - centerX * ( this._mirror != 0 );
-		this._initialX       = centerX * ( this._mirror == -1 || this._mirror && isRadial );
+		this._initialX       = centerX * ( this._mirror == -1 && ! isRadial );
 	}
 
 	/**
@@ -932,19 +932,21 @@ export default class AudioMotionAnalyzer {
 			this._spinAngle += this._spinSpeed * RPM;
 
 		// helper function - convert planar X,Y coordinates to radial coordinates
-		const radialXY = ( x, y ) => {
+		const radialXY = ( x, y, mirror = false ) => {
 			const height = radius + y,
-				  angle  = TAU * ( x / canvas.width ) + ( mirrorMode ? -HALF_PI : this._spinAngle );
+				  angle  = ( mirror ? -1 : 1 ) * TAU * ( x / canvas.width ) + this._spinAngle;
 
 			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
 		}
 
 		// helper function - draw a polygon of width `w` and height `h` at (x,y) in radial mode
 		const radialPoly = ( x, y, w, h ) => {
-			ctx.moveTo( ...radialXY( x, y ) );
-			ctx.lineTo( ...radialXY( x, y + h ) );
-			ctx.lineTo( ...radialXY( x + w, y + h ) );
-			ctx.lineTo( ...radialXY( x + w, y ) );
+			for ( let m = 0; m <= !!mirrorMode; m++ ) {
+				ctx.moveTo( ...radialXY( x, y, m ) );
+				ctx.lineTo( ...radialXY( x, y + h, m ) );
+				ctx.lineTo( ...radialXY( x + w, y + h, m ) );
+				ctx.lineTo( ...radialXY( x + w, y, m ) );
+			}
 		}
 
 		// LED attributes
@@ -1252,7 +1254,7 @@ export default class AudioMotionAnalyzer {
 		} // for ( let channel = 0; channel < isStereo + 1; channel++ ) {
 
 		// Mirror effect
-		if ( mirrorMode ) {
+		if ( mirrorMode && ! isRadial ) {
 			ctx.setTransform( -1, 0, 0, 1, canvas.width - initialX, 0 );
 			ctx.drawImage( canvas, initialX, 0, centerX, canvas.height, 0, 0, centerX, canvas.height );
 			ctx.setTransform( 1, 0, 0, 1, 0, 0 );
@@ -1279,7 +1281,7 @@ export default class AudioMotionAnalyzer {
 			if ( isRadial ) {
 				ctx.save();
 				ctx.translate( centerX, centerY );
-				if ( this._spinSpeed != 0 && ! mirrorMode )
+				if ( this._spinSpeed )
 					ctx.rotate( this._spinAngle + HALF_PI );
 				ctx.drawImage( canvasR, -canvasR.width >> 1, -canvasR.width >> 1 );
 				ctx.restore();
@@ -1502,7 +1504,7 @@ export default class AudioMotionAnalyzer {
 		const canvas        = this._canvasCtx.canvas,
 			  mirrorMode    = this._mirror,
 			  analyzerWidth = this._analyzerWidth,
-			  initialX      = this._initialX * ! this._radial, // always 0 in radial mode
+			  initialX      = this._initialX,
 			  maxFreq       = this._maxFreq,
 			  minFreq       = this._minFreq;
 
