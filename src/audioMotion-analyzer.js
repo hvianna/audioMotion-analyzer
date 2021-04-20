@@ -932,20 +932,20 @@ export default class AudioMotionAnalyzer {
 			this._spinAngle += this._spinSpeed * RPM;
 
 		// helper function - convert planar X,Y coordinates to radial coordinates
-		const radialXY = ( x, y, mirror = false ) => {
+		const radialXY = ( x, y, dir ) => {
 			const height = radius + y,
-				  angle  = ( mirror ? -1 : 1 ) * TAU * ( x / canvas.width ) + this._spinAngle;
+				  angle  = dir * TAU * ( x / canvas.width ) + this._spinAngle;
 
 			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
 		}
 
 		// helper function - draw a polygon of width `w` and height `h` at (x,y) in radial mode
 		const radialPoly = ( x, y, w, h ) => {
-			for ( let m = 0; m <= !!mirrorMode; m++ ) {
-				ctx.moveTo( ...radialXY( x, y, m ) );
-				ctx.lineTo( ...radialXY( x, y + h, m ) );
-				ctx.lineTo( ...radialXY( x + w, y + h, m ) );
-				ctx.lineTo( ...radialXY( x + w, y, m ) );
+			for ( const dir of ( mirrorMode ? [1,-1] : [1] ) ) {
+				ctx.moveTo( ...radialXY( x, y, dir ) );
+				ctx.lineTo( ...radialXY( x, y + h, dir ) );
+				ctx.lineTo( ...radialXY( x + w, y + h, dir ) );
+				ctx.lineTo( ...radialXY( x + w, y, dir ) );
 			}
 		}
 
@@ -1053,6 +1053,8 @@ export default class AudioMotionAnalyzer {
 
 			// draw bars / lines
 
+			let points = []; // store line graph (mode 10) points to create mirror effect in radial mode
+
 			for ( let i = 0; i < nBars; i++ ) {
 
 				let bar       = this._bars[ i ],
@@ -1105,10 +1107,13 @@ export default class AudioMotionAnalyzer {
 					if ( isRadial ) {
 						// in radial graph mode, use value of previous FFT bin (if available) as the initial amplitude
 						if ( i == 0 && bar.dataIdx && bar.posX )
-							ctx.lineTo( ...radialXY( 0, fftData[ bar.dataIdx - 1 ] / 255 * ( centerY - radius ) * ( channel == 1 ? -1 : 1 ) ) );
+							ctx.lineTo( ...radialXY( 0, fftData[ bar.dataIdx - 1 ] / 255 * ( centerY - radius ) * ( channel == 1 ? -1 : 1 ), 1 ) );
 						// draw line to current point, avoiding overlapping wrap-around frequencies
-						if ( bar.posX >= 0 )
-							ctx.lineTo( ...radialXY( bar.posX, barHeight ) );
+						if ( bar.posX >= 0 ) {
+							const point = [ bar.posX, barHeight ];
+							ctx.lineTo( ...radialXY( ...point, 1 ) );
+							points.push( point );
+						}
 					}
 					else {
 						if ( i == 0 ) {
@@ -1199,8 +1204,14 @@ export default class AudioMotionAnalyzer {
 
 			// Fill/stroke drawing path for mode 10 and radial
 			if ( mode == 10 ) {
-				if ( isRadial )
+				if ( isRadial ) {
+					if ( mirrorMode ) {
+						let p;
+						while ( p = points.pop() )
+							ctx.lineTo( ...radialXY( ...p, -1 ) );
+					}
 					ctx.closePath();
+				}
 				else
 					ctx.lineTo( canvas.width + this.lineWidth, analyzerBottom );
 
