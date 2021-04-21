@@ -915,16 +915,16 @@ export default class AudioMotionAnalyzer {
 			  isLumiBars     = this._isLumiBars,
 			  isRadial       = this._radial,
 			  isStereo       = this._stereo,
+			  lineWidth      = +this.lineWidth, // make sure the damn thing is a number!
 			  mirrorMode     = this._mirror,
 			  mode           = this._mode,
 			  channelHeight  = this._channelHeight,
 			  channelGap     = this._channelGap,
 			  analyzerHeight = this._analyzerHeight,
 			  analyzerWidth  = isRadial ? canvas.width : this._analyzerWidth,
-			  initialX       = this._initialX;
-
-		// radial related constants
-		const centerX        = canvas.width >> 1, // also for mirror effect
+			  initialX       = this._initialX,
+			  finalX         = initialX + analyzerWidth,
+			  centerX        = canvas.width >> 1,
 			  centerY        = canvas.height >> 1,
 			  radius         = this._radius;
 
@@ -1027,7 +1027,7 @@ export default class AudioMotionAnalyzer {
 
 					ctx.beginPath();
 					ctx.moveTo( initialX + scaleWidth * even * ( mirrorMode != -1 ), ~~posY + .5 ); // for sharp 1px line (https://stackoverflow.com/a/13879402/2370385)
-					ctx.lineTo( initialX + analyzerWidth - scaleWidth * even * ( mirrorMode != 1 ), ~~posY + .5 );
+					ctx.lineTo( finalX - scaleWidth * even * ( mirrorMode != 1 ), ~~posY + .5 );
 					ctx.stroke();
 				}
 				// restore line properties
@@ -1116,15 +1116,14 @@ export default class AudioMotionAnalyzer {
 						}
 					}
 					else {
-						if ( i == 0 ) {
-							// in linear mode, start the line off screen
-							ctx.moveTo( -this.lineWidth, analyzerBottom );
-							// use value of previous FFT bin
-							if ( bar.dataIdx )
-								ctx.lineTo( -this.lineWidth, analyzerBottom - fftData[ bar.dataIdx - 1 ] / 255 * analyzerHeight );
-						}
-						// draw line to current point
-						ctx.lineTo( bar.posX, analyzerBottom - barHeight );
+						// in linear mode, start the line off-screen (except when mirroring left), using the previous FFT bin value as the initial amplitude
+						if ( i == 0 )
+							ctx.moveTo( initialX - ( mirrorMode != -1 ? lineWidth : 0 ), analyzerBottom - ( bar.dataIdx ? fftData[ bar.dataIdx - 1 ] / 255 * analyzerHeight : 0 ) );
+
+						// draw line to the current point
+						// avoid X values lower than the origin when mirroring left, otherwise draw them for graph accuracy
+						if ( mirrorMode != -1 || posX > initialX )
+							ctx.lineTo( posX, analyzerBottom - barHeight );
 					}
 				}
 				else {
@@ -1174,7 +1173,7 @@ export default class AudioMotionAnalyzer {
 
 				// Draw peak
 				if ( bar.peak[ channel ] > 1 ) { // avoid half "negative" peaks on top channel (peak height is 2px)
-					if ( this.showPeaks && ! isLumiBars ) {
+					if ( this.showPeaks && ! isLumiBars && posX >= initialX && posX < finalX ) {
 						if ( isLedDisplay ) {
 							// convert the bar height to the position of the corresponding led element
 							const fullLeds = bar.peak[ channel ] / ( analyzerHeight + ledSpaceV ) * ledCount | 0,
@@ -1185,7 +1184,7 @@ export default class AudioMotionAnalyzer {
 						else if ( ! isRadial ) {
 							ctx.fillRect( posX, analyzerBottom - bar.peak[ channel ], adjWidth, 2 );
 						}
-						else if ( mode != 10 && bar.posX >= 0 ) { // radial - no peaks for mode 10 or wrap-around frequencies
+						else if ( mode != 10 ) { // radial - no peaks for mode 10
 							radialPoly( posX, bar.peak[ channel ] * ( channel == 1 ? -1 : 1 ), adjWidth, -2 );
 						}
 					}
@@ -1212,11 +1211,9 @@ export default class AudioMotionAnalyzer {
 					}
 					ctx.closePath();
 				}
-				else
-					ctx.lineTo( canvas.width + this.lineWidth, analyzerBottom );
 
-				if ( this.lineWidth > 0 ) {
-					ctx.lineWidth = this.lineWidth;
+				if ( lineWidth > 0 ) {
+					ctx.lineWidth = lineWidth;
 					ctx.stroke();
 				}
 
@@ -1226,6 +1223,11 @@ export default class AudioMotionAnalyzer {
 						ctx.moveTo( centerX + radius, centerY );
 						ctx.arc( centerX, centerY, radius, 0, TAU, true );
 					}
+					else { // close the fill area
+						ctx.lineTo( finalX, analyzerBottom );
+						ctx.lineTo( initialX, analyzerBottom );
+					}
+
 					ctx.globalAlpha = this.fillAlpha;
 					ctx.fill();
 					ctx.globalAlpha = 1;
