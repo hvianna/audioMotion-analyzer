@@ -284,7 +284,7 @@ export default class AudioMotionAnalyzer {
 		return this._mirror;
 	}
 	set mirror( value ) {
-		this._mirror = +value;
+		this._mirror = Math.sign( value ) | 0; // ensure only -1, 0 or 1
 		this._calcAux();
 		this._calcBars();
 		this._makeGrad();
