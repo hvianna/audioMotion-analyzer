@@ -20,6 +20,7 @@ export interface Options {
   maxFreq?: number;
   minDecibels?: number;
   minFreq?: number;
+  mirror?: number;
   mode?: number;
   onCanvasDraw?: OnCanvasDrawFunction;
   onCanvasResize?: OnCanvasResizeFunction;
@@ -128,6 +129,9 @@ declare class AudioMotionAnalyzer {
 
   get minFreq(): number;
   set minFreq(value: number);
+
+  get mirror(): number;
+  set mirror(value: number);
 
   get mode(): number;
   set mode(value: number);
