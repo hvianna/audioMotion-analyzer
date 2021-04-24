@@ -1057,22 +1057,19 @@ export default class AudioMotionAnalyzer {
 
 			for ( let i = 0; i < nBars; i++ ) {
 
-				let bar       = this._bars[ i ],
-					barHeight = 0;
+				const bar = this._bars[ i ],
+					  idx = bar.dataIdx;
 
-				if ( bar.endIdx == 0 ) { // single FFT bin
-					barHeight = fftData[ bar.dataIdx ];
-					// perform value interpolation when several bars share the same bin, to generate a smooth curve
-					if ( bar.factor ) {
-						const prevBar = bar.dataIdx ? fftData[ bar.dataIdx - 1 ] : barHeight;
-						barHeight = prevBar + ( barHeight - prevBar ) * bar.factor;
-					}
-				}
-				else { 					// range of bins
-					// use the highest value in the range
-					for ( let j = bar.dataIdx; j <= bar.endIdx; j++ )
+				let barHeight = fftData[ idx ];
+
+				const prevBar = idx ? fftData[ idx - 1 ] : barHeight; // get previous FFT bin value, when available
+
+				if ( bar.endIdx ) {    // range of bins - use the highest value for the current bar
+					for ( let j = idx + 1; j <= bar.endIdx; j++ )
 						barHeight = Math.max( barHeight, fftData[ j ] );
 				}
+				else if ( bar.factor ) // single bin shared by several bars - perform interpolation to generate a smooth curve
+					barHeight = prevBar + ( barHeight - prevBar ) * bar.factor;
 
 				barHeight /= 255;
 				currentEnergy += barHeight;
@@ -1104,25 +1101,28 @@ export default class AudioMotionAnalyzer {
 				// Draw current bar or line segment
 
 				if ( mode == 10 ) {
+					const nextBar = i ? 0 : fftData[ this._bars[1].dataIdx ] / 255; // used only for initial point (i == 0)
 					if ( isRadial ) {
-						// in radial graph mode, use value of previous FFT bin (if available) as the initial amplitude
-						if ( i == 0 && bar.dataIdx && bar.posX )
-							ctx.lineTo( ...radialXY( 0, fftData[ bar.dataIdx - 1 ] / 255 * ( centerY - radius ) * ( channel == 1 ? -1 : 1 ), 1 ) );
-						// draw line to current point, avoiding overlapping wrap-around frequencies
-						if ( bar.posX >= 0 ) {
-							const point = [ bar.posX, barHeight ];
+						if ( i == 0 )
+							ctx.lineTo( ...radialXY( 0, posX >= 0 ? barHeight : nextBar * ( centerY - radius ) * ( channel == 1 ? -1 : 1 ), 1 ) );
+						// draw line to the current point, avoiding overlapping wrap-around frequencies
+						if ( posX >= 0 ) {
+							const point = [ posX, barHeight ];
 							ctx.lineTo( ...radialXY( ...point, 1 ) );
 							points.push( point );
 						}
 					}
-					else {
-						// in linear mode, start the line off-screen (except when mirroring left), using the previous FFT bin value as the initial amplitude
-						if ( i == 0 )
-							ctx.moveTo( initialX - ( mirrorMode != -1 ? lineWidth : 0 ), analyzerBottom - ( bar.dataIdx ? fftData[ bar.dataIdx - 1 ] / 255 * analyzerHeight : 0 ) );
-
+					else { // Linear
+						if ( i == 0 ) {
+							// start the line off-screen using the previous FFT bin value as the initial amplitude
+							if ( mirrorMode != -1 )
+								ctx.moveTo( initialX - lineWidth, analyzerBottom - prevBar / 255 * analyzerHeight );
+							else // when mirroring left, if initial posX is off-screen start the line with the next bar amplitude
+								ctx.moveTo( initialX, analyzerBottom - ( posX >= initialX ? barHeight : nextBar * analyzerHeight ) );
+						}
 						// draw line to the current point
-						// avoid X values lower than the origin when mirroring left, otherwise draw them for graph accuracy
-						if ( mirrorMode != -1 || posX > initialX )
+						// avoid X values lower than the origin when mirroring left, otherwise draw them for best graph accuracy
+						if ( mirrorMode != -1 || posX >= initialX )
 							ctx.lineTo( posX, analyzerBottom - barHeight );
 					}
 				}
@@ -1166,7 +1166,7 @@ export default class AudioMotionAnalyzer {
 					else if ( ! isRadial ) {
 						ctx.fillRect( posX, isLumiBars ? channelTop : analyzerBottom, adjWidth, isLumiBars ? channelBottom : -barHeight );
 					}
-					else if ( bar.posX >= 0 ) {
+					else if ( posX >= 0 ) {
 						radialPoly( posX, 0, adjWidth, barHeight );
 					}
 				}
