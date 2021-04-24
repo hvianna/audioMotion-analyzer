@@ -1,6 +1,13 @@
 Changelog
 =========
 
+## version 3.3.0-beta.0 (2021-04-24)
+
+### Added: {docsify-ignore}
+
++ New horizontal mirroring effect; see [`mirror`](README.md#mirror-number) property - thanks [@lexterror](https://github.com/lexterror) for suggesting this feature.
+
+
 ## version 3.2.1 (2021-04-03)
 
 + Fixes an undefined property error.
