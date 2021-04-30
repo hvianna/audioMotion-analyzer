@@ -55,10 +55,15 @@ type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "treble";
 
 type GradientColorStop = string | { pos: number; color: string };
 
+type ArrayTwoOrMore<T> = {
+  0: T
+  1: T
+} & Array<T>;
+
 export interface GradientOptions {
   bgColor: string;
   dir?: "h";
-  colorStops: GradientColorStop[];
+  colorStops: ArrayTwoOrMore<GradientColorStop>
 }
 
 export interface LedParameters {
