@@ -58,7 +58,7 @@ type GradientColorStop = string | { pos: number; color: string };
 export interface GradientOptions {
   bgColor: string;
   dir?: "h";
-  colorStops: [GradientColorStop, GradientColorStop, ...GradientColorStop[]];
+  colorStops: GradientColorStop[];
 }
 
 export interface LedParameters {
