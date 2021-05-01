@@ -926,7 +926,8 @@ export default class AudioMotionAnalyzer {
 			  finalX         = initialX + analyzerWidth,
 			  centerX        = canvas.width >> 1,
 			  centerY        = canvas.height >> 1,
-			  radius         = this._radius;
+			  radius         = this._radius,
+			  maxBarHeight   = isRadial ? centerY - radius : analyzerHeight;
 
 		if ( energy.val > 0 )
 			this._spinAngle += this._spinSpeed * RPM;
@@ -1084,7 +1085,7 @@ export default class AudioMotionAnalyzer {
 						barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
 				}
 				else
-					barHeight = barHeight * ( isRadial ? centerY - radius : analyzerHeight ) | 0;
+					barHeight = barHeight * maxBarHeight | 0;
 
 				if ( barHeight >= bar.peak[ channel ] ) {
 					bar.peak[ channel ] = barHeight;
@@ -1101,10 +1102,13 @@ export default class AudioMotionAnalyzer {
 				// Draw current bar or line segment
 
 				if ( mode == 10 ) {
-					const nextBar = i ? 0 : fftData[ this._bars[1].dataIdx ] / 255; // used only for initial point (i == 0)
+					// compute the average between the initial bar (i==0) and the next one
+					// used to smooth the curve when the initial posX is off the screen, in mirror and radial modes
+					const nextBarAvg = i ? 0 : ( fftData[ this._bars[1].dataIdx ] / 255 * maxBarHeight * ( ! isRadial || ! channel || - 1 ) + barHeight ) / 2;
+
 					if ( isRadial ) {
 						if ( i == 0 )
-							ctx.lineTo( ...radialXY( 0, posX >= 0 ? barHeight : nextBar * ( centerY - radius ) * ( channel == 1 ? -1 : 1 ), 1 ) );
+							ctx.lineTo( ...radialXY( 0, ( posX < 0 ? nextBarAvg : barHeight ), 1 ) );
 						// draw line to the current point, avoiding overlapping wrap-around frequencies
 						if ( posX >= 0 ) {
 							const point = [ posX, barHeight ];
@@ -1117,8 +1121,8 @@ export default class AudioMotionAnalyzer {
 							// start the line off-screen using the previous FFT bin value as the initial amplitude
 							if ( mirrorMode != -1 )
 								ctx.moveTo( initialX - lineWidth, analyzerBottom - prevBar / 255 * analyzerHeight );
-							else // when mirroring left, if initial posX is off-screen start the line with the next bar amplitude
-								ctx.moveTo( initialX, analyzerBottom - ( posX >= initialX ? barHeight : nextBar * analyzerHeight ) );
+							else
+								ctx.moveTo( initialX, analyzerBottom - ( posX < initialX ? nextBarAvg : barHeight ) );
 						}
 						// draw line to the current point
 						// avoid X values lower than the origin when mirroring left, otherwise draw them for best graph accuracy
@@ -1185,7 +1189,7 @@ export default class AudioMotionAnalyzer {
 							ctx.fillRect( posX, analyzerBottom - bar.peak[ channel ], adjWidth, 2 );
 						}
 						else if ( mode != 10 ) { // radial - no peaks for mode 10
-							radialPoly( posX, bar.peak[ channel ] * ( channel == 1 ? -1 : 1 ), adjWidth, -2 );
+							radialPoly( posX, bar.peak[ channel ] * ( ! channel || -1 ), adjWidth, -2 );
 						}
 					}
 
