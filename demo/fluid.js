@@ -36,6 +36,7 @@ const presets = [
 			fillAlpha: .6,
 			gradient: 'rainbow',
 			lineWidth: 2,
+			mirror: -1,
 			radial: false,
 			reflexAlpha: 1,
 			reflexBright: 1,
@@ -73,6 +74,22 @@ const presets = [
 			showLeds: false,
 			showPeaks: true,
 			overlay: false
+		}
+	},
+	{
+		name: 'Testing config 1',
+		options: {
+			mode: 10,
+			gradient: 'rainbow',
+			reflexRatio: .4,
+			showBgColor: true,
+			showPeaks: true,
+			showScaleX: false,
+			mirror: -1,
+			maxFreq: 8000,
+			overlay: true,
+			lineWidth: 2,
+			fillAlpha: .2
 		}
 	}
 ];

@@ -8,7 +8,7 @@
 	<link href="styles.css" rel="stylesheet">
 </head>
 
-<body>
+<body class="wide">
 	<header>
 		<h1><a href="https://audiomotion.dev" class="logo">audioMotion-analyzer</a> | fluid layout demo</h1>
 		<ul class="header-nav">
@@ -80,6 +80,8 @@
 					<option value="40">40</option>
 					<option value="60">60</option>
 					<option value="100">100</option>
+					<option value="500">500</option>
+					<option value="1000">1000</option>
 				</select>
 			</label>
 
@@ -137,7 +139,7 @@
 			<fieldset>
 				<legend>mode 10 only</legend>
 				<label class="label">lineWidth
-					<input type="range" min="0" max="9" step="1" data-setting="lineWidth">
+					<input type="range" min="0" max="5" step="1" data-setting="lineWidth">
 					<div class="value"></div>
 				</label>
 
@@ -158,7 +160,7 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>Reflex effect</legend>
+				<legend>Reflex & Mirror</legend>
 				<label class="label">reflexRatio
 					<input type="range" min="0" max=".9" step=".1" data-setting="reflexRatio">
 					<div class="value"></div>
@@ -175,6 +177,11 @@
 				</label>
 
 				<button data-prop="reflexFit">reflexFit</button>
+
+				<label class="label">mirror
+					<input type="range" min="-1" max="1" step="1" data-setting="mirror">
+					<div class="value"></div>
+				</label>
 			</fieldset>
 
 			<fieldset>

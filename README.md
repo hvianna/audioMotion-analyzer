@@ -12,8 +12,8 @@ I originally wrote it as part of my [**audioMotion**](https://audiomotion.me) mu
 + High-resolution real-time dual channel audio spectrum analyzer
 + Logarithmic frequency scale with customizable range
 + Visualize discrete frequencies or octave bands based on the equal tempered scale
-+ Optional effects: vintage LEDs, luminance bars, customizable reflection, radial visualization
-+ Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing constant
++ Optional effects: vintage LEDs, luminance bars, mirroring and reflection, radial visualization
++ Customizable sensitivity, FFT size and time-smoothing constant
 + Comes with 3 predefined color gradients - easily add your own!
 + Fullscreen support, ready for retina / HiDPI displays
 + Zero-dependency native ES6+ module (ESM), less than 20kB minified
@@ -105,6 +105,7 @@ options = {<br>
 &emsp;&emsp;[maxFreq](#maxfreq-number): **22000**,<br>
 &emsp;&emsp;[minDecibels](#mindecibels-number): **-85**,<br>
 &emsp;&emsp;[minFreq](#minfreq-number): **20**,<br>
+&emsp;&emsp;[mirror](#mirror-number): **0**,<br>
 &emsp;&emsp;[mode](#mode-number): **0**,<br>
 &emsp;&emsp;[onCanvasDraw](#oncanvasdraw-function): *undefined*,<br>
 &emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *undefined*,<br>
@@ -387,6 +388,22 @@ The minimum allowed value is **1**. Trying to set a lower value will throw an `E
 The maximum practical value is half the sampling rate ([`audioCtx.sampleRate`](#audioctx-audiocontext-object-read-only)), although this is not enforced by **audioMotion-analyzer**.
 
 It is preferable to use the [`setFreqRange()`](#setfreqrange-minfreq-maxfreq-) method and set both values at once, to prevent `minFreq` being higher than the current `maxFreq` or vice-versa at a given moment.
+
+### `mirror` *number*
+
+*Available since v3.3.0*
+
+Horizontal mirroring effect. Valid values are:
+
+mirror | Effect
+:-----:|--------
+-1     | Mirrors the analyzer to the left (low frequencies at the center of screen)
+0      | Disables mirror effect (default)
+1      | Mirrors the analyzer to the right (high frequencies at the center of screen)
+
+**Note:** when [`radial`](#radial-boolean) is **_true_**, both `1` and `-1` will produce the same effect.
+
+Defaults to **0**.
 
 ### `mode` *number*
 

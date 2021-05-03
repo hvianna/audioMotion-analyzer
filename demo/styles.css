@@ -7,6 +7,9 @@ body {
 	max-width: 100%;
 	width: 1000px;
 }
+body.wide {
+	width: 1200px;
+}
 
 a {
 	color: #b5c6d0;
@@ -235,7 +238,7 @@ ul {
 
 /* overlay */
 #container.overlay {
-	height: 563px;
+	height: 675px;
 	margin: 0 auto;
 	position: relative;
 	width: 100%;

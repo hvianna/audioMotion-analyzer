@@ -20,6 +20,7 @@ export interface Options {
   maxFreq?: number;
   minDecibels?: number;
   minFreq?: number;
+  mirror?: number;
   mode?: number;
   onCanvasDraw?: OnCanvasDrawFunction;
   onCanvasResize?: OnCanvasResizeFunction;
@@ -54,10 +55,15 @@ type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "treble";
 
 type GradientColorStop = string | { pos: number; color: string };
 
+type ArrayTwoOrMore<T> = {
+  0: T
+  1: T
+} & Array<T>;
+
 export interface GradientOptions {
   bgColor: string;
   dir?: "h";
-  colorStops: [GradientColorStop, GradientColorStop, ...GradientColorStop[]];
+  colorStops: ArrayTwoOrMore<GradientColorStop>
 }
 
 export interface LedParameters {
@@ -128,6 +134,9 @@ declare class AudioMotionAnalyzer {
 
   get minFreq(): number;
   set minFreq(value: number);
+
+  get mirror(): number;
+  set mirror(value: number);
 
   get mode(): number;
   set mode(value: number);
