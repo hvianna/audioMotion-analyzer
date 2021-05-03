@@ -12,8 +12,8 @@ I originally wrote it as part of my [**audioMotion**](https://audiomotion.me) mu
 + High-resolution real-time dual channel audio spectrum analyzer
 + Logarithmic frequency scale with customizable range
 + Visualize discrete frequencies or octave bands based on the equal tempered scale
-+ Optional effects: vintage LEDs, luminance bars, customizable reflection, radial visualization
-+ Customizable Web Audio API parameters: FFT size, sensitivity and time-smoothing constant
++ Optional effects: vintage LEDs, luminance bars, mirroring and reflection, radial visualization
++ Customizable sensitivity, FFT size and time-smoothing constant
 + Comes with 3 predefined color gradients - easily add your own!
 + Fullscreen support, ready for retina / HiDPI displays
 + Zero-dependency native ES6+ module (ESM), less than 20kB minified
@@ -397,9 +397,11 @@ Horizontal mirroring effect. Valid values are:
 
 mirror | Effect
 :-----:|--------
--1     | Mirrors analyzer to the left (low frequencies at the center of screen)
+-1     | Mirrors the analyzer to the left (low frequencies at the center of screen)
 0      | Disables mirror effect (default)
-1      | Mirrors analyzer to the right (high frequencies at the center of screen)
+1      | Mirrors the analyzer to the right (high frequencies at the center of screen)
+
+**Note:** when [`radial`](#radial-boolean) is **_true_**, both `1` and `-1` will produce the same effect.
 
 Defaults to **0**.
 
