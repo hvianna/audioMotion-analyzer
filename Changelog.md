@@ -1,11 +1,15 @@
 Changelog
 =========
 
-## version 3.3.0-beta.0 (2021-04-24)
+## version 3.3.0 (2021-05-03)
 
 ### Added: {docsify-ignore}
 
 + New horizontal mirroring effect; see [`mirror`](README.md#mirror-number) property - thanks [@lexterror](https://github.com/lexterror) for suggesting this feature.
+
+### Improvements: {docsify-ignore}
+
++ `colorStops` type definition updated for improved compatibility ([see #17](https://github.com/hvianna/audioMotion-analyzer/pull/17)) - props to [@Staijn1](https://github.com/Staijn1).
 
 
 ## version 3.2.1 (2021-04-03)
