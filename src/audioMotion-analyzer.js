@@ -180,7 +180,7 @@ export default class AudioMotionAnalyzer {
 		window.addEventListener( 'resize', onResize );
 
 		// listen for fullscreenchange events on the canvas - not available on Safari
-		canvas.addEventListener( 'fullscreenchange', () => {
+		( this._fsEl = options.fsElement || canvas ).addEventListener( 'fullscreenchange', () => {
 			// set flag to indicate a fullscreen change in progress
 			this._fsChanging = true;
 
@@ -504,7 +504,7 @@ export default class AudioMotionAnalyzer {
 		return this._fps;
 	}
 	get isFullscreen() {
-		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this.canvas;
+		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._fsEl;
 	}
 	get isOctaveBands() {
 		return this._isOctaveBands;
@@ -797,11 +797,11 @@ export default class AudioMotionAnalyzer {
 				document.webkitExitFullscreen();
 		}
 		else {
-			const canvas = this.canvas;
-			if ( canvas.requestFullscreen )
-				canvas.requestFullscreen();
-			else if ( canvas.webkitRequestFullscreen )
-				canvas.webkitRequestFullscreen();
+			const fsEl = this._fsEl;
+			if ( fsEl.requestFullscreen )
+				fsEl.requestFullscreen();
+			else if ( fsEl.webkitRequestFullscreen )
+				fsEl.webkitRequestFullscreen();
 		}
 	}
 
@@ -1660,20 +1660,27 @@ export default class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const ctx    = this._canvasCtx,
-			  canvas = ctx.canvas;
+		const ctx        = this._canvasCtx,
+			  canvas     = ctx.canvas,
+			  canvasX    = this._scaleX.canvas,
+			  pixelRatio = window.devicePixelRatio / ( this._loRes + 1 );
 
-		this._pixelRatio = window.devicePixelRatio; // for Retina / HiDPI devices
+		let screenWidth  = window.screen.width  * pixelRatio,
+			screenHeight = window.screen.height * pixelRatio;
 
-		if ( this._loRes )
-			this._pixelRatio /= 2;
-
-		this._fsWidth = Math.max( window.screen.width, window.screen.height ) * this._pixelRatio;
-		this._fsHeight = Math.min( window.screen.height, window.screen.width ) * this._pixelRatio;
+		// Fix for iOS Safari - swap width and height when in landscape
+		if ( Math.abs( window.orientation ) == 90 && screenWidth < screenHeight )
+			[ screenWidth, screenHeight ] = [ screenHeight, screenWidth ];
 
 		const isFullscreen = this.isFullscreen,
-			  newWidth  = isFullscreen ? this._fsWidth  : ( this._width  || this._container.clientWidth  || this._defaultWidth )  * this._pixelRatio | 0,
-			  newHeight = isFullscreen ? this._fsHeight : ( this._height || this._container.clientHeight || this._defaultHeight ) * this._pixelRatio | 0;
+			  isCanvasFs   = isFullscreen && this._fsEl == canvas,
+			  newWidth     = isCanvasFs ? screenWidth  : ( this._width  || this._container.clientWidth  || this._defaultWidth  ) * pixelRatio | 0,
+			  newHeight    = isCanvasFs ? screenHeight : ( this._height || this._container.clientHeight || this._defaultHeight ) * pixelRatio | 0;
+
+		// set/update object properties
+		this._pixelRatio = pixelRatio;
+		this._fsWidth    = screenWidth;
+		this._fsHeight   = screenHeight;
 
 		// if canvas dimensions haven't changed, quit
 		if ( canvas.width == newWidth && canvas.height == newHeight )
@@ -1689,16 +1696,15 @@ export default class AudioMotionAnalyzer {
 		// if not in overlay mode, paint the canvas black
 		if ( ! this.overlay ) {
 			ctx.fillStyle = '#000';
-			ctx.fillRect( 0, 0, canvas.width, canvas.height );
+			ctx.fillRect( 0, 0, newWidth, newHeight );
 		}
 
 		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
 		ctx.lineJoin = 'bevel';
 
 		// update dimensions of the scale canvas
-		const canvasX = this._scaleX.canvas;
-		canvasX.width = canvas.width;
-		canvasX.height = Math.max( 20 * this._pixelRatio, canvas.height / 27 | 0 );
+		canvasX.width = newWidth;
+		canvasX.height = Math.max( 20 * pixelRatio, newHeight / 27 | 0 );
 
 		// (re)generate gradient
 		this._makeGrad();
