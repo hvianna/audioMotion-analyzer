@@ -822,7 +822,7 @@ export default class AudioMotionAnalyzer {
 			  isDual   = this._stereo && ! isRadial,
 			  centerX  = canvas.width >> 1;
 
-		this._radius         = canvas.height * ( this._stereo ? .375 : .125 ) | 0;
+		this._radius         = Math.min( canvas.width, canvas.height ) * ( this._stereo ? .375 : .125 ) | 0;
 		this._barSpacePx     = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
 		this._isOctaveBands  = ( this._mode % 10 != 0 );
 		this._isLedDisplay   = ( this._showLeds && this._isOctaveBands && ! isRadial );
@@ -927,7 +927,7 @@ export default class AudioMotionAnalyzer {
 			  centerX        = canvas.width >> 1,
 			  centerY        = canvas.height >> 1,
 			  radius         = this._radius,
-			  maxBarHeight   = isRadial ? centerY - radius : analyzerHeight;
+			  maxBarHeight   = isRadial ? Math.min( centerX, centerY ) - radius : analyzerHeight;
 
 		if ( energy.val > 0 )
 			this._spinAngle += this._spinSpeed * RPM;
@@ -1434,7 +1434,7 @@ export default class AudioMotionAnalyzer {
 			  scaleR      = this._scaleR,
 			  canvasX     = scaleX.canvas,
 			  canvasR     = scaleR.canvas,
-			  scaleHeight = canvas.height * .03 | 0; // circular scale height (radial mode)
+			  scaleHeight = Math.min( canvas.width, canvas.height ) * .03 | 0; // circular scale height (radial mode)
 
 		// in radial stereo mode, the scale is positioned exactly between both channels, by making the canvas a bit larger than the central diameter
 		canvasR.width = canvasR.height = ( this._radius << 1 ) + ( this._stereo * scaleHeight );
@@ -1704,7 +1704,7 @@ export default class AudioMotionAnalyzer {
 
 		// update dimensions of the scale canvas
 		canvasX.width = newWidth;
-		canvasX.height = Math.max( 20 * pixelRatio, newHeight / 27 | 0 );
+		canvasX.height = Math.max( 20 * pixelRatio, Math.min( newWidth, newHeight ) / 27 | 0 );
 
 		// (re)generate gradient
 		this._makeGrad();
