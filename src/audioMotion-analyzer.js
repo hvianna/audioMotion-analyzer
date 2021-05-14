@@ -1354,9 +1354,10 @@ export default class AudioMotionAnalyzer {
 			  initialX       = this._initialX;
 
 		// for radial mode
-		const centerX = canvas.width >> 1,
-			  centerY = canvas.height >> 1,
-			  radius  = this._radius;
+		const centerX   = canvas.width >> 1,
+			  centerY   = canvas.height >> 1,
+			  maxRadius = Math.min( centerX, centerY ),
+			  radius    = this._radius;
 
 		const currGradient = this._gradients[ this._gradient ],
 			  colorStops   = currGradient.colorStops,
@@ -1365,7 +1366,7 @@ export default class AudioMotionAnalyzer {
 		let grad;
 
 		if ( this._radial )
-			grad = ctx.createRadialGradient( centerX, centerY, centerY, centerX, centerY, radius - ( centerY - radius ) * this._stereo );
+			grad = ctx.createRadialGradient( centerX, centerY, maxRadius, centerX, centerY, radius - ( maxRadius - radius ) * this._stereo );
 		else
 			grad = ctx.createLinearGradient( ...( isHorizontal ? [ initialX, 0, initialX + this._analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
 
