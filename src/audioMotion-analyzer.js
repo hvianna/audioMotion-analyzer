@@ -148,6 +148,9 @@ export default class AudioMotionAnalyzer {
 		for ( const ctx of [ '_scaleX', '_scaleR' ] )
 			this[ ctx ] = document.createElement('canvas').getContext('2d');
 
+		// set fullscreen element (defaults to canvas)
+		this._fsEl = options.fsElement || canvas;
+
 		// Update canvas size on container / window resize and fullscreen events
 
 		// Fullscreen changes are handled quite differently across browsers:
@@ -180,7 +183,7 @@ export default class AudioMotionAnalyzer {
 		window.addEventListener( 'resize', onResize );
 
 		// listen for fullscreenchange events on the canvas - not available on Safari
-		( this._fsEl = options.fsElement || canvas ).addEventListener( 'fullscreenchange', () => {
+		canvas.addEventListener( 'fullscreenchange', () => {
 			// set flag to indicate a fullscreen change in progress
 			this._fsChanging = true;
 
