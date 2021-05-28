@@ -1170,11 +1170,11 @@ export default class AudioMotionAnalyzer {
 						ctx.lineTo( x, isLumiBars ? channelBottom : analyzerBottom - barHeight );
 						ctx.stroke();
 					}
-					else if ( ! isRadial ) {
-						ctx.fillRect( posX, isLumiBars ? channelTop : analyzerBottom, adjWidth, isLumiBars ? channelBottom : -barHeight );
-					}
-					else if ( posX >= 0 ) {
-						radialPoly( posX, 0, adjWidth, barHeight );
+					else if ( posX >= initialX ) {
+						if ( isRadial )
+							radialPoly( posX, 0, adjWidth, barHeight );
+						else
+							ctx.fillRect( posX, isLumiBars ? channelTop : analyzerBottom, adjWidth, isLumiBars ? channelBottom : -barHeight );
 					}
 				}
 
