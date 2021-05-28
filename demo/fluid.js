@@ -128,14 +128,18 @@ document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 const audioCtx   = audioMotion.audioCtx,
 	  oscillator = audioCtx.createOscillator(),
 	  gainNode   = audioCtx.createGain(),
-	  panNode    = audioCtx.createStereoPanner();
+	  panNode    = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : false; // Safari >= 14.1; iOS Safari >= 14.5
 
 oscillator.frequency.setValueAtTime( 0, audioCtx.currentTime );
 oscillator.start();
 
 // Connect audio nodes: oscillator -> panNode -> gainNode
-oscillator.connect( panNode );
-panNode.connect( gainNode );
+if ( panNode ) {
+	oscillator.connect( panNode );
+	panNode.connect( gainNode );
+}
+else
+	oscillator.connect( gainNode );
 
 // Connect gainNode to audioMotion's input
 audioMotion.connectInput( gainNode );
@@ -207,7 +211,10 @@ document.getElementById('btn_play').addEventListener( 'click', () => {
 document.getElementById('btn_soundoff').addEventListener( 'click', () => gainNode.gain.setValueAtTime( 0, audioCtx.currentTime ) );
 
 // Stereo pan for test tones
-document.getElementById('pan').addEventListener( 'change', e => panNode.pan.setValueAtTime( e.target.value, audioCtx.currentTime ) );
+document.getElementById('pan').addEventListener( 'change', e => {
+	if ( panNode )
+		panNode.pan.setValueAtTime( e.target.value, audioCtx.currentTime );
+});
 
 // File upload
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );

@@ -88,7 +88,10 @@ const presets = [
 // Create audioMotion-analyzer object
 
 try {
-	var audioMotion = new AudioMotionAnalyzer( container, {	source: videoEl	} );
+	var audioMotion = new AudioMotionAnalyzer( container, {
+		source: videoEl,
+		fsElement: container
+	});
 }
 catch( err ) {
 	container.innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
@@ -120,22 +123,6 @@ presetSelection.addEventListener( 'change', () => {
 
 // Display value of ranged input elements
 document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
-
-// Handle fullscreen mode for container element
-document.getElementById('btn_fullscr').addEventListener( 'click', () => {
-	if ( document.fullscreenElement ) {
-		if ( document.exitFullscreen )
-			document.exitFullscreen();
-		else if ( document.webkitExitFullscreen )
-			document.webkitExitFullscreen();
-	}
-	else {
-		if ( container.requestFullscreen )
-			container.requestFullscreen();
-		else if ( container.webkitRequestFullscreen )
-			container.webkitRequestFullscreen();
-	}
-});
 
 // Populate the UI presets select element
 presets.forEach( ( preset, index ) => {
