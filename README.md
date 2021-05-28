@@ -1,11 +1,13 @@
 
 ## About
 
-**audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer module built upon Web Audio and Canvas JavaScript APIs.
+**audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer module built upon **Web Audio** and **Canvas** JavaScript APIs.
 
-It's highly customizable, and optimized for high performance and a small file size.
+It was originally conceived as part of a larger project: a full-featured music player called [**audioMotion**](https://audiomotion.me).
+As it started getting some attention, I realized other developers might be interested in using the spectrum analyzer in their own projects,
+so I decided to make it available as a self-contained module.
 
-I originally wrote it as part of my [**audioMotion**](https://audiomotion.me) music player. Check it out too!
+> **audioMotion-analyzer** is aimed to be the best looking, most customizable spectrum analyzer around, with high accuracy and performance, in a small footprint package!
 
 ## Features
 
@@ -46,7 +48,7 @@ Load from Skypack CDN:
 </script>
 ```
 
-Or download the [latest version](https://github.com/hvianna/audioMotion-analyzer/releases) and copy the `audioMotion-analyzer.js` file from the `src/` folder to your project folder.
+Or download the [latest version](https://github.com/hvianna/audioMotion-analyzer/releases) and copy the `audioMotion-analyzer.js` file from the `src/` folder into your project folder.
 
 ### npm project
 
@@ -85,17 +87,20 @@ const audioMotion = new AudioMotionAnalyzer(
 
 This will insert the analyzer canvas inside the *#container* element and start the visualization of audio coming from the *#audio* element.
 
-### Options
+### Options object
 
-Available options and default values:
+Valid properties and default values are shown below.
+
+Properties marked as *constructor only* can only be set by the constructor call, the others can also be set anytime via [`setOptions()`](#setoptions-options-) method.
 
 options = {<br>
-&emsp;&emsp;[audioCtx](#audioctx-audiocontext-object-read-only): *undefined*, // constructor only<br>
+&emsp;&emsp;[audioCtx](#audioctx-audiocontext-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[barSpace](#barspace-number): **0.1**,<br>
 &emsp;&emsp;[bgAlpha](#bgalpha-number): **0.7**,<br>
 &emsp;&emsp;[connectSpeakers](#connectspeakers-boolean): **true**, // constructor only<br>
 &emsp;&emsp;[fftSize](#fftsize-number): **8192**,<br>
 &emsp;&emsp;[fillAlpha](#fillalpha-number): **1**,<br>
+&emsp;&emsp;[fsElement](#fselement-htmlelement-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[gradient](#gradient-string): **'classic'**,<br>
 &emsp;&emsp;[height](#height-number): *undefined*,<br>
 &emsp;&emsp;[lineWidth](#linewidth-number): **0**,<br>
@@ -131,7 +136,22 @@ options = {<br>
 &emsp;&emsp;[width](#width-number): *undefined*<br>
 }
 
-### `connectSpeakers` *boolean*
+### Constructor-specific options
+
+#### `audioCtx` *AudioContext object*
+
+*Available since v2.0.0*
+
+Allows you to provide an external [*AudioContext*](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext)
+for **audioMotion-analyzer**, for connection with other Web Audio nodes or sound-processing modules.
+
+Since version 3.2.0, `audioCtx` will be automatically inferred from the [`source`](#source-htmlmediaelement-or-audionode-object) property if that's an *AudioNode*.
+
+If none are defined, a new context will be created. After instantiation, [`audioCtx`](#audioctx-audiocontext-object-read-only) will be available as a read-only property.
+
+See [this live code](https://codesandbox.io/s/9y6qb) and the [multi-instance demo](/demo/multi.html) for more usage examples.
+
+#### `connectSpeakers` *boolean*
 
 *Available since v3.2.0*
 
@@ -150,14 +170,27 @@ Defaults to **true**.
 
 See also [`connectedTo`](#connectedto-array-read-only).
 
-### `source` *HTMLMediaElement or AudioNode object*
+#### `fsElement` *HTMLElement object*
+
+*Available since v3.4.0*
+
+HTML element affected by the [`toggleFullscreen()`](#togglefullscreen) method.
+
+If not defined, defaults to the [`canvas`](#canvas-htmlcanvaselement-object-read-only).
+**Set it to a container `<div>` to keep additional interface elements available in fullscreen mode.**
+
+See the [overlay demo](/demo/overlay.html) or [this pen](https://codepen.io/hvianna/pen/LYREBYQ) for usage examples.
+
+After instantiation, [`fsElement`](#fselement-htmlelement-object-read-only) is available as a read-only property.
+
+#### `source` *HTMLMediaElement or AudioNode object*
 
 If `source` is specified, connects an [*HTMLMediaElement*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) object (an `<audio>` or `<video>` HTML tag)
 or any instance of [*AudioNode*](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) to the analyzer.
 
 At least one audio source is required for the analyzer to work. You can also connect audio sources after instantiation, using the [`connectInput()`](#connectinput-source-) method.
 
-### `start` *boolean*
+#### `start` *boolean*
 
 If `start: false` is specified, the analyzer will be created stopped. You can then start it with the [`toggleAnalyzer()`](#toggleanalyzer-boolean-) method.
 
@@ -168,8 +201,6 @@ Defaults to **true**, so the analyzer will start running right after initializat
 ### `audioCtx` *AudioContext object* *(Read only)*
 
 [*AudioContext*](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) used by **audioMotion-analyzer**.
-It can be provided in the [constructor](#constructor) options, explicitly via the `audioCtx` property, or implicitly (since v3.2.0) when the [`source`](#source-htmlmediaelement-or-audionode-object) property is an AudioNode.
-Otherwise, a new context will be created upon instantiation.
 
 Use this object to create additional audio sources to be connected to the analyzer, like oscillator nodes, gain nodes and media streams.
 
@@ -189,6 +220,10 @@ audioMotion.connectInput( gainNode ); // connect gainNode -> audioMotion
 
 oscillator.start(); // play tone
 ```
+
+You can provide your own *AudioContext* via the [`audioCtx`](#audioctx-audiocontext-object) property in the [constructor](#constructor) options.
+
+See also the [fluid demo](/demo/fluid.html) and the [multi-instance demo](/demo/multi.html) for more usage examples.
 
 ### `barSpace` *number*
 
@@ -241,9 +276,9 @@ By default, **audioMotion-analyzer** is connected to the *AudioContext* `destina
 
 See also [`connectOutput()`](#connectoutput-node-).
 
-### `energy` *number* *(Read only)*
+### `energy` **(DEPRECATED)**
 
-**DEPRECATED - will be removed in version 4.0.0**
+**This property will be removed in version 4.0.0**
 
 Use [`getEnergy()`](#getenergy-preset-startfreq-endfreq-) instead.
 
@@ -273,6 +308,14 @@ Defaults to **1**.
 ### `fps` *number* *(Read only)*
 
 Current frame rate.
+
+### `fsElement` *HTMLElement object* *(Read only)*
+
+*Available since v3.4.0*
+
+HTML element affected by the [`toggleFullscreen()`](#togglefullscreen) method.
+
+See [`fsElement`](#fselement-htmlelement-object) in the constructor options context for more information.
 
 ### `fsHeight` *number* *(Read only)*
 ### `fsWidth` *number* *(Read only)*
@@ -439,9 +482,11 @@ When [`showBgColor`](#showbgcolor-boolean) is also *true*, [`bgAlpha`](#bgalpha-
 
 Defaults to **false**.
 
-### `peakEnergy` *number* *(Read only)*
+?> In order to keep elements other than the canvas visible in fullscreen, you'll need to set the [`fsElement`](#fselement-htmlelement-object) property in the [constructor](#constructor) options.
 
-**DEPRECATED - will be removed in version 4.0.0**
+### `peakEnergy` **(DEPRECATED)**
+
+**This property will be removed in version 4.0.0**
 
 Use [`getEnergy('peak')`](#getenergy-preset-startfreq-endfreq-) instead.
 
@@ -522,10 +567,10 @@ Opacity can be adjusted via [`bgAlpha`](#bgalpha-number) property, when [`overla
 If ***false***, the canvas background will be painted black when [`overlay`](#overlay-boolean) is ***false***,
 or transparent when [`overlay`](#overlay-boolean) is ***true***.
 
-?> Please note that when [`overlay`](#overlay-boolean) is ***false*** and [`showLeds`](#showleds-boolean) is ***true***, the background color will always be black
-and setting `showBgColor` to ***true*** will make the "unlit" LEDs visible instead.
-
 Defaults to **true**.
+
+?> Please note that when [`overlay`](#overlay-boolean) is ***false*** and [`showLeds`](#showleds-boolean) is ***true***, the background color will always be black,
+and setting `showBgColor` to ***true*** will make the "unlit" LEDs visible instead.
 
 ### `showFPS` *boolean*
 
@@ -681,7 +726,7 @@ Reason | Description
 `'user'` | canvas dimensions changed by user script, via [`height`](#height-number) and [`width`](#width-number) properties, [`setCanvasSize()`](#setcanvassize-width-height-) or [`setOptions()`](#setoptions-options-) methods
 
 ?> As of [version 2.5.0](https://github.com/hvianna/audioMotion-analyzer/releases/tag/2.5.0), the `'resize'` reason is no longer sent on fullscreen changes and
-a callback is triggered only when canvas dimensions *effectively* change from the previous state.
+the callback is triggered only when canvas dimensions *effectively* change from the previous state.
 
 Usage example:
 
@@ -717,11 +762,13 @@ See also [`disconnectInput()`](#disconnectinput-node-) and [`connectedSources`](
 
 This method allows connecting the analyzer **output** to other audio processing modules that use the Web Audio API.
 
-`node` must be an [*AudioNode*](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) instance; **if not specified, the analyzer output is connected to the speakers** (the *AudioContext* `destination` node).
+`node` must be an [*AudioNode*](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) instance.
 
 By default, the analyzer is connected to the speakers upon instantiation, unless you set [`connectSpeakers: false`](#connectspeakers-boolean) in the constructor options.
 
 See also [`disconnectOutput()`](#disconnectoutput-node-) and [`connectedTo`](#connectedto-array-read-only).
+
+?> If called with no argument, analyzer output is connected to the speakers (the *AudioContext* `destination` node).
 
 ### `disconnectInput( [node] )`
 
@@ -729,12 +776,14 @@ See also [`disconnectOutput()`](#disconnectoutput-node-) and [`connectedTo`](#co
 
 Disconnects audio source nodes previously connected to the analyzer.
 
-`node` may be an *AudioNode* instance or an **array** of such objects; **if not specified, all connected nodes are disconnected.**
+`node` may be an *AudioNode* instance or an **array** of such objects.
 
 Please note that if you have connected an `<audio>` or `<video>` element, you should disconnect the respective [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode)
 created for it.
 
 See also [`connectInput()`](#connectinput-source-).
+
+?> If called with no argument, all connected sources are disconnected.
 
 ### `disconnectOutput( [node] )`
 
@@ -742,9 +791,11 @@ See also [`connectInput()`](#connectinput-source-).
 
 Disconnects the analyzer output from previously connected audio nodes.
 
-`node` must be a connected *AudioNode*; **if not specified, the output is disconnected from all nodes, including the speakers!**
+`node` must be a connected *AudioNode*.
 
 See also [`connectOutput()`](#connectoutput-node-).
+
+?> If called with no argument, analyzer output is disconnected from all nodes, **including the speakers!**
 
 ### `getEnergy( [preset | startFreq], [endFreq] )`
 
@@ -832,11 +883,11 @@ You can try different values in the [fluid demo](https://audiomotion.dev/demo/fl
 
 ### `setOptions( [options] )`
 
-Shorthand method for setting several options at once.
+Shorthand method for setting several analyzer [properties](#properties) at once.
 
-[`options`](#options) should be an object as defined in the class constructor.
+See **[Options object](#options-object)** for object structure and default values.
 
-**If called with no argument (or `options` is *undefined*), resets all configuration options to their default values.**
+?> If called with no argument (or `options` is *undefined*), resets all configuration options to their default values.
 
 ### `setSensitivity( minDecibels, maxDecibels )`
 
@@ -854,12 +905,11 @@ The analyzer is started by default after initialization, unless you specify [`st
 
 Toggles fullscreen mode on / off.
 
-Please note that fullscreen requests must be triggered by user action, like a key press or mouse click,
-so you must call this method from within a user-generated event handler.
+By default, only the canvas is sent to fullscreen.
+You can set the [`fsElement`](#fselement-htmlelement-object) constructor option to a parent container, to keep desired interface elements visible during fullscreen.
 
-Also, if you're displaying the analyzer over other content in [overlay](#overlay-boolean) mode,
-you'll probably want to handle fullscreen on the container element instead, using your own code.
-See the [overlay demo](/demo/overlay.html) for an example.
+?> Fullscreen requests must be triggered by user action, like a key press or mouse click, so you must call this method from within a user-generated event handler.
+
 
 ## Custom Errors
 
