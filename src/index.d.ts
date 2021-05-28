@@ -48,6 +48,7 @@ export interface Options {
 interface ConstructorOptions extends Options {
   audioCtx?: AudioContext;
   connectSpeakers?: boolean;
+  fsElement?: HTMLElement;
   source?: HTMLMediaElement | AudioNode;
 }
 
