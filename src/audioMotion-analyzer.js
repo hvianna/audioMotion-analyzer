@@ -2,12 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 3.3.0
+ * @version 3.4.0
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const VERSION = '3.3.0';
+const VERSION = '3.4.0';
 
 // internal constants
 const TAU     = 2 * Math.PI,
@@ -147,6 +147,9 @@ export default class AudioMotionAnalyzer {
 		// create auxiliary canvases for the X-axis and radial scale labels
 		for ( const ctx of [ '_scaleX', '_scaleR' ] )
 			this[ ctx ] = document.createElement('canvas').getContext('2d');
+
+		// set fullscreen element (defaults to canvas)
+		this._fsEl = options.fsElement || canvas;
 
 		// Update canvas size on container / window resize and fullscreen events
 
@@ -504,7 +507,7 @@ export default class AudioMotionAnalyzer {
 		return this._fps;
 	}
 	get isFullscreen() {
-		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this.canvas;
+		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._fsEl;
 	}
 	get isOctaveBands() {
 		return this._isOctaveBands;
@@ -797,11 +800,11 @@ export default class AudioMotionAnalyzer {
 				document.webkitExitFullscreen();
 		}
 		else {
-			const canvas = this.canvas;
-			if ( canvas.requestFullscreen )
-				canvas.requestFullscreen();
-			else if ( canvas.webkitRequestFullscreen )
-				canvas.webkitRequestFullscreen();
+			const fsEl = this._fsEl;
+			if ( fsEl.requestFullscreen )
+				fsEl.requestFullscreen();
+			else if ( fsEl.webkitRequestFullscreen )
+				fsEl.webkitRequestFullscreen();
 		}
 	}
 
@@ -822,7 +825,7 @@ export default class AudioMotionAnalyzer {
 			  isDual   = this._stereo && ! isRadial,
 			  centerX  = canvas.width >> 1;
 
-		this._radius         = canvas.height * ( this._stereo ? .375 : .125 ) | 0;
+		this._radius         = Math.min( canvas.width, canvas.height ) * ( this._stereo ? .375 : .125 ) | 0;
 		this._barSpacePx     = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
 		this._isOctaveBands  = ( this._mode % 10 != 0 );
 		this._isLedDisplay   = ( this._showLeds && this._isOctaveBands && ! isRadial );
@@ -927,7 +930,7 @@ export default class AudioMotionAnalyzer {
 			  centerX        = canvas.width >> 1,
 			  centerY        = canvas.height >> 1,
 			  radius         = this._radius,
-			  maxBarHeight   = isRadial ? centerY - radius : analyzerHeight;
+			  maxBarHeight   = isRadial ? Math.min( centerX, centerY ) - radius : analyzerHeight;
 
 		if ( energy.val > 0 )
 			this._spinAngle += this._spinSpeed * RPM;
@@ -1167,11 +1170,11 @@ export default class AudioMotionAnalyzer {
 						ctx.lineTo( x, isLumiBars ? channelBottom : analyzerBottom - barHeight );
 						ctx.stroke();
 					}
-					else if ( ! isRadial ) {
-						ctx.fillRect( posX, isLumiBars ? channelTop : analyzerBottom, adjWidth, isLumiBars ? channelBottom : -barHeight );
-					}
-					else if ( posX >= 0 ) {
-						radialPoly( posX, 0, adjWidth, barHeight );
+					else if ( posX >= initialX ) {
+						if ( isRadial )
+							radialPoly( posX, 0, adjWidth, barHeight );
+						else
+							ctx.fillRect( posX, isLumiBars ? channelTop : analyzerBottom, adjWidth, isLumiBars ? channelBottom : -barHeight );
 					}
 				}
 
@@ -1354,9 +1357,10 @@ export default class AudioMotionAnalyzer {
 			  initialX       = this._initialX;
 
 		// for radial mode
-		const centerX = canvas.width >> 1,
-			  centerY = canvas.height >> 1,
-			  radius  = this._radius;
+		const centerX   = canvas.width >> 1,
+			  centerY   = canvas.height >> 1,
+			  maxRadius = Math.min( centerX, centerY ),
+			  radius    = this._radius;
 
 		const currGradient = this._gradients[ this._gradient ],
 			  colorStops   = currGradient.colorStops,
@@ -1365,7 +1369,7 @@ export default class AudioMotionAnalyzer {
 		let grad;
 
 		if ( this._radial )
-			grad = ctx.createRadialGradient( centerX, centerY, centerY, centerX, centerY, radius - ( centerY - radius ) * this._stereo );
+			grad = ctx.createRadialGradient( centerX, centerY, maxRadius, centerX, centerY, radius - ( maxRadius - radius ) * this._stereo );
 		else
 			grad = ctx.createLinearGradient( ...( isHorizontal ? [ initialX, 0, initialX + this._analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
 
@@ -1434,7 +1438,7 @@ export default class AudioMotionAnalyzer {
 			  scaleR      = this._scaleR,
 			  canvasX     = scaleX.canvas,
 			  canvasR     = scaleR.canvas,
-			  scaleHeight = canvas.height * .03 | 0; // circular scale height (radial mode)
+			  scaleHeight = Math.min( canvas.width, canvas.height ) * .03 | 0; // circular scale height (radial mode)
 
 		// in radial stereo mode, the scale is positioned exactly between both channels, by making the canvas a bit larger than the central diameter
 		canvasR.width = canvasR.height = ( this._radius << 1 ) + ( this._stereo * scaleHeight );
@@ -1660,20 +1664,27 @@ export default class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const ctx    = this._canvasCtx,
-			  canvas = ctx.canvas;
+		const ctx        = this._canvasCtx,
+			  canvas     = ctx.canvas,
+			  canvasX    = this._scaleX.canvas,
+			  pixelRatio = window.devicePixelRatio / ( this._loRes + 1 );
 
-		this._pixelRatio = window.devicePixelRatio; // for Retina / HiDPI devices
+		let screenWidth  = window.screen.width  * pixelRatio,
+			screenHeight = window.screen.height * pixelRatio;
 
-		if ( this._loRes )
-			this._pixelRatio /= 2;
-
-		this._fsWidth = Math.max( window.screen.width, window.screen.height ) * this._pixelRatio;
-		this._fsHeight = Math.min( window.screen.height, window.screen.width ) * this._pixelRatio;
+		// Fix for iOS Safari - swap width and height when in landscape
+		if ( Math.abs( window.orientation ) == 90 && screenWidth < screenHeight )
+			[ screenWidth, screenHeight ] = [ screenHeight, screenWidth ];
 
 		const isFullscreen = this.isFullscreen,
-			  newWidth  = isFullscreen ? this._fsWidth  : ( this._width  || this._container.clientWidth  || this._defaultWidth )  * this._pixelRatio | 0,
-			  newHeight = isFullscreen ? this._fsHeight : ( this._height || this._container.clientHeight || this._defaultHeight ) * this._pixelRatio | 0;
+			  isCanvasFs   = isFullscreen && this._fsEl == canvas,
+			  newWidth     = isCanvasFs ? screenWidth  : ( this._width  || this._container.clientWidth  || this._defaultWidth  ) * pixelRatio | 0,
+			  newHeight    = isCanvasFs ? screenHeight : ( this._height || this._container.clientHeight || this._defaultHeight ) * pixelRatio | 0;
+
+		// set/update object properties
+		this._pixelRatio = pixelRatio;
+		this._fsWidth    = screenWidth;
+		this._fsHeight   = screenHeight;
 
 		// if canvas dimensions haven't changed, quit
 		if ( canvas.width == newWidth && canvas.height == newHeight )
@@ -1689,16 +1700,15 @@ export default class AudioMotionAnalyzer {
 		// if not in overlay mode, paint the canvas black
 		if ( ! this.overlay ) {
 			ctx.fillStyle = '#000';
-			ctx.fillRect( 0, 0, canvas.width, canvas.height );
+			ctx.fillRect( 0, 0, newWidth, newHeight );
 		}
 
 		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
 		ctx.lineJoin = 'bevel';
 
 		// update dimensions of the scale canvas
-		const canvasX = this._scaleX.canvas;
-		canvasX.width = canvas.width;
-		canvasX.height = Math.max( 20 * this._pixelRatio, canvas.height / 27 | 0 );
+		canvasX.width = newWidth;
+		canvasX.height = Math.max( 20 * pixelRatio, Math.min( newWidth, newHeight ) / 27 | 0 );
 
 		// (re)generate gradient
 		this._makeGrad();

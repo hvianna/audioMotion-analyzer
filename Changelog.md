@@ -1,6 +1,20 @@
 Changelog
 =========
 
+## version 3.4.0 (2021-05-29)
+
+### Added: {docsify-ignore}
+
++ [`fsElement`](README.md#fselement-htmlelement-object) constructor option, for easily handling fullscreen on any element.
+
+### Fixed and improved: {docsify-ignore}
+
++ Fixed radial analyzer too wide in vertical containers;
++ Fixed out of bounds bar in mode 0 (discrete frequencies) with `mirror` set to -1;
++ Improved fullscreen rendering in portrait orientation displays;
++ Improved font size adjustment for scale labels and FPS display on vertical containers.
+
+
 ## version 3.3.0 (2021-05-03)
 
 ### Added: {docsify-ignore}
