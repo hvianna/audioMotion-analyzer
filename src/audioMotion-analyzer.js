@@ -953,8 +953,9 @@ export default class AudioMotionAnalyzer {
 			}
 		}
 
-		// LED attributes
+		// LED attributes and helper function for bar height calculation
 		const [ ledCount, ledSpaceH, ledSpaceV, ledHeight ] = this._leds || [];
+		const ledPosY = height => ( height * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV;
 
 		// select background color
 		const bgColor = ( ! this.showBgColor || isLedDisplay && ! this.overlay ) ? '#000' : this._gradients[ this._gradient ].bgColor;
@@ -1076,30 +1077,42 @@ export default class AudioMotionAnalyzer {
 					barHeight = prevBar + ( barHeight - prevBar ) * bar.factor;
 
 				barHeight /= 255;
+				bar.value[ channel ] = barHeight;
 				currentEnergy += barHeight;
+
+				// update bar peak
+				if ( bar.peak[ channel ] > 0 ) {
+					bar.hold[ channel ]--;
+					// if hold is negative, it becomes the "acceleration" for peak drop
+					if ( bar.hold[ channel ] < 0 )
+						bar.peak[ channel ] += bar.hold[ channel ] / maxBarHeight;
+				}
+
+				// check if it's a new peak for this bar
+				if ( barHeight >= bar.peak[ channel ] ) {
+					bar.peak[ channel ] = barHeight;
+					bar.hold[ channel ] = 30; // set peak hold time to 30 frames (0.5s)
+				}
 
 				// set opacity for lumi bars before barHeight value is normalized
 				if ( isLumiBars )
 					ctx.globalAlpha = barHeight;
 
-				if ( isLedDisplay ) { // normalize barHeight to match one of the "led" elements
-					barHeight = ( barHeight * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV;
+				// normalize barHeight
+				if ( isLedDisplay ) {
+					barHeight = ledPosY( barHeight );
 					if ( barHeight < 0 )
 						barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
 				}
 				else
 					barHeight = barHeight * maxBarHeight | 0;
 
-				if ( barHeight >= bar.peak[ channel ] ) {
-					bar.peak[ channel ] = barHeight;
-					bar.hold[ channel ] = 30; // set peak hold time to 30 frames (0.5s)
-					bar.accel[ channel ] = 0;
-				}
-
+				// invert bar for radial channel 1
 				if ( isRadial && channel == 1 )
 					barHeight *= -1;
 
-				let adjWidth = width,    // bar width may need small adjustments for some bars, when barSpace == 0
+				// bar width may need small adjustments for some bars, when barSpace == 0
+				let adjWidth = width,
 					posX     = bar.posX;
 
 				// Draw current bar or line segment
@@ -1179,30 +1192,15 @@ export default class AudioMotionAnalyzer {
 				}
 
 				// Draw peak
-				if ( bar.peak[ channel ] > 1 ) { // avoid half "negative" peaks on top channel (peak height is 2px)
-					if ( this.showPeaks && ! isLumiBars && posX >= initialX && posX < finalX ) {
-						if ( isLedDisplay ) {
-							// convert the bar height to the position of the corresponding led element
-							const fullLeds = bar.peak[ channel ] / ( analyzerHeight + ledSpaceV ) * ledCount | 0,
-								  posY     = ( ledCount - fullLeds - 1 ) * ( ledHeight + ledSpaceV );
-
-							ctx.fillRect( posX,	channelTop + posY, width, ledHeight );
-						}
-						else if ( ! isRadial ) {
-							ctx.fillRect( posX, analyzerBottom - bar.peak[ channel ], adjWidth, 2 );
-						}
-						else if ( mode != 10 ) { // radial - no peaks for mode 10
-							radialPoly( posX, bar.peak[ channel ] * ( ! channel || -1 ), adjWidth, -2 );
-						}
-					}
-
-					if ( bar.hold[ channel ] )
-						bar.hold[ channel ]--;
-					else {
-						bar.accel[ channel ]++;
-						bar.peak[ channel ] -= bar.accel[ channel ];
-					}
+				if ( bar.peak[ channel ] > 0 && this.showPeaks && ! isLumiBars && posX >= initialX && posX < finalX ) {
+					if ( isLedDisplay )
+						ctx.fillRect( posX,	analyzerBottom - ledPosY( bar.peak[ channel ] ), width, ledHeight );
+					else if ( ! isRadial )
+						ctx.fillRect( posX, analyzerBottom - bar.peak[ channel ] * maxBarHeight, adjWidth, 2 );
+					else if ( mode != 10 ) // radial - no peaks for mode 10
+						radialPoly( posX, bar.peak[ channel ] * maxBarHeight * ( ! channel || -1 ), adjWidth, -2 );
 				}
+
 			} // for ( let i = 0; i < nBars; i++ )
 
 			// restore global alpha
@@ -1549,7 +1547,7 @@ export default class AudioMotionAnalyzer {
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
 				if ( pos > lastPos ) {
-					bars.push( { posX: pos, dataIdx: i, endIdx: 0, factor: 0, peak: [0,0], hold: [], accel: [] } );
+					bars.push( { posX: pos, dataIdx: i, endIdx: 0, factor: 0, peak: [0,0], hold: [], value: [] } );
 					lastPos = pos;
 				} // otherwise, add this frequency to the last bar's range
 				else if ( bars.length )
@@ -1626,7 +1624,7 @@ export default class AudioMotionAnalyzer {
 					factor: 0,
 					peak: [0,0],
 					hold: [],
-					accel: []
+					value: []
 				} );
 
 			} );
