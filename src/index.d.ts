@@ -41,6 +41,7 @@ export interface Options {
   splitGradient?: boolean;
   start?: boolean;
   stereo?: boolean;
+  useCanvas?: boolean;
   volume?: number;
   width?: number;
 }
@@ -178,6 +179,8 @@ declare class AudioMotionAnalyzer {
 
   get stereo(): boolean;
   set stereo(value: boolean);
+
+  public useCanvas: boolean;
 
   get volume(): number;
   set volume(value: number);
