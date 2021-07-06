@@ -626,6 +626,15 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Returns analyzer bars data
+     *
+	 * @returns {array}
+	 */
+	getBars() {
+		return Array.from( this._bars, ( { posX, freqLo, freqHi, hold, peak, value } ) => ( { posX, freqLo, freqHi, hold, peak, value } ) );
+	}
+
+	/**
 	 * Returns the energy of a frequency, or average energy of a range of frequencies
 	 *
 	 * @param [{number|string}] single or initial frequency (Hz), or preset name; if undefined, returns the overall energy

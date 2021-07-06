@@ -46,6 +46,15 @@ export interface Options {
   width?: number;
 }
 
+interface AnalyzerBarData {
+  posX: number;
+  freqLo: number;
+  freqHi: number;
+  hold: [ mono_or_left: number, right?: number ];
+  peak: [ mono_or_left: number, right: number ];
+  value: [ mono_or_left: number, right?: number ];
+}
+
 interface ConstructorOptions extends Options {
   audioCtx?: AudioContext;
   connectSpeakers?: boolean;
@@ -196,6 +205,8 @@ declare class AudioMotionAnalyzer {
 
   public disconnectInput(node?: AudioNode | AudioNode[]): void;
   public disconnectOutput(node?: AudioNode): void;
+
+  public getBars(): AnalyzerBarData[];
 
   public getEnergy(preset?: EnergyPreset): number;
   public getEnergy(startFreq: number, endFreq?: number): number;
