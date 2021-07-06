@@ -1,6 +1,20 @@
 Changelog
 =========
 
+## version 3.5.0-beta.0 (2021-07-06)
+
+### Added: {docsify-ignore}
+
++ [`getBars()`](README.md#getbars) method, which provides current analyzer data;
++ [`useCanvas`](README.md#usecanvas-boolean) property to disable canvas usage - thanks [@davay42](https://github.com/davay42) for [suggesting this feature](https://github.com/hvianna/audioMotion-analyzer/issues/19).
+
+### Improved: {docsify-ignore}
+
++ Fine-tuned generation of octave bands;
++ Improved FFT data interpolation;
++ Improved peak rendering when changing visualization modes.
+
+
 ## version 3.4.0 (2021-05-29)
 
 ### Added: {docsify-ignore}
