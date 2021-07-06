@@ -132,6 +132,7 @@ options = {<br>
 &emsp;&emsp;[splitGradient](#splitgradient-boolean): **false**,<br>
 &emsp;&emsp;[start](#start-boolean): **true**,<br>
 &emsp;&emsp;[stereo](#stereo-boolean): **false**,<br>
+&emsp;&emsp;[useCanvas](#usecanvas-boolean): **true**,<br>
 &emsp;&emsp;[volume](#volume-number): **1**,<br>
 &emsp;&emsp;[width](#width-number): *undefined*<br>
 }
@@ -369,7 +370,7 @@ See [`toggleFullscreen()`](#togglefullscreen).
 
 ### `isOn` *boolean* *(Read only)*
 
-*true* if the analyzer canvas animation is running, or *false* if it's stopped.
+*true* if the analyzer process is running, or *false* if it's stopped.
 
 See [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
 
@@ -651,6 +652,17 @@ See also [`splitGradient`](#splitgradient-boolean).
 
 Defaults to **false**.
 
+### `useCanvas` *boolean*
+
+*Available since v3.5.0*
+
+When set to *false*, analyzer graphics are not rendered to the [`canvas`](#canvas-htmlcanvaselement-object-read-only).
+Setting it to *false* in the [**constructor**](#constructor) options also prevents the canvas from being added to the document/container.
+
+Please note that the analyzer processing continues to run and any callback defined for [`onCanvasDraw`](#oncanvasdraw-function) will still be triggered on every animation frame, regardless of the value of `useCanvas`.
+
+If you want to completely stop the audio data processing, see [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
+
 ### `volume` *number*
 
 *Available since v3.0.0*
@@ -797,6 +809,23 @@ See also [`connectOutput()`](#connectoutput-node-).
 
 ?> If called with no argument, analyzer output is disconnected from all nodes, **including the speakers!**
 
+### `getBars()`
+
+*Available since v3.5.0*
+
+Returns an array of objects with current data for each analyzer bar, with the structure below:
+
+```js
+{
+	posX: <number>,   // horizontal position of this bar on the canvas
+	freqLo: <number>, // nominal starting frequency
+	freqHi: <number>, // nominal ending frequency
+	peak: <array>,    // peak values for left and right channels
+	hold: <array>,    // peak hold frames for left and right channels - values < 0 mean the peak is falling down
+	value: <array>    // current amplitude on left and right channels
+}
+```
+
 ### `getEnergy( [preset | startFreq], [endFreq] )`
 
 *Available since v3.2.0*
@@ -895,11 +924,14 @@ Adjust the analyzer's sensitivity. See [`maxDecibels`](#maxdecibels-number) and 
 
 ### `toggleAnalyzer( [boolean] )`
 
-Starts (*true*) or stops (*false*) the analyzer animation. If no argument provided, inverts the current status.
+Starts (*true*) or stops (*false*) the analyzer process. If no argument provided, inverts the current status.
 
 Returns the resulting status.
 
 The analyzer is started by default after initialization, unless you specify [`start: false`](#start-boolean) in the [constructor](#constructor) options.
+When the analyzer is off, no audio data is processed and no callbacks to [`onCanvasDraw`](#oncanvasdraw-function) will be triggered.
+
+See also [`isOn`](#ison-boolean-read-only) property.
 
 ### `toggleFullscreen()`
 
