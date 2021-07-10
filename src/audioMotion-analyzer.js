@@ -1560,8 +1560,8 @@ export default class AudioMotionAnalyzer {
 			// generate a 11-octave 24-tone equal tempered scale (16Hz to 33kHz)
 
 			/*
-				A simple linear interpolation is used to get an approximate amplitude value for the desired frequency from the available FFT data,
-				like so:
+				A simple linear interpolation is used to obtain an approximate amplitude value for the desired frequency
+				from available FFT data, like so:
 
 				h = hLo + ( hHi - hLo ) * ( f - fLo ) / ( fHi - fLo )
 				                         \___________________________/
@@ -1599,33 +1599,47 @@ export default class AudioMotionAnalyzer {
 			const steps = [0,1,2,3,4,6,8,12,24][ this._mode ]; // number of notes grouped per band for each mode
 
 			for ( let index = 0; index < temperedScale.length; index += steps ) {
-				let { freq: freqLo, bin: binLo, ratio: ratioLo } = temperedScale[ index ],
-					{ freq: freqHi, bin: binHi, ratio: ratioHi } = temperedScale[ index + steps - 1 ];
+				let { freq: freqLo, bin: binLo, ratio: ratioLo } = temperedScale[ index ],             // band start
+					{ freq: freqHi, bin: binHi, ratio: ratioHi } = temperedScale[ index + steps - 1 ]; // band end
 
 				const nBars   = bars.length,
 					  prevBar = bars[ nBars - 1 ];
 
+				// if the ending frequency is out of range, we're done here
 				if ( freqHi > maxFreq || binHi >= this.fftSize / 2 ) {
-					prevBar.binHi++;
-					prevBar.ratioHi = 0;
+					prevBar.binHi++;     // add an extra bin to the last bar, to fully include the last valid band
+					prevBar.ratioHi = 0; // disable interpolation
+					prevBar.freqHi = binToFreq( prevBar.binHi ); // update ending frequency
 					break;
 				}
 
+				// is the starting frequency in the selected range?
 				if ( freqLo >= minFreq ) {
 					if ( nBars > 0 ) {
 						const diff = binLo - prevBar.binHi;
 
+						// check if we skipped any available FFT bins since the last bar
 						if ( diff > 1 ) {
 							// allocate half of the unused bins to the previous bar
 							prevBar.binHi = binLo - ( diff >> 1 );
 							prevBar.ratioHi = 0;
-							if ( nBars > 1 && prevBar.binHi > prevBar.binLo && prevBar.binLo > bars[ nBars - 2 ].binHi )
+							prevBar.freqHi = binToFreq( prevBar.binHi ); // update ending frequency
+
+							// if the previous bar doesn't share any bins with other bars, no need for interpolation
+							if ( nBars > 1 && prevBar.binHi > prevBar.binLo && prevBar.binLo > bars[ nBars - 2 ].binHi ) {
 								prevBar.ratioLo = 0;
+								prevBar.freqLo = binToFreq( prevBar.binLo ); // update starting frequency
+							}
+
+							// start the current bar at the bin following the last allocated bin
 							binLo = prevBar.binHi + 1;
 						}
 
-						if ( binHi > binLo && binLo > prevBar.binHi )
+						// if the lower bin is not shared with the ending frequency nor the previous bar, no need to interpolate it
+						if ( binHi > binLo && binLo > prevBar.binHi ) {
 							ratioLo = 0;
+							freqLo = binToFreq( binLo );
+						}
 					}
 
 					barsPush( 0, binLo, binHi, freqLo, freqHi, ratioLo, ratioHi );
