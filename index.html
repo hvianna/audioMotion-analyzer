@@ -72,11 +72,63 @@
 		p ~ .table-wrapper table {
 			margin-top: 0;
 		}
+
+		.quotes-container {
+			display: flex;
+			overflow-x: scroll;
+			padding: 1em 0;
+			scroll-behavior: smooth;
+			scroll-snap-type: x mandatory;
+		}
+		.quote {
+			flex-shrink: 0;
+			font-size: 1.2em;
+			font-style: italic;
+			font-weight: bold;
+			padding: 0 1em;
+			position: relative;
+			scroll-snap-align: start;
+			text-align: center;
+			width: 100%;
+		}
+		.quote::before {
+			color: #bbb;
+			content: '\201c';
+			font-family: serif;
+			font-size: 3em;
+			font-style: normal;
+			margin-left: -.6em;
+			position: absolute;
+			top: -.5em;
+		}
+		.quote .author {
+			font-size: 1rem;
+			font-style: normal;
+			font-weight: normal;
+			text-align: right;
+		}
+		.quote .author::before {
+			content: '\2014';
+			margin-right: .25em;
+		}
 	</style>
 </head>
 <body>
 	<div id="app"></div>
 	<script>
+		// thanks https://stackoverflow.com/a/15343916/2370385
+		function scrollHorizontally( e ) {
+			e = window.event || e;
+
+			const quotes = document.querySelector('.quotes-container'),
+				  delta  = Math.max( -1, Math.min( 1, ( e.wheelDelta || -e.detail ) ) );
+
+			quotes.scrollLeft -= ( delta * quotes.offsetWidth );
+
+			if ( ( delta > 0 && quotes.scrollLeft > 0 ) || ( delta < 0 && quotes.offsetWidth + quotes.scrollLeft < quotes.scrollWidth ) )
+				e.preventDefault();
+		}
+
 		window.$docsify = {
 			name: 'audioMotion-analyzer',
 			repo: 'https://github.com/hvianna/audioMotion-analyzer',
@@ -85,7 +137,12 @@
 			coverpage: 'coverpage.md',
 			search: {
 				depth: 3,
-			}
+			},
+			plugins: [
+				hook => {
+					hook.ready( _ => document.querySelector('.quotes-container').addEventListener( 'wheel', scrollHorizontally ) );
+				}
+			]
 		}
 	</script>
 	<script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
