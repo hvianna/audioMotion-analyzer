@@ -1,18 +1,21 @@
 Changelog
 =========
 
-## version 3.5.0-beta.0 (2021-07-06)
+## version 3.5.0 (2021-07-15)
 
 ### Added: {docsify-ignore}
 
-+ [`getBars()`](README.md#getbars) method, which provides current analyzer data;
-+ [`useCanvas`](README.md#usecanvas-boolean) property to disable canvas usage - thanks [@davay42](https://github.com/davay42) for [suggesting this feature](https://github.com/hvianna/audioMotion-analyzer/issues/19).
++ [`getBars()`](README.md#getbars) method, which provides real-time analyzer data;
++ [`useCanvas`](README.md#usecanvas-boolean) property to disable rendering to the canvas - thanks **@davay42** for [suggesting this feature](https://github.com/hvianna/audioMotion-analyzer/issues/19);
++ A tool to view/debug the generated octave bands - see the `/tools` folder.
 
 ### Improved: {docsify-ignore}
 
 + Fine-tuned generation of octave bands;
 + Improved FFT data interpolation;
-+ Improved peak rendering when changing visualization modes.
++ Improved peak rendering when changing visualization modes;
++ Added a simple piano keyboard to the test tones section of the "fluid" demo;
++ Added search funcionality to the documentation website.
 
 
 ## version 3.4.0 (2021-05-29)
@@ -33,7 +36,7 @@ Changelog
 
 ### Added: {docsify-ignore}
 
-+ New horizontal mirroring effect; see [`mirror`](README.md#mirror-number) property - thanks [@lexterror](https://github.com/lexterror) for suggesting this feature.
++ New horizontal mirroring effect; see [`mirror`](README.md#mirror-number) property - thanks **@lexterror** for [suggesting this feature](https://github.com/hvianna/audioMotion-analyzer/issues/16).
 
 ### Improvements: {docsify-ignore}
 
@@ -49,9 +52,9 @@ Changelog
 
 ### Added: {docsify-ignore}
 
-+ [`getEnergy()`](README.md#getenergy-preset-startfreq-endfreq-) method - see it in action on [this pen](https://codepen.io/hvianna/pen/poNmVYo) - thanks [@Staijn1](https://github.com/Staijn1) for suggesting this feature;
++ [`getEnergy()`](README.md#getenergy-preset-startfreq-endfreq-) method - see it in action on [this pen](https://codepen.io/hvianna/pen/poNmVYo) - thanks **@Staijn1** for [suggesting this feature](https://github.com/hvianna/audioMotion.js/issues/12#issuecomment-733045035);
 + [`setLedParams()`](README.md#setledparams-params-) method, which allows you to customize the look of the LEDs - you can try it in the [fluid demo](https://audiomotion.dev/demo/fluid.html);
-+ [`connectSpeakers`](README.md#connectspeakers-boolean) constructor option - thanks [@evoyy](https://github.com/evoyy) for the suggestion;
++ [`connectSpeakers`](README.md#connectspeakers-boolean) constructor option - thanks **@evoyy** for the [suggestion](https://github.com/hvianna/audioMotion-analyzer/issues/13);
 + [`connectedTo`](README.md#connectedto-array-read-only) read only property.
 
 ### Improvements: {docsify-ignore}
@@ -141,7 +144,7 @@ Changelog
 
 ### Added: {docsify-ignore}
 
-+ New **Radial** visualization - see [`radial`](README.md#radial-boolean) and [`spinSpeed`](README.md#spinspeed-number) properties and try them in the [demos](https://audiomotion.dev/demo)!
++ New **Radial** visualization - see [`radial`](README.md#radial-boolean) and [`spinSpeed`](README.md#spinspeed-number) properties and try them in the [demos](https://audiomotion.dev/demo)! - thanks **@inglesuniversal** for [suggesting this feature](https://github.com/hvianna/audioMotion.js/issues/6);
 + [`showScaleY`](README.md#showscaley-boolean) property for displaying the level (dB) scale on the analyzer's vertical axis;
 + [`energy`](README.md#energy-number-read-only) and [`peakEnergy`](README.md#peakenergy-number-read-only) read-only properties;
 + [Known issues](README.md#known-issues) section added to the documentation.
