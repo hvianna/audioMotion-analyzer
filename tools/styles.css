@@ -1,0 +1,109 @@
+body {
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-size: 15px;
+}
+
+button, input, select {
+	font: inherit;
+	margin-top: 1em;
+	padding: 4px;
+	width: 100%;
+}
+
+h1 {
+	margin-bottom: -.5em;
+}
+h1, h2 {
+	text-align: center;
+}
+
+label {
+	display: block;
+	margin: 1em 1em 0 0;
+	white-space: nowrap;
+	width: 100%;
+}
+
+table {
+	border-collapse: collapse;
+	display: block;
+	height: calc( 100vh - 40px );
+	margin: 0 auto;
+	overflow-y: auto;
+}
+table th,
+table td {
+	border: 1px solid #444;
+	padding: 6px;
+}
+table td {
+	position: relative;
+	text-align: right;
+}
+table tr:nth-child(odd),
+.odd {
+	background: #f0f0f0;
+}
+
+.bar {
+	background: #0c04;
+	height: 100%;
+	left: 0;
+	position: absolute;
+	top: 0;
+}
+
+.center {
+	text-align: center;
+}
+
+.credits {
+	bottom: 2em;
+	font-size: .8rem;
+	line-height: 1.6;
+	position: fixed;
+	text-align: center;
+}
+
+.even {
+	background: #fff;
+}
+
+.flex {
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+}
+
+.info {
+	border-bottom: 1px dotted #080;
+	position: relative;
+}
+.info:hover::before {
+	background: #fffff0;
+	border: 1px solid #ccc;
+	border-radius: 10px;
+	content: attr( data-text );
+	font-size: .8em;
+	font-weight: normal;
+	padding: 6px;
+	position: absolute;
+	text-align: center;
+	top: 2em;
+	white-space: normal;
+	width: 200px;
+	z-index: 2;
+}
+
+th .info {
+	position: static;
+}
+th .info:hover::before {
+	top: 85px;
+}
+
+.options {
+	display: flex;
+	justify-content: space-around;
+	margin: 20px;
+}

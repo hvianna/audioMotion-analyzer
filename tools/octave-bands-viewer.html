@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link href="styles.css" rel="stylesheet">
+	<title>Octave bands viewer | audioMotion-analyzer</title>
+</head>
+
+<body>
+<div class="options">
+	<table id="tableScale">
+		<thead>
+			<tr>
+				<th colspan="5">24-tone Tempered Scale</th>
+			</tr>
+			<tr>
+				<th>Note</th>
+				<th>Frequency<br>(Hz)</th>
+				<th>FFT bin</th>
+				<th><span class="info" data-text="The selected FFT bin is interpolated with the next bin to obtain an approximate value for the desired frequency">Interpolation<br>Ratio</span></th>
+				<th><span class="info" data-text="Actual frequencies of the selected FFT bins, with green bar representing the interpolated frequency">Actual range</span><br>(Hz)</th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+
+	<div>
+		<h1>audioMotion-analyzer</h1>
+		<h2>octave bands viewer tool</h2>
+		<div class="flex">
+			<label><span class="info" data-text="[audioMotion.fftSize] Higher values provide more detail in the frequency domain, but less detail in the temporal domain (slower response).">FFT size</span> (samples)</label>
+			<select id="fftsize">
+				<option>512</option>
+				<option>1024</option>
+				<option>2048</option>
+				<option>4096</option>
+				<option selected>8192</option>
+				<option>16384</option>
+				<option>32768</option>
+			</select>
+		</div>
+
+		<div class="flex">
+			<label><span class="info" data-text="[audioCtx.sampleRate] The sample rate depends on the output device, but it's usually 44100 or 48000 Hz.">Sample rate</span> (Hz)</label>
+			<select id="samplerate">
+				<option>44100</option>
+				<option selected>48000</option>
+				<option>96000</option>
+			</select>
+		</div>
+
+		<div class="flex">
+			<label><span class="info" data-text="[audioMotion.minFreq] The lowest valid value is 1.">Min. Frequency</span> (Hz)</label>
+			<input id="minFreq" type="text" size="5" value="20">
+		</div>
+
+		<div class="flex">
+			<label><span class="info" data-text="[audioMotion.maxFreq] The highest valid value is half the Sample Rate.">Max. Frequency</span> (Hz)</label>
+			<input id="maxFreq" type="text" size="5" value="22000">
+		</div>
+
+		<div class="flex">
+			<label><span class="info" data-text="[audioMotion.mode]">Visualization Mode</span></label>
+			<select id="mode">
+				<option value="8">Full octave bands</option>
+				<option value="7">Half octave bands</option>
+				<option value="6">1/3rd octave bands</option>
+				<option value="5">1/4th octave bands</option>
+				<option value="4">1/6th octave bands</option>
+				<option value="3">1/8th octave bands</option>
+				<option value="2">1/12th octave bands</option>
+				<option value="1">1/24th octave bands</option>
+			</select>
+		</div>
+
+		<label>
+			<button id="generate">Generate Tempered Scale & Analyzer Bars</button>
+		</label>
+
+		<div>
+			<h4>References:</h4>
+			<ul>
+				<li><a href="https://en.wikipedia.org/wiki/Quarter_tone">https://en.wikipedia.org/wiki/Quarter_tone</a></li>
+				<li><a href="https://pages.mtu.edu/~suits/notefreqs.html">https://pages.mtu.edu/~suits/notefreqs.html</a></li>
+				<li><a href="http://hyperphysics.phy-astr.gsu.edu/hbase/Music/et.html">http://hyperphysics.phy-astr.gsu.edu/hbase/Music/et.html</a></li>
+				<li><a href="https://www.dacapoalcoda.com/quarter-tones">https://www.dacapoalcoda.com/quarter-tones</a></li>
+			</ul>
+		</div>
+
+		<div class="credits">
+			<strong>audioMotion-analyzer</strong> Copyright &copy; 2018-2021 Henrique Avila Vianna.<br>
+			Licensed under AGPL-3.0 or later. Source code is available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
+		</div>
+	</div>
+
+	<table id="tableBands">
+		<thead>
+			<tr>
+				<th colspan="5">Analyzer bars</th>
+			</tr>
+			<tr>
+				<th>Bar</th>
+				<th>Octave</th>
+				<th><span class="info" data-text="Initial FFT bin and interpolation ratio (0 means no interpolation)">Initial bin / ratio</span></th>
+				<th><span class="info" data-text="Final FFT bin and interpolation ratio (0 means no interpolation)">Final bin / ratio</span></th>
+				<th><span class="info" data-text="Resulting frequency range for this bar">Frequency range (Hz)</span></th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+</div>
+
+<script src="generateBands.js"></script>
+
+<script>
+	function update() {
+
+		const fftSize    = +document.getElementById('fftsize').value,
+			  sampleRate = +document.getElementById('samplerate').value,
+			  mode       = +document.getElementById('mode').value,
+			  minFreq    = +document.getElementById('minFreq').value,
+			  maxFreq    = +document.getElementById('maxFreq').value;
+
+		const { temperedScale, analyzerBars } = generateBands( { fftSize, sampleRate, mode, minFreq, maxFreq } );
+
+		const bodyScale = document.getElementById('tableScale').tBodies[0],
+			  bodyBands = document.getElementById('tableBands').tBodies[0];
+
+		bodyScale.innerHTML = '';
+
+		temperedScale.forEach( band => {
+			bodyScale.innerHTML += `<tr><td>${band.note}${band.octave}<td>${band.freq.toFixed(2)}<td>${band.bin}<td>${band.ratio.toFixed(3)}<td><span class="bar" style="width: ${ band.ratio * 100 }%"></span>${band.range[0].toFixed(2)} - ${band.range[1].toFixed(2)}`;
+		});
+
+		bodyBands.innerHTML = '';
+
+		let prevOctave = -1,
+			octaveChanges = 0;
+
+		analyzerBars.forEach( ( bar, index ) => {
+			let html = `<tr><td>${index}`;
+			if ( bar.octave != prevOctave ) {
+				prevOctave = bar.octave;
+				octaveChanges++;
+				let rows = 1;
+				while ( analyzerBars[ index + rows ] && analyzerBars[ index + rows ].octave == bar.octave )
+					rows++;
+				html += `<td rowspan="${rows}" class="center${ octaveChanges % 2 ? ' odd' : ' even' }">${bar.octave}`;
+			}
+			html += `
+				<td>${ bar.binLo } / ${ bar.ratioLo.toFixed(3) }
+				<td>${ bar.binHi } / ${ bar.ratioHi.toFixed(3) }
+				<td class="center">${ bar.freqLo.toFixed(2) } - ${ bar.freqHi.toFixed(2) }`;
+			bodyBands.innerHTML += html;
+		});
+	}
+
+	update();
+	document.getElementById('generate').addEventListener( 'click', () => update() );
+</script>
+
+</body>
+</html>
