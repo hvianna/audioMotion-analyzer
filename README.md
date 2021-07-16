@@ -1,13 +1,29 @@
 
 ## About
 
-**audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer module built upon **Web Audio** and **Canvas** JavaScript APIs.
+**audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer built upon **Web Audio** and **Canvas** JavaScript APIs.
 
-It was originally conceived as part of a larger project: a full-featured music player called [**audioMotion**](https://audiomotion.me).
-As it started getting some attention, I realized other developers might be interested in using the spectrum analyzer in their own projects,
-so I decided to make it available as a self-contained module.
+It was originally conceived as part of a full-featured music player called [**audioMotion**](https://audiomotion.me), but I later decided to make just
+the spectrum analyzer available as a self-contained module, so other developers could use it in their own projects.
 
-> **audioMotion-analyzer** is aimed to be the best looking, most customizable spectrum analyzer around, with high accuracy and performance, in a small footprint package!
+My goal is to make this the best looking, most accurate and customizable spectrum analyzer around, in a small-footprint and high-performance package.
+
+What users are saying:
+
+<div class="quotes-container">
+	<div class="quote">
+		I still, to this day, haven't found anything close to audioMotion in terms of beauty.
+		<div class="author">Weakky@github</div>
+	</div>
+	<div class="quote">
+	 I've been visualizing input with FFT with p5.js for a while, but got sick of how much code was needed.<br>This looks way better and works better too.
+		<div class="author">Staijn1@github</div>
+	</div>
+	<div class="quote">
+		It works amazing! The spectrum is so easy readable even for complex sound.
+		<div class="author">davay42@github</div>
+	</div>
+</div>
 
 ## Features
 
@@ -18,7 +34,7 @@ so I decided to make it available as a self-contained module.
 + Customizable sensitivity, FFT size and time-smoothing constant
 + Comes with 3 predefined color gradients - easily add your own!
 + Fullscreen support, ready for retina / HiDPI displays
-+ Zero-dependency native ES6+ module (ESM), less than 20kB minified
++ Zero-dependency native ES6+ module (ESM), \~20kB minified
 
 ## Online demos
 
@@ -33,6 +49,7 @@ so I decided to make it available as a self-contained module.
 - [Using microphone input](https://codepen.io/hvianna/pen/VwKZgEE)
 - [Custom callback function](https://codepen.io/hvianna/pen/LYZwdvG)
 - [Creating additional effects with `getEnergy()`](https://codepen.io/hvianna/pen/poNmVYo)
+- [No canvas example](https://codepen.io/hvianna/pen/ZEKWWJb) (create your own visualization using analyzer data)
 - [Integration with Pizzicato library](https://codesandbox.io/s/9y6qb) - see [this discussion](https://github.com/hvianna/audioMotion-analyzer/issues/10) for more info
 
 ## Usage
@@ -70,9 +87,9 @@ import AudioMotionAnalyzer from 'audiomotion-analyzer';
 
 Creates a new instance of **audioMotion-analyzer**.
 
-The analyzer canvas will be created and appended to the HTML element referenced by `container`.
+The analyzer canvas will be appended to the HTML element referenced by `container`, unless you set [`useCanvas: false`](#usecanvas-boolean) in the options.
 
-If `container` is undefined, the canvas will be appended to the document's body.
+If `container` is undefined, the document's body will be used instead.
 
 Usage example:
 
@@ -132,6 +149,7 @@ options = {<br>
 &emsp;&emsp;[splitGradient](#splitgradient-boolean): **false**,<br>
 &emsp;&emsp;[start](#start-boolean): **true**,<br>
 &emsp;&emsp;[stereo](#stereo-boolean): **false**,<br>
+&emsp;&emsp;[useCanvas](#usecanvas-boolean): **true**,<br>
 &emsp;&emsp;[volume](#volume-number): **1**,<br>
 &emsp;&emsp;[width](#width-number): *undefined*<br>
 }
@@ -147,7 +165,7 @@ for **audioMotion-analyzer**, for connection with other Web Audio nodes or sound
 
 Since version 3.2.0, `audioCtx` will be automatically inferred from the [`source`](#source-htmlmediaelement-or-audionode-object) property if that's an *AudioNode*.
 
-If none are defined, a new context will be created. After instantiation, [`audioCtx`](#audioctx-audiocontext-object-read-only) will be available as a read-only property.
+If neither is defined, a new audio context will be created. After instantiation, [`audioCtx`](#audioctx-audiocontext-object-read-only) will be available as a read-only property.
 
 See [this live code](https://codesandbox.io/s/9y6qb) and the [multi-instance demo](/demo/multi.html) for more usage examples.
 
@@ -369,7 +387,7 @@ See [`toggleFullscreen()`](#togglefullscreen).
 
 ### `isOn` *boolean* *(Read only)*
 
-*true* if the analyzer canvas animation is running, or *false* if it's stopped.
+*true* if the analyzer process is running, or *false* if it's stopped.
 
 See [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
 
@@ -415,22 +433,24 @@ Defaults to **false**.
 
 Highest and lowest decibel values represented in the Y-axis of the analyzer. The loudest volume possible is **0**.
 
-*maxDecibels* defaults to **-25** and *minDecibels* defaults to **-85**.
-
 You can set both values at once using the [`setSensitivity()`](#setsensitivity-mindecibels-maxdecibels-) method.
 
 For more info, see [AnalyserNode.minDecibels](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/minDecibels).
 
+*minDecibels* defaults to **-85** and *maxDecibels* defaults to **-25**.
+
 ### `maxFreq` *number*
 ### `minFreq` *number*
 
-Highest and lowest frequencies represented in the X-axis of the analyzer. Values in Hertz. *maxFreq* defaults to **22000** and *minFreq* defaults to **20**.
+Highest and lowest frequencies represented in the X-axis of the analyzer. Values in Hertz.
 
 The minimum allowed value is **1**. Trying to set a lower value will throw an `ERR_FREQUENCY_TOO_LOW` [error](#custom-errors).
 
 The maximum practical value is half the sampling rate ([`audioCtx.sampleRate`](#audioctx-audiocontext-object-read-only)), although this is not enforced by **audioMotion-analyzer**.
 
 It is preferable to use the [`setFreqRange()`](#setfreqrange-minfreq-maxfreq-) method and set both values at once, to prevent `minFreq` being higher than the current `maxFreq` or vice-versa at a given moment.
+
+*minFreq* defaults to **20** and *maxFreq* defaults to **22000**.
 
 ### `mirror` *number*
 
@@ -440,9 +460,9 @@ Horizontal mirroring effect. Valid values are:
 
 mirror | Effect
 :-----:|--------
--1     | Mirrors the analyzer to the left (low frequencies at the center of screen)
+-1     | Mirrors the analyzer to the left (low frequencies at the center of the screen)
 0      | Disables mirror effect (default)
-1      | Mirrors the analyzer to the right (high frequencies at the center of screen)
+1      | Mirrors the analyzer to the right (high frequencies at the center of the screen)
 
 **Note:** when [`radial`](#radial-boolean) is **_true_**, both `1` and `-1` will produce the same effect.
 
@@ -651,6 +671,20 @@ See also [`splitGradient`](#splitgradient-boolean).
 
 Defaults to **false**.
 
+### `useCanvas` *boolean*
+
+*Available since v3.5.0*
+
+When set to *false*, analyzer graphics are not rendered to the [`canvas`](#canvas-htmlcanvaselement-object-read-only).
+Setting it to *false* in the [**constructor**](#constructor) options also prevents the canvas from being added to the document/container.
+
+Please note that the analyzer processing runs regardless of the value of `useCanvas` and any callback defined for [`onCanvasDraw`](#oncanvasdraw-function)
+will still be triggered on every animation frame, so you can use the [`getBars()`](#getbars) method to create your own visualizations.
+
+If you want to completely stop the audio data processing, see [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
+
+Defaults to **true**.
+
 ### `volume` *number*
 
 *Available since v3.0.0*
@@ -797,6 +831,31 @@ See also [`connectOutput()`](#connectoutput-node-).
 
 ?> If called with no argument, analyzer output is disconnected from all nodes, **including the speakers!**
 
+### `getBars()`
+
+*Available since v3.5.0*
+
+Returns an array with current data for each analyzer bar. Each array element is an object with the format below:
+
+```js
+{
+	posX: <number>,   // horizontal position of this bar on the canvas
+	freqLo: <number>, // starting frequency for this bar
+	freqHi: <number>, // ending frequency for this bar
+	peak: <array>,    // peak values for left and right channels
+	hold: <array>,    // peak hold frames for left and right channels - values < 0 mean the peak is falling down
+	value: <array>    // current amplitude on left and right channels
+}
+```
+
+`peak` and `value` elements are floats between 0 and 1, relative to the lowest and highest volume levels defined by [`minDecibels`](#mindecibels-number) and [`maxDecibels`](#maxdecibels-number).
+
+`hold` values are integers and indicate the hold time (in frames) for the current peak. The maximum value is 30 and means the peak has just been set, while negative values mean the peak is currently falling down.
+
+Please note that `hold` and `value` will have only one element when [`stereo`](#stereo-boolean) is *false*, but `peak` is always a two-element array.
+
+You can use this method to create your own visualizations using the analyzer data. See [this pen](https://codepen.io/hvianna/pen/ZEKWWJb) for usage example.
+
 ### `getEnergy( [preset | startFreq], [endFreq] )`
 
 *Available since v3.2.0*
@@ -891,15 +950,18 @@ See **[Options object](#options-object)** for object structure and default value
 
 ### `setSensitivity( minDecibels, maxDecibels )`
 
-Adjust the analyzer's sensitivity. See [`maxDecibels`](#maxdecibels-number) and [`minDecibels`](#mindecibels-number) properties.
+Adjust the analyzer's sensitivity. See [`minDecibels`](#mindecibels-number) and [`maxDecibels`](#maxdecibels-number) properties.
 
 ### `toggleAnalyzer( [boolean] )`
 
-Starts (*true*) or stops (*false*) the analyzer animation. If no argument provided, inverts the current status.
+Starts (*true*) or stops (*false*) the analyzer process. If no argument provided, inverts the current status.
 
 Returns the resulting status.
 
 The analyzer is started by default after initialization, unless you specify [`start: false`](#start-boolean) in the [constructor](#constructor) options.
+When the analyzer is off, no audio data is processed and no callbacks to [`onCanvasDraw`](#oncanvasdraw-function) will be triggered.
+
+See also [`isOn`](#ison-boolean-read-only) property.
 
 ### `toggleFullscreen()`
 

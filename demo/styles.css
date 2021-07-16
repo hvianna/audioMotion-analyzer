@@ -106,6 +106,7 @@ ul {
 	margin-right: 1em;
 }
 
+
 .label {
 	color: #fff;
 	display: inline-block;
@@ -191,6 +192,14 @@ ul {
 	margin: 0 calc( 50% - 50vw + 9px );
 }
 
+.sticky {
+	background: #222e;
+	margin-bottom: -10px;
+	padding-bottom: 30px;
+	position: sticky;
+	top: 0;
+}
+
 /* background animation for overlay test on fluid demo */
 .fluid canvas {
 	background-image: url(media/sealoop.gif);
@@ -199,10 +208,6 @@ ul {
 
 #container1 {
 	margin-bottom: 15px;
-}
-
-#frequency {
-	width: 100px;
 }
 
 .center {
@@ -214,6 +219,10 @@ ul {
 	display: flex;
 	justify-content: space-between;
 	margin: 10px 0;
+}
+
+.evenly {
+	justify-content: space-evenly;
 }
 
 .main {
@@ -234,6 +243,60 @@ ul {
 
 .selected {
 	outline: 3px solid #c00;
+}
+
+.stretch {
+	align-items: stretch;
+}
+
+/* piano keys (fluid demo) */
+
+#piano {
+	margin: 10px 10px 0 4px;
+	user-select: none;
+}
+
+.c4::before {
+	background: #c00;
+	border-radius: 50%;
+	bottom: 10px;
+	content: '';
+	height: 6px;
+	left: 50%;
+	position: absolute;
+	width: 6px;
+}
+
+.key {
+	cursor: pointer;
+	display: inline-block;
+	position: relative;
+}
+
+.black {
+	background: #000;
+	border-bottom-left-radius: 2px;
+	border-bottom-right-radius: 2px;
+	height: 60px;
+	left: 17px;
+	position: absolute;
+	top: 0;
+	width: 12px;
+	z-index: 2;
+}
+
+.white {
+	background: #fff;
+	border: 2px solid #000;
+	border-radius: 4px;
+	height: 100px;
+	margin-right: -6px;
+	width: 20px;
+}
+
+.black:hover,
+.white:hover {
+	background: #888;
 }
 
 /* overlay */
