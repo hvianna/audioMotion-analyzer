@@ -18,8 +18,10 @@
 		</ul>
 	</header>
 
-	<div id="container" class="fluid"></div>
-	<audio id="audio" controls crossorigin="anonymous"></audio>
+	<div class="sticky">
+		<div id="container" class="fluid"></div>
+		<audio id="audio" controls crossorigin="anonymous"></audio>
+	</div>
 
 	<div class="flex">
 		<div>
@@ -194,7 +196,7 @@
 			</fieldset>
 		</div>
 
-		<div class="box center">
+		<div class="flex center evenly stretch">
 			<fieldset>
 				<legend>Switches</legend>
 				<button data-prop="loRes">loRes</button>
@@ -225,16 +227,16 @@
 					<input id="spaceH" type="number" min="0" max="1" step=".05" value=".8" data-custom="ledParams">
 				</label>
 			</fieldset>
-		</div>
 
-		<div class="box center">
 			<fieldset>
 				<legend>Features added via callback</legend>
 				<button data-feature="showLogo">Logo</button>
 				<button data-feature="energyMeter">Energy meters</button>
 				<button data-feature="songProgress">Progress bar</button>
 			</fieldset>
+		</div>
 
+		<div class="box center">
 			<fieldset>
 				<legend>Test tones</legend>
 				<label class="label">Waveform
@@ -263,7 +265,7 @@
 					</select>
 				</label>
 
-				<label class="label">Custom freq. (Hz)
+				<label class="label">Custom frequency (Hz)
 					<input id="frequency" type="text">
 				</label>
 
@@ -272,8 +274,15 @@
 					<div class="value"></div>
 				</label>
 
+				<label class="label">Volume
+					<input id="volume" type="range" min="0" max="1" step=".1">
+					<div class="value"></div>
+				</label>
+
 				<button id="btn_play">Play</button>
 				<button id="btn_soundoff">STOP</button>
+
+				<div id="piano"></div>
 			</fieldset>
 	</div>
 
