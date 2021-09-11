@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## version 3.5.1 (2021-09-10)
+
++ Removed named tuples from the TS type definitions file, for improved compatibility [(#20)](https://github.com/hvianna/audioMotion-analyzer/issues/20).
+
+
 ## version 3.5.0 (2021-07-15)
 
 ### Added: {docsify-ignore}
