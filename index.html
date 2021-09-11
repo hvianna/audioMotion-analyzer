@@ -76,16 +76,14 @@
 		.quotes-container {
 			display: flex;
 			overflow-x: scroll;
-			padding: 1em 0;
 			scroll-behavior: smooth;
 			scroll-snap-type: x mandatory;
 		}
 		.quote {
 			flex-shrink: 0;
-			font-size: 1.2em;
+			font-size: 1.25rem;
 			font-style: italic;
-			font-weight: bold;
-			padding: 0 1em;
+			padding: 0 1.8em;
 			position: relative;
 			scroll-snap-align: start;
 			text-align: center;
@@ -94,22 +92,17 @@
 		.quote::before {
 			color: #bbb;
 			content: '\201c';
-			font-family: serif;
-			font-size: 3em;
-			font-style: normal;
+			font: bold normal 3.5rem serif;
 			margin-left: -.6em;
 			position: absolute;
-			top: -.5em;
+			top: -.25em;
 		}
 		.quote .author {
+			display: block;
 			font-size: 1rem;
 			font-style: normal;
 			font-weight: normal;
 			text-align: right;
-		}
-		.quote .author::before {
-			content: '\2014';
-			margin-right: .25em;
 		}
 	</style>
 </head>

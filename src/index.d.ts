@@ -50,9 +50,9 @@ interface AnalyzerBarData {
   posX: number;
   freqLo: number;
   freqHi: number;
-  hold: [ mono_or_left: number, right?: number ];
-  peak: [ mono_or_left: number, right: number ];
-  value: [ mono_or_left: number, right?: number ];
+  hold: [ number, number? ];
+  peak: [ number, number ];
+  value: [ number, number? ];
 }
 
 interface ConstructorOptions extends Options {

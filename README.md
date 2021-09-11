@@ -11,18 +11,18 @@ My goal is to make this the best looking, most accurate and customizable spectru
 What users are saying:
 
 <div class="quotes-container">
-	<div class="quote">
-		I still, to this day, haven't found anything close to audioMotion in terms of beauty.
-		<div class="author">Weakky@github</div>
-	</div>
-	<div class="quote">
-	 I've been visualizing input with FFT with p5.js for a while, but got sick of how much code was needed.<br>This looks way better and works better too.
-		<div class="author">Staijn1@github</div>
-	</div>
-	<div class="quote">
-		It works amazing! The spectrum is so easy readable even for complex sound.
-		<div class="author">davay42@github</div>
-	</div>
+	<p class="quote">
+		<strong>I still, to this day, haven't found anything close to audioMotion in terms of beauty.</strong>
+		<span class="author">&mdash; Weakky@github</span>
+	</p>
+	<p class="quote">
+		<strong>I've been visualizing input with FFT with p5.js for a while, but got sick of how much code was needed.<br>This looks way better and works better too.</strong>
+		<span class="author">&mdash; Staijn1@github</span>
+	</p>
+	<p class="quote">
+		<strong>It works amazing! The spectrum is so easy readable even for complex sound.</strong>
+		<span class="author">&mdash; davay42@github</span>
+	</p>
 </div>
 
 ## Features
