@@ -7,6 +7,7 @@ type OnCanvasResizeFunction = (
 type CanvasResizeReason = "create" | "fschange" | "lores" | "resize" | "user";
 
 export interface Options {
+  alphaBars?: boolean;
   barSpace?: number;
   bgAlpha?: number;
   fftSize?: number;
@@ -85,6 +86,8 @@ export interface LedParameters {
 
 declare class AudioMotionAnalyzer {
   constructor(container?: HTMLElement, options?: ConstructorOptions);
+
+  public alphaBars: boolean;
 
   get audioCtx(): AudioContext;
   get canvas(): HTMLCanvasElement;

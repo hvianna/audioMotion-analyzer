@@ -925,6 +925,7 @@ export default class AudioMotionAnalyzer {
 			  canvasX        = this._scaleX.canvas,
 			  canvasR        = this._scaleR.canvas,
 			  energy         = this._energy,
+			  isAlphaBars    = this.alphaBars,
 			  isOctaveBands  = this._isOctaveBands,
 			  isLedDisplay   = this._isLedDisplay,
 			  isLumiBars     = this._isLumiBars,
@@ -958,12 +959,14 @@ export default class AudioMotionAnalyzer {
 
 		// helper function - draw a polygon of width `w` and height `h` at (x,y) in radial mode
 		const radialPoly = ( x, y, w, h ) => {
+			ctx.beginPath();
 			for ( const dir of ( mirrorMode ? [1,-1] : [1] ) ) {
 				ctx.moveTo( ...radialXY( x, y, dir ) );
 				ctx.lineTo( ...radialXY( x, y + h, dir ) );
 				ctx.lineTo( ...radialXY( x + w, y + h, dir ) );
 				ctx.lineTo( ...radialXY( x + w, y, dir ) );
 			}
+			ctx.fill();
 		}
 
 		// LED attributes and helper function for bar height calculation
@@ -1071,12 +1074,13 @@ export default class AudioMotionAnalyzer {
 			// helper function for FFT data interpolation
 			const interpolate = ( bin, ratio ) => fftData[ bin ] + ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio;
 
-			// start drawing path
+			// start drawing path (for mode 10)
 			ctx.beginPath();
 
-			// draw bars / lines
+			// store line graph points to create mirror effect in radial mode
+			let points = [];
 
-			let points = []; // store line graph (mode 10) points to create mirror effect in radial mode
+			// draw bars / lines
 
 			for ( let i = 0; i < nBars; i++ ) {
 
@@ -1114,7 +1118,7 @@ export default class AudioMotionAnalyzer {
 					continue;
 
 				// set opacity for lumi bars before barHeight value is normalized
-				if ( isLumiBars )
+				if ( isLumiBars || isAlphaBars )
 					ctx.globalAlpha = barHeight;
 
 				// normalize barHeight
@@ -1213,13 +1217,17 @@ export default class AudioMotionAnalyzer {
 				}
 
 				// Draw peak
-				if ( bar.peak[ channel ] > 0 && this.showPeaks && ! isLumiBars && posX >= initialX && posX < finalX ) {
+				const peak = bar.peak[ channel ];
+				if ( peak > 0 && this.showPeaks && ! isLumiBars && posX >= initialX && posX < finalX ) {
+					if ( isAlphaBars )
+						ctx.globalAlpha = peak;
+
 					if ( isLedDisplay )
-						ctx.fillRect( posX,	analyzerBottom - ledPosY( bar.peak[ channel ] ), width, ledHeight );
+						ctx.fillRect( posX,	analyzerBottom - ledPosY( peak ), width, ledHeight );
 					else if ( ! isRadial )
-						ctx.fillRect( posX, analyzerBottom - bar.peak[ channel ] * maxBarHeight, adjWidth, 2 );
+						ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, adjWidth, 2 );
 					else if ( mode != 10 ) // radial - no peaks for mode 10
-						radialPoly( posX, bar.peak[ channel ] * maxBarHeight * ( ! channel || -1 ), adjWidth, -2 );
+						radialPoly( posX, peak * maxBarHeight * ( ! channel || -1 ), adjWidth, -2 );
 				}
 
 			} // for ( let i = 0; i < nBars; i++ )
@@ -1231,7 +1239,7 @@ export default class AudioMotionAnalyzer {
 			// restore global alpha
 			ctx.globalAlpha = 1;
 
-			// Fill/stroke drawing path for mode 10 and radial
+			// Fill/stroke drawing path for mode 10
 			if ( mode == 10 ) {
 				if ( isRadial ) {
 					if ( mirrorMode ) {
@@ -1262,9 +1270,6 @@ export default class AudioMotionAnalyzer {
 					ctx.fill();
 					ctx.globalAlpha = 1;
 				}
-			}
-			else if ( isRadial ) {
-				ctx.fill();
 			}
 
 			// Reflex effect
@@ -1816,7 +1821,8 @@ export default class AudioMotionAnalyzer {
 			start        : true,
 			volume       : 1,
 			mirror       : 0,
-			useCanvas    : true
+			useCanvas    : true,
+			alphaBars    : false
 		};
 
 		// callback functions properties
