@@ -1823,10 +1823,10 @@ export default class AudioMotionAnalyzer {
 		const callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
 
 		// compile valid properties; `start` is not an actual property and is handled after setting everything else
-		const validProps = Object.keys( defaults ).concat( callbacks, ['height', 'width'] ).filter( e => e != 'start' );
+		const validProps = Object.keys( defaults ).filter( e => e != 'start' ).concat( callbacks, ['height', 'width'] );
 
 		if ( useDefaults || options === undefined )
-			options = Object.assign( defaults, options ); // NOTE: defaults is modified!
+			options = { ...defaults, ...options }; // merge options with defaults
 
 		for ( const prop of Object.keys( options ) ) {
 			if ( callbacks.includes( prop ) && typeof options[ prop ] !== 'function' ) // check invalid callback
