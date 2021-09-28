@@ -923,7 +923,8 @@ export default class AudioMotionAnalyzer {
 			  canvasX        = this._scaleX.canvas,
 			  canvasR        = this._scaleR.canvas,
 			  energy         = this._energy,
-			  isAlphaBars    = this.alphaBars,
+			  mode           = this._mode,
+			  isAlphaBars    = this.alphaBars && mode != 10,
 			  isOctaveBands  = this._isOctaveBands,
 			  isLedDisplay   = this._isLedDisplay,
 			  isLumiBars     = this._isLumiBars,
@@ -932,7 +933,6 @@ export default class AudioMotionAnalyzer {
 			  isStereo       = this._stereo,
 			  lineWidth      = +this.lineWidth, // make sure the damn thing is a number!
 			  mirrorMode     = this._mirror,
-			  mode           = this._mode,
 			  channelHeight  = this._channelHeight,
 			  channelGap     = this._channelGap,
 			  analyzerHeight = this._analyzerHeight,
@@ -947,6 +947,15 @@ export default class AudioMotionAnalyzer {
 
 		if ( energy.val > 0 )
 			this._spinAngle += this._spinSpeed * RPM;
+
+		const strokeIf = flag => {
+			if ( flag && lineWidth ) {
+				const alpha = ctx.globalAlpha;
+				ctx.globalAlpha = 1;
+				ctx.stroke();
+				ctx.globalAlpha = alpha;
+			}
+		}
 
 		// helper function - convert planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y, dir ) => {
@@ -965,7 +974,9 @@ export default class AudioMotionAnalyzer {
 				ctx.lineTo( ...radialXY( x + w, y + h, dir ) );
 				ctx.lineTo( ...radialXY( x + w, y, dir ) );
 			}
-			ctx[ stroke ? 'stroke' : 'fill' ]();
+
+			strokeIf( stroke );
+			ctx.fill();
 		}
 
 		// LED attributes and helper function for bar height calculation
@@ -1061,8 +1072,8 @@ export default class AudioMotionAnalyzer {
 					ctx.setLineDash( [ ledHeight, ledSpaceV ] );
 					ctx.lineWidth = width;
 				}
-				else // for outline effect ensure linewidth is greater than 0, but not greater than half the bar width
-					ctx.lineWidth = isOutline ? Math.min( lineWidth || 1, width / 2 ) : lineWidth;
+				else // for outline effect ensure linewidth is not greater than half the bar width
+					ctx.lineWidth = isOutline ? Math.min( lineWidth, width / 2 ) : lineWidth;
 
 				// set selected gradient for fill and stroke
 				ctx.fillStyle = ctx.strokeStyle = this._canvasGradient;
@@ -1121,6 +1132,8 @@ export default class AudioMotionAnalyzer {
 				// set opacity for lumi bars before barHeight value is normalized
 				if ( isLumiBars || isAlphaBars )
 					ctx.globalAlpha = barHeight;
+				else if ( isOutline )
+					ctx.globalAlpha = this.fillAlpha;
 
 				// normalize barHeight
 				if ( isLedDisplay ) {
@@ -1212,16 +1225,28 @@ export default class AudioMotionAnalyzer {
 					else if ( posX >= initialX ) {
 						if ( isRadial )
 							radialPoly( posX, 0, adjWidth, barHeight, isOutline );
-						else
-							ctx[ `${ isOutline ? 'stroke' : 'fill' }Rect` ]( posX, isLumiBars ? channelTop : analyzerBottom, adjWidth, isLumiBars ? channelBottom : -barHeight );
+						else {
+							const x = posX,
+								  y = isLumiBars ? channelTop : analyzerBottom,
+								  w = adjWidth,
+								  h = isLumiBars ? channelBottom : -barHeight;
+
+							ctx.beginPath();
+							ctx.moveTo( x, y );
+							ctx.lineTo( x, y + h );
+							ctx.lineTo( x + w, y + h );
+							ctx.lineTo( x + w, y );
+
+							strokeIf( isOutline );
+							ctx.fill();
+						}
 					}
 				}
 
 				// Draw peak
 				const peak = bar.peak[ channel ];
 				if ( peak > 0 && this.showPeaks && ! isLumiBars && posX >= initialX && posX < finalX ) {
-					if ( isAlphaBars )
-						ctx.globalAlpha = peak;
+					ctx.globalAlpha = isAlphaBars ? peak : 1;
 
 					if ( isLedDisplay )
 						ctx.fillRect( posX,	analyzerBottom - ledPosY( peak ), width, ledHeight );
