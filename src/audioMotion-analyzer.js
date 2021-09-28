@@ -693,17 +693,15 @@ export default class AudioMotionAnalyzer {
 		if ( options.colorStops === undefined || options.colorStops.length < 2 )
 			throw new AudioMotionError( 'ERR_GRADIENT_MISSING_COLOR', 'Gradient must define at least two colors' );
 
-		this._gradients[ name ] = {};
+		this._gradients[ name ] = {
+			bgColor:    options.bgColor || '#111',
+			dir:        options.dir,
+			colorStops: options.colorStops
+		};
 
-		if ( options.bgColor !== undefined )
-			this._gradients[ name ].bgColor = options.bgColor;
-		else
-			this._gradients[ name ].bgColor = '#111';
-
-		if ( options.dir !== undefined )
-			this._gradients[ name ].dir = options.dir;
-
-		this._gradients[ name ].colorStops = options.colorStops;
+		// if the registered gradient is the current one, regenerate it
+		if ( name == this._gradient )
+			this._makeGrad();
 	}
 
 	/**
