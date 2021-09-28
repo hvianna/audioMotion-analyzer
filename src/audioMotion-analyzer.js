@@ -927,6 +927,7 @@ export default class AudioMotionAnalyzer {
 			  isOctaveBands  = this._isOctaveBands,
 			  isLedDisplay   = this._isLedDisplay,
 			  isLumiBars     = this._isLumiBars,
+			  isOutline      = this.outlineBars && isOctaveBands && ! isLumiBars,
 			  isRadial       = this._radial,
 			  isStereo       = this._stereo,
 			  lineWidth      = +this.lineWidth, // make sure the damn thing is a number!
@@ -956,7 +957,7 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// helper function - draw a polygon of width `w` and height `h` at (x,y) in radial mode
-		const radialPoly = ( x, y, w, h ) => {
+		const radialPoly = ( x, y, w, h, stroke ) => {
 			ctx.beginPath();
 			for ( const dir of ( mirrorMode ? [1,-1] : [1] ) ) {
 				ctx.moveTo( ...radialXY( x, y, dir ) );
@@ -964,7 +965,7 @@ export default class AudioMotionAnalyzer {
 				ctx.lineTo( ...radialXY( x + w, y + h, dir ) );
 				ctx.lineTo( ...radialXY( x + w, y, dir ) );
 			}
-			ctx.fill();
+			ctx[ stroke ? 'stroke' : 'fill' ]();
 		}
 
 		// LED attributes and helper function for bar height calculation
@@ -1060,6 +1061,8 @@ export default class AudioMotionAnalyzer {
 					ctx.setLineDash( [ ledHeight, ledSpaceV ] );
 					ctx.lineWidth = width;
 				}
+				else // for outline effect ensure linewidth is greater than 0, but not greater than half the bar width
+					ctx.lineWidth = isOutline ? Math.min( lineWidth || 1, width / 2 ) : lineWidth;
 
 				// set selected gradient for fill and stroke
 				ctx.fillStyle = ctx.strokeStyle = this._canvasGradient;
@@ -1208,9 +1211,9 @@ export default class AudioMotionAnalyzer {
 					}
 					else if ( posX >= initialX ) {
 						if ( isRadial )
-							radialPoly( posX, 0, adjWidth, barHeight );
+							radialPoly( posX, 0, adjWidth, barHeight, isOutline );
 						else
-							ctx.fillRect( posX, isLumiBars ? channelTop : analyzerBottom, adjWidth, isLumiBars ? channelBottom : -barHeight );
+							ctx[ `${ isOutline ? 'stroke' : 'fill' }Rect` ]( posX, isLumiBars ? channelTop : analyzerBottom, adjWidth, isLumiBars ? channelBottom : -barHeight );
 					}
 				}
 
@@ -1248,10 +1251,8 @@ export default class AudioMotionAnalyzer {
 					ctx.closePath();
 				}
 
-				if ( lineWidth > 0 ) {
-					ctx.lineWidth = lineWidth;
+				if ( lineWidth > 0 )
 					ctx.stroke();
-				}
 
 				if ( this.fillAlpha > 0 ) {
 					if ( isRadial ) {
@@ -1820,7 +1821,8 @@ export default class AudioMotionAnalyzer {
 			volume       : 1,
 			mirror       : 0,
 			useCanvas    : true,
-			alphaBars    : false
+			alphaBars    : false,
+			outlineBars  : false
 		};
 
 		// callback functions properties

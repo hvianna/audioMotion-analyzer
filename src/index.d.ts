@@ -25,6 +25,7 @@ export interface Options {
   mode?: number;
   onCanvasDraw?: OnCanvasDrawFunction;
   onCanvasResize?: OnCanvasResizeFunction;
+  outlineBars?: boolean;
   overlay?: boolean;
   radial?: boolean;
   reflexAlpha?: number;
@@ -155,6 +156,7 @@ declare class AudioMotionAnalyzer {
   get mode(): number;
   set mode(value: number);
 
+  public outlineBars: boolean;
   public overlay: boolean;
 
   get peakEnergy(): number;
