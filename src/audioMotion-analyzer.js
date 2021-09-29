@@ -928,7 +928,7 @@ export default class AudioMotionAnalyzer {
 			  isOctaveBands  = this._isOctaveBands,
 			  isLedDisplay   = this._isLedDisplay,
 			  isLumiBars     = this._isLumiBars,
-			  isOutline      = this.outlineBars && isOctaveBands && ! isLumiBars,
+			  isOutline      = this.outlineBars && isOctaveBands && ! isLumiBars && ! isLedDisplay,
 			  isRadial       = this._radial,
 			  isStereo       = this._stereo,
 			  lineWidth      = +this.lineWidth, // make sure the damn thing is a number!
@@ -1129,7 +1129,7 @@ export default class AudioMotionAnalyzer {
 				if ( ! useCanvas )
 					continue;
 
-				// set opacity for lumi bars before barHeight value is normalized
+				// set opacity for bar effects
 				if ( isLumiBars || isAlphaBars )
 					ctx.globalAlpha = barHeight;
 				else if ( isOutline )
