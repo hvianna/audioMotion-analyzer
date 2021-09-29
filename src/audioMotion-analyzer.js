@@ -1246,8 +1246,13 @@ export default class AudioMotionAnalyzer {
 				// Draw peak
 				const peak = bar.peak[ channel ];
 				if ( peak > 0 && this.showPeaks && ! isLumiBars && posX >= initialX && posX < finalX ) {
-					ctx.globalAlpha = isAlphaBars ? peak : 1;
+					// choose the best opacity for the peaks
+					if ( isOutline && lineWidth > 0 )
+						ctx.globalAlpha = 1;
+					else if ( isAlphaBars )
+						ctx.globalAlpha = peak;
 
+					// render peak according to current mode / effect
 					if ( isLedDisplay )
 						ctx.fillRect( posX,	analyzerBottom - ledPosY( peak ), width, ledHeight );
 					else if ( ! isRadial )
