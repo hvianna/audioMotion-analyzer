@@ -88,7 +88,8 @@ export interface LedParameters {
 declare class AudioMotionAnalyzer {
   constructor(container?: HTMLElement, options?: ConstructorOptions);
 
-  public alphaBars: boolean;
+  get alphaBars(): boolean;
+  set alphaBars(value: boolean);
 
   get audioCtx(): AudioContext;
   get canvas(): HTMLCanvasElement;
@@ -123,10 +124,12 @@ declare class AudioMotionAnalyzer {
   get width(): number;
   set width(w: number);
 
+  get isAlphaBars(): boolean;
   get isFullscreen(): boolean;
   get isLedDisplay(): boolean;
   get isLumiBars(): boolean;
   get isOctaveBands(): boolean;
+  get isOutlineBars(): boolean;
 
   get isOn(): boolean;
 
@@ -156,7 +159,9 @@ declare class AudioMotionAnalyzer {
   get mode(): number;
   set mode(value: number);
 
-  public outlineBars: boolean;
+  get outlineBars(): boolean;
+  set outlineBars(value: boolean);
+
   public overlay: boolean;
 
   get peakEnergy(): number;

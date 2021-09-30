@@ -231,6 +231,17 @@ export default class AudioMotionAnalyzer {
 	 * ==========================================================================
 	 */
 
+
+	// alphaBars effect
+
+	get alphaBars() {
+		return this._alphaBars;
+	}
+	set alphaBars( value ) {
+		this._alphaBars = !! value;
+		this._calcAux();
+	}
+
 	// Bar spacing (for octave bands modes)
 
 	get barSpace() {
@@ -333,6 +344,16 @@ export default class AudioMotionAnalyzer {
 		this._calcAux();
 		this._calcLeds();
 		this._makeGrad();
+	}
+
+	// Outlined bars
+
+	get outlineBars() {
+		return this._outlineBars;
+	}
+	set outlineBars( value ) {
+		this._outlineBars = !! value;
+		this._calcAux();
 	}
 
 	// Radial mode
@@ -509,6 +530,9 @@ export default class AudioMotionAnalyzer {
 	get fps() {
 		return this._fps;
 	}
+	get isAlphaBars() {
+		return this._isAlphaBars;
+	}
 	get isFullscreen() {
 		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._fsEl;
 	}
@@ -523,6 +547,9 @@ export default class AudioMotionAnalyzer {
 	}
 	get isOn() {
 		return this._runId !== undefined;
+	}
+	get isOutlineBars() {
+		return this._isOutline;
 	}
 	get peakEnergy() {
 		// DEPRECATED - to be removed in v4.0.0
@@ -837,9 +864,11 @@ export default class AudioMotionAnalyzer {
 
 		this._radius         = Math.min( canvas.width, canvas.height ) * ( this._stereo ? .375 : .125 ) | 0;
 		this._barSpacePx     = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
-		this._isOctaveBands  = ( this._mode % 10 != 0 );
-		this._isLedDisplay   = ( this._showLeds && this._isOctaveBands && ! isRadial );
-		this._isLumiBars     = ( this._lumiBars && this._isOctaveBands && ! isRadial );
+		this._isOctaveBands  = this._mode % 10 != 0;
+		this._isLedDisplay   = this._showLeds && this._isOctaveBands && ! isRadial;
+		this._isLumiBars     = this._lumiBars && this._isOctaveBands && ! isRadial;
+		this._isAlphaBars    = this._alphaBars && ! this._isLumiBars && this._mode != 10;
+		this._isOutline      = this._outlineBars && this._isOctaveBands && ! this._isLumiBars && ! this._isLedDisplay;
 		this._maximizeLeds   = ! this._stereo || this._reflexRatio > 0 && ! this._isLumiBars;
 
 		this._channelHeight  = canvas.height - ( isDual && ! this._isLedDisplay ? .5 : 0 ) >> isDual;
@@ -924,11 +953,11 @@ export default class AudioMotionAnalyzer {
 			  canvasR        = this._scaleR.canvas,
 			  energy         = this._energy,
 			  mode           = this._mode,
-			  isAlphaBars    = this.alphaBars && mode != 10,
-			  isOctaveBands  = this._isOctaveBands,
+			  isAlphaBars    = this._isAlphaBars,
 			  isLedDisplay   = this._isLedDisplay,
 			  isLumiBars     = this._isLumiBars,
-			  isOutline      = this.outlineBars && isOctaveBands && ! isLumiBars && ! isLedDisplay,
+			  isOctaveBands  = this._isOctaveBands,
+			  isOutline      = this._isOutline,
 			  isRadial       = this._radial,
 			  isStereo       = this._stereo,
 			  lineWidth      = +this.lineWidth, // make sure the damn thing is a number!
