@@ -278,6 +278,16 @@ export default class AudioMotionAnalyzer {
 		this._makeGrad();
 	}
 
+	// LEDs effect
+
+	get ledBars() {
+		return this._showLeds;
+	}
+	set ledBars( value ) {
+		this._showLeds = !! value;
+		this._calcAux();
+	}
+
 	// Canvas size
 
 	get height() {
@@ -439,14 +449,12 @@ export default class AudioMotionAnalyzer {
 			this._analyzer[ i ].maxDecibels = value;
 	}
 
-	// LEDs effect
-
+	// DEPRECATED - use ledBars instead
 	get showLeds() {
-		return this._showLeds;
+		return this.ledBars;
 	}
 	set showLeds( value ) {
-		this._showLeds = !! value;
-		this._calcAux();
+		this.ledBars = value;
 	}
 
 	// Analyzer's smoothing time constant
@@ -539,8 +547,12 @@ export default class AudioMotionAnalyzer {
 	get isOctaveBands() {
 		return this._isOctaveBands;
 	}
-	get isLedDisplay() {
+	get isLedBars() {
 		return this._isLedDisplay;
+	}
+	get isLedDisplay() {
+		// DEPRECATED - use isLedBars instead
+		return this.isLedBars;
 	}
 	get isLumiBars() {
 		return this._isLumiBars;
@@ -1856,11 +1868,11 @@ export default class AudioMotionAnalyzer {
 			minDecibels  : -85,
 			maxDecibels  : -25,
 			showBgColor  : true,
-			showLeds     : false,
 			showScaleX   : true,
 			showScaleY   : false,
 			showPeaks    : true,
 			showFPS      : false,
+			ledBars      : false,
 			lumiBars     : false,
 			loRes        : false,
 			reflexRatio  : 0,
@@ -1887,8 +1899,12 @@ export default class AudioMotionAnalyzer {
 		// callback functions properties
 		const callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
 
-		// compile valid properties; `start` is not an actual property and is handled after setting everything else
+		// build an array of valid properties; `start` is not an actual property and is handled after setting everything else
 		const validProps = Object.keys( defaults ).filter( e => e != 'start' ).concat( callbacks, ['height', 'width'] );
+
+		// handle deprecated `showLeds` property
+		if ( options && options.showLeds !== undefined && options.ledBars === undefined )
+			options.ledBars = options.showLeds;
 
 		if ( useDefaults || options === undefined )
 			options = { ...defaults, ...options }; // merge options with defaults

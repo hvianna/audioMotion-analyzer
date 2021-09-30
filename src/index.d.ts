@@ -14,6 +14,7 @@ export interface Options {
   fillAlpha?: number;
   gradient?: string;
   height?: number;
+  ledBars?: boolean;
   lineWidth?: number;
   loRes?: boolean;
   lumiBars?: boolean;
@@ -34,7 +35,7 @@ export interface Options {
   reflexRatio?: number;
   showBgColor?: boolean;
   showFPS?: boolean;
-  showLeds?: boolean;
+  showLeds?: boolean; // DEPRECATED - use ledBars instead
   showPeaks?: boolean;
   showScaleX?: boolean;
   showScaleY?: boolean;
@@ -103,7 +104,7 @@ declare class AudioMotionAnalyzer {
   get connectedSources(): AudioNode[];
   get connectedTo(): AudioNode[];
 
-  get energy(): number;
+  get energy(): number; // DEPRECATED - use getEnergy() instead
 
   get fftSize(): number;
   set fftSize(value: number);
@@ -126,12 +127,16 @@ declare class AudioMotionAnalyzer {
 
   get isAlphaBars(): boolean;
   get isFullscreen(): boolean;
-  get isLedDisplay(): boolean;
+  get isLedBars(): boolean;
+  get isLedDisplay(): boolean; // DEPRECATED - use isLedBars instead
   get isLumiBars(): boolean;
   get isOctaveBands(): boolean;
   get isOutlineBars(): boolean;
 
   get isOn(): boolean;
+
+  get ledBars(): boolean;
+  set ledBars(value: boolean);
 
   public lineWidth: number;
 
@@ -164,7 +169,7 @@ declare class AudioMotionAnalyzer {
 
   public overlay: boolean;
 
-  get peakEnergy(): number;
+  get peakEnergy(): number; // DEPRECATED - use getEnergy('peak') instead
   get pixelRatio(): number;
 
   get radial(): boolean;
@@ -180,6 +185,7 @@ declare class AudioMotionAnalyzer {
   public showBgColor: boolean;
   public showFPS: boolean;
 
+  // DEPRECATED - use ledBars instead
   get showLeds(): boolean;
   set showLeds(value: boolean);
 
