@@ -193,11 +193,13 @@ ul {
 }
 
 .sticky {
-	background: #222e;
-	margin-bottom: -10px;
+	background: linear-gradient(to top, transparent 0%, #222 28px);
+	margin-bottom: -10px !important;
 	padding-bottom: 30px;
+	pointer-events: none;
 	position: sticky;
 	top: 0;
+	z-index: 1;
 }
 
 /* background animation for overlay test on fluid demo */
@@ -212,6 +214,21 @@ ul {
 
 .center {
 	text-align: center;
+}
+
+.flag {
+	background: #444;
+	border-radius: 999px;
+	display: inline-block;
+	font-size: .9em;
+	margin: .5em .25em;
+	opacity: .5;
+	padding: .25em 1em;
+}
+.flag.active {
+	background: #0f0;
+	color: #222;
+	opacity: 1;
 }
 
 .flex {
