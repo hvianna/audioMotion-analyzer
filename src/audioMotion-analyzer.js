@@ -645,7 +645,7 @@ export default class AudioMotionAnalyzer {
 			return this._energy.val;
 
 		// if startFreq is a string, check for presets
-		if ( startFreq != ( startFreq | 0 ) ) {
+		if ( startFreq != +startFreq ) {
 			if ( startFreq == 'peak' )
 				return this._energy.peak;
 
