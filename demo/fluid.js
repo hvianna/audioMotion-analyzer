@@ -21,11 +21,11 @@ const presets = [
 			mode: 3,
 			barSpace: .4,
 			gradient: 'classic',
+			ledBars: true,
 			lumiBars: false,
 			radial: false,
 			reflexRatio: 0,
 			showBgColor: true,
-			showLeds: true,
 			showPeaks: true
 		}
 	},
@@ -50,9 +50,9 @@ const presets = [
 			mode: 5,
 			barSpace: .1,
 			gradient: 'prism',
+			ledBars: false,
 			radial: true,
 			showBgColor: true,
-			showLeds: false,
 			showPeaks: true,
 			spinSpeed: 1,
 			overlay: true
@@ -64,6 +64,7 @@ const presets = [
 			mode: 5,
 			barSpace: .25,
 			gradient: 'rainbow',
+			ledBars: false,
 			lumiBars: false,
 			radial: false,
 			reflexAlpha: .25,
@@ -71,7 +72,6 @@ const presets = [
 			reflexFit: true,
 			reflexRatio: .3,
 			showBgColor: false,
-			showLeds: false,
 			showPeaks: true,
 			overlay: false
 		}

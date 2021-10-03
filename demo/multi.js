@@ -51,11 +51,9 @@ document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 audioMotion[0].setOptions({
 	mode: 3,
-	showLeds: true,
+	ledBars: true,
 	showScaleY: true,
-	barSpace: 0.5,
-	width: 640,
-	height: 270
+	barSpace: 0.5
 });
 
 audioMotion[1].setOptions({
@@ -66,9 +64,7 @@ audioMotion[1].setOptions({
 	showScaleX: false,
 	showPeaks: false,
 	lineWidth: 2,
-	fillAlpha: .3,
-	width: 320,
-	height: 145
+	fillAlpha: .3
 });
 
 audioMotion[2].setOptions({
@@ -81,9 +77,7 @@ audioMotion[2].setOptions({
 	showPeaks: false,
 	lumiBars: true,
 	minDecibels: -80,
-	maxDecibels: -20,
-	width: 320,
-	height: 145
+	maxDecibels: -20
 });
 
 // Analyzer selector
