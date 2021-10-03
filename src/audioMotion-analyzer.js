@@ -232,8 +232,6 @@ export default class AudioMotionAnalyzer {
 	 */
 
 
-	// alphaBars effect
-
 	get alphaBars() {
 		return this._alphaBars;
 	}
@@ -242,8 +240,6 @@ export default class AudioMotionAnalyzer {
 		this._calcAux();
 	}
 
-	// Bar spacing (for octave bands modes)
-
 	get barSpace() {
 		return this._barSpace;
 	}
@@ -251,8 +247,6 @@ export default class AudioMotionAnalyzer {
 		this._barSpace = +value || 0;
 		this._calcAux();
 	}
-
-	// FFT size
 
 	get fftSize() {
 		return this._analyzer[0].fftSize;
@@ -265,8 +259,6 @@ export default class AudioMotionAnalyzer {
 		this._calcBars();
 	}
 
-	// Gradient
-
 	get gradient() {
 		return this._gradient;
 	}
@@ -278,7 +270,13 @@ export default class AudioMotionAnalyzer {
 		this._makeGrad();
 	}
 
-	// LEDs effect
+	get height() {
+		return this._height;
+	}
+	set height( h ) {
+		this._height = h;
+		this._setCanvas('user');
+	}
 
 	get ledBars() {
 		return this._showLeds;
@@ -288,24 +286,63 @@ export default class AudioMotionAnalyzer {
 		this._calcAux();
 	}
 
-	// Canvas size
-
-	get height() {
-		return this._height;
+	get loRes() {
+		return this._loRes;
 	}
-	set height( h ) {
-		this._height = h;
-		this._setCanvas('user');
-	}
-	get width() {
-		return this._width;
-	}
-	set width( w ) {
-		this._width = w;
-		this._setCanvas('user');
+	set loRes( value ) {
+		this._loRes = !! value;
+		this._setCanvas('lores');
 	}
 
-	// Mirror
+	get lumiBars() {
+		return this._lumiBars;
+	}
+	set lumiBars( value ) {
+		this._lumiBars = !! value;
+		this._calcAux();
+		this._calcLeds();
+		this._makeGrad();
+	}
+
+	get maxDecibels() {
+		return this._analyzer[0].maxDecibels;
+	}
+	set maxDecibels( value ) {
+		for ( const i of [0,1] )
+			this._analyzer[ i ].maxDecibels = value;
+	}
+
+	get maxFreq() {
+		return this._maxFreq;
+	}
+	set maxFreq( value ) {
+		if ( value < 1 )
+			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
+		else {
+			this._maxFreq = value;
+			this._calcBars();
+		}
+	}
+
+	get minDecibels() {
+		return this._analyzer[0].minDecibels;
+	}
+	set minDecibels( value ) {
+		for ( const i of [0,1] )
+			this._analyzer[ i ].minDecibels = value;
+	}
+
+	get minFreq() {
+		return this._minFreq;
+	}
+	set minFreq( value ) {
+		if ( value < 1 )
+			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
+		else {
+			this._minFreq = value;
+			this._calcBars();
+		}
+	}
 
 	get mirror() {
 		return this._mirror;
@@ -316,8 +353,6 @@ export default class AudioMotionAnalyzer {
 		this._calcBars();
 		this._makeGrad();
 	}
-
-	// Visualization mode
 
 	get mode() {
 		return this._mode;
@@ -334,30 +369,6 @@ export default class AudioMotionAnalyzer {
 			throw new AudioMotionError( 'ERR_INVALID_MODE', `Invalid mode: ${value}` );
 	}
 
-	// Low-resolution mode
-
-	get loRes() {
-		return this._loRes;
-	}
-	set loRes( value ) {
-		this._loRes = !! value;
-		this._setCanvas('lores');
-	}
-
-	// Luminance bars
-
-	get lumiBars() {
-		return this._lumiBars;
-	}
-	set lumiBars( value ) {
-		this._lumiBars = !! value;
-		this._calcAux();
-		this._calcLeds();
-		this._makeGrad();
-	}
-
-	// Outlined bars
-
 	get outlineBars() {
 		return this._outlineBars;
 	}
@@ -365,8 +376,6 @@ export default class AudioMotionAnalyzer {
 		this._outlineBars = !! value;
 		this._calcAux();
 	}
-
-	// Radial mode
 
 	get radial() {
 		return this._radial;
@@ -377,20 +386,6 @@ export default class AudioMotionAnalyzer {
 		this._calcBars();
 		this._makeGrad();
 	}
-
-	// Radial spin speed
-
-	get spinSpeed() {
-		return this._spinSpeed;
-	}
-	set spinSpeed( value ) {
-		value = +value || 0;
-		if ( this._spinSpeed === undefined || value == 0 )
-			this._spinAngle = -HALF_PI; // initialize or reset the rotation angle
-		this._spinSpeed = value;
-	}
-
-	// Reflex
 
 	get reflexRatio() {
 		return this._reflexRatio;
@@ -407,48 +402,6 @@ export default class AudioMotionAnalyzer {
 		}
 	}
 
-	// Current frequency range
-
-	get minFreq() {
-		return this._minFreq;
-	}
-	set minFreq( value ) {
-		if ( value < 1 )
-			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
-		else {
-			this._minFreq = value;
-			this._calcBars();
-		}
-	}
-	get maxFreq() {
-		return this._maxFreq;
-	}
-	set maxFreq( value ) {
-		if ( value < 1 )
-			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
-		else {
-			this._maxFreq = value;
-			this._calcBars();
-		}
-	}
-
-	// Analyzer's sensitivity
-
-	get minDecibels() {
-		return this._analyzer[0].minDecibels;
-	}
-	set minDecibels( value ) {
-		for ( const i of [0,1] )
-			this._analyzer[ i ].minDecibels = value;
-	}
-	get maxDecibels() {
-		return this._analyzer[0].maxDecibels;
-	}
-	set maxDecibels( value ) {
-		for ( const i of [0,1] )
-			this._analyzer[ i ].maxDecibels = value;
-	}
-
 	// DEPRECATED - use ledBars instead
 	get showLeds() {
 		return this.ledBars;
@@ -456,8 +409,6 @@ export default class AudioMotionAnalyzer {
 	set showLeds( value ) {
 		this.ledBars = value;
 	}
-
-	// Analyzer's smoothing time constant
 
 	get smoothing() {
 		return this._analyzer[0].smoothingTimeConstant;
@@ -467,7 +418,15 @@ export default class AudioMotionAnalyzer {
 			this._analyzer[ i ].smoothingTimeConstant = value;
 	}
 
-	// Split gradient (in stereo mode)
+	get spinSpeed() {
+		return this._spinSpeed;
+	}
+	set spinSpeed( value ) {
+		value = +value || 0;
+		if ( this._spinSpeed === undefined || value == 0 )
+			this._spinAngle = -HALF_PI; // initialize or reset the rotation angle
+		this._spinSpeed = value;
+	}
 
 	get splitGradient() {
 		return this._splitGradient;
@@ -476,8 +435,6 @@ export default class AudioMotionAnalyzer {
 		this._splitGradient = !! value;
 		this._makeGrad();
 	}
-
-	// Stereo
 
 	get stereo() {
 		return this._stereo;
@@ -499,13 +456,19 @@ export default class AudioMotionAnalyzer {
 		this._makeGrad();
 	}
 
-	// Volume
-
 	get volume() {
 		return this._output.gain.value;
 	}
 	set volume( value ) {
 		this._output.gain.value = value;
+	}
+
+	get width() {
+		return this._width;
+	}
+	set width( w ) {
+		this._width = w;
+		this._setCanvas('user');
 	}
 
 	// Read only properties
@@ -525,18 +488,17 @@ export default class AudioMotionAnalyzer {
 	get connectedTo() {
 		return this._outNodes;
 	}
-	get energy() {
-		// DEPRECATED - to be removed in v4.0.0
+	get energy() { // DEPRECATED - use getEnergy() instead
 		return this.getEnergy();
 	}
-	get fsWidth() {
-		return this._fsWidth;
+	get fps() {
+		return this._fps;
 	}
 	get fsHeight() {
 		return this._fsHeight;
 	}
-	get fps() {
-		return this._fps;
+	get fsWidth() {
+		return this._fsWidth;
 	}
 	get isAlphaBars() {
 		return this._isAlphaBars;
@@ -544,18 +506,17 @@ export default class AudioMotionAnalyzer {
 	get isFullscreen() {
 		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._fsEl;
 	}
-	get isOctaveBands() {
-		return this._isOctaveBands;
-	}
 	get isLedBars() {
 		return this._isLedDisplay;
 	}
-	get isLedDisplay() {
-		// DEPRECATED - use isLedBars instead
+	get isLedDisplay() { // DEPRECATED - use isLedBars instead
 		return this.isLedBars;
 	}
 	get isLumiBars() {
 		return this._isLumiBars;
+	}
+	get isOctaveBands() {
+		return this._isOctaveBands;
 	}
 	get isOn() {
 		return this._runId !== undefined;
@@ -563,8 +524,7 @@ export default class AudioMotionAnalyzer {
 	get isOutlineBars() {
 		return this._isOutline;
 	}
-	get peakEnergy() {
-		// DEPRECATED - to be removed in v4.0.0
+	get peakEnergy() { // DEPRECATED - use getEnergy('peak') instead
 		return this.getEnergy('peak');
 	}
 	get pixelRatio() {
@@ -606,6 +566,25 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Connects the analyzer output to another audio node
+	 *
+	 * @param [{object}] an AudioNode; if undefined, the output is connected to the audio context destination (speakers)
+	 */
+	connectOutput( node = this.audioCtx.destination ) {
+		if ( this._outNodes.includes( node ) )
+			return;
+
+		this._output.connect( node );
+		this._outNodes.push( node );
+
+		// when connecting the first node, also connect the analyzer nodes to the merger / output nodes
+		if ( this._outNodes.length == 1 ) {
+			for ( const i of [0,1] )
+				this._analyzer[ i ].connect( ( ! this._stereo && ! i ? this._output : this._merger ), 0, i );
+		}
+	}
+
+	/**
 	 * Disconnects audio sources from the analyzer
 	 *
 	 * @param [{object|array}] a connected AudioNode object or an array of such objects; if undefined, all connected nodes are disconnected
@@ -622,25 +601,6 @@ export default class AudioMotionAnalyzer {
 				node.disconnect( this._input );
 				this._sources.splice( idx, 1 );
 			}
-		}
-	}
-
-	/**
-	 * Connects the analyzer output to another audio node
-	 *
-	 * @param [{object}] an AudioNode; if undefined, the output is connected to the audio context destination (speakers)
-	 */
-	connectOutput( node = this.audioCtx.destination ) {
-		if ( this._outNodes.includes( node ) )
-			return;
-
-		this._output.connect( node );
-		this._outNodes.push( node );
-
-		// when connecting the first node, also connect the analyzer nodes to the merger / output nodes
-		if ( this._outNodes.length == 1 ) {
-			for ( const i of [0,1] )
-				this._analyzer[ i ].connect( ( ! this._stereo && ! i ? this._output : this._merger ), 0, i );
 		}
 	}
 
@@ -895,6 +855,185 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Precalculate the actual X-coordinate on screen for each analyzer bar
+	 */
+	_calcBars() {
+		/*
+	 	   Since the frequency scale is logarithmic, each position in the X-axis actually represents a power of 10.
+	 	   To improve performace, the position of each frequency is calculated in advance and stored in an array.
+	 	   Canvas space usage is optimized to accommodate exactly the frequency range the user needs.
+	 	   Positions need to be recalculated whenever the frequency range, FFT size or canvas size change.
+
+	 	                                +-------------------------- canvas --------------------------+
+	 	                                |                                                            |
+	 	      |-------------------|-----|-------------|-------------------!-------------------|------|------------|
+	 	      1                  10     |            100                  1K                 10K     |           100K (Hz)
+	 	   (10^0)              (10^1)   |          (10^2)               (10^3)              (10^4)   |          (10^5)
+	 	                                |-------------|<--- logWidth ---->|--------------------------|
+	 	                    minFreq--> 20                   (pixels)                                22K <--maxFreq
+	 	                            (10^1.3)                                                     (10^4.34)
+	 	                             minLog
+	 	*/
+
+		const bars = this._bars = []; // initialize object property
+
+		if ( ! this._ready )
+			return;
+
+		// helper functions
+		const binToFreq = bin => bin * this.audioCtx.sampleRate / this.fftSize || 1; // returns 1 for bin 0
+		const barsPush  = ( posX, binLo, binHi, freqLo, freqHi, ratioLo, ratioHi ) => bars.push( { posX, binLo, binHi, freqLo, freqHi, ratioLo, ratioHi, peak: [0,0], hold: [0], value: [0] } );
+
+		const analyzerWidth = this._analyzerWidth,
+			  initialX      = this._initialX,
+			  maxFreq       = this._maxFreq,
+			  minFreq       = this._minFreq;
+
+		let minLog,	logWidth;
+
+		if ( this._isOctaveBands ) {
+
+			// generate a 11-octave 24-tone equal tempered scale (16Hz to 33kHz)
+
+			/*
+				A simple linear interpolation is used to obtain an approximate amplitude value for the desired frequency
+				from available FFT data, like so:
+
+				h = hLo + ( hHi - hLo ) * ( f - fLo ) / ( fHi - fLo )
+				                         \___________________________/
+				                                       |
+				                                     ratio
+				where:
+
+				f   - desired frequency
+				h   - amplitude of desired frequency
+				fLo - frequency represented by the lower FFT bin
+				fHi - frequency represented by the higher FFT bin
+				hLo - amplitude of fLo
+				hHi - amplitude of fHi
+
+				ratio is calculated in advance here, to reduce computational complexity during real-time rendering in the _draw() function
+			*/
+
+			let temperedScale = [];
+
+			for ( let octave = 0; octave < 11; octave++ ) {
+				for ( let note = 0; note < 24; note++ ) {
+
+					const freq     = C0 * ROOT24 ** ( octave * 24 + note ),
+						  bin      = this._freqToBin( freq, 'floor' ),
+						  binFreq  = binToFreq( bin ),
+						  nextFreq = binToFreq( bin + 1 ),
+						  ratio    = ( freq - binFreq ) / ( nextFreq - binFreq );
+
+					temperedScale.push( { freq, bin, ratio } );
+				}
+			}
+
+			// generate the frequency bands according to current analyzer settings
+
+			const steps = [0,1,2,3,4,6,8,12,24][ this._mode ]; // number of notes grouped per band for each mode
+
+			for ( let index = 0; index < temperedScale.length; index += steps ) {
+				let { freq: freqLo, bin: binLo, ratio: ratioLo } = temperedScale[ index ],             // band start
+					{ freq: freqHi, bin: binHi, ratio: ratioHi } = temperedScale[ index + steps - 1 ]; // band end
+
+				const nBars   = bars.length,
+					  prevBar = bars[ nBars - 1 ];
+
+				// if the ending frequency is out of range, we're done here
+				if ( freqHi > maxFreq || binHi >= this.fftSize / 2 ) {
+					prevBar.binHi++;     // add an extra bin to the last bar, to fully include the last valid band
+					prevBar.ratioHi = 0; // disable interpolation
+					prevBar.freqHi = binToFreq( prevBar.binHi ); // update ending frequency
+					break;
+				}
+
+				// is the starting frequency in the selected range?
+				if ( freqLo >= minFreq ) {
+					if ( nBars > 0 ) {
+						const diff = binLo - prevBar.binHi;
+
+						// check if we skipped any available FFT bins since the last bar
+						if ( diff > 1 ) {
+							// allocate half of the unused bins to the previous bar
+							prevBar.binHi = binLo - ( diff >> 1 );
+							prevBar.ratioHi = 0;
+							prevBar.freqHi = binToFreq( prevBar.binHi ); // update ending frequency
+
+							// if the previous bar doesn't share any bins with other bars, no need for interpolation
+							if ( nBars > 1 && prevBar.binHi > prevBar.binLo && prevBar.binLo > bars[ nBars - 2 ].binHi ) {
+								prevBar.ratioLo = 0;
+								prevBar.freqLo = binToFreq( prevBar.binLo ); // update starting frequency
+							}
+
+							// start the current bar at the bin following the last allocated bin
+							binLo = prevBar.binHi + 1;
+						}
+
+						// if the lower bin is not shared with the ending frequency nor the previous bar, no need to interpolate it
+						if ( binHi > binLo && binLo > prevBar.binHi ) {
+							ratioLo = 0;
+							freqLo = binToFreq( binLo );
+						}
+					}
+
+					barsPush( 0, binLo, binHi, freqLo, freqHi, ratioLo, ratioHi );
+				}
+			}
+
+			this._barWidth = analyzerWidth / bars.length;
+
+			bars.forEach( ( bar, index ) => bar.posX = initialX + index * this._barWidth );
+
+			minLog = Math.log10( bars[0].freqLo );
+			logWidth = analyzerWidth / ( Math.log10( bars[ bars.length - 1 ].freqHi ) - minLog );
+		}
+		else {
+
+			// Discrete frequencies modes
+
+			this._barWidth = 1;
+
+			minLog = Math.log10( minFreq );
+			logWidth = analyzerWidth / ( Math.log10( maxFreq ) - minLog );
+
+			const minIndex = this._freqToBin( minFreq, 'floor' ),
+				  maxIndex = this._freqToBin( maxFreq );
+
+	 		let lastPos = -999;
+
+			for ( let i = minIndex; i <= maxIndex; i++ ) {
+				const freq = binToFreq( i ), // frequency represented by this index
+					  pos  = initialX + Math.round( logWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
+
+				// if it's on a different X-coordinate, create a new bar for this frequency
+				if ( pos > lastPos ) {
+					barsPush( pos, i, i, freq, freq, 0, 0 );
+					lastPos = pos;
+				} // otherwise, add this frequency to the last bar's range
+				else if ( bars.length ) {
+					bars[ bars.length - 1 ].binHi = i;
+					bars[ bars.length - 1 ].freqHi = freq;
+				}
+			}
+		}
+
+		// save these for scale generation
+		this._minLog = minLog;
+		this._logWidth = logWidth;
+
+		// update internal variables
+		this._calcAux();
+
+		// generate the X-axis and radial scales
+		this._createScales();
+
+		// update LED properties
+		this._calcLeds();
+	}
+
+	/**
 	 * Calculate attributes for the vintage LEDs effect, based on visualization mode and canvas resolution
 	 */
 	_calcLeds() {
@@ -952,6 +1091,72 @@ export default class AudioMotionAnalyzer {
 			spaceV,
 			analyzerHeight / ledCount - spaceV // ledHeight
 		];
+	}
+
+	/**
+	 * Generate the X-axis and radial scales in auxiliary canvases
+	 */
+	_createScales() {
+		const freqLabels  = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ],
+			  canvas      = this._canvasCtx.canvas,
+			  scaleX      = this._scaleX,
+			  scaleR      = this._scaleR,
+			  canvasX     = scaleX.canvas,
+			  canvasR     = scaleR.canvas,
+			  scaleHeight = Math.min( canvas.width, canvas.height ) * .03 | 0; // circular scale height (radial mode)
+
+		// in radial stereo mode, the scale is positioned exactly between both channels, by making the canvas a bit larger than the central diameter
+		canvasR.width = canvasR.height = ( this._radius << 1 ) + ( this._stereo * scaleHeight );
+
+		const radius  = canvasR.width >> 1, // this is also used as the center X and Y coordinates of the circular scale canvas
+			  radialY = radius - scaleHeight * .7;	// vertical position of text labels in the circular scale
+
+		// helper function
+		const radialLabel = ( x, label ) => {
+			const angle  = TAU * ( x / canvas.width ),
+				  adjAng = angle - HALF_PI, // rotate angles so 0 is at the top
+				  posX   = radialY * Math.cos( adjAng ),
+				  posY   = radialY * Math.sin( adjAng );
+
+			scaleR.save();
+			scaleR.translate( radius + posX, radius + posY );
+			scaleR.rotate( angle );
+			scaleR.fillText( label, 0, 0 );
+			scaleR.restore();
+		}
+
+		// clear scale canvas
+		canvasX.width |= 0;
+
+		scaleX.fillStyle = scaleR.strokeStyle = '#000c';
+		scaleX.fillRect( 0, 0, canvasX.width, canvasX.height );
+
+		scaleR.arc( radius, radius, radius - scaleHeight / 2, 0, TAU );
+		scaleR.lineWidth = scaleHeight;
+		scaleR.stroke();
+
+		scaleX.fillStyle = scaleR.fillStyle = '#fff';
+		scaleX.font = `${ canvasX.height >> 1 }px sans-serif`;
+		scaleR.font = `${ scaleHeight >> 1 }px sans-serif`;
+		scaleX.textAlign = scaleR.textAlign = 'center';
+
+		for ( const freq of freqLabels ) {
+			const label = ( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
+				  x     = this._logWidth * ( Math.log10( freq ) - this._minLog );
+
+			if ( x >= 0 && x <= this._analyzerWidth ) {
+				scaleX.fillText( label, this._initialX + x, canvasX.height * .75 );
+				if ( x < this._analyzerWidth ) // avoid wrapping-around the last label and overlapping the first one
+					radialLabel( x, label );
+
+				if ( this._mirror ) {
+					scaleX.fillText( label, ( this._initialX || canvas.width ) - x, canvasX.height * .75 );
+					if ( x > 10 ) // avoid overlapping of first labels on mirror mode
+						radialLabel( -x, label );
+				}
+
+			}
+		}
 	}
 
 	/**
@@ -1441,6 +1646,16 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Return the FFT data bin (array index) which represents a given frequency
+	 */
+	_freqToBin( freq, rounding = 'round' ) {
+		const max = this._analyzer[0].frequencyBinCount - 1,
+			  bin = Math[ rounding ]( freq * this.fftSize / this.audioCtx.sampleRate );
+
+		return bin < max ? bin : max;
+	}
+
+	/**
 	 * Generate currently selected gradient
 	 */
 	_makeGrad() {
@@ -1529,260 +1744,6 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Generate the X-axis and radial scales in auxiliary canvases
-	 */
-	_createScales() {
-		const freqLabels  = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ],
-			  canvas      = this._canvasCtx.canvas,
-			  scaleX      = this._scaleX,
-			  scaleR      = this._scaleR,
-			  canvasX     = scaleX.canvas,
-			  canvasR     = scaleR.canvas,
-			  scaleHeight = Math.min( canvas.width, canvas.height ) * .03 | 0; // circular scale height (radial mode)
-
-		// in radial stereo mode, the scale is positioned exactly between both channels, by making the canvas a bit larger than the central diameter
-		canvasR.width = canvasR.height = ( this._radius << 1 ) + ( this._stereo * scaleHeight );
-
-		const radius  = canvasR.width >> 1, // this is also used as the center X and Y coordinates of the circular scale canvas
-			  radialY = radius - scaleHeight * .7;	// vertical position of text labels in the circular scale
-
-		// helper function
-		const radialLabel = ( x, label ) => {
-			const angle  = TAU * ( x / canvas.width ),
-				  adjAng = angle - HALF_PI, // rotate angles so 0 is at the top
-				  posX   = radialY * Math.cos( adjAng ),
-				  posY   = radialY * Math.sin( adjAng );
-
-			scaleR.save();
-			scaleR.translate( radius + posX, radius + posY );
-			scaleR.rotate( angle );
-			scaleR.fillText( label, 0, 0 );
-			scaleR.restore();
-		}
-
-		// clear scale canvas
-		canvasX.width |= 0;
-
-		scaleX.fillStyle = scaleR.strokeStyle = '#000c';
-		scaleX.fillRect( 0, 0, canvasX.width, canvasX.height );
-
-		scaleR.arc( radius, radius, radius - scaleHeight / 2, 0, TAU );
-		scaleR.lineWidth = scaleHeight;
-		scaleR.stroke();
-
-		scaleX.fillStyle = scaleR.fillStyle = '#fff';
-		scaleX.font = `${ canvasX.height >> 1 }px sans-serif`;
-		scaleR.font = `${ scaleHeight >> 1 }px sans-serif`;
-		scaleX.textAlign = scaleR.textAlign = 'center';
-
-		for ( const freq of freqLabels ) {
-			const label = ( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
-				  x     = this._logWidth * ( Math.log10( freq ) - this._minLog );
-
-			if ( x >= 0 && x <= this._analyzerWidth ) {
-				scaleX.fillText( label, this._initialX + x, canvasX.height * .75 );
-				if ( x < this._analyzerWidth ) // avoid wrapping-around the last label and overlapping the first one
-					radialLabel( x, label );
-
-				if ( this._mirror ) {
-					scaleX.fillText( label, ( this._initialX || canvas.width ) - x, canvasX.height * .75 );
-					if ( x > 10 ) // avoid overlapping of first labels on mirror mode
-						radialLabel( -x, label );
-				}
-
-			}
-		}
-	}
-
-	/**
-	 * Precalculate the actual X-coordinate on screen for each analyzer bar
-	 *
-	 * Since the frequency scale is logarithmic, each position in the X-axis actually represents a power of 10.
-	 * To improve performace, the position of each frequency is calculated in advance and stored in an array.
-	 * Canvas space usage is optimized to accommodate exactly the frequency range the user needs.
-	 * Positions need to be recalculated whenever the frequency range, FFT size or canvas size change.
-	 *
-	 *                              +-------------------------- canvas --------------------------+
-	 *                              |                                                            |
-	 *    |-------------------|-----|-------------|-------------------!-------------------|------|------------|
-	 *    1                  10     |            100                  1K                 10K     |           100K (Hz)
-	 * (10^0)              (10^1)   |          (10^2)               (10^3)              (10^4)   |          (10^5)
-	 *                              |-------------|<--- logWidth ---->|--------------------------|
-	 *                  minFreq--> 20                   (pixels)                                22K <--maxFreq
-	 *                          (10^1.3)                                                     (10^4.34)
-	 *                           minLog
-	 */
-	_calcBars() {
-
-		const bars = this._bars = []; // initialize object property
-
-		if ( ! this._ready )
-			return;
-
-		// helper functions
-		const binToFreq = bin => bin * this.audioCtx.sampleRate / this.fftSize || 1; // returns 1 for bin 0
-		const barsPush  = ( posX, binLo, binHi, freqLo, freqHi, ratioLo, ratioHi ) => bars.push( { posX, binLo, binHi, freqLo, freqHi, ratioLo, ratioHi, peak: [0,0], hold: [0], value: [0] } );
-
-		const analyzerWidth = this._analyzerWidth,
-			  initialX      = this._initialX,
-			  maxFreq       = this._maxFreq,
-			  minFreq       = this._minFreq;
-
-		let minLog,	logWidth;
-
-		if ( this._isOctaveBands ) {
-
-			// generate a 11-octave 24-tone equal tempered scale (16Hz to 33kHz)
-
-			/*
-				A simple linear interpolation is used to obtain an approximate amplitude value for the desired frequency
-				from available FFT data, like so:
-
-				h = hLo + ( hHi - hLo ) * ( f - fLo ) / ( fHi - fLo )
-				                         \___________________________/
-				                                       |
-				                                     ratio
-				where:
-
-				f   - desired frequency
-				h   - amplitude of desired frequency
-				fLo - frequency represented by the lower FFT bin
-				fHi - frequency represented by the higher FFT bin
-				hLo - amplitude of fLo
-				hHi - amplitude of fHi
-
-				ratio is calculated in advance here, to reduce computational complexity during real-time rendering in the _draw() function
-			*/
-
-			let temperedScale = [];
-
-			for ( let octave = 0; octave < 11; octave++ ) {
-				for ( let note = 0; note < 24; note++ ) {
-
-					const freq     = C0 * ROOT24 ** ( octave * 24 + note ),
-						  bin      = this._freqToBin( freq, 'floor' ),
-						  binFreq  = binToFreq( bin ),
-						  nextFreq = binToFreq( bin + 1 ),
-						  ratio    = ( freq - binFreq ) / ( nextFreq - binFreq );
-
-					temperedScale.push( { freq, bin, ratio } );
-				}
-			}
-
-			// generate the frequency bands according to current analyzer settings
-
-			const steps = [0,1,2,3,4,6,8,12,24][ this._mode ]; // number of notes grouped per band for each mode
-
-			for ( let index = 0; index < temperedScale.length; index += steps ) {
-				let { freq: freqLo, bin: binLo, ratio: ratioLo } = temperedScale[ index ],             // band start
-					{ freq: freqHi, bin: binHi, ratio: ratioHi } = temperedScale[ index + steps - 1 ]; // band end
-
-				const nBars   = bars.length,
-					  prevBar = bars[ nBars - 1 ];
-
-				// if the ending frequency is out of range, we're done here
-				if ( freqHi > maxFreq || binHi >= this.fftSize / 2 ) {
-					prevBar.binHi++;     // add an extra bin to the last bar, to fully include the last valid band
-					prevBar.ratioHi = 0; // disable interpolation
-					prevBar.freqHi = binToFreq( prevBar.binHi ); // update ending frequency
-					break;
-				}
-
-				// is the starting frequency in the selected range?
-				if ( freqLo >= minFreq ) {
-					if ( nBars > 0 ) {
-						const diff = binLo - prevBar.binHi;
-
-						// check if we skipped any available FFT bins since the last bar
-						if ( diff > 1 ) {
-							// allocate half of the unused bins to the previous bar
-							prevBar.binHi = binLo - ( diff >> 1 );
-							prevBar.ratioHi = 0;
-							prevBar.freqHi = binToFreq( prevBar.binHi ); // update ending frequency
-
-							// if the previous bar doesn't share any bins with other bars, no need for interpolation
-							if ( nBars > 1 && prevBar.binHi > prevBar.binLo && prevBar.binLo > bars[ nBars - 2 ].binHi ) {
-								prevBar.ratioLo = 0;
-								prevBar.freqLo = binToFreq( prevBar.binLo ); // update starting frequency
-							}
-
-							// start the current bar at the bin following the last allocated bin
-							binLo = prevBar.binHi + 1;
-						}
-
-						// if the lower bin is not shared with the ending frequency nor the previous bar, no need to interpolate it
-						if ( binHi > binLo && binLo > prevBar.binHi ) {
-							ratioLo = 0;
-							freqLo = binToFreq( binLo );
-						}
-					}
-
-					barsPush( 0, binLo, binHi, freqLo, freqHi, ratioLo, ratioHi );
-				}
-			}
-
-			this._barWidth = analyzerWidth / bars.length;
-
-			bars.forEach( ( bar, index ) => bar.posX = initialX + index * this._barWidth );
-
-			minLog = Math.log10( bars[0].freqLo );
-			logWidth = analyzerWidth / ( Math.log10( bars[ bars.length - 1 ].freqHi ) - minLog );
-		}
-		else {
-
-			// Discrete frequencies modes
-
-			this._barWidth = 1;
-
-			minLog = Math.log10( minFreq );
-			logWidth = analyzerWidth / ( Math.log10( maxFreq ) - minLog );
-
-			const minIndex = this._freqToBin( minFreq, 'floor' ),
-				  maxIndex = this._freqToBin( maxFreq );
-
-	 		let lastPos = -999;
-
-			for ( let i = minIndex; i <= maxIndex; i++ ) {
-				const freq = binToFreq( i ), // frequency represented by this index
-					  pos  = initialX + Math.round( logWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
-
-				// if it's on a different X-coordinate, create a new bar for this frequency
-				if ( pos > lastPos ) {
-					barsPush( pos, i, i, freq, freq, 0, 0 );
-					lastPos = pos;
-				} // otherwise, add this frequency to the last bar's range
-				else if ( bars.length ) {
-					bars[ bars.length - 1 ].binHi = i;
-					bars[ bars.length - 1 ].freqHi = freq;
-				}
-			}
-		}
-
-		// save these for scale generation
-		this._minLog = minLog;
-		this._logWidth = logWidth;
-
-		// update internal variables
-		this._calcAux();
-
-		// generate the X-axis and radial scales
-		this._createScales();
-
-		// update LED properties
-		this._calcLeds();
-	}
-
-	/**
-	 * Return the FFT data bin (array index) which represents a given frequency
-	 */
-	_freqToBin( freq, rounding = 'round' ) {
-		const max = this._analyzer[0].frequencyBinCount - 1,
-			  bin = Math[ rounding ]( freq * this.fftSize / this.audioCtx.sampleRate );
-
-		return bin < max ? bin : max;
-	}
-
-	/**
 	 * Internal function to change canvas dimensions on demand
 	 */
 	_setCanvas( reason ) {
@@ -1859,41 +1820,41 @@ export default class AudioMotionAnalyzer {
 
 		// settings defaults
 		const defaults = {
-			mode         : 0,
+			alphaBars    : false,
+			barSpace     : 0.1,
+			bgAlpha      : 0.7,
 			fftSize      : 8192,
-			minFreq      : 20,
-			maxFreq      : 22000,
-			smoothing    : 0.5,
+			fillAlpha    : 1,
 			gradient     : 'classic',
-			minDecibels  : -85,
-			maxDecibels  : -25,
-			showBgColor  : true,
-			showScaleX   : true,
-			showScaleY   : false,
-			showPeaks    : true,
-			showFPS      : false,
 			ledBars      : false,
-			lumiBars     : false,
+			lineWidth    : 0,
 			loRes        : false,
-			reflexRatio  : 0,
+			lumiBars     : false,
+			maxDecibels  : -25,
+			maxFreq      : 22000,
+			minDecibels  : -85,
+			minFreq      : 20,
+			mirror       : 0,
+			mode         : 0,
+			outlineBars  : false,
+			overlay      : false,
+			radial		 : false,
 			reflexAlpha  : 0.15,
 			reflexBright : 1,
 			reflexFit    : true,
-			lineWidth    : 0,
-			fillAlpha    : 1,
-			barSpace     : 0.1,
-			overlay      : false,
-			bgAlpha      : 0.7,
-			radial		 : false,
+			reflexRatio  : 0,
+			showBgColor  : true,
+			showFPS      : false,
+			showPeaks    : true,
+			showScaleX   : true,
+			showScaleY   : false,
+			smoothing    : 0.5,
 			spinSpeed    : 0,
-			stereo       : false,
 			splitGradient: false,
 			start        : true,
-			volume       : 1,
-			mirror       : 0,
+			stereo       : false,
 			useCanvas    : true,
-			alphaBars    : false,
-			outlineBars  : false
+			volume       : 1,
 		};
 
 		// callback functions properties
