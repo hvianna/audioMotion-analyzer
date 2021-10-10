@@ -20,8 +20,8 @@
 
 	<div class="sticky">
 		<div id="container" class="fluid"></div>
-		<audio id="audio" controls crossorigin="anonymous"></audio>
 	</div>
+	<audio id="audio" controls crossorigin="anonymous"></audio>
 
 	<div class="flex">
 		<div>
@@ -139,7 +139,7 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>mode 10 only</legend>
+				<legend>mode 10 / outlineBars</legend>
 				<label class="label">lineWidth
 					<input type="range" min="0" max="5" step="1" data-setting="lineWidth">
 					<div class="value"></div>
@@ -196,22 +196,32 @@
 			</fieldset>
 		</div>
 
-		<div class="flex center evenly stretch">
+		<div class="box center">
 			<fieldset>
-				<legend>Switches</legend>
+				<legend>Switches & read-only flags</legend>
+				<button data-prop="alphaBars">alphaBars</button>
+				<button data-prop="ledBars">ledBars</button>
 				<button data-prop="loRes">loRes</button>
 				<button data-prop="lumiBars">lumiBars</button>
+				<button data-prop="outlineBars">outlineBars</button>
 				<button data-prop="showBgColor">showBgColor</button>
 				<button data-prop="showFPS">showFPS</button>
-				<button data-prop="showLeds">showLeds</button>
 				<button data-prop="showPeaks">showPeaks</button>
-				<br>
 				<button data-prop="showScaleX">showScaleX</button>
 				<button data-prop="showScaleY">showScaleY</button>
 				<button data-prop="splitGradient">splitGradient</button>
 				<button data-prop="stereo">stereo</button>
+				<hr>
+				<span class="flag" data-flag="isAlphaBars">isAlphaBars</span>
+				<span class="flag" data-flag="isLedBars">isLedBars</span>
+				<span class="flag" data-flag="isLumiBars">isLumiBars</span>
+				<span class="flag" data-flag="isOctaveBands">isOctaveBands</span>
+				<span class="flag" data-flag="isOutlineBars">isOutlineBars</span>
+				<span class="flag" data-flag="isOn">isOn</span>
 			</fieldset>
+		</div>
 
+		<div class="flex center evenly stretch">
 			<fieldset>
 				<legend>Custom LED parameters</legend>
 				<label class="label">set
@@ -229,7 +239,7 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>Features added via callback</legend>
+				<legend>Demo features added via callback</legend>
 				<button data-feature="showLogo">Logo</button>
 				<button data-feature="energyMeter">Energy meters</button>
 				<button data-feature="songProgress">Progress bar</button>

@@ -45,12 +45,11 @@ What users are saying:
 ## Live code examples
 
 - [Quick and easy spectrum analyzer](https://codepen.io/hvianna/pen/pobMLNL)
-- [Complete visualization options](https://codepen.io/hvianna/pen/LYREBYQ)
 - [Using microphone input](https://codepen.io/hvianna/pen/VwKZgEE)
-- [Custom callback function](https://codepen.io/hvianna/pen/LYZwdvG)
 - [Creating additional effects with `getEnergy()`](https://codepen.io/hvianna/pen/poNmVYo)
 - [No canvas example](https://codepen.io/hvianna/pen/ZEKWWJb) (create your own visualization using analyzer data)
 - [Integration with Pizzicato library](https://codesandbox.io/s/9y6qb) - see [this discussion](https://github.com/hvianna/audioMotion-analyzer/issues/10) for more info
+- [See more code examples on CodePen](https://codepen.io/collection/ABbbKr)
 
 ## Usage
 
@@ -111,6 +110,7 @@ Valid properties and default values are shown below.
 Properties marked as *constructor only* can only be set by the constructor call, the others can also be set anytime via [`setOptions()`](#setoptions-options-) method.
 
 options = {<br>
+&emsp;&emsp;[alphaBars](#alphabars-boolean): **false**,<br>
 &emsp;&emsp;[audioCtx](#audioctx-audiocontext-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[barSpace](#barspace-number): **0.1**,<br>
 &emsp;&emsp;[bgAlpha](#bgalpha-number): **0.7**,<br>
@@ -120,6 +120,7 @@ options = {<br>
 &emsp;&emsp;[fsElement](#fselement-htmlelement-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[gradient](#gradient-string): **'classic'**,<br>
 &emsp;&emsp;[height](#height-number): *undefined*,<br>
+&emsp;&emsp;[ledBars](#ledbars-boolean): **false**,<br>
 &emsp;&emsp;[lineWidth](#linewidth-number): **0**,<br>
 &emsp;&emsp;[loRes](#lores-boolean): **false**,<br>
 &emsp;&emsp;[lumiBars](#lumibars-boolean): **false**,<br>
@@ -131,6 +132,7 @@ options = {<br>
 &emsp;&emsp;[mode](#mode-number): **0**,<br>
 &emsp;&emsp;[onCanvasDraw](#oncanvasdraw-function): *undefined*,<br>
 &emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *undefined*,<br>
+&emsp;&emsp;[outlineBars](#outlinebars-boolean): **false**,<br>
 &emsp;&emsp;[overlay](#overlay-boolean): **false**,<br>
 &emsp;&emsp;[radial](#radial-boolean): **false**,<br>
 &emsp;&emsp;[reflexAlpha](#reflexalpha-number): **0.15**,<br>
@@ -139,7 +141,7 @@ options = {<br>
 &emsp;&emsp;[reflexRatio](#reflexratio-number): **0**,<br>
 &emsp;&emsp;[showBgColor](#showbgcolor-boolean): **true**,<br>
 &emsp;&emsp;[showFPS](#showfps-boolean): **false**,<br>
-&emsp;&emsp;[showLeds](#showleds-boolean): **false**,<br>
+&emsp;&emsp;[showLeds](#showleds-deprecated): **false**, // DEPRECATED - use ledBars instead<br>
 &emsp;&emsp;[showPeaks](#showpeaks-boolean): **true**,<br>
 &emsp;&emsp;[showScaleX](#showscalex-boolean): **true**,<br>
 &emsp;&emsp;[showScaleY](#showscaley-boolean): **false**,<br>
@@ -216,6 +218,20 @@ Defaults to **true**, so the analyzer will start running right after initializat
 
 ## Properties
 
+### `alphaBars` *boolean*
+
+*Available since v3.6.0*
+
+When set to *true* each bar's amplitude affects its opacity, i.e., higher bars are rendered more opaque while shorter bars are more transparent.
+
+This is similar to the [`lumiBars`](#lumibars-boolean) effect, but bars' amplitudes are preserved and it also works on **Discrete** [mode](#mode-number) and [radial](#radial-boolean) visualization.
+
+For effect priority when combined with other settings, see [`isAlphaBars`](#isalphabars-boolean-read-only).
+
+Defaults to **false**.
+
+!> [See related known issue](#alphabars-and-fillalpha-wont-work-with-radial-on-firefox)
+
 ### `audioCtx` *AudioContext object* *(Read only)*
 
 [*AudioContext*](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext) used by **audioMotion-analyzer**.
@@ -247,7 +263,7 @@ See also the [fluid demo](/demo/fluid.html) and the [multi-instance demo](/demo/
 
 *Available since v2.0.0*
 
-Customize the spacing between bars in [octave bands modes](#mode-number).
+Customize the spacing between bars in **octave bands** [modes](#mode-number).
 
 Use a value between 0 and 1 for spacing proportional to the band width. Values >= 1 will be considered as a literal number of pixels.
 
@@ -255,7 +271,7 @@ For example, `barSpace = 0.5` will use half the width available to each band for
 On the other hand, `barSpace = 2` will set a fixed spacing of 2 pixels, independent of the width of bars.
 Prefer proportional spacing to obtain consistent results among different resolutions and screen sizes.
 
-`barSpace = 0` will effectively show contiguous bars, except when [`showLeds`](#showleds-boolean) is *true*, in which case a minimum spacing is enforced
+`barSpace = 0` will effectively show contiguous bars, except when [`ledBars`](#ledbars-boolean) is *true*, in which case a minimum spacing is enforced
 (this can be customized via [`setLedParams()`](#setledparams-params-) method).
 
 Defaults to **0.1**.
@@ -296,9 +312,7 @@ See also [`connectOutput()`](#connectoutput-node-).
 
 ### `energy` **(DEPRECATED)**
 
-**This property will be removed in version 4.0.0**
-
-Use [`getEnergy()`](#getenergy-preset-startfreq-endfreq-) instead.
+**This property will be removed in version 4.0.0** - Use [`getEnergy()`](#getenergy-preset-startfreq-endfreq-) instead.
 
 ### `fftSize` *number*
 
@@ -313,15 +327,17 @@ Defaults to **8192**.
 
 *Available since v2.0.0*
 
-Opacity of the area fill in **Line / Area graph** visualization ([`mode`](#mode-number) 10).
+Opacity of the area fill in **Graph** [mode](#mode-number), or inner fill of bars in **octave bands** modes when [`outlineBars`](#outlinebars-boolean) is *true*.
 
 It must be a number between 0 (completely transparent) and 1 (completely opaque).
 
-Please note that this affects only the area fill. The line (when [`lineWidth`](#linewidth-number) > 0) is always drawn at full opacity.
+Please note that the line stroke (when [`lineWidth`](#linewidth-number) > 0) is always drawn at full opacity, regardless of the `fillAlpha` value.
+
+Also, for octave bands modes, [`alphaBars`](#alphabars-boolean) set to *true* takes precedence over `fillAlpha`.
 
 Defaults to **1**.
 
-!> [See related known issue](#fillalpha-and-radial-mode-on-firefox)
+!> [See related known issue](#alphabars-and-fillalpha-wont-work-with-radial-on-firefox)
 
 ### `fps` *number* *(Read only)*
 
@@ -355,47 +371,77 @@ Nominal dimensions of the analyzer.
 
 If one or both of these are `undefined`, the analyzer will try to adjust to the container's width and/or height.
 If the container's width and/or height are 0 (inline elements), a reference size of **640 x 270 pixels** will be used to replace the missing dimension(s).
-This should be considered the minimum dimensions for proper visualization of all available modes with the [LED effect](#showleds-boolean) on.
+This should be considered the minimum dimensions for proper visualization of all available modes with the [LED effect](#ledbars-boolean) on.
 
 You can set both values at once using the [`setCanvasSize()`](#setcanvassize-width-height-) method.
 
 ?> You can read the actual canvas dimensions at any time directly from the [`canvas`](#canvas-htmlcanvaselement-object-read-only) object.
 
+### `isAlphaBars` *boolean* *(Read only)*
+
+*Available since v3.6.0*
+
+***true*** when alpha bars are effectively being displayed, i.e., [`alphaBars`](#alphabars-boolean) is set to *true* and [`mode`](#mode-number) is set to discrete frequencies
+or one of the octave bands modes, in which case [`lumiBars`](#lumibars-boolean) must be set to *false* or [`radial`](#radial-boolean) must be set to *true*.
+
 ### `isFullscreen` *boolean* *(Read only)*
 
-*true* when the analyzer is being displayed in fullscreen, or *false* otherwise.
+***true*** when the analyzer is being displayed in fullscreen, or ***false*** otherwise.
 
 See [`toggleFullscreen()`](#togglefullscreen).
 
-### `isLedDisplay` *boolean* *(Read only)*
+### `isLedBars` *boolean* *(Read only)*
 
-*Available since v3.0.0*
+*Available since v3.6.0* (formerly `isLedDisplay`)
 
-*true* when the LED effect is effectively being displayed, i.e., [`showLeds`](#showleds-boolean) is set to *true* and [`mode`](#mode-number) is set to one of the octave bands modes and [`radial`](#radial-boolean) is *false*.
+***true*** when LED bars are effectively being displayed, i.e., [`ledBars`](#ledBars-boolean) is set to *true* and [`mode`](#mode-number) is set to an octave bands mode and [`radial`](#radial-boolean) is *false*.
+
+### `isLedDisplay` **(DEPRECATED)**
+
+**This property will be removed in version 4.0.0** - Use [`isLedBars`](#isledbars-boolean-read-only) instead.
 
 ### `isLumiBars` *boolean* *(Read only)*
 
 *Available since v3.0.0*
 
-*true* when the luminance bars effect is effectively being displayed, i.e., [`lumiBars`](#lumibars-boolean) is set to *true* and [`mode`](#mode-number) is set to one of the octave bands modes and [`radial`](#radial-boolean) is *false*.
+***true*** when luminance bars are effectively being displayed, i.e., [`lumiBars`](#lumibars-boolean) is set to *true* and [`mode`](#mode-number) is set to an octave bands mode and [`radial`](#radial-boolean) is *false*.
 
 ### `isOctaveBands` *boolean* *(Read only)*
 
 *Available since v3.0.0*
 
-*true* when [`mode`](#mode-number) is set to one of the octave bands modes.
+***true*** when [`mode`](#mode-number) is set to one of the octave bands modes.
 
 ### `isOn` *boolean* *(Read only)*
 
-*true* if the analyzer process is running, or *false* if it's stopped.
+***true*** if the analyzer process is running, or *false* if it's stopped.
 
 See [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
+
+### `isOutlineBars` *boolean* *(Read only)*
+
+*Available since v3.6.0*
+
+***true*** when outlined bars are effectively being displayed, i.e., [`outlineBars`](#outlinebars-boolean) is set to *true*, [`mode`](#mode-number) is set to
+one of the octave bands modes and both [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) are set to *false*, or [`radial`](#radial-boolean) is set to *true*.
+
+### `ledBars` *boolean*
+
+*Available since v3.6.0* (formerly `showLeds`)
+
+*true* to activate a vintage LEDs display effect. Only effective for **octave bands** [modes](#mode-number).
+
+This effect can be customized via [`setLedParams()`](#setledparams-params-) method.
+
+For effect priority when combined with other settings, see [`isLedBars`](#isledbars-boolean-read-only).
+
+Defaults to **false**.
 
 ### `lineWidth` *number*
 
 *Available since v2.0.0*
 
-Line width for the **Line / Area graph** visualization ([`mode`](#mode-number) 10).
+Line width for **Graph** [mode](#mode-number), or outline stroke in **octave bands** modes when [`outlineBars`](#outlinebars-boolean) is *true*.
 
 For the line to be distinguishable, set also [`fillAlpha`](#fillalpha-number) < 1.
 
@@ -422,9 +468,13 @@ This will prevent the canvas size from changing, when switching the low resoluti
 
 *Available since v1.1.0*
 
-This is only effective for [visualization modes](#mode-number) 1 to 8 (octave bands).
+This is only effective for **octave bands** [modes](#mode-number).
 
 When set to *true* all analyzer bars will be displayed at full height with varying luminance (opacity, actually) instead.
+
+`lumiBars` takes precedence over [`alphaBars`](#alphabars-boolean) and [`outlineBars`](#outlinebars-boolean), except in [`radial`](#radial-boolean) visualization.
+
+For effect priority when combined with other settings, see [`isLumiBars`](#islumibars-boolean-read-only).
 
 Defaults to **false**.
 
@@ -472,9 +522,9 @@ Defaults to **0**.
 
 Current visualization mode.
 
-+ **Discrete frequencies** mode provides the highest resolution, allowing you to visualize individual frequencies provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform);
++ **Discrete** mode provides the highest resolution, allowing you to visualize individual frequencies amplitudes as provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform) computation;
 + **Octave bands** modes display wider vertical bars, each one representing the *n*th part of an octave, based on a [24-tone equal tempered scale](https://en.wikipedia.org/wiki/Quarter_tone);
-+ **Line / Area graph** mode uses the discrete frequencies data to draw a filled shape and/or a continuous line (see [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number) properties).
++ **Graph** mode uses the discrete data points to draw a continuous line and/or filled area graph (see [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number) properties).
 
 mode | description | notes
 ------:|:-------------:|------
@@ -488,9 +538,19 @@ mode | description | notes
 7 | Half octave bands |
 8 | Full octave bands |
 9 | *(not valid)* | *reserved*
-10 | Line / Area graph | *added in v1.1.0*
+10 | Graph | *added in v1.1.0*
 
 Defaults to **0**.
+
+### `outlineBars` *boolean*
+
+*Available since v3.6.0*
+
+When *true* and [`mode`](#mode-number) is set to one of the **octave bands** modes, draws outlined bars with customizable [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number).
+
+For effect priority when combined with other settings, see [`isOutlineBars`](#isoutlinebars-boolean-read-only).
+
+Defaults to **false**.
 
 ### `overlay` *boolean*
 
@@ -506,9 +566,7 @@ Defaults to **false**.
 
 ### `peakEnergy` **(DEPRECATED)**
 
-**This property will be removed in version 4.0.0**
-
-Use [`getEnergy('peak')`](#getenergy-preset-startfreq-endfreq-) instead.
+**This property will be removed in version 4.0.0** - Use [`getEnergy('peak')`](#getenergy-preset-startfreq-endfreq-) instead.
 
 ### `pixelRatio` *number* *(Read only)*
 
@@ -525,14 +583,14 @@ When [`loRes`](#lores-boolean) is *true* `pixelRatio` is halved, i.e. **0.5** fo
 
 When *true*, the spectrum analyzer is rendered as a circle, with radial frequency bars spreading from the center of the canvas.
 
-When radial mode is active, [`lumiBars`](#lumibars-boolean) and [`showLeds`](#showleds-boolean) have no effect, and
-also [`showPeaks`](#showpeaks-boolean) has no effect in **Line / Area graph** mode.
+When radial mode is active, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) have no effect, and
+also [`showPeaks`](#showpeaks-boolean) has no effect in radial **Graph** mode.
 
 See also [`spinSpeed`](#spinspeed-number).
 
 Defaults to **false**.
 
-!> [See related known issue](#fillalpha-and-radial-mode-on-firefox)
+!> [See related known issue](#alphabars-and-fillalpha-wont-work-with-radial-on-firefox)
 
 ### `reflexAlpha` *number*
 
@@ -589,20 +647,16 @@ or transparent when [`overlay`](#overlay-boolean) is ***true***.
 
 Defaults to **true**.
 
-?> Please note that when [`overlay`](#overlay-boolean) is ***false*** and [`showLeds`](#showleds-boolean) is ***true***, the background color will always be black,
+?> Please note that when [`overlay`](#overlay-boolean) is ***false*** and [`ledBars`](#ledbars-boolean) is ***true***, the background color will always be black,
 and setting `showBgColor` to ***true*** will make the "unlit" LEDs visible instead.
 
 ### `showFPS` *boolean*
 
 *true* to display the current frame rate. Defaults to **false**.
 
-### `showLeds` *boolean*
+### `showLeds` **(DEPRECATED)**
 
-*true* to activate a vintage LEDs display effect. Only effective for [visualization modes](#mode-number) 1 to 8 (octave bands).
-
-This effect can be customized via [`setLedParams()`](#setledparams-params-) method.
-
-Defaults to **false**.
+**This property will be removed in version 4.0.0** - Use [`ledBars`](#ledbars-boolean) instead.
 
 ### `showPeaks` *boolean*
 
@@ -915,7 +969,7 @@ Sets the desired frequency range. Values are expressed in Hz (Hertz).
 
 *Available since v3.2.0*
 
-Customize parameters used to create the [LEDs display effect](#showleds-boolean).
+Customize parameters used to create the [LEDs display effect](#ledbars-boolean).
 
 `params` should be an object with the following structure:
 
@@ -1002,9 +1056,9 @@ ERR_UNKNOWN_GRADIENT       | User tried to [select a gradient](#gradient-string)
 [`reflexBright`](#reflexbright-number) feature relies on the [`filter`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter) property of the Canvas API,
 which is [currently not supported in some browsers](https://caniuse.com/#feat=mdn-api_canvasrenderingcontext2d_filter) (notably, Opera and Safari).
 
-### fillAlpha and radial mode on Firefox {docsify-ignore}
+### alphaBars and fillAlpha won't work with Radial on Firefox {docsify-ignore}
 
-On Firefox, [`fillAlpha`](#fillalpha-number) may not work properly for [`radial`](#radial-boolean) visualization, due to [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912).
+On Firefox, [`alphaBars`](#alphaBars-boolean) and [`fillAlpha`](#fillalpha-number) won't work with [`radial`](#radial-boolean) visualization when using hardware acceleration, due to [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912).
 
 ### Visualization of live streams won't work on Safari {docsify-ignore}
 
@@ -1030,13 +1084,15 @@ See [Changelog.md](Changelog.md)
 
 ## Get in touch!
 
-If you create something cool with this project, or simply think it's useful, I would like to know! Please drop me an e-mail at hvianna@gmail.com
+If you create something cool with **audioMotion-analyzer**, or simply think it's useful, I would love to know! Please drop me an e-mail at hvianna@gmail.com
 
-If you have a feature request or code suggestion, please see [CONTRIBUTING.md](CONTRIBUTING.md)
+For feature requests, suggestions or feedback, please see the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
-And if you're feeling generous you can [buy me a coffee on Ko-fi](https://ko-fi.com/Q5Q6157GZ) :grin::coffee:
+And if you're feeling generous, maybe:
 
-[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q6157GZ)
+* [Buy me a coffee](https://ko-fi.com/Q5Q6157GZ) on Ko-fi ☕😁
+* Gift me something from my [Bandcamp wishlist](https://bandcamp.com/henriquevianna/wishlist) 🎁🥰
+* Tip me via [Brave Rewards](https://brave.com/brave-rewards/) using Brave browser 🤓
 
 
 ## License

@@ -20,16 +20,12 @@
 
 	<p>&nbsp;</p>
 
-	<div id="analyzer-block">
-		<div class="main">
-			<div id="container0"></div>
-			<audio id="audio" controls crossorigin="anonymous"></audio>
-		</div>
-		<div class="aside">
-			<div id="container1"></div>
-			<div id="container2"></div>
-		</div>
+	<div class="multi-block">
+		<div id="container0" class="colspan-2 rowspan-2"></div>
+		<div id="container1"></div>
+		<div id="container2"></div>
 	</div>
+	<audio id="audio" controls crossorigin="anonymous"></audio>
 
 	<div class="flex">
 		<div>
@@ -126,7 +122,7 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>mode 10 only</legend>
+				<legend>mode 10 / outlineBars</legend>
 				<label class="label">lineWidth
 					<input type="range" id="line_width" min="0" max="5" step="1" data-setting="lineWidth">
 					<div class="value"></div>
@@ -175,17 +171,19 @@
 		</div>
 
 		<div class="box">
-			<button data-prop="showBgColor">showBgColor</button>
-			<button data-prop="showPeaks">showPeaks</button>
-			<button data-prop="showLeds">showLeds</button>
+			<button data-prop="alphaBars">alphaBars</button>
+			<button data-prop="ledBars">ledBars</button>
 			<button data-prop="lumiBars">lumiBars</button>
-			<button data-prop="radial">radial</button>
+			<button data-prop="outlineBars">outlineBars</button>
+			<button data-prop="loRes">loRes</button>
+			<button data-prop="splitGradient">splitGradient</button>
+			<button data-prop="stereo">stereo</button>
+			<br>
+			<button data-prop="showBgColor">showBgColor</button>
+			<button data-prop="showFPS">showFPS</button>
+			<button data-prop="showPeaks">showPeaks</button>
 			<button data-prop="showScaleX">showScaleX</button>
 			<button data-prop="showScaleY">showScaleY</button>
-			<button data-prop="stereo">stereo</button>
-			<button data-prop="splitGradient">splitGradient</button>
-			<button data-prop="loRes">loRes</button>
-			<button data-prop="showFPS">showFPS</button>
 		</div>
 
 	</div>

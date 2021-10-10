@@ -19,6 +19,10 @@ a:not([class]):hover {
 	filter: drop-shadow(.07em .07em .14em #f0fc) drop-shadow( -.07em -.07em .14em #f0fc);
 }
 
+audio {
+	height: 40px;
+}
+
 button {
 	margin: 5px;
 	padding: 6px;
@@ -193,11 +197,13 @@ ul {
 }
 
 .sticky {
-	background: #222e;
-	margin-bottom: -10px;
+	background: linear-gradient(to top, transparent 0%, #222 28px);
+	margin-bottom: -10px !important;
 	padding-bottom: 30px;
+	pointer-events: none;
 	position: sticky;
 	top: 0;
+	z-index: 1;
 }
 
 /* background animation for overlay test on fluid demo */
@@ -206,12 +212,23 @@ ul {
 	background-size: cover;
 }
 
-#container1 {
-	margin-bottom: 15px;
-}
-
 .center {
 	text-align: center;
+}
+
+.flag {
+	background: #444;
+	border-radius: 999px;
+	display: inline-block;
+	font-size: .9em;
+	margin: .5em .25em;
+	opacity: .5;
+	padding: .25em 1em;
+}
+.flag.active {
+	background: #0f0;
+	color: #222;
+	opacity: 1;
 }
 
 .flex {
@@ -225,16 +242,19 @@ ul {
 	justify-content: space-evenly;
 }
 
-.main {
-	display: inline-block;
-	margin-right: 20px;
-	width: 640px;
+.multi-block {
+	display: grid;
+	grid-gap: 20px;
+	grid-template: 1fr 1fr / 1fr 1fr 1fr;
+	height: 340px;
+	margin-bottom: 10px;
 }
 
-.aside {
-	display: inline-block;
-	vertical-align: top;
-	width: 320px;
+.colspan-2 {
+	grid-column: span 2;
+}
+.rowspan-2 {
+	grid-row: span 2;
 }
 
 .selector {

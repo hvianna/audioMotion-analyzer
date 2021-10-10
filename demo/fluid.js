@@ -21,11 +21,11 @@ const presets = [
 			mode: 3,
 			barSpace: .4,
 			gradient: 'classic',
+			ledBars: true,
 			lumiBars: false,
 			radial: false,
 			reflexRatio: 0,
 			showBgColor: true,
-			showLeds: true,
 			showPeaks: true
 		}
 	},
@@ -50,9 +50,9 @@ const presets = [
 			mode: 5,
 			barSpace: .1,
 			gradient: 'prism',
+			ledBars: false,
 			radial: true,
 			showBgColor: true,
-			showLeds: false,
 			showPeaks: true,
 			spinSpeed: 1,
 			overlay: true
@@ -64,6 +64,7 @@ const presets = [
 			mode: 5,
 			barSpace: .25,
 			gradient: 'rainbow',
+			ledBars: false,
 			lumiBars: false,
 			radial: false,
 			reflexAlpha: .25,
@@ -71,7 +72,6 @@ const presets = [
 			reflexFit: true,
 			reflexRatio: .3,
 			showBgColor: false,
-			showLeds: false,
 			showPeaks: true,
 			overlay: false
 		}
@@ -152,7 +152,7 @@ document.querySelectorAll('[data-prop]').forEach( el => {
 			audioMotion[ el.dataset.func ]();
 		else
 			audioMotion[ el.dataset.prop ] = ! audioMotion[ el.dataset.prop ];
-		el.classList.toggle( 'active', audioMotion[ el.dataset.prop ] );
+		updateUI();
 	});
 });
 
@@ -164,7 +164,10 @@ document.querySelectorAll('[data-feature]').forEach( el => {
 });
 
 document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'change', () => audioMotion[ el.dataset.setting ] = el.value );
+	el.addEventListener( 'change', () => {
+		audioMotion[ el.dataset.setting ] = el.value;
+		updateUI();
+	});
 });
 
 document.querySelectorAll('[data-custom]').forEach( el => {
@@ -304,6 +307,7 @@ function updateUI() {
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
 	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', audioMotion[ el.dataset.prop ] ) );
 	document.querySelectorAll('button[data-feature]').forEach( el => el.classList.toggle( 'active', features[ el.dataset.feature ] ) );
+	document.querySelectorAll('[data-flag]').forEach( el => el.classList.toggle( 'active', audioMotion[ el.dataset.flag ] ) );
 }
 
 // Callback function used to add custom features for this demo

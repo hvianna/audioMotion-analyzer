@@ -7,12 +7,14 @@ type OnCanvasResizeFunction = (
 type CanvasResizeReason = "create" | "fschange" | "lores" | "resize" | "user";
 
 export interface Options {
+  alphaBars?: boolean;
   barSpace?: number;
   bgAlpha?: number;
   fftSize?: number;
   fillAlpha?: number;
   gradient?: string;
   height?: number;
+  ledBars?: boolean;
   lineWidth?: number;
   loRes?: boolean;
   lumiBars?: boolean;
@@ -24,6 +26,7 @@ export interface Options {
   mode?: number;
   onCanvasDraw?: OnCanvasDrawFunction;
   onCanvasResize?: OnCanvasResizeFunction;
+  outlineBars?: boolean;
   overlay?: boolean;
   radial?: boolean;
   reflexAlpha?: number;
@@ -32,7 +35,7 @@ export interface Options {
   reflexRatio?: number;
   showBgColor?: boolean;
   showFPS?: boolean;
-  showLeds?: boolean;
+  showLeds?: boolean; // DEPRECATED - use ledBars instead
   showPeaks?: boolean;
   showScaleX?: boolean;
   showScaleY?: boolean;
@@ -86,6 +89,9 @@ export interface LedParameters {
 declare class AudioMotionAnalyzer {
   constructor(container?: HTMLElement, options?: ConstructorOptions);
 
+  get alphaBars(): boolean;
+  set alphaBars(value: boolean);
+
   get audioCtx(): AudioContext;
   get canvas(): HTMLCanvasElement;
   get canvasCtx(): CanvasRenderingContext2D;
@@ -98,7 +104,7 @@ declare class AudioMotionAnalyzer {
   get connectedSources(): AudioNode[];
   get connectedTo(): AudioNode[];
 
-  get energy(): number;
+  get energy(): number; // DEPRECATED - use getEnergy() instead
 
   get fftSize(): number;
   set fftSize(value: number);
@@ -119,12 +125,18 @@ declare class AudioMotionAnalyzer {
   get width(): number;
   set width(w: number);
 
+  get isAlphaBars(): boolean;
   get isFullscreen(): boolean;
-  get isLedDisplay(): boolean;
+  get isLedBars(): boolean;
+  get isLedDisplay(): boolean; // DEPRECATED - use isLedBars instead
   get isLumiBars(): boolean;
   get isOctaveBands(): boolean;
+  get isOutlineBars(): boolean;
 
   get isOn(): boolean;
+
+  get ledBars(): boolean;
+  set ledBars(value: boolean);
 
   public lineWidth: number;
 
@@ -152,9 +164,12 @@ declare class AudioMotionAnalyzer {
   get mode(): number;
   set mode(value: number);
 
+  get outlineBars(): boolean;
+  set outlineBars(value: boolean);
+
   public overlay: boolean;
 
-  get peakEnergy(): number;
+  get peakEnergy(): number; // DEPRECATED - use getEnergy('peak') instead
   get pixelRatio(): number;
 
   get radial(): boolean;
@@ -170,6 +185,7 @@ declare class AudioMotionAnalyzer {
   public showBgColor: boolean;
   public showFPS: boolean;
 
+  // DEPRECATED - use ledBars instead
   get showLeds(): boolean;
   set showLeds(value: boolean);
 
