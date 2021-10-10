@@ -1,26 +1,26 @@
 Changelog
 =========
 
-## version 3.6.0-beta.0 (2021-10-05)
+## version 3.6.0 (2021-10-10)
 
 ### Added: <!-- {docsify-ignore} -->
 
-+ `alphaBars` effect, which is similar to `lumiBars` but preserves bars' amplitudes and also works on discrete frequencies mode and radial visualization;
-+ `outlineBars` effect, which extends the usage of `lineWidth` and `fillAlpha` to octave bands modes;
-+ `isAlphaBars` and `isOutlineBars` read-only properties.
++ [`alphaBars`](README.md#alphabars-boolean) effect, which is similar to `lumiBars` but preserves bars' amplitudes and also works on discrete frequencies mode and radial visualization;
++ [`outlineBars`](README.md#outlinebars-boolean) effect, which extends the usage of `lineWidth` and `fillAlpha` to octave bands modes;
++ [`isAlphaBars`](README.md#isalphabars-boolean-read-only) and [`isOutlineBars`](README.md#isoutlinebars-boolean-read-only) read-only properties.
 
 ### Changed: <!-- {docsify-ignore} -->
 
-+ `showLeds` and `isLedDisplay` **have been deprecated** in favor of `ledBars` and `isLedBars`, for consistency.
++ `showLeds` and `isLedDisplay` **have been deprecated** in favor of [`ledBars`](README.md#ledbars-boolean) and [`isLedBars`](README.md#isledbars-boolean-read-only), for consistent naming of effects.
 
 ### Fixed: <!-- {docsify-ignore} -->
 
-+ [`getEnergy()`](README.md#getenergy-preset-startfreq-endfreq-) would not accept a fractionary starting frequency.
++ [`getEnergy()`](README.md#getenergy-preset-startfreq-endfreq-) would not accept a fractionary initial frequency.
 
 ### Improved: <!-- {docsify-ignore} -->
 
 + Regenerate the current gradient if/when it is re-registered [(#21)](https://github.com/hvianna/audioMotion-analyzer/issues/21);
-+ The fluid demo now shows the status of read-only flags (`isLedBars`, etc) for better visualization of the interactions between different options.
++ The [fluid demo](/demo/fluid.html) now shows the status of read-only flags, for better visualization of interactions between different properties.
 
 
 ## version 3.5.1 (2021-09-10)
