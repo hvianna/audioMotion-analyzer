@@ -48,7 +48,10 @@ What users are saying:
 - [Using microphone input](https://codepen.io/hvianna/pen/VwKZgEE)
 - [Creating additional effects with `getEnergy()`](https://codepen.io/hvianna/pen/poNmVYo)
 - [No canvas example](https://codepen.io/hvianna/pen/ZEKWWJb) (create your own visualization using analyzer data)
-- [Integration with Pizzicato library](https://codesandbox.io/s/9y6qb) - see [this discussion](https://github.com/hvianna/audioMotion-analyzer/issues/10) for more info
+- Example integrations with other audio libraries:
+  - [Icecast Metadata Player](https://codepen.io/hvianna/pen/YzrgWVe)
+  - [Pizzicato](https://codesandbox.io/s/9y6qb)
+  - [jPlayer](https://codepen.io/hvianna/pen/dyVrMJX)
 - [See more code examples on CodePen](https://codepen.io/collection/ABbbKr)
 
 ## Usage
@@ -71,7 +74,7 @@ Or download the [latest version](https://github.com/hvianna/audioMotion-analyzer
 Install as a dependency:
 
 ```console
-$ npm i --save audiomotion-analyzer
+$ npm i audiomotion-analyzer
 ```
 
 Use ES6 import syntax:
@@ -1051,18 +1054,81 @@ ERR_UNKNOWN_GRADIENT       | User tried to [select a gradient](#gradient-string)
 
 ## Known Issues
 
-### reflexBright won't work on some browsers {docsify-ignore}
+### reflexBright won't work on some browsers <!-- {docsify-ignore} -->
 
 [`reflexBright`](#reflexbright-number) feature relies on the [`filter`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter) property of the Canvas API,
 which is [currently not supported in some browsers](https://caniuse.com/#feat=mdn-api_canvasrenderingcontext2d_filter) (notably, Opera and Safari).
 
-### alphaBars and fillAlpha won't work with Radial on Firefox {docsify-ignore}
+### alphaBars and fillAlpha won't work with Radial on Firefox <!-- {docsify-ignore} -->
 
 On Firefox, [`alphaBars`](#alphaBars-boolean) and [`fillAlpha`](#fillalpha-number) won't work with [`radial`](#radial-boolean) visualization when using hardware acceleration, due to [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912).
 
 ### Visualization of live streams won't work on Safari {docsify-ignore}
 
 Safari's implementation of Web Audio won't return analyzer data for live streams, as documented in [this bug report](https://bugs.webkit.org/show_bug.cgi?id=195043).
+
+
+## Troubleshooting
+
+Common problems and solutions. Remember to check the browser console for error messages.
+
+### Error message: `Cannot use import statement outside a module` <!-- {docsify-ignore} -->
+
+The `import` statement must be inside a `script` which has the `type="module"` property (and no `type="text/javascript"`), like so:
+
+```html
+  <script type="module">
+    import AudioMotionAnalyzer from 'https://cdn.skypack.dev/audiomotion-analyzer?min';
+
+    // your code here
+  </script>
+```
+
+Or
+
+```html
+  <script src="main.js" type="module"></script>
+```
+
+### Error message: `MediaElementAudioSource outputs zeroes due to CORS access restrictions` <!-- {docsify-ignore} -->
+
+Make sure the media element (`audio` or `video` tag) connected to **audioMotion-analyzer** has the `crossorigin = "anonymous"` property, like so:
+
+```html
+<audio id="myAudio" src="https://example.com/stream" controls crossorigin="anonymous"></audio>
+```
+
+You can also set the `crossOrigin` (mind the uppercase "O") property via JavaScript, like so:
+
+```js
+myAudio.crossOrigin = 'anonymous';
+```
+
+### Sound only plays after the user clicks somewhere on the page. <!-- {docsify-ignore} -->
+
+**audioMotion-analyzer** automatically unlocks the audio context on the first click on the page,
+since browsers' autoplay policy requires audio output to be initiated on user gesture only.
+
+However, if you're using an `audio` or `video` element with the `controls` property, clicks on those native media
+controls can't be detected, so the audio will only be enabled if/when the user clicks somewhere else.
+
+Two possible solutions: **1)** make **sure** your users have to click somewhere else before using the media controls,
+like a "power on" button, or simply clicking to select a song from a list will do; or **2)** don't use the native
+controls at all, and create your own custom 'Play' and 'Stop' buttons. A very simple example:
+
+```html
+<audio id="myAudio" src="track.mp3" crossorigin="anonymous"></audio> <!-- do not add the 'controls' property! -->
+
+<button id="play"> Play </button>
+<button id="stop"> Stop </button>
+```
+
+```js
+const myAudio = document.getElementById('audio');
+
+document.getElementById('play').addEventListener( 'click', () => myAudio.play() );
+document.getElementById('stop').addEventListener( 'click', () => myAudio.pause() );
+```
 
 
 ## References and acknowledgments
