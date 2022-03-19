@@ -319,7 +319,7 @@ export default class AudioMotionAnalyzer {
 		if ( value < 1 )
 			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
 		else {
-			this._maxFreq = value;
+			this._maxFreq = +value;
 			this._calcBars();
 		}
 	}
@@ -339,7 +339,7 @@ export default class AudioMotionAnalyzer {
 		if ( value < 1 )
 			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
 		else {
-			this._minFreq = value;
+			this._minFreq = +value;
 			this._calcBars();
 		}
 	}
