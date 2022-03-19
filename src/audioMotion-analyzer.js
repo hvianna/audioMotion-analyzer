@@ -866,13 +866,14 @@ export default class AudioMotionAnalyzer {
 
 	 	                                +-------------------------- canvas --------------------------+
 	 	                                |                                                            |
-	 	      |-------------------|-----|-------------|-------------------!-------------------|------|------------|
+	 	      |-------------------|-----|-------------|-------------------|-------------------|------|------------|
 	 	      1                  10     |            100                  1K                 10K     |           100K (Hz)
 	 	   (10^0)              (10^1)   |          (10^2)               (10^3)              (10^4)   |          (10^5)
 	 	                                |-------------|<--- logWidth ---->|--------------------------|
 	 	                    minFreq--> 20                   (pixels)                                22K <--maxFreq
 	 	                            (10^1.3)                                                     (10^4.34)
-	 	                             minLog
+	 	                                 ^
+	 	                               minLog
 	 	*/
 
 		const bars = this._bars = []; // initialize object property
@@ -893,90 +894,56 @@ export default class AudioMotionAnalyzer {
 
 		if ( this._isOctaveBands ) {
 
-			// generate a 11-octave 24-tone equal tempered scale (16Hz to 33kHz)
-
 			/*
-				A simple linear interpolation is used to obtain an approximate amplitude value for the desired frequency
-				from available FFT data, like so:
+				A simple linear interpolation is used to obtain an approximate amplitude value for any given frequency,
+				from available FFT data. We find the FFT bin which closer matches the desired frequency and interpolate
+				its value with that of the next adjacent bin, like so:
 
-				h = hLo + ( hHi - hLo ) * ( f - fLo ) / ( fHi - fLo )
-				                         \___________________________/
-				                                       |
-				                                     ratio
-				where:
+					v = v0 + ( v1 - v0 ) * ( f - f0 ) / ( f1 - f0 )
+					                       \______________________/
+					                                  |
+					                                ratio
+					where:
 
-				f   - desired frequency
-				h   - amplitude of desired frequency
-				fLo - frequency represented by the lower FFT bin
-				fHi - frequency represented by the higher FFT bin
-				hLo - amplitude of fLo
-				hHi - amplitude of fHi
+					f  - desired frequency
+					v  - amplitude (volume) of desired frequency
+					f0 - frequency represented by the selected FFT bin
+					f1 - frequency represented by the next FFT bin
+					v0 - amplitude of f0
+					v1 - amplitude of f1
 
-				ratio is calculated in advance here, to reduce computational complexity during real-time rendering in the _draw() function
+				ratio is calculated in advance here, to reduce the computational complexity during real-time rendering.
 			*/
 
-			let temperedScale = [];
+			// helper function to calculate FFT bin and interpolation ratio for a given frequency
+			const calcRatio = freq => {
+				const bin      = this._freqToBin( freq, 'floor' ), // find closest FFT bin
+					  thisFreq = binToFreq( bin ),
+					  nextFreq = binToFreq( bin + 1 ),
+					  ratio    = ( freq - thisFreq ) / ( nextFreq - thisFreq );
 
-			for ( let octave = 0; octave < 11; octave++ ) {
-				for ( let note = 0; note < 24; note++ ) {
-
-					const freq     = C0 * ROOT24 ** ( octave * 24 + note ),
-						  bin      = this._freqToBin( freq, 'floor' ),
-						  binFreq  = binToFreq( bin ),
-						  nextFreq = binToFreq( bin + 1 ),
-						  ratio    = ( freq - binFreq ) / ( nextFreq - binFreq );
-
-					temperedScale.push( { freq, bin, ratio } );
-				}
+				return [ bin, ratio ];
 			}
 
-			// generate the frequency bands according to current analyzer settings
+			const steps = [0,1,2,3,4,6,8,12,24][ this._mode ], // number of notes grouped per band for each mode
+				  rootN = 2 ** ( steps / 48 ); // 2N-th root of 2, where N is 1/steps (3 for 1/3rd bands and so on)
 
-			const steps = [0,1,2,3,4,6,8,12,24][ this._mode ]; // number of notes grouped per band for each mode
+			// generate a 11-octave 24-tone equal tempered scale (~16Hz to ~33kHz)
 
-			for ( let index = 0; index < temperedScale.length; index += steps ) {
-				let { freq: freqLo, bin: binLo, ratio: ratioLo } = temperedScale[ index ],             // band start
-					{ freq: freqHi, bin: binHi, ratio: ratioHi } = temperedScale[ index + steps - 1 ]; // band end
+			for ( let octave = 0; octave < 11; octave++ ) {
+				for ( let note = 0; note < 24; note += steps ) {
 
-				const nBars   = bars.length,
-					  prevBar = bars[ nBars - 1 ];
+					const freq   = C0 * ROOT24 ** ( octave * 24 + note ), // center frequency for this band
+						  freqLo = freq / rootN,
+						  freqHi = freq * rootN,
+						  [ binLo, ratioLo ] = calcRatio( freqLo ),
+						  [ binHi, ratioHi ] = calcRatio( freqHi );
 
-				// if the ending frequency is out of range, we're done here
-				if ( freqHi > maxFreq || binHi >= this.fftSize / 2 ) {
-					prevBar.binHi++;     // add an extra bin to the last bar, to fully include the last valid band
-					prevBar.ratioHi = 0; // disable interpolation
-					prevBar.freqHi = binToFreq( prevBar.binHi ); // update ending frequency
-					break;
-				}
+					if ( freq < minFreq )
+						continue;
 
-				// is the starting frequency in the selected range?
-				if ( freqLo >= minFreq ) {
-					if ( nBars > 0 ) {
-						const diff = binLo - prevBar.binHi;
-
-						// check if we skipped any available FFT bins since the last bar
-						if ( diff > 1 ) {
-							// allocate half of the unused bins to the previous bar
-							prevBar.binHi = binLo - ( diff >> 1 );
-							prevBar.ratioHi = 0;
-							prevBar.freqHi = binToFreq( prevBar.binHi ); // update ending frequency
-
-							// if the previous bar doesn't share any bins with other bars, no need for interpolation
-							if ( nBars > 1 && prevBar.binHi > prevBar.binLo && prevBar.binLo > bars[ nBars - 2 ].binHi ) {
-								prevBar.ratioLo = 0;
-								prevBar.freqLo = binToFreq( prevBar.binLo ); // update starting frequency
-							}
-
-							// start the current bar at the bin following the last allocated bin
-							binLo = prevBar.binHi + 1;
-						}
-
-						// if the lower bin is not shared with the ending frequency nor the previous bar, no need to interpolate it
-						if ( binHi > binLo && binLo > prevBar.binHi ) {
-							ratioLo = 0;
-							freqLo = binToFreq( binLo );
-						}
-					}
+					if ( freq > maxFreq || binHi >= this.fftSize / 2 )
+						break;
 
 					barsPush( 0, binLo, binHi, freqLo, freqHi, ratioLo, ratioHi );
 				}
@@ -986,8 +953,23 @@ export default class AudioMotionAnalyzer {
 
 			bars.forEach( ( bar, index ) => bar.posX = initialX + index * this._barWidth );
 
-			minLog = Math.log10( bars[0].freqLo );
-			logWidth = analyzerWidth / ( Math.log10( bars[ bars.length - 1 ].freqHi ) - minLog );
+			const firstBar = bars[0],
+				  lastBar  = bars[ bars.length - 1 ];
+
+			minLog = Math.log10( firstBar.freqLo );
+			logWidth = analyzerWidth / ( Math.log10( lastBar.freqHi ) - minLog );
+
+			// clamp edge frequencies to minFreq / maxFreq, if necessary
+			// this is done after computing minLog and logWidth, for the proper positioning of labels on the X-axis
+			if ( firstBar.freqLo < minFreq ) {
+				firstBar.freqLo = minFreq;
+				[ firstBar.binLo, firstBar.ratioLo ] = calcRatio( minFreq );
+			}
+
+			if ( lastBar.freqHi > maxFreq ) {
+				lastBar.freqHi = maxFreq;
+				[ lastBar.binHi, lastBar.ratioHi ] = calcRatio( maxFreq );
+			}
 		}
 		else {
 

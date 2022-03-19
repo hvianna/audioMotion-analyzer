@@ -8,23 +8,6 @@
 
 <body>
 <div class="options">
-	<table id="tableScale">
-		<thead>
-			<tr>
-				<th colspan="5">24-tone Tempered Scale</th>
-			</tr>
-			<tr>
-				<th>Note</th>
-				<th>Frequency<br>(Hz)</th>
-				<th>FFT bin</th>
-				<th><span class="info" data-text="The selected FFT bin is interpolated with the next bin to obtain an approximate value for the desired frequency">Interpolation<br>Ratio</span></th>
-				<th><span class="info" data-text="Actual frequencies of the selected FFT bins, with green bar representing the interpolated frequency">Actual range</span><br>(Hz)</th>
-			</tr>
-		</thead>
-		<tbody>
-		</tbody>
-	</table>
-
 	<div>
 		<h1>audioMotion-analyzer</h1>
 		<h2>octave bands viewer tool</h2>
@@ -75,21 +58,22 @@
 		</div>
 
 		<label>
-			<button id="generate">Generate Tempered Scale & Analyzer Bars</button>
+			<button id="generate">Generate Analyzer Bars</button>
 		</label>
 
 		<div>
 			<h4>References:</h4>
 			<ul>
-				<li><a href="https://en.wikipedia.org/wiki/Quarter_tone">https://en.wikipedia.org/wiki/Quarter_tone</a></li>
-				<li><a href="https://pages.mtu.edu/~suits/notefreqs.html">https://pages.mtu.edu/~suits/notefreqs.html</a></li>
-				<li><a href="http://hyperphysics.phy-astr.gsu.edu/hbase/Music/et.html">http://hyperphysics.phy-astr.gsu.edu/hbase/Music/et.html</a></li>
-				<li><a href="https://www.dacapoalcoda.com/quarter-tones">https://www.dacapoalcoda.com/quarter-tones</a></li>
+				<li><a href="https://en.wikipedia.org/wiki/Quarter_tone">Quarter tone</a></li>
+				<li><a href="https://pages.mtu.edu/~suits/notefreqs.html">Frequencies for equal-tempered scale, A4 = 440 Hz</a></li>
+				<li><a href="http://hyperphysics.phy-astr.gsu.edu/hbase/Music/et.html">Equal temperament</a></li>
+				<li><a href="https://www.dacapoalcoda.com/quarter-tones">Quarter tones</a></li>
+				<li><a href="https://groups.google.com/g/alt.sci.physics.acoustics/c/4RJQhYPKyIQ/m/1qFk8_pagSsJ">Center frequencies for 1/12, 1/24 octaves</a></li>
 			</ul>
 		</div>
 
 		<div class="credits">
-			<strong>audioMotion-analyzer</strong> Copyright &copy; 2018-2021 Henrique Avila Vianna.<br>
+			<strong>audioMotion-analyzer</strong> Copyright &copy; 2018-2022 Henrique Avila Vianna.<br>
 			Licensed under AGPL-3.0 or later. Source code is available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
 		</div>
 	</div>
@@ -97,15 +81,22 @@
 	<table id="tableBands">
 		<thead>
 			<tr>
-				<th colspan="5">Analyzer bars</th>
+				<th rowspan="2">Bar</th>
+				<th rowspan="2">Octave</th>
+				<th rowspan="2"><span class="info" data-text="Musical note represented by the central frequency of the bar">Pitch</span></th>
+				<th colspan="3">Frequency range (Hz)</th>
+				<th colspan="2"><span class="info" data-text="FFT bin selected for the lower edge">Lower FFT bin</span></th>
+				<th colspan="2"><span class="info" data-text="FFT bin selected for the upper edge">Upper FFT bin</span></th>
 			</tr>
 			<tr>
-				<th>Bar</th>
-				<th>Octave</th>
-				<th><span class="info" data-text="Initial FFT bin and interpolation ratio (0 means no interpolation)">Initial bin / ratio</span></th>
-				<th><span class="info" data-text="Final FFT bin and interpolation ratio (0 means no interpolation)">Final bin / ratio</span></th>
-				<th><span class="info" data-text="Resulting frequency range for this bar">Frequency range (Hz)</span></th>
-			</tr>
+				<th>Lower</th>
+				<th>Center</th>
+				<th>Upper</th>
+				<th><span class="info" data-text="FFT bin index">#</span></th>
+				<th><span class="info" data-text="Actual frequencies and interpolation ratio used">Frequency (Hz)</span></th>
+				<th><span class="info" data-text="FFT bin index">#</span></th>
+				<th><span class="info" data-text="Actual frequencies and interpolation ratio used">Frequency (Hz)</span></th>
+			</th>
 		</thead>
 		<tbody>
 		</tbody>
@@ -121,18 +112,14 @@
 			  sampleRate = +document.getElementById('samplerate').value,
 			  mode       = +document.getElementById('mode').value,
 			  minFreq    = +document.getElementById('minFreq').value,
-			  maxFreq    = +document.getElementById('maxFreq').value;
+			  maxFreq    = +document.getElementById('maxFreq').value,
+			  bodyBands  = document.getElementById('tableBands').tBodies[0];
 
-		const { temperedScale, analyzerBars } = generateBands( { fftSize, sampleRate, mode, minFreq, maxFreq } );
+		const analyzerBars = generateBands( { fftSize, sampleRate, mode, minFreq, maxFreq } );
 
-		const bodyScale = document.getElementById('tableScale').tBodies[0],
-			  bodyBands = document.getElementById('tableBands').tBodies[0];
-
-		bodyScale.innerHTML = '';
-
-		temperedScale.forEach( band => {
-			bodyScale.innerHTML += `<tr><td>${band.note}${band.octave}<td>${band.freq.toFixed(2)}<td>${band.bin}<td>${band.ratio.toFixed(3)}<td><span class="bar" style="width: ${ band.ratio * 100 }%"></span>${band.range[0].toFixed(2)} - ${band.range[1].toFixed(2)}`;
-		});
+		// helper functions
+		const normalize = freq => freq.toFixed( Math.max( 0, 3 - ( Math.log10( freq ) | 0 ) ) );
+		const binToFreq = bin => normalize( bin * sampleRate / fftSize || 1 );
 
 		bodyBands.innerHTML = '';
 
@@ -140,7 +127,7 @@
 			octaveChanges = 0;
 
 		analyzerBars.forEach( ( bar, index ) => {
-			let html = `<tr><td>${index}`;
+			let html = `<tr${ bar.disabled ? ' class="disabled" title="This bar will not be displayed because it is out of the selected frequency range"' : '' }><td>${index}`;
 			if ( bar.octave != prevOctave ) {
 				prevOctave = bar.octave;
 				octaveChanges++;
@@ -150,9 +137,15 @@
 				html += `<td rowspan="${rows}" class="center${ octaveChanges % 2 ? ' odd' : ' even' }">${bar.octave}`;
 			}
 			html += `
-				<td>${ bar.binLo } / ${ bar.ratioLo.toFixed(3) }
-				<td>${ bar.binHi } / ${ bar.ratioHi.toFixed(3) }
-				<td class="center">${ bar.freqLo.toFixed(2) } - ${ bar.freqHi.toFixed(2) }`;
+				<td class="center">${ bar.note }
+				<td class="center${ bar.clamped == 'l' ? ' clamped" title="Lower edge will be clamped to ' + minFreq + 'Hz (minFreq)' : '' }">${ normalize( bar.freqLo ) }
+				<td class="center">${ normalize( bar.freq ) }
+				<td class="center${ bar.clamped == 'u' ? ' clamped" title="Upper edge will be clamped to ' + maxFreq + 'Hz (maxFreq)' : '' }">${ normalize( bar.freqHi ) }
+				<td>${ bar.binLo }
+				<td title="Interpolation ratio: ${ bar.ratioLo.toFixed(3) }"><span class="bar" style="width: ${ bar.ratioLo * 100 }%"></span>${ binToFreq( bar.binLo ) } - ${ binToFreq( bar.binLo + 1 ) }
+				<td>${ bar.binHi }
+				<td title="Interpolation ratio: ${ bar.ratioHi.toFixed(3) }"><span class="bar" style="width: ${ bar.ratioHi * 100 }%"></span>${ binToFreq( bar.binHi ) } - ${ binToFreq( bar.binHi + 1 ) }
+			`;
 			bodyBands.innerHTML += html;
 		});
 	}

@@ -28,13 +28,15 @@ table {
 	border-collapse: collapse;
 	display: block;
 	height: calc( 100vh - 40px );
-	margin: 0 auto;
 	overflow-y: auto;
 }
 table th,
 table td {
 	border: 1px solid #444;
 	padding: 6px;
+}
+table th {
+	background: #ccc;
 }
 table td {
 	position: relative;
@@ -57,12 +59,20 @@ table tr:nth-child(odd),
 	text-align: center;
 }
 
+.clamped {
+	color: #e00;
+}
+
 .credits {
 	bottom: 2em;
 	font-size: .8rem;
 	line-height: 1.6;
 	position: fixed;
 	text-align: center;
+}
+
+.disabled {
+	opacity: .3;
 }
 
 .even {
