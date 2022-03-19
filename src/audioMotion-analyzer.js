@@ -1079,7 +1079,7 @@ export default class AudioMotionAnalyzer {
 	 * Generate the X-axis and radial scales in auxiliary canvases
 	 */
 	_createScales() {
-		const freqLabels  = [ 16, 31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000 ],
+		const freqLabels  = [ 16.35, 32.70, 65.41, 130.81, 261.63, 523.25, 1046.5, 2093, 4186, 8372, 16744 ],
 			  canvas      = this._canvasCtx.canvas,
 			  scaleX      = this._scaleX,
 			  scaleR      = this._scaleR,
@@ -1123,7 +1123,7 @@ export default class AudioMotionAnalyzer {
 		scaleX.textAlign = scaleR.textAlign = 'center';
 
 		for ( const freq of freqLabels ) {
-			const label = ( freq >= 1000 ) ? `${ freq / 1000 }k` : freq,
+			const label = freq >= 1e3 ? `${ freq / 1e3 | 0 }k` : freq | 0,
 				  x     = this._logWidth * ( Math.log10( freq ) - this._minLog );
 
 			if ( x >= 0 && x <= this._analyzerWidth ) {
