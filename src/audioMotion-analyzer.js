@@ -369,6 +369,14 @@ export default class AudioMotionAnalyzer {
 			throw new AudioMotionError( 'ERR_INVALID_MODE', `Invalid mode: ${value}` );
 	}
 
+	get noteLabels() {
+		return this._noteLabels;
+	}
+	set noteLabels( value ) {
+		this._noteLabels = !! value;
+		this._createScales();
+	}
+
 	get outlineBars() {
 		return this._outlineBars;
 	}
@@ -1079,22 +1087,47 @@ export default class AudioMotionAnalyzer {
 	 * Generate the X-axis and radial scales in auxiliary canvases
 	 */
 	_createScales() {
-		const freqLabels  = [ 16.35, 32.70, 65.41, 130.81, 261.63, 523.25, 1046.5, 2093, 4186, 8372, 16744 ],
-			  canvas      = this._canvasCtx.canvas,
-			  scaleX      = this._scaleX,
-			  scaleR      = this._scaleR,
-			  canvasX     = scaleX.canvas,
-			  canvasR     = scaleR.canvas,
-			  scaleHeight = Math.min( canvas.width, canvas.height ) * .03 | 0; // circular scale height (radial mode)
+		if ( ! this._ready )
+			return;
+
+		const analyzerWidth = this._analyzerWidth,
+			  canvas        = this._canvasCtx.canvas,
+			  scaleX        = this._scaleX,
+			  scaleR        = this._scaleR,
+			  canvasX       = scaleX.canvas,
+			  canvasR       = scaleR.canvas,
+			  freqLabels    = [],
+			  initialX      = this._initialX,
+			  isStereo      = this._stereo,
+			  isMirror      = this._mirror,
+			  noteLabels    = this._noteLabels,
+			  scale         = [ 'C',, 'D',, 'E', 'F',, 'G',, 'A',, 'B' ], // for note labels (no sharp notes)
+			  scaleHeight   = Math.min( canvas.width, canvas.height ) * .03 | 0; // circular scale height (radial mode)
+
+		for ( let octave = 0; octave < 11; octave++ ) {
+			for ( let note = 0; note < 12; note++ ) {
+				const freq = C0 * ROOT24 ** ( octave * 24 + note * 2 );
+
+				if ( freq >= this._minFreq && freq <= this._maxFreq ) {
+					const pitch = scale[ note ],
+						  isC   = pitch == 'C';
+					if ( ( pitch && noteLabels && ! isMirror ) || isC )
+						freqLabels.push( [ freq, ( noteLabels ? pitch + ( isC ? octave : '' ) : freq >= 1e3 ? `${ freq / 1e3 | 0 }k` : freq | 0 ) ] );
+				}
+			}
+		}
 
 		// in radial stereo mode, the scale is positioned exactly between both channels, by making the canvas a bit larger than the central diameter
-		canvasR.width = canvasR.height = ( this._radius << 1 ) + ( this._stereo * scaleHeight );
+		canvasR.width = canvasR.height = ( this._radius << 1 ) + ( isStereo * scaleHeight );
 
 		const radius  = canvasR.width >> 1, // this is also used as the center X and Y coordinates of the circular scale canvas
 			  radialY = radius - scaleHeight * .7;	// vertical position of text labels in the circular scale
 
 		// helper function
 		const radialLabel = ( x, label ) => {
+			if ( noteLabels && ! isStereo && ! ['C','E','G'].includes( label[0] ) )
+				return;
+
 			const angle  = TAU * ( x / canvas.width ),
 				  adjAng = angle - HALF_PI, // rotate angles so 0 is at the top
 				  posX   = radialY * Math.cos( adjAng ),
@@ -1118,25 +1151,26 @@ export default class AudioMotionAnalyzer {
 		scaleR.stroke();
 
 		scaleX.fillStyle = scaleR.fillStyle = '#fff';
-		scaleX.font = `${ canvasX.height >> 1 }px sans-serif`;
+		scaleX.font = `${ Math.max( 10 * this._pixelRatio, canvasX.height / ( noteLabels ? 3 : 2 ) ) }px sans-serif`;
 		scaleR.font = `${ scaleHeight >> 1 }px sans-serif`;
 		scaleX.textAlign = scaleR.textAlign = 'center';
 
-		for ( const freq of freqLabels ) {
-			const label = freq >= 1e3 ? `${ freq / 1e3 | 0 }k` : freq | 0,
-				  x     = this._logWidth * ( Math.log10( freq ) - this._minLog );
+		for ( const [ freq, label ] of freqLabels ) {
+			const x = this._logWidth * ( Math.log10( freq ) - this._minLog ),
+				  y = canvasX.height * .75;
 
-			if ( x >= 0 && x <= this._analyzerWidth ) {
-				scaleX.fillText( label, this._initialX + x, canvasX.height * .75 );
-				if ( x < this._analyzerWidth ) // avoid wrapping-around the last label and overlapping the first one
+			if ( x >= 0 && x <= analyzerWidth ) {
+				scaleX.fillStyle = scaleR.fillStyle = ( label[0] == 'C' && ! isMirror ) ? '#4f4' : '#fff';
+
+				scaleX.fillText( label, initialX + x, y );
+				if ( x < analyzerWidth ) // avoid wrapping-around the last label and overlapping the first one
 					radialLabel( x, label );
 
-				if ( this._mirror ) {
-					scaleX.fillText( label, ( this._initialX || canvas.width ) - x, canvasX.height * .75 );
+				if ( isMirror ) {
+					scaleX.fillText( label, ( initialX || canvas.width ) - x, y );
 					if ( x > 10 ) // avoid overlapping of first labels on mirror mode
 						radialLabel( -x, label );
 				}
-
 			}
 		}
 	}
@@ -1818,6 +1852,7 @@ export default class AudioMotionAnalyzer {
 			minFreq      : 20,
 			mirror       : 0,
 			mode         : 0,
+			noteLabels   : false,
 			outlineBars  : false,
 			overlay      : false,
 			radial		 : false,
