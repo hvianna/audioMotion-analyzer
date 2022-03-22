@@ -1117,7 +1117,7 @@ export default class AudioMotionAnalyzer {
 			}
 		}
 
-		// in radial stereo mode, the scale is positioned exactly between both channels, by making the canvas a bit larger than the central diameter
+		// in radial stereo mode, the scale is positioned exactly between both channels, by making the canvas a bit larger than the inner diameter
 		canvasR.width = canvasR.height = ( this._radius << 1 ) + ( isStereo * scaleHeight );
 
 		const radius  = canvasR.width >> 1, // this is also used as the center X and Y coordinates of the circular scale canvas
@@ -1151,23 +1151,25 @@ export default class AudioMotionAnalyzer {
 		scaleR.stroke();
 
 		scaleX.fillStyle = scaleR.fillStyle = '#fff';
-		scaleX.font = `${ Math.max( 10 * this._pixelRatio, canvasX.height / ( noteLabels ? 3 : 2 ) ) }px sans-serif`;
+		scaleX.font = `${ canvasX.height >> 1 }px sans-serif`;
 		scaleR.font = `${ scaleHeight >> 1 }px sans-serif`;
 		scaleX.textAlign = scaleR.textAlign = 'center';
 
 		for ( const [ freq, label ] of freqLabels ) {
-			const x = this._logWidth * ( Math.log10( freq ) - this._minLog ),
-				  y = canvasX.height * .75;
+			const x    = this._logWidth * ( Math.log10( freq ) - this._minLog ),
+				  y    = canvasX.height * .75,
+				  isC  = label[0] == 'C',
+	  			  maxW = noteLabels && ! isMirror ? this._logWidth * ( isC ? .03 : .015 ) : 99;
 
 			if ( x >= 0 && x <= analyzerWidth ) {
-				scaleX.fillStyle = scaleR.fillStyle = ( label[0] == 'C' && ! isMirror ) ? '#4f4' : '#fff';
+				scaleX.fillStyle = scaleR.fillStyle = isC && ! isMirror ? '#4f4' : '#fff';
 
-				scaleX.fillText( label, initialX + x, y );
+				scaleX.fillText( label, initialX + x, y, maxW );
 				if ( x < analyzerWidth ) // avoid wrapping-around the last label and overlapping the first one
 					radialLabel( x, label );
 
 				if ( isMirror ) {
-					scaleX.fillText( label, ( initialX || canvas.width ) - x, y );
+					scaleX.fillText( label, ( initialX || canvas.width ) - x, y, maxW );
 					if ( x > 10 ) // avoid overlapping of first labels on mirror mode
 						radialLabel( -x, label );
 				}
