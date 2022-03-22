@@ -27,6 +27,28 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  SCALEY_LABEL_COLOR       = '#888',
 	  SCALEY_MIDLINE_COLOR     = '#555';
 
+// custom error messages
+const ERR_AUDIO_CONTEXT_FAIL     = [ 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create audio context. Web Audio API not supported?' ],
+	  ERR_INVALID_AUDIO_CONTEXT  = [ 'ERR_INVALID_AUDIO_CONTEXT', 'Provided audio context is not valid' ],
+	  ERR_UNKNOWN_GRADIENT       = [ 'ERR_UNKNOWN_GRADIENT', 'Unknown gradient' ],
+	  ERR_FREQUENCY_TOO_LOW      = [ 'ERR_FREQUENCY_TOO_LOW', 'Frequency values must be >= 1' ],
+	  ERR_INVALID_MODE           = [ 'ERR_INVALID_MODE', 'Invalid mode' ],
+	  ERR_REFLEX_OUT_OF_RANGE    = [ 'ERR_REFLEX_OUT_OF_RANGE', 'Reflex ratio must be >= 0 and < 1' ],
+	  ERR_INVALID_AUDIO_SOURCE   = [ 'ERR_INVALID_AUDIO_SOURCE', 'Audio source must be an instance of HTMLMediaElement or AudioNode' ],
+	  ERR_GRADIENT_INVALID_NAME  = [ 'ERR_GRADIENT_INVALID_NAME', 'Gradient name must be a non-empty string' ],
+	  ERR_GRADIENT_NOT_AN_OBJECT = [ 'ERR_GRADIENT_NOT_AN_OBJECT', 'Gradient options must be an object' ],
+	  ERR_GRADIENT_MISSING_COLOR = [ 'ERR_GRADIENT_MISSING_COLOR', 'Gradient must define at least two colors' ];
+
+class AudioMotionError extends Error {
+	constructor( error, value ) {
+		const [ code, message ] = error;
+		super( message + ( value !== undefined ? `: ${value}` : '' ) );
+		this.name = 'AudioMotionError';
+		this.code = code;
+	}
+}
+
+// AudioMotionAnalyzer class
 
 export default class AudioMotionAnalyzer {
 
@@ -99,13 +121,13 @@ export default class AudioMotionAnalyzer {
 				audioCtx = new ( window.AudioContext || window.webkitAudioContext )();
 			}
 			catch( err ) {
-				throw new AudioMotionError( 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create audio context. Web Audio API not supported?' );
+				throw new AudioMotionError( ERR_AUDIO_CONTEXT_FAIL );
 			}
 		}
 
 		// make sure audioContext is valid
 		if ( ! audioCtx.createGain )
-			throw new AudioMotionError( 'ERR_INVALID_AUDIO_CONTEXT', 'Provided audio context is not valid' );
+			throw new AudioMotionError( ERR_INVALID_AUDIO_CONTEXT );
 
 		/*
 			Connection routing:
@@ -243,7 +265,6 @@ export default class AudioMotionAnalyzer {
 	 * ==========================================================================
 	 */
 
-
 	get alphaBars() {
 		return this._alphaBars;
 	}
@@ -276,7 +297,7 @@ export default class AudioMotionAnalyzer {
 	}
 	set gradient( value ) {
 		if ( ! this._gradients.hasOwnProperty( value ) )
-			throw new AudioMotionError( 'ERR_UNKNOWN_GRADIENT', `Unknown gradient: '${value}'` );
+			throw new AudioMotionError( ERR_UNKNOWN_GRADIENT, value );
 
 		this._gradient = value;
 		this._makeGrad();
@@ -329,7 +350,7 @@ export default class AudioMotionAnalyzer {
 	}
 	set maxFreq( value ) {
 		if ( value < 1 )
-			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
+			throw new AudioMotionError( ERR_FREQUENCY_TOO_LOW );
 		else {
 			this._maxFreq = +value;
 			this._calcBars();
@@ -349,7 +370,7 @@ export default class AudioMotionAnalyzer {
 	}
 	set minFreq( value ) {
 		if ( value < 1 )
-			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
+			throw new AudioMotionError( ERR_FREQUENCY_TOO_LOW );
 		else {
 			this._minFreq = +value;
 			this._calcBars();
@@ -378,7 +399,7 @@ export default class AudioMotionAnalyzer {
 			this._makeGrad();
 		}
 		else
-			throw new AudioMotionError( 'ERR_INVALID_MODE', `Invalid mode: ${value}` );
+			throw new AudioMotionError( ERR_INVALID_MODE, value );
 	}
 
 	get noteLabels() {
@@ -413,7 +434,7 @@ export default class AudioMotionAnalyzer {
 	set reflexRatio( value ) {
 		value = +value || 0;
 		if ( value < 0 || value >= 1 )
-			throw new AudioMotionError( 'ERR_REFLEX_OUT_OF_RANGE', `Reflex ratio must be >= 0 and < 1` );
+			throw new AudioMotionError( ERR_REFLEX_OUT_OF_RANGE );
 		else {
 			this._reflexRatio = value;
 			this._calcAux();
@@ -572,7 +593,7 @@ export default class AudioMotionAnalyzer {
 		const isHTML = source instanceof HTMLMediaElement;
 
 		if ( ! ( isHTML || source.connect ) )
-			throw new AudioMotionError( 'ERR_INVALID_AUDIO_SOURCE', 'Audio source must be an instance of HTMLMediaElement or AudioNode' );
+			throw new AudioMotionError( ERR_INVALID_AUDIO_SOURCE );
 
 		// if source is an HTML element, create an audio node for it; otherwise, use the provided audio node
 		const node = isHTML ? this.audioCtx.createMediaElementSource( source ) : source;
@@ -704,13 +725,13 @@ export default class AudioMotionAnalyzer {
 	 */
 	registerGradient( name, options ) {
 		if ( typeof name !== 'string' || name.trim().length == 0 )
-			throw new AudioMotionError( 'ERR_GRADIENT_INVALID_NAME', 'Gradient name must be a non-empty string' );
+			throw new AudioMotionError( ERR_GRADIENT_INVALID_NAME );
 
 		if ( typeof options !== 'object' )
-			throw new AudioMotionError( 'ERR_GRADIENT_NOT_AN_OBJECT', 'Gradient options must be an object' );
+			throw new AudioMotionError( ERR_GRADIENT_NOT_AN_OBJECT );
 
 		if ( options.colorStops === undefined || options.colorStops.length < 2 )
-			throw new AudioMotionError( 'ERR_GRADIENT_MISSING_COLOR', 'Gradient must define at least two colors' );
+			throw new AudioMotionError( ERR_GRADIENT_MISSING_COLOR );
 
 		this._gradients[ name ] = {
 			bgColor:    options.bgColor || GRADIENT_DEFAULT_BGCOLOR,
@@ -743,7 +764,7 @@ export default class AudioMotionAnalyzer {
 	 */
 	setFreqRange( min, max ) {
 		if ( min < 1 || max < 1 )
-			throw new AudioMotionError( 'ERR_FREQUENCY_TOO_LOW', `Frequency values must be >= 1` );
+			throw new AudioMotionError( ERR_FREQUENCY_TOO_LOW );
 		else {
 			this._minFreq = Math.min( min, max );
 			this._maxFreq = Math.max( min, max );
@@ -1912,14 +1933,4 @@ export default class AudioMotionAnalyzer {
 			this.toggleAnalyzer( options.start );
 	}
 
-}
-
-/* Custom error class */
-
-class AudioMotionError extends Error {
-	constructor( code, message ) {
-		super( message );
-		this.name = 'AudioMotionError';
-		this.code = code;
-	}
 }
