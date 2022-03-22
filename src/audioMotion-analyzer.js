@@ -16,6 +16,18 @@ const TAU     = 2 * Math.PI,
 	  ROOT24  = 2 ** ( 1 / 24 ),      // 24th root of 2
 	  C0      = 440 * ROOT24 ** -114; // ~16.35 Hz
 
+const CANVAS_BACKGROUND_COLOR  = '#000',
+ 	  GRADIENT_DEFAULT_BGCOLOR = '#111',
+	  FONT_FAMILY              = 'sans-serif',
+	  FPS_COLOR                = '#0f0',
+	  LEDS_UNLIT_COLOR         = '#7f7f7f22',
+	  SCALEX_BACKGROUND_COLOR  = '#000c',
+	  SCALEX_LABEL_COLOR       = '#fff',
+	  SCALEX_HIGHLIGHT_COLOR   = '#4f4',
+	  SCALEY_LABEL_COLOR       = '#888',
+	  SCALEY_MIDLINE_COLOR     = '#555';
+
+
 export default class AudioMotionAnalyzer {
 
 /**
@@ -33,7 +45,7 @@ export default class AudioMotionAnalyzer {
 
 		this._gradients = {
 			classic: {
-				bgColor: '#111',
+				bgColor: GRADIENT_DEFAULT_BGCOLOR,
 				colorStops: [
 					'hsl( 0, 100%, 50% )',
 					{ pos: .6, color: 'hsl( 60, 100%, 50% )' },
@@ -41,7 +53,7 @@ export default class AudioMotionAnalyzer {
 				]
 			},
 			prism:   {
-				bgColor: '#111',
+				bgColor: GRADIENT_DEFAULT_BGCOLOR,
 				colorStops: [
 					'hsl( 0, 100%, 50% )',
 					'hsl( 60, 100%, 50% )',
@@ -51,7 +63,7 @@ export default class AudioMotionAnalyzer {
 				]
 			},
 			rainbow: {
-				bgColor: '#111',
+				bgColor: GRADIENT_DEFAULT_BGCOLOR,
 				dir: 'h',
 				colorStops: [
 					'hsl( 0, 100%, 50% )',
@@ -701,7 +713,7 @@ export default class AudioMotionAnalyzer {
 			throw new AudioMotionError( 'ERR_GRADIENT_MISSING_COLOR', 'Gradient must define at least two colors' );
 
 		this._gradients[ name ] = {
-			bgColor:    options.bgColor || '#111',
+			bgColor:    options.bgColor || GRADIENT_DEFAULT_BGCOLOR,
 			dir:        options.dir,
 			colorStops: options.colorStops
 		};
@@ -1143,16 +1155,16 @@ export default class AudioMotionAnalyzer {
 		// clear scale canvas
 		canvasX.width |= 0;
 
-		scaleX.fillStyle = scaleR.strokeStyle = '#000c';
+		scaleX.fillStyle = scaleR.strokeStyle = SCALEX_BACKGROUND_COLOR;
 		scaleX.fillRect( 0, 0, canvasX.width, canvasX.height );
 
 		scaleR.arc( radius, radius, radius - scaleHeight / 2, 0, TAU );
 		scaleR.lineWidth = scaleHeight;
 		scaleR.stroke();
 
-		scaleX.fillStyle = scaleR.fillStyle = '#fff';
-		scaleX.font = `${ canvasX.height >> 1 }px sans-serif`;
-		scaleR.font = `${ scaleHeight >> 1 }px sans-serif`;
+		scaleX.fillStyle = scaleR.fillStyle = SCALEX_LABEL_COLOR;
+		scaleX.font = `${ canvasX.height >> 1 }px ${FONT_FAMILY}`;
+		scaleR.font = `${ scaleHeight >> 1 }px ${FONT_FAMILY}`;
 		scaleX.textAlign = scaleR.textAlign = 'center';
 
 		for ( const [ freq, label ] of freqLabels ) {
@@ -1162,7 +1174,7 @@ export default class AudioMotionAnalyzer {
 	  			  maxW = noteLabels && ! isMirror ? this._logWidth * ( isC ? .03 : .015 ) : 99;
 
 			if ( x >= 0 && x <= analyzerWidth ) {
-				scaleX.fillStyle = scaleR.fillStyle = isC && ! isMirror ? '#4f4' : '#fff';
+				scaleX.fillStyle = scaleR.fillStyle = isC && ! isMirror ? SCALEX_HIGHLIGHT_COLOR : SCALEX_LABEL_COLOR;
 
 				scaleX.fillText( label, initialX + x, y, maxW );
 				if ( x < analyzerWidth ) // avoid wrapping-around the last label and overlapping the first one
@@ -1296,8 +1308,8 @@ export default class AudioMotionAnalyzer {
 						  maxdB      = this._analyzer[0].maxDecibels,
 						  interval   = analyzerHeight / ( maxdB - mindB );
 
-					ctx.fillStyle = '#888';
-					ctx.font = `${fontSize}px sans-serif`;
+					ctx.fillStyle = SCALEY_LABEL_COLOR;
+					ctx.font = `${fontSize}px ${FONT_FAMILY}`;
 					ctx.textAlign = 'right';
 					ctx.lineWidth = 1;
 
@@ -1311,12 +1323,12 @@ export default class AudioMotionAnalyzer {
 								ctx.fillText( db, scaleWidth * .85, labelY );
 							if ( mirrorMode != 1 )
 								ctx.fillText( db, canvas.width - scaleWidth * .1, labelY );
-							ctx.strokeStyle = '#888';
+							ctx.strokeStyle = SCALEY_LABEL_COLOR;
 							ctx.setLineDash([2,4]);
 							ctx.lineDashOffset = 0;
 						}
 						else {
-							ctx.strokeStyle = '#555';
+							ctx.strokeStyle = SCALEY_MIDLINE_COLOR;
 							ctx.setLineDash([2,8]);
 							ctx.lineDashOffset = 1;
 						}
@@ -1474,7 +1486,7 @@ export default class AudioMotionAnalyzer {
 							ctx.beginPath();
 							ctx.moveTo( x, channelTop );
 							ctx.lineTo( x, analyzerBottom );
-							ctx.strokeStyle = '#7f7f7f22';
+							ctx.strokeStyle = LEDS_UNLIT_COLOR;
 							ctx.globalAlpha = 1;
 							ctx.stroke();
 							// restore properties
@@ -1645,8 +1657,8 @@ export default class AudioMotionAnalyzer {
 		}
 		if ( this.showFPS ) {
 			const size = canvasX.height;
-			ctx.font = `bold ${size}px sans-serif`;
-			ctx.fillStyle = '#0f0';
+			ctx.font = `bold ${size}px ${FONT_FAMILY}`;
+			ctx.fillStyle = FPS_COLOR;
 			ctx.textAlign = 'right';
 			ctx.fillText( Math.round( this._fps ), canvas.width - size, size * 2 );
 		}
