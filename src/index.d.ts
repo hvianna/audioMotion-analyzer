@@ -24,6 +24,7 @@ export interface Options {
   minFreq?: number;
   mirror?: number;
   mode?: number;
+  noteLabels?: boolean;
   onCanvasDraw?: OnCanvasDrawFunction;
   onCanvasResize?: OnCanvasResizeFunction;
   outlineBars?: boolean;
@@ -51,6 +52,7 @@ export interface Options {
 
 interface AnalyzerBarData {
   posX: number;
+  freq: number;
   freqLo: number;
   freqHi: number;
   hold: [ number, number? ];
@@ -163,6 +165,9 @@ declare class AudioMotionAnalyzer {
 
   get mode(): number;
   set mode(value: number);
+
+  get noteLabels(): boolean;
+  set noteLabels(value: boolean);
 
   get outlineBars(): boolean;
   set outlineBars(value: boolean);

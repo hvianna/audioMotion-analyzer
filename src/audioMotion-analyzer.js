@@ -671,7 +671,7 @@ export default class AudioMotionAnalyzer {
 	 * @returns {array}
 	 */
 	getBars() {
-		return Array.from( this._bars, ( { posX, freqLo, freqHi, hold, peak, value } ) => ( { posX, freqLo, freqHi, hold, peak, value } ) );
+		return Array.from( this._bars, ( { posX, freq, freqLo, freqHi, hold, peak, value } ) => ( { posX, freq, freqLo, freqHi, hold, peak, value } ) );
 	}
 
 	/**
@@ -924,7 +924,8 @@ export default class AudioMotionAnalyzer {
 
 		// helper functions
 		const binToFreq = bin => bin * this.audioCtx.sampleRate / this.fftSize || 1; // returns 1 for bin 0
-		const barsPush  = ( posX, binLo, binHi, freqLo, freqHi, ratioLo, ratioHi ) => bars.push( { posX, binLo, binHi, freqLo, freqHi, ratioLo, ratioHi, peak: [0,0], hold: [0], value: [0] } );
+		const barsPush  = args => bars.push( { ...args, peak: [0,0], hold: [0], value: [0] } );
+		// bar object: { posX, freq, freqLo, freqHi, binLo, binHi, ratioLo, ratioHi, peak, hold, value }
 
 		const analyzerWidth = this._analyzerWidth,
 			  initialX      = this._initialX,
@@ -986,7 +987,7 @@ export default class AudioMotionAnalyzer {
 					if ( freq > maxFreq || binHi >= this.fftSize / 2 )
 						break;
 
-					barsPush( 0, binLo, binHi, freqLo, freqHi, ratioLo, ratioHi );
+					barsPush( { posX: 0, freq, freqLo, freqHi, binLo, binHi, ratioLo, ratioHi } );
 				}
 			}
 
@@ -1028,16 +1029,18 @@ export default class AudioMotionAnalyzer {
 
 			for ( let i = minIndex; i <= maxIndex; i++ ) {
 				const freq = binToFreq( i ), // frequency represented by this index
-					  pos  = initialX + Math.round( logWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
+					  posX = initialX + Math.round( logWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
-				if ( pos > lastPos ) {
-					barsPush( pos, i, i, freq, freq, 0, 0 );
-					lastPos = pos;
+				if ( posX > lastPos ) {
+					barsPush( { posX, freq, freqLo: freq, freqHi: freq, binLo: i, binHi: i, ratioLo: 0, ratioHi: 0 } );
+					lastPos = posX;
 				} // otherwise, add this frequency to the last bar's range
 				else if ( bars.length ) {
-					bars[ bars.length - 1 ].binHi = i;
-					bars[ bars.length - 1 ].freqHi = freq;
+					const lastBar = bars[ bars.length - 1 ];
+					lastBar.binHi = i;
+					lastBar.freqHi = freq;
+					lastBar.freq = 2 ** ( ( Math.log2( lastBar.freqLo ) + Math.log2( freq ) ) / 2 ); // compute center frequency
 				}
 			}
 		}
