@@ -15,6 +15,7 @@ export interface Options {
   gradient?: string;
   height?: number;
   ledBars?: boolean;
+  linearAmplitude?: boolean;
   lineWidth?: number;
   loRes?: boolean;
   lumiBars?: boolean;
@@ -140,6 +141,7 @@ declare class AudioMotionAnalyzer {
   get ledBars(): boolean;
   set ledBars(value: boolean);
 
+  public linearAmplitude: boolean;
   public lineWidth: number;
 
   get loRes(): boolean;

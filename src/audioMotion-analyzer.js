@@ -1226,6 +1226,7 @@ export default class AudioMotionAnalyzer {
 			  mode           = this._mode,
 			  isAlphaBars    = this._isAlphaBars,
 			  isLedDisplay   = this._isLedDisplay,
+			  isLinearAmplitude = this.linearAmplitude,
 			  isLumiBars     = this._isLumiBars,
 			  isOctaveBands  = this._isOctaveBands,
 			  isOutline      = this._isOutline,
@@ -1243,6 +1244,9 @@ export default class AudioMotionAnalyzer {
 			  centerY        = canvas.height >> 1,
 			  radius         = this._radius,
 			  maxBarHeight   = isRadial ? Math.min( centerX, centerY ) - radius : analyzerHeight,
+			  maxdB			 = this.maxDecibels,
+			  mindB			 = this.minDecibels,
+			  deltadB 		 = ( maxdB - mindB ) / -20,
 			  useCanvas      = this.useCanvas;
 
 		if ( energy.val > 0 )
@@ -1328,25 +1332,26 @@ export default class AudioMotionAnalyzer {
 				if ( this.showScaleY && ! isLumiBars && ! isRadial ) {
 					const scaleWidth = canvasX.height,
 						  fontSize   = scaleWidth >> 1,
-						  mindB      = this._analyzer[0].minDecibels,
-						  maxdB      = this._analyzer[0].maxDecibels,
-						  interval   = analyzerHeight / ( maxdB - mindB );
+						  max        = isLinearAmplitude ? 100 : maxdB,
+						  min        = isLinearAmplitude ? 0 : mindB,
+						  incr       = isLinearAmplitude ? 20 : 5,
+						  interval   = analyzerHeight / ( max - min );
 
 					ctx.fillStyle = SCALEY_LABEL_COLOR;
 					ctx.font = `${fontSize}px ${FONT_FAMILY}`;
 					ctx.textAlign = 'right';
 					ctx.lineWidth = 1;
 
-					for ( let db = maxdB; db > mindB; db -= 5 ) {
-						const posY = channelTop + ( maxdB - db ) * interval,
-							  even = ( db % 2 == 0 ) | 0;
+					for ( let val = max; val > min; val -= incr ) {
+						const posY = channelTop + ( max - val ) * interval,
+							  even = ( val % 2 == 0 ) | 0;
 
 						if ( even ) {
 							const labelY = posY + fontSize * ( posY == channelTop ? .8 : .35 );
 							if ( mirrorMode != -1 )
-								ctx.fillText( db, scaleWidth * .85, labelY );
+								ctx.fillText( val, scaleWidth * .85, labelY );
 							if ( mirrorMode != 1 )
-								ctx.fillText( db, canvas.width - scaleWidth * .1, labelY );
+								ctx.fillText( val, canvas.width - scaleWidth * .1, labelY );
 							ctx.strokeStyle = SCALEY_LABEL_COLOR;
 							ctx.setLineDash([2,4]);
 							ctx.lineDashOffset = 0;
@@ -1408,6 +1413,8 @@ export default class AudioMotionAnalyzer {
 				}
 
 				barHeight /= 255;
+				if ( isLinearAmplitude && barHeight ) // avoid residual amplitude if bar value is 0
+					barHeight = 10 ** ( ( 1 - barHeight ) * deltadB );
 				bar.value[ channel ] = barHeight;
 				currentEnergy += barHeight;
 
@@ -1881,6 +1888,7 @@ export default class AudioMotionAnalyzer {
 			fillAlpha    : 1,
 			gradient     : 'classic',
 			ledBars      : false,
+			linearAmplitude: false,
 			lineWidth    : 0,
 			loRes        : false,
 			lumiBars     : false,
