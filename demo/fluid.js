@@ -118,7 +118,7 @@ try {
 	);
 }
 catch( err ) {
-	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
+	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: ${ err.code ? '<strong>' + err.code + '</strong>' : '' } <em>${ err.code ? err.message : err }</em></p>`;
 }
 
 // Display package version at the footer
