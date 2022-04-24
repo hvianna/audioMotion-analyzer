@@ -12,9 +12,8 @@ const VERSION = '3.6.0';
 // internal constants
 const TAU     = 2 * Math.PI,
 	  HALF_PI = Math.PI / 2,
-	  RPM     = TAU / 3600,           // angle increment per frame for one revolution per minute @60fps
-	  ROOT24  = 2 ** ( 1 / 24 ),      // 24th root of 2
-	  C0      = 440 * ROOT24 ** -114; // ~16.35 Hz
+	  RPM     = TAU / 3600,   // angle increment per frame for one revolution per minute @60fps
+	  C0      = 16.3516;
 
 const CANVAS_BACKGROUND_COLOR  = '#000',
  	  GRADIENT_DEFAULT_BGCOLOR = '#111',
@@ -967,29 +966,23 @@ export default class AudioMotionAnalyzer {
 				return [ bin, ratio ];
 			}
 
-			const steps = [0,1,2,3,4,6,8,12,24][ this._mode ], // number of notes grouped per band for each mode
-				  rootN = 2 ** ( steps / 48 ); // 2N-th root of 2, where N is 1/steps (3 for 1/3rd bands and so on)
+			const bands = [0,24,12,8,6,4,3,2,1][ this._mode ], // bands per octave for each mode
+				  bandWidth = 2 ** ( 1 / bands ), // Nth root of 2, where N is number of bands
+				  halfBand  = bandWidth ** .5;    // 2N-th root of 2
 
-			// generate a 11-octave 24-tone equal tempered scale (~16Hz to ~33kHz)
+			let freq = 8.1758;
 
-			for ( let octave = 0; octave < 11; octave++ ) {
-				for ( let note = 0; note < 24; note += steps ) {
+			do {
+				const freqLo = freq / halfBand,
+					  freqHi = freq * halfBand,
+					  [ binLo, ratioLo ] = calcRatio( freqLo ),
+					  [ binHi, ratioHi ] = calcRatio( freqHi );
 
-					const freq   = C0 * ROOT24 ** ( octave * 24 + note ), // center frequency for this band
-						  freqLo = freq / rootN,
-						  freqHi = freq * rootN,
-						  [ binLo, ratioLo ] = calcRatio( freqLo ),
-						  [ binHi, ratioHi ] = calcRatio( freqHi );
-
-					if ( freq < minFreq )
-						continue;
-
-					if ( freq > maxFreq || binHi >= this.fftSize / 2 )
-						break;
-
+				if ( freq >= minFreq )
 					barsPush( { posX: 0, freq, freqLo, freqHi, binLo, binHi, ratioLo, ratioHi } );
-				}
-			}
+
+				freq *= bandWidth;
+			} while ( freq <= maxFreq );
 
 			this._barWidth = analyzerWidth / bars.length;
 
@@ -1138,11 +1131,12 @@ export default class AudioMotionAnalyzer {
 			  isMirror      = this._mirror,
 			  noteLabels    = this._noteLabels,
 			  scale         = [ 'C',, 'D',, 'E', 'F',, 'G',, 'A',, 'B' ], // for note labels (no sharp notes)
-			  scaleHeight   = Math.min( canvas.width, canvas.height ) * .03 | 0; // circular scale height (radial mode)
+			  scaleHeight   = Math.min( canvas.width, canvas.height ) * .03 | 0, // circular scale height (radial mode)
+		  	  ROOT12        = 2 ** ( 1 / 12 );
 
-		for ( let octave = 0; octave < 11; octave++ ) {
+		for ( let octave = -1; octave < 11; octave++ ) {
 			for ( let note = 0; note < 12; note++ ) {
-				const freq = C0 * ROOT24 ** ( octave * 24 + note * 2 );
+				const freq = C0 * ROOT12 ** ( octave * 12 + note );
 
 				if ( freq >= this._minFreq && freq <= this._maxFreq ) {
 					const pitch = scale[ note ],
