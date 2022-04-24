@@ -351,7 +351,7 @@ export default class AudioMotionAnalyzer {
 		if ( value < 1 )
 			throw new AudioMotionError( ERR_FREQUENCY_TOO_LOW );
 		else {
-			this._maxFreq = +value;
+			this._maxFreq = Math.min( value, this.audioCtx.sampleRate / 2 );
 			this._calcBars();
 		}
 	}
@@ -766,8 +766,7 @@ export default class AudioMotionAnalyzer {
 			throw new AudioMotionError( ERR_FREQUENCY_TOO_LOW );
 		else {
 			this._minFreq = Math.min( min, max );
-			this._maxFreq = Math.max( min, max );
-			this._calcBars();
+			this.maxFreq  = Math.max( min, max ); // use the setter for maxFreq
 		}
 	}
 
