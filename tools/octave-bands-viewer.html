@@ -106,13 +106,18 @@
 <script>
 	function update() {
 
-		const fftSize    = +document.getElementById('fftsize').value,
-			  sampleRate = +document.getElementById('samplerate').value,
-			  mode       = +document.getElementById('mode').value,
-			  minFreq    = +document.getElementById('minFreq').value,
-			  maxFreq    = +document.getElementById('maxFreq').value,
-			  bodyBands  = document.getElementById('tableBands').tBodies[0];
+		let fftSize    = +document.getElementById('fftsize').value,
+			sampleRate = +document.getElementById('samplerate').value,
+			mode       = +document.getElementById('mode').value,
+			minFreq    = +document.getElementById('minFreq').value,
+			maxFreq    = +document.getElementById('maxFreq').value,
+			bodyBands  = document.getElementById('tableBands').tBodies[0];
 
+		// make sure maxFreq is not higher than the Nyquist frequency (enforced on module by maxFreq setter)
+		maxFreq = Math.min( maxFreq, sampleRate / 2 );
+		document.getElementById('maxFreq').value = maxFreq;
+
+		// generate analyzer bands
 		const analyzerBars = generateBands( { fftSize, sampleRate, mode, minFreq, maxFreq } );
 
 		// helper functions

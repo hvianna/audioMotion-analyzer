@@ -71,10 +71,6 @@ table tr:nth-child(odd),
 	text-align: center;
 }
 
-.disabled {
-	opacity: .3;
-}
-
 .even {
 	background: #fff;
 }

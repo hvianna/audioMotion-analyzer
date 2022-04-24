@@ -65,12 +65,12 @@ function generateBands( options ) {
 			  [ binHi, ratioHi ] = calcRatio( freqHi );
 
 		// for viewer tool only
-		const clamped = freqLo < minFreq ? 'l'       // lower edge clamped by minFreq
-		  					: freqHi > maxFreq ? 'u' // upper edge clamped by maxFreq
+		const clamped = freqLo < minFreq ? 'l' // lower edge clamped by minFreq
+		  					: freqHi > maxFreq || ratioHi > 1 ? 'u' // upper edge clamped by maxFreq (or sample rate)
 		  						: '';
 
-			analyzerBars.push( { freq, freqLo, freqHi, binLo, ratioLo, binHi, ratioHi, clamped } );
 		if ( freq >= minFreq )
+			analyzerBars.push( { freq, freqLo, freqHi, binLo, ratioLo, binHi, ratioHi: Math.min( ratioHi, 1 ), clamped } );
 
 		freq *= bandWidth;
 	} while ( freq <= maxFreq );
