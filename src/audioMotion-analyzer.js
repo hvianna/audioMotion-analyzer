@@ -1379,11 +1379,12 @@ export default class AudioMotionAnalyzer {
 			} // if ( useCanvas )
 
 			// get a new array of data from the FFT
-			const fftData = this._fftData[ channel ];
+			const fftData = this._fftData[ channel ],
+				  lastBin = fftData.length - 1;
 			this._analyzer[ channel ].getByteFrequencyData( fftData );
 
 			// helper function for FFT data interpolation
-			const interpolate = ( bin, ratio ) => fftData[ bin ] + ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio;
+			const interpolate = ( bin, ratio ) => fftData[ bin ] + ( bin < lastBin ? ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio : 0 );
 
 			// start drawing path (for mode 10)
 			ctx.beginPath();
