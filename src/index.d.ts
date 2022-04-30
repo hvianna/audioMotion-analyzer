@@ -8,6 +8,7 @@ type CanvasResizeReason = "create" | "fschange" | "lores" | "resize" | "user";
 
 export interface Options {
   alphaBars?: boolean;
+  ansiBands?: boolean;
   barSpace?: number;
   bgAlpha?: number;
   fftSize?: number;
@@ -94,6 +95,9 @@ declare class AudioMotionAnalyzer {
 
   get alphaBars(): boolean;
   set alphaBars(value: boolean);
+
+  get ansiBands(): boolean;
+  set ansiBands(value: boolean);
 
   get audioCtx(): AudioContext;
   get canvas(): HTMLCanvasElement;

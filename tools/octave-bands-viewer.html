@@ -28,7 +28,7 @@
 			<label><span class="info" data-text="[audioCtx.sampleRate] The sample rate depends on the output device, but it's usually 44100 or 48000 Hz.">Sample rate</span> (Hz)</label>
 			<select id="samplerate">
 				<option>44100</option>
-				<option selected>48000</option>
+				<option>48000</option>
 				<option>96000</option>
 			</select>
 		</div>
@@ -57,6 +57,11 @@
 			</select>
 		</div>
 
+		<div class="flex">
+			<label for="ansi"><span class="info" data-text="[audioMotion.ansiBands]">ANSI Standard Octave Bands</span></label>
+			<input id="ansi" type="checkbox">
+		</div>
+
 		<label>
 			<button id="generate">Generate Analyzer Bars</button>
 		</label>
@@ -69,6 +74,8 @@
 				<li><a href="http://hyperphysics.phy-astr.gsu.edu/hbase/Music/et.html">Equal temperament</a></li>
 				<li><a href="https://www.dacapoalcoda.com/quarter-tones">Quarter tones</a></li>
 				<li><a href="https://blog.prosig.com/2006/02/17/standard-octave-bands/">Standard Octave Bands</a></li>
+				<li><a href="https://www.engineeringtoolbox.com/octave-bands-frequency-limits-d_1602.html">Octave Band Frequencies</a></li>
+				<li><a href="https://archive.org/details/gov.law.ansi.s1.11.2004">ANSI S1.11-2004: Specification for Octave-Band and<br>Fractional-Octave-Band Analog and Digital Filters</a></li>
 			</ul>
 		</div>
 
@@ -111,6 +118,7 @@
 			mode       = +document.getElementById('mode').value,
 			minFreq    = +document.getElementById('minFreq').value,
 			maxFreq    = +document.getElementById('maxFreq').value,
+			ansiBands  = document.getElementById('ansi').checked,
 			bodyBands  = document.getElementById('tableBands').tBodies[0];
 
 		// make sure maxFreq is not higher than the Nyquist frequency (enforced on module by maxFreq setter)
@@ -118,11 +126,11 @@
 		document.getElementById('maxFreq').value = maxFreq;
 
 		// generate analyzer bands
-		const analyzerBars = generateBands( { fftSize, sampleRate, mode, minFreq, maxFreq } );
+		const analyzerBars = generateBands( { fftSize, sampleRate, mode, minFreq, maxFreq, ansiBands } );
 
 		// helper functions
-		const normalize = freq => freq.toFixed( Math.max( 0, 3 - ( Math.log10( freq ) | 0 ) ) );
-		const binToFreq = bin => normalize( bin * sampleRate / fftSize || 1 );
+		const round = freq => freq.toFixed( Math.max( 0, 3 - ( Math.log10( freq ) | 0 ) ) );
+		const binToFreq = bin => round( bin * sampleRate / fftSize || 1 );
 
 		bodyBands.innerHTML = '';
 
@@ -130,9 +138,9 @@
 			let html = `
 				<tr>
 					<td class="center">${index}</td>
-					<td class="center${ bar.clamped == 'l' ? ' clamped" title="Lower edge will be clamped to ' + minFreq + 'Hz (minFreq)' : '' }">${ normalize( bar.freqLo ) }</td>
-					<td class="center">${ normalize( bar.freq ) }</td>
-					<td class="center${ bar.clamped == 'u' ? ' clamped" title="Upper edge will be clamped to ' + maxFreq + 'Hz (maxFreq)' : '' }">${ normalize( bar.freqHi ) }</td>
+					<td class="center${ bar.clamped == 'l' ? ' clamped" title="Lower edge will be clamped to ' + minFreq + 'Hz (minFreq)' : '' }">${ bar.freqLo }</td>
+					<td class="center">${ bar.freq }</td>
+					<td class="center${ bar.clamped == 'u' ? ' clamped" title="Upper edge will be clamped to ' + maxFreq + 'Hz (maxFreq)' : '' }">${ bar.freqHi }</td>
 					<td>${ bar.binLo }</td>
 					<td title="Interpolation ratio: ${ bar.ratioLo.toFixed(3) }"><span class="bar" style="width: ${ bar.ratioLo * 100 }%"></span>${ binToFreq( bar.binLo ) } - ${ binToFreq( bar.binLo + 1 ) }</td>
 					<td>${ bar.binHi }</td>
@@ -142,6 +150,9 @@
 			bodyBands.innerHTML += html;
 		});
 	}
+
+	const audioCtx = new ( window.AudioContext || window.webkitAudioContext )();
+	document.getElementById('samplerate').value = audioCtx.sampleRate;
 
 	update();
 	document.getElementById('generate').addEventListener( 'click', () => update() );

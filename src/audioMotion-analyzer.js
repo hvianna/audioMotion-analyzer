@@ -12,8 +12,8 @@ const VERSION = '3.6.0';
 // internal constants
 const TAU     = 2 * Math.PI,
 	  HALF_PI = Math.PI / 2,
-	  RPM     = TAU / 3600,   // angle increment per frame for one revolution per minute @60fps
-	  C0      = 16.3516;
+	  RPM     = TAU / 3600,  // angle increment per frame for one revolution per minute @60fps
+	  C_1     = 8.17579892;  // frequency for C -1
 
 const CANVAS_BACKGROUND_COLOR  = '#000',
  	  GRADIENT_DEFAULT_BGCOLOR = '#111',
@@ -270,6 +270,14 @@ export default class AudioMotionAnalyzer {
 	set alphaBars( value ) {
 		this._alphaBars = !! value;
 		this._calcAux();
+	}
+
+	get ansiBands() {
+		return this._ansiBands;
+	}
+	set ansiBands( value ) {
+		this._ansiBands = !! value;
+		this._calcBars();
 	}
 
 	get barSpace() {
@@ -927,61 +935,102 @@ export default class AudioMotionAnalyzer {
 
 		const analyzerWidth = this._analyzerWidth,
 			  initialX      = this._initialX,
+			  isAnsiBands   = this._ansiBands,
 			  maxFreq       = this._maxFreq,
 			  minFreq       = this._minFreq;
 
 		let minLog,	logWidth;
 
 		if ( this._isOctaveBands ) {
-
 			/*
-				A simple linear interpolation is used to obtain an approximate amplitude value for any given frequency,
-				from available FFT data. We find the FFT bin which closer matches the desired frequency and interpolate
-				its value with that of the next adjacent bin, like so:
+				A simple interpolation is used to obtain an approximate amplitude value for any given frequency,
+				from the available FFT data. We find the FFT bin which closer matches the desired frequency	and
+				interpolate its value with that of the next adjacent bin, like so:
 
-					v = v0 + ( v1 - v0 ) * ( f - f0 ) / ( f1 - f0 )
-					                       \______________________/
-					                                  |
-					                                ratio
+					v = v0 + ( v1 - v0 ) * ( log2( f / f0 ) / log2( f1 / f0 ) )
+					                       \__________________________________/
+					                                        |
+					                                      ratio
 					where:
 
 					f  - desired frequency
 					v  - amplitude (volume) of desired frequency
-					f0 - frequency represented by the selected FFT bin
-					f1 - frequency represented by the next FFT bin
+					f0 - frequency represented by the lower FFT bin
+					f1 - frequency represented by the upper FFT bin
 					v0 - amplitude of f0
 					v1 - amplitude of f1
 
-				ratio is calculated in advance here, to reduce the computational complexity during real-time rendering.
+				ratio is calculated in advance here, to reduce computational complexity during real-time rendering.
 			*/
 
 			// helper function to calculate FFT bin and interpolation ratio for a given frequency
 			const calcRatio = freq => {
-				const bin      = this._freqToBin( freq, 'floor' ), // find closest FFT bin
-					  thisFreq = binToFreq( bin ),
-					  nextFreq = binToFreq( bin + 1 ),
-					  ratio    = ( freq - thisFreq ) / ( nextFreq - thisFreq );
+				const bin   = this._freqToBin( freq, 'floor' ), // find closest FFT bin
+					  lower = binToFreq( bin ),
+					  upper = binToFreq( bin + 1 ),
+					  ratio = Math.log2( freq / lower ) / Math.log2( upper / lower );
 
 				return [ bin, ratio ];
 			}
 
-			const bands = [0,24,12,8,6,4,3,2,1][ this._mode ], // bands per octave for each mode
-				  bandWidth = 2 ** ( 1 / bands ), // Nth root of 2, where N is number of bands
-				  halfBand  = bandWidth ** .5;    // 2N-th root of 2
+			// helper function to round a value to a given number of significant digits
+			// `atLeast` set to true prevents reducing the number of integer significant digits
+			const roundSD = ( value, digits, atLeast ) => {
+				const pow = Math.log10( value ) | 0,
+					  sd  = Math.max( digits, atLeast ? pow + 1 : digits ),
+					  exp = 10 ** ( sd - pow - 1 );
+				return Math.round( value * exp ) / exp;
+			}
 
-			let freq = 8.1758;
+			// helper function to find the nearest preferred number (Renard series) for a given value
+			const nearestPreferred = value => {
+				// R20 series provides closer approximations for 1/2 octave bands (non-standard)
+				const preferred = [ 1, 1.12, 1.25, 1.4, 1.6, 1.8, 2, 2.24, 2.5, 2.8, 3.15, 3.55, 4, 4.5, 5, 5.6, 6.3, 7.1, 8, 9, 10 ],
+					  power = Math.log10( value ) | 0,
+					  normalized = value / 10 ** power;
+
+				let i = 1;
+				while ( i < preferred.length && normalized > preferred[ i ] )
+					i++;
+
+				if ( normalized - preferred[ i - 1 ] < preferred[ i ] - normalized )
+					i--;
+
+				return ( preferred[ i ] * 10 ** ( power + 5 ) | 0 ) / 1e5; // keep 5 significant digits
+			}
+
+			// ANSI standard octave bands use the base-10 frequency ratio, as preferred by [ANSI S1.11-2004, p.2]
+			// The equal-tempered scale uses the base-2 ratio
+			const bands = [0,24,12,8,6,4,3,2,1][ this._mode ],
+				  bandWidth = isAnsiBands ? 10 ** ( 3 / ( bands * 10 ) ) : 2 ** ( 1 / bands ), // 10^(3/10N) or 2^(1/N)
+				  halfBand  = bandWidth ** .5;
+
+			let analyzerBars = [],
+				currFreq = isAnsiBands ? 7.94328235 / ( bands % 2 ? 1 : halfBand ) : C_1;
+				// For ANSI bands with even denominators (all except 1/1 and 1/3), the reference frequency (1 kHz)
+				// must fall on the edges of a pair of adjacent bands, instead of midband [ANSI S1.11-2004, p.2]
+				// In the equal-tempered scale, all midband frequencies represent a musical note or quarter-tone.
 
 			do {
-				const freqLo = freq / halfBand,
-					  freqHi = freq * halfBand,
+				let freq = currFreq; // midband frequency
+
+				const freqLo = roundSD( freq / halfBand, 4, true ), // lower edge frequency
+					  freqHi = roundSD( freq * halfBand, 4, true ), // upper edge frequency
 					  [ binLo, ratioLo ] = calcRatio( freqLo ),
 					  [ binHi, ratioHi ] = calcRatio( freqHi );
+
+				// for 1/1, 1/2 and 1/3 ANSI bands, use the preferred numbers to find the nominal midband frequency
+				// for 1/4 to 1/24, round to 2 or 3 significant digits, according to the MSD [ANSI S1.11-2004, p.12]
+				if ( isAnsiBands )
+					freq = bands < 4 ? nearestPreferred( freq ) : roundSD( freq, freq.toString()[0] < 5 ? 3 : 2 );
+				else
+					freq = roundSD( freq, 4, true );
 
 				if ( freq >= minFreq )
 					barsPush( { posX: 0, freq, freqLo, freqHi, binLo, binHi, ratioLo, ratioHi } );
 
-				freq *= bandWidth;
-			} while ( freq <= maxFreq );
+				currFreq *= bandWidth;
+			} while ( currFreq <= maxFreq );
 
 			this._barWidth = analyzerWidth / bars.length;
 
@@ -1032,7 +1081,7 @@ export default class AudioMotionAnalyzer {
 					const lastBar = bars[ bars.length - 1 ];
 					lastBar.binHi = i;
 					lastBar.freqHi = freq;
-					lastBar.freq = 2 ** ( ( Math.log2( lastBar.freqLo ) + Math.log2( freq ) ) / 2 ); // compute center frequency
+					lastBar.freq = ( lastBar.freqLo * freq ) ** .5; // compute center frequency (geometric mean)
 				}
 			}
 		}
@@ -1128,20 +1177,24 @@ export default class AudioMotionAnalyzer {
 			  initialX      = this._initialX,
 			  isStereo      = this._stereo,
 			  isMirror      = this._mirror,
-			  noteLabels    = this._noteLabels,
+			  isNoteLabels  = this._noteLabels,
 			  scale         = [ 'C',, 'D',, 'E', 'F',, 'G',, 'A',, 'B' ], // for note labels (no sharp notes)
 			  scaleHeight   = Math.min( canvas.width, canvas.height ) * .03 | 0, // circular scale height (radial mode)
-		  	  ROOT12        = 2 ** ( 1 / 12 );
+		  	  root12        = 2 ** ( 1 / 12 );
 
-		for ( let octave = -1; octave < 11; octave++ ) {
-			for ( let note = 0; note < 12; note++ ) {
-				const freq = C0 * ROOT12 ** ( octave * 12 + note );
-
-				if ( freq >= this._minFreq && freq <= this._maxFreq ) {
-					const pitch = scale[ note ],
-						  isC   = pitch == 'C';
-					if ( ( pitch && noteLabels && ! isMirror ) || isC )
-						freqLabels.push( [ freq, ( noteLabels ? pitch + ( isC ? octave : '' ) : freq >= 1e3 ? `${ freq / 1e3 | 0 }k` : freq | 0 ) ] );
+		if ( this._ansiBands && ! isNoteLabels )
+			freqLabels.push(16,31.5,63,125,250,500,1e3,2e3,4e3,8e3,16e3);
+		else {
+			let freq = C_1;
+			for ( let octave = -1; octave < 11; octave++ ) {
+				for ( let note = 0; note < 12; note++ ) {
+					if ( freq >= this._minFreq && freq <= this._maxFreq ) {
+						const pitch = scale[ note ],
+							  isC   = pitch == 'C';
+						if ( ( pitch && isNoteLabels && ! isMirror ) || isC )
+							freqLabels.push( isNoteLabels ? [ freq, pitch + ( isC ? octave : '' ) ] : freq );
+					}
+					freq *= root12;
 				}
 			}
 		}
@@ -1154,7 +1207,7 @@ export default class AudioMotionAnalyzer {
 
 		// helper function
 		const radialLabel = ( x, label ) => {
-			if ( noteLabels && ! isStereo && ! ['C','E','G'].includes( label[0] ) )
+			if ( isNoteLabels && ! isStereo && ! ['C','E','G'].includes( label[0] ) )
 				return;
 
 			const angle  = TAU * ( x / canvas.width ),
@@ -1184,11 +1237,12 @@ export default class AudioMotionAnalyzer {
 		scaleR.font = `${ scaleHeight >> 1 }px ${FONT_FAMILY}`;
 		scaleX.textAlign = scaleR.textAlign = 'center';
 
-		for ( const [ freq, label ] of freqLabels ) {
-			const x    = this._logWidth * ( Math.log10( freq ) - this._minLog ),
+		for ( const item of freqLabels ) {
+			const [ freq, label ] = Array.isArray( item ) ? item : [ item, item < 1e3 ? item | 0 : `${ ( item / 100 | 0 ) / 10 }k` ],
+				  x    = this._logWidth * ( Math.log10( freq ) - this._minLog ),
 				  y    = canvasX.height * .75,
 				  isC  = label[0] == 'C',
-	  			  maxW = noteLabels && ! isMirror ? this._logWidth * ( isC ? .03 : .015 ) : 99;
+	  			  maxW = isNoteLabels && ! isMirror ? this._logWidth * ( isC ? .03 : .015 ) : 99;
 
 			if ( x >= 0 && x <= analyzerWidth ) {
 				scaleX.fillStyle = scaleR.fillStyle = isC && ! isMirror ? SCALEX_HIGHLIGHT_COLOR : SCALEX_LABEL_COLOR;
@@ -1703,9 +1757,9 @@ export default class AudioMotionAnalyzer {
 	/**
 	 * Return the FFT data bin (array index) which represents a given frequency
 	 */
-	_freqToBin( freq, rounding = 'round' ) {
+	_freqToBin( freq, method = 'round' ) {
 		const max = this._analyzer[0].frequencyBinCount - 1,
-			  bin = Math[ rounding ]( freq * this.fftSize / this.audioCtx.sampleRate );
+			  bin = Math[ method ]( freq * this.fftSize / this.audioCtx.sampleRate );
 
 		return bin < max ? bin : max;
 	}
@@ -1876,6 +1930,7 @@ export default class AudioMotionAnalyzer {
 		// settings defaults
 		const defaults = {
 			alphaBars    : false,
+			ansiBands    : false,
 			barSpace     : 0.1,
 			bgAlpha      : 0.7,
 			fftSize      : 8192,
