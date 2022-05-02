@@ -195,26 +195,33 @@ presetSelection.addEventListener( 'change', () => {
 	updateUI();
 });
 
-// Create piano keyboard
+// Create an 88-key piano keyboard
 
 const ROOT12 = 2 ** ( 1 / 12 ),
-	  C0 = 440 * ROOT12 ** -57;
+	  scale = [ 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B' ];
 
-let html = '';
+let html   = '',
+	freq   = 27.50, // A0 (first key)
+	octave = 0,
+	note   = 9;
 
-for ( let octave = 1; octave < 8; octave++ ) {
-	for ( let note = 0; note < 12; note++ ) {
+do {
+	const key     = scale[ note ],
+		  isSharp = key.endsWith('#');
 
-		const key  = [1,3,6,8,10].includes( note ) ? 'black' : 'white',
-			  freq = C0 * ROOT12 ** ( octave * 12 + note );
+	html += `
+		${ isSharp ? '' : '<div class="key">' }
+		<div class="${ isSharp ? 'black' : 'white' }${ octave == 4 && note == 0 ? ' c4' : '' }" data-freq="${ freq.toFixed(2) }" title="${ key + octave }"></div>
+		${ isSharp || key == 'E' || key == 'B' ? '</div>' : '' }
+	`;
 
-		html += `
-			${ key == 'white' ? '<div class="key">' : '' }
-			<div class="${key}${ octave == 4 && note == 0 ? ' c4' : '' }" data-freq="${ freq.toFixed(2) }"></div>
-			${ note == 4 || note == 11 || key == 'black' ? '</div>' : '' }
-		`;
+	freq *= ROOT12;
+	note++;
+	if ( note > 11 ) {
+		note = 0;
+		octave++;
 	}
-}
+} while ( freq < 4200 ); // go up to C8 (4186 Hz)
 
 document.getElementById('piano').innerHTML = html;
 
