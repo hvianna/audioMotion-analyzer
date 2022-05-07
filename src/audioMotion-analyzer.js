@@ -450,14 +450,6 @@ export default class AudioMotionAnalyzer {
 		}
 	}
 
-	// DEPRECATED - use ledBars instead
-	get showLeds() {
-		return this.ledBars;
-	}
-	set showLeds( value ) {
-		this.ledBars = value;
-	}
-
 	get smoothing() {
 		return this._analyzer[0].smoothingTimeConstant;
 	}
@@ -536,9 +528,6 @@ export default class AudioMotionAnalyzer {
 	get connectedTo() {
 		return this._outNodes;
 	}
-	get energy() { // DEPRECATED - use getEnergy() instead
-		return this.getEnergy();
-	}
 	get fps() {
 		return this._fps;
 	}
@@ -557,9 +546,6 @@ export default class AudioMotionAnalyzer {
 	get isLedBars() {
 		return this._isLedDisplay;
 	}
-	get isLedDisplay() { // DEPRECATED - use isLedBars instead
-		return this.isLedBars;
-	}
 	get isLumiBars() {
 		return this._isLumiBars;
 	}
@@ -571,9 +557,6 @@ export default class AudioMotionAnalyzer {
 	}
 	get isOutlineBars() {
 		return this._isOutline;
-	}
-	get peakEnergy() { // DEPRECATED - use getEnergy('peak') instead
-		return this.getEnergy('peak');
 	}
 	get pixelRatio() {
 		return this._pixelRatio;
@@ -1969,10 +1952,6 @@ export default class AudioMotionAnalyzer {
 
 		// build an array of valid properties; `start` is not an actual property and is handled after setting everything else
 		const validProps = Object.keys( defaults ).filter( e => e != 'start' ).concat( callbacks, ['height', 'width'] );
-
-		// handle deprecated `showLeds` property
-		if ( options && options.showLeds !== undefined && options.ledBars === undefined )
-			options.ledBars = options.showLeds;
 
 		if ( useDefaults || options === undefined )
 			options = { ...defaults, ...options }; // merge options with defaults

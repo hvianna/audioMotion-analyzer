@@ -144,7 +144,6 @@ options = {<br>
 &emsp;&emsp;[reflexRatio](#reflexratio-number): **0**,<br>
 &emsp;&emsp;[showBgColor](#showbgcolor-boolean): **true**,<br>
 &emsp;&emsp;[showFPS](#showfps-boolean): **false**,<br>
-&emsp;&emsp;[showLeds](#showleds-deprecated): **false**, // DEPRECATED - use ledBars instead<br>
 &emsp;&emsp;[showPeaks](#showpeaks-boolean): **true**,<br>
 &emsp;&emsp;[showScaleX](#showscalex-boolean): **true**,<br>
 &emsp;&emsp;[showScaleY](#showscaley-boolean): **false**,<br>
@@ -313,10 +312,6 @@ By default, **audioMotion-analyzer** is connected to the *AudioContext* `destina
 
 See also [`connectOutput()`](#connectoutput-node-).
 
-### `energy` **(DEPRECATED)**
-
-**This property will be removed in version 4.0.0** - Use [`getEnergy()`](#getenergy-preset-startfreq-endfreq-) instead.
-
 ### `fftSize` *number*
 
 Number of samples used for the FFT performed by the [*AnalyzerNode*](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode).
@@ -398,10 +393,6 @@ See [`toggleFullscreen()`](#togglefullscreen).
 *Available since v3.6.0* (formerly `isLedDisplay`)
 
 ***true*** when LED bars are effectively being displayed, i.e., [`ledBars`](#ledBars-boolean) is set to *true* and [`mode`](#mode-number) is set to an octave bands mode and [`radial`](#radial-boolean) is *false*.
-
-### `isLedDisplay` **(DEPRECATED)**
-
-**This property will be removed in version 4.0.0** - Use [`isLedBars`](#isledbars-boolean-read-only) instead.
 
 ### `isLumiBars` *boolean* *(Read only)*
 
@@ -567,10 +558,6 @@ Defaults to **false**.
 
 ?> In order to keep elements other than the canvas visible in fullscreen, you'll need to set the [`fsElement`](#fselement-htmlelement-object) property in the [constructor](#constructor) options.
 
-### `peakEnergy` **(DEPRECATED)**
-
-**This property will be removed in version 4.0.0** - Use [`getEnergy('peak')`](#getenergy-preset-startfreq-endfreq-) instead.
-
 ### `pixelRatio` *number* *(Read only)*
 
 Current [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio).
@@ -656,10 +643,6 @@ and setting `showBgColor` to ***true*** will make the "unlit" LEDs visible inste
 ### `showFPS` *boolean*
 
 *true* to display the current frame rate. Defaults to **false**.
-
-### `showLeds` **(DEPRECATED)**
-
-**This property will be removed in version 4.0.0** - Use [`ledBars`](#ledbars-boolean) instead.
 
 ### `showPeaks` *boolean*
 
