@@ -295,7 +295,7 @@ export default class AudioMotionAnalyzer {
 		for ( const i of [0,1] )
 			this._analyzer[ i ].fftSize = value;
 		const binCount = this._analyzer[0].frequencyBinCount;
-		this._fftData = [ new Uint8Array( binCount ), new Uint8Array( binCount ) ];
+		this._fftData = [ new Float32Array( binCount ), new Float32Array( binCount ) ];
 		this._calcBars();
 	}
 
@@ -1293,11 +1293,32 @@ export default class AudioMotionAnalyzer {
 			  maxBarHeight   = isRadial ? Math.min( centerX, centerY ) - radius : analyzerHeight,
 			  maxdB			 = this.maxDecibels,
 			  mindB			 = this.minDecibels,
-			  deltadB 		 = ( maxdB - mindB ) / -20,
-			  useCanvas      = this.useCanvas;
+			  dbRange 		 = maxdB - mindB,
+			  useCanvas      = this.useCanvas,
+			  weightingMode  = this.weightingMode;
 
 		if ( energy.val > 0 )
 			this._spinAngle += this._spinSpeed * RPM;
+
+		// helper function - return dB correction for a given frequency, according to the selected weighting filter
+		const weightdB = freq => {
+			let db = 0;
+
+			if ( weightingMode == 1 ) { // ITU-R 468 https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting
+				const h1 = -4.737338981378384e-24 * freq ** 6 + 2.043828333606125e-15 * freq ** 4 - 1.363894795463638e-7 * freq ** 2 + 1,
+					  h2 = 1.306612257412824e-19 * freq ** 5 - 2.118150887518656e-11 * freq ** 3 + 5.559488023498642e-4 * freq,
+					  rI = 1.246332637532143e-4 * freq / Math.sqrt( h1 ** 2 + h2 ** 2 );
+				db = 18.2 + 20 * Math.log10( rI );
+			}
+			else if ( weightingMode == 2 ) { // A-weighting https://en.wikipedia.org/wiki/A-weighting
+				const f2 = freq ** 2,
+					  c1 = 12194 ** 2,
+					  rA = ( c1 * f2 ** 2 ) / ( ( f2 + 20.6 ** 2 ) * Math.sqrt( ( f2 + 107.7 ** 2 ) * ( f2 + 737.9 ** 2 ) ) * ( f2 + c1 ) );
+				db = 2 + 20 * Math.log10( rA );
+			}
+
+			return db;
+		}
 
 		const strokeIf = flag => {
 			if ( flag && lineWidth ) {
@@ -1434,7 +1455,7 @@ export default class AudioMotionAnalyzer {
 			// get a new array of data from the FFT
 			const fftData = this._fftData[ channel ],
 				  lastBin = fftData.length - 1;
-			this._analyzer[ channel ].getByteFrequencyData( fftData );
+			this._analyzer[ channel ].getFloatFrequencyData( fftData );
 
 			// helper function for FFT data interpolation
 			const interpolate = ( bin, ratio ) => fftData[ bin ] + ( bin < lastBin ? ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio : 0 );
@@ -1450,7 +1471,7 @@ export default class AudioMotionAnalyzer {
 			for ( let i = 0; i < nBars; i++ ) {
 
 				const bar = this._bars[ i ],
-					  { binLo, binHi, ratioLo, ratioHi } = bar;
+					  { freq, binLo, binHi, ratioLo, ratioHi } = bar;
 
 				let barHeight = Math.max( interpolate( binLo, ratioLo ), interpolate( binHi, ratioHi ) );
 
@@ -1460,9 +1481,14 @@ export default class AudioMotionAnalyzer {
 						barHeight = fftData[ j ];
 				}
 
-				barHeight /= 255;
-				if ( isLinearAmplitude && barHeight ) // avoid residual amplitude if bar value is 0
-					barHeight = 10 ** ( ( 1 - barHeight ) * deltadB );
+				barHeight += weightdB( freq );
+
+				// normalize bar amplitude in [0;1] range
+				barHeight = Math.min( 1, ( barHeight - mindB ) / dbRange );
+
+				if ( isLinearAmplitude )
+					barHeight = 10 ** ( ( 1 - barHeight ) * dbRange / -20 );
+
 				bar.value[ channel ] = barHeight;
 				currentEnergy += barHeight;
 
@@ -1967,6 +1993,7 @@ export default class AudioMotionAnalyzer {
 			stereo       : false,
 			useCanvas    : true,
 			volume       : 1,
+			weightingMode: 0
 		};
 
 		// callback functions properties
