@@ -3,8 +3,8 @@
 
 **audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer built upon **Web Audio** and **Canvas** JavaScript APIs.
 
-It was originally conceived as part of a full-featured music player called [**audioMotion**](https://audiomotion.me), but I later decided to make just
-the spectrum analyzer available as a self-contained module, so other developers could use it in their own projects.
+It was originally conceived as part of a full-featured music player called [**audioMotion**](https://audiomotion.me),
+but I later decided to make only the spectrum analyzer available as a self-contained module, so other developers could use it in their own projects.
 
 My goal is to make this the best looking, most accurate and customizable spectrum analyzer around, in a small-footprint and high-performance package.
 
@@ -29,7 +29,7 @@ What users are saying:
 
 + High-resolution real-time dual channel audio spectrum analyzer
 + Logarithmic frequency scale with customizable range
-+ Visualize discrete frequencies or octave bands based on the equal tempered scale
++ Visualize discrete FFT frequencies or octave bands
 + Optional effects: vintage LEDs, luminance bars, mirroring and reflection, radial visualization
 + Customizable sensitivity, FFT size and time-smoothing constant
 + Comes with 3 predefined color gradients - easily add your own!
@@ -114,6 +114,7 @@ Properties marked as *constructor only* can only be set by the constructor call,
 
 options = {<br>
 &emsp;&emsp;[alphaBars](#alphabars-boolean): **false**,<br>
+&emsp;&emsp;[ansiBands](#ansibands-boolean): **false**,<br>
 &emsp;&emsp;[audioCtx](#audioctx-audiocontext-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[barSpace](#barspace-number): **0.1**,<br>
 &emsp;&emsp;[bgAlpha](#bgalpha-number): **0.7**,<br>
@@ -124,6 +125,7 @@ options = {<br>
 &emsp;&emsp;[gradient](#gradient-string): **'classic'**,<br>
 &emsp;&emsp;[height](#height-number): *undefined*,<br>
 &emsp;&emsp;[ledBars](#ledbars-boolean): **false**,<br>
+&emsp;&emsp;[linearAmplitude](#linearamplitude-boolean): **false**,<br>
 &emsp;&emsp;[lineWidth](#linewidth-number): **0**,<br>
 &emsp;&emsp;[loRes](#lores-boolean): **false**,<br>
 &emsp;&emsp;[lumiBars](#lumibars-boolean): **false**,<br>
@@ -133,6 +135,7 @@ options = {<br>
 &emsp;&emsp;[minFreq](#minfreq-number): **20**,<br>
 &emsp;&emsp;[mirror](#mirror-number): **0**,<br>
 &emsp;&emsp;[mode](#mode-number): **0**,<br>
+&emsp;&emsp;[noteLabels](#notelabels-boolean): **false**,<br>
 &emsp;&emsp;[onCanvasDraw](#oncanvasdraw-function): *undefined*,<br>
 &emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *undefined*,<br>
 &emsp;&emsp;[outlineBars](#outlinebars-boolean): **false**,<br>
@@ -188,9 +191,9 @@ only one of them needs to be connected to the speakers, otherwise the volume wil
 
 After instantiation, use [`connectOutput()`](#connectoutput-node-) and [`disconnectOutput()`](#disconnectoutput-node-) to connect or disconnect the output from the speakers (or other nodes).
 
-Defaults to **true**.
-
 See also [`connectedTo`](#connectedto-array-read-only).
+
+Defaults to **true**.
 
 #### `fsElement` *HTMLElement object*
 
@@ -233,6 +236,18 @@ For effect priority when combined with other settings, see [`isAlphaBars`](#isal
 Defaults to **false**.
 
 !> [See related known issue](#alphabars-and-fillalpha-wont-work-with-radial-on-firefox)
+
+### `ansiBands` *boolean*
+
+*Available since v4.0.0*
+
+When set to *true* uses ANSI/IEC preferred frequencies to generate the bands for [octave bands modes](#mode-number).
+The preferred base-10 scale is used to compute the center and bandedge frequencies, as specified in the [ANSI S1.11-2004 standard](https://archive.org/details/gov.law.ansi.s1.11.2004).
+
+The default is to use the [equal temperament scale](http://hyperphysics.phy-astr.gsu.edu/hbase/Music/et.html), so that in 1/12 octave bands
+the center of each band is perfectly tuned to a musical note.
+
+Defaults to **false**.
 
 ### `audioCtx` *AudioContext object* *(Read only)*
 
@@ -431,6 +446,15 @@ For effect priority when combined with other settings, see [`isLedBars`](#isledb
 
 Defaults to **false**.
 
+### `linearAmplitude` *boolean*
+
+*Available since v4.0.0*
+
+When set to *true* uses linear values, instead of decibels, for displaying bars' amplitudes.
+This may improve the visualization of predominant tones, especially at higher frequencies, but it will make the entire spectrum look much quieter.
+
+Defaults to **false**.
+
 ### `lineWidth` *number*
 
 *Available since v2.0.0*
@@ -536,6 +560,16 @@ mode | description | notes
 
 Defaults to **0**.
 
+### `noteLabels` *boolean*
+
+*Available since v4.0.0*
+
+When set to *true* displays musical note labels instead of frequency values, in the X axis (when [`showScaleX`](#showscalex-boolean) is also set to *true*).
+
+For best visualization in octave bands modes, make sure [`ansiBands`](#ansibands-boolean) is set to *false*, so all bands will be perfectly aligned with notes frequencies.
+
+Defaults to **false**.
+
 ### `outlineBars` *boolean*
 
 *Available since v3.6.0*
@@ -563,18 +597,20 @@ Defaults to **false**.
 Current [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio).
 This is usually **1** for standard displays and **2** for retina / Hi-DPI screens.
 
-You can refer to this value to adjust any additional drawings done in the canvas (via [callback function](#oncanvasdraw-function)).
+When [`loRes`](#lores-boolean) is *true*, the value of `pixelRatio` is halved, i.e. **0.5** for standard displays and **1** for retina / Hi-DPI.
 
-When [`loRes`](#lores-boolean) is *true* `pixelRatio` is halved, i.e. **0.5** for standard displays and **1** for retina / Hi-DPI.
+You can refer to this value to adjust any additional drawings done in the canvas (via [callback function](#oncanvasdraw-function)).
 
 ### `radial` *boolean*
 
 *Available since v2.4.0*
 
-When *true*, the spectrum analyzer is rendered as a circle, with radial frequency bars spreading from the center of the canvas.
+When *true*, the spectrum analyzer is rendered in a circular shape, with radial frequency bars spreading from its center.
 
-When radial mode is active, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) have no effect, and
-also [`showPeaks`](#showpeaks-boolean) has no effect in radial **Graph** mode.
+In radial visualization, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) effects are disabled, and
+[`showPeaks`](#showpeaks-boolean) has no effect for [**Graph** mode](#mode-number).
+
+When [`stereo`](#stereo-boolean) is *true*, a larger diameter is used and the right channel bars are rendered towards the center of the analyzer.
 
 See also [`spinSpeed`](#spinspeed-number).
 
@@ -650,19 +686,28 @@ and setting `showBgColor` to ***true*** will make the "unlit" LEDs visible inste
 
 ### `showScaleX` *boolean*
 
-*Available since v3.0.0*
+*Available since v3.0.0 - this property was named `showScale` in earlier versions*
 
-*true* to display the frequency (Hz) scale on the X axis. Defaults to **true**.
+*true* to display scale labels on the X axis.
 
-*NOTE: this property was named `showScale` in versions prior to v3.0.0*
+See also [`noteLabels`](#notelabels-boolean).
+
+Defaults to **true**.
 
 ### `showScaleY` *boolean*
 
 *Available since v2.4.0*
 
-*true* to display the level (dB) scale on the Y axis. Defaults to **false**.
+*true* to display the level/amplitude scale on the Y axis.
 
 This option has no effect when [`radial`](#radial-boolean) or [`lumiBars`](#lumibars-boolean) are set to *true*.
+
+When [`linearAmplitude`](#linearamplitude-boolean) is set to *false* (default), labels are shown in decibels (dB);
+otherwise, values represent a percentage (0-100%) of the maximum amplitude.
+
+See also [`minDecibels`](#mindecibels-number) and [`maxDecibels`](#maxdecibels-number).
+
+Defaults to **false**.
 
 ### `smoothing` *number*
 
@@ -880,8 +925,9 @@ Returns an array with current data for each analyzer bar. Each array element is 
 ```js
 {
 	posX: <number>,   // horizontal position of this bar on the canvas
-	freqLo: <number>, // starting frequency for this bar
-	freqHi: <number>, // ending frequency for this bar
+	freq: <number>,   // center frequency for this bar (added in v4.0.0)
+	freqLo: <number>, // lower edge frequency
+	freqHi: <number>, // upper edge frequency
 	peak: <array>,    // peak values for left and right channels
 	hold: <array>,    // peak hold frames for left and right channels - values < 0 mean the peak is falling down
 	value: <array>    // current amplitude on left and right channels
@@ -896,7 +942,7 @@ Please note that `hold` and `value` will have only one element when [`stereo`](#
 
 You can use this method to create your own visualizations using the analyzer data. See [this pen](https://codepen.io/hvianna/pen/ZEKWWJb) for usage example.
 
-### `getEnergy( [preset | startFreq], [endFreq] )`
+### `getEnergy( [preset | startFreq [, endFreq] ] )`
 
 *Available since v3.2.0*
 
@@ -978,7 +1024,7 @@ if necessary, the led count is decreased until both the led segment and the vert
 
 You can try different values in the [fluid demo](https://audiomotion.dev/demo/fluid.html).
 
-**If called with no arguments or any invalid property, disables previously set parameters.**
+**If called with no arguments or any invalid property, clears custom parameters previously set.**
 
 ### `setOptions( [options] )`
 
@@ -1116,8 +1162,10 @@ document.getElementById('stop').addEventListener( 'click', () => myAudio.pause()
 
 ## References and acknowledgments
 
+* Thanks to my wife, Virginia, for her never-ending love and support! 💞
 * Thanks to [Yuji Koike](http://www.ykcircus.com) for his awesome [Soniq Viewer for iOS](https://itunes.apple.com/us/app/soniq-viewer/id448343005), which inspired me to create **audioMotion**
 * [HTML Canvas Reference @W3Schools](https://www.w3schools.com/tags/ref_canvas.asp)
+* [Web Audio API specification](https://webaudio.github.io/web-audio-api/)
 * [Web Audio API documentation @MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 * [What does the FFT data in the Web Audio API correspond to?](https://stackoverflow.com/a/14789992/2370385)
 * [Equations for equal-tempered scale frequencies](http://pages.mtu.edu/~suits/NoteFreqCalcs.html)
@@ -1146,5 +1194,5 @@ And if you're feeling generous, maybe:
 
 ## License
 
-audioMotion-analyzer copyright (c) 2018-2021 [Henrique Avila Vianna](https://henriquevianna.com)<br>
+audioMotion-analyzer copyright (c) 2018-2022 [Henrique Avila Vianna](https://henriquevianna.com)<br>
 Licensed under the [GNU Affero General Public License, version 3 or later](https://www.gnu.org/licenses/agpl.html).
