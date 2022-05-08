@@ -1,6 +1,35 @@
 Changelog
 =========
 
+## version 4.0.0-beta.0 (2022-05-08)
+
+### 🚨BREAKING CHANGES: <!-- {docsify-ignore} -->
+
++ Removed deprecated properties:
+  + ~`energy`~ - use `getEnergy()` instead
+  + ~`isLedDisplay`~ - use `isLedBars` instead
+  + ~`peakEnergy`~ - use `getEnergy('peak')` instead
+  + ~`showLeds`~ - use `ledBars` instead
+
++ `getBars()` elements now contain an extra `freq` property (potentially breaking in TypeScript projects), which represents the bar's center frequency.
+  The range of each bar has also changed from version 3.6.0, with frequencies that were previously at the lower edge (`freqLo`) now placed at the center.
+
+### Added: <!-- {docsify-ignore} -->
+
++ [`ansiBands`](README.md#ansibands-boolean) property, to use ANSI/IEC preferred frequencies for the octave bands - thanks [**@jonathan-annett** for suggesting this](https://github.com/hvianna/audioMotion.js/issues/28);
++ [`linearAmplitude`](README.md#linearamplitude-boolean) property, to use linear values instead of dB for bar amplitudes - thanks [**@TF3RDL** for the idea](https://github.com/hvianna/audioMotion-analyzer/issues/30);
++ [`noteLabels`](README.md#notelabels-boolean) property, to show musical note labels instead of frequency values on the X axis.
+
+### Changed and improved: <!-- {docsify-ignore} -->
+
++ Optimized generation of octave bands, with more accurate bands range and center frequencies;
++ Frequency labels on the X axis now show slightly different values depending on whether the analyzer is set to use the equal-tempered scale
+  (default) or the ANSI standard bands (`ansiBands` == true), to properly match the octave bands center frequencies;
++ [`maxFreq`] is now capped to half the AudioContext's sample rate (Nyquist frequency);
++ Code optimizations, minor fixes and clean-up;
++ Updated demos.
+
+
 ## version 3.6.0 (2021-10-10)
 
 ### Added: <!-- {docsify-ignore} -->
@@ -285,8 +314,3 @@ and creates a consistent effect, whether overlay mode is on or off~~ **(reverted
 ## version 1.0.0 (2019-10-07)
 
 + First stable release.
-
-
-## version 1.0.0-rc.1 (2019-10-05)
-
-+ Release candidate for v1.0.0
