@@ -53,6 +53,9 @@ class AudioMotionError extends Error {
 	}
 }
 
+// helper function - clamp val in [min;max] range
+const clamp = ( val, min, max ) => val <= min ? min : val >= max ? max : val;
+
 // AudioMotionAnalyzer class
 
 export default class AudioMotionAnalyzer {
@@ -726,15 +729,18 @@ export default class AudioMotionAnalyzer {
 
 		const startBin = this._freqToBin( startFreq ),
 		      endBin   = endFreq ? this._freqToBin( endFreq ) : startBin,
-		      chnCount = this._stereo + 1;
+		      chnCount = this._stereo + 1,
+   			  maxdB	   = this.maxDecibels,
+			  mindB	   = this.minDecibels,
+			  dbRange  = maxdB - mindB;
 
 		let energy = 0;
 		for ( let channel = 0; channel < chnCount; channel++ ) {
 			for ( let i = startBin; i <= endBin; i++ )
-				energy += this._fftData[ channel ][ i ];
+				energy += clamp( ( this._fftData[ channel ][ i ] - mindB ) / dbRange, 0, 1 );
 		}
 
-		return energy / ( endBin - startBin + 1 ) / chnCount / 255;
+		return energy / ( endBin - startBin + 1 ) / chnCount;
 	}
 
 	/**
@@ -1518,7 +1524,7 @@ export default class AudioMotionAnalyzer {
 				}
 
 				// normalize bar amplitude in [0;1] range
-				barHeight = Math.min( 1, ( barHeight - mindB ) / dbRange );
+				barHeight = clamp( ( barHeight - mindB ) / dbRange, 0, 1 );
 
 				if ( isLinearAmplitude )
 					barHeight = 10 ** ( ( 1 - barHeight ) * dbRange / -20 );
