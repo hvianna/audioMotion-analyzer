@@ -24,7 +24,13 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  SCALEX_LABEL_COLOR       = '#fff',
 	  SCALEX_HIGHLIGHT_COLOR   = '#4f4',
 	  SCALEY_LABEL_COLOR       = '#888',
-	  SCALEY_MIDLINE_COLOR     = '#555';
+	  SCALEY_MIDLINE_COLOR     = '#555',
+	  SQ20_6                   =  20.6 ** 2, // for weighting filters
+	  SQ107_7                  = 107.7 ** 2,
+	  SQ158_5                  = 158.5 ** 2,
+	  SQ737_9                  = 737.9 ** 2,
+	  SQ12194                  = 12194 ** 2,
+	  WEIGHTING_MODES          = [ '', 'A', 'B', 'C', 'D', 'I' ];
 
 // custom error messages
 const ERR_AUDIO_CONTEXT_FAIL     = [ 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create audio context. Web Audio API not supported?' ],
@@ -509,6 +515,13 @@ export default class AudioMotionAnalyzer {
 	}
 	set volume( value ) {
 		this._output.gain.value = value;
+	}
+
+	get weightingMode() {
+		return this._weightingMode;
+	}
+	set weightingMode( value ) {
+		this._weightingMode = WEIGHTING_MODES[ Math.max( 0, WEIGHTING_MODES.indexOf( ( '' + value ).toUpperCase() ) ) ];
 	}
 
 	get width() {
@@ -1301,29 +1314,42 @@ export default class AudioMotionAnalyzer {
 			  mindB			 = this.minDecibels,
 			  dbRange 		 = maxdB - mindB,
 			  useCanvas      = this.useCanvas,
-			  weightingMode  = this.weightingMode;
+			  weightingMode  = this._weightingMode;
 
 		if ( energy.val > 0 )
 			this._spinAngle += this._spinSpeed * RPM;
 
 		// helper function - return dB correction for a given frequency, according to the selected weighting filter
 		const weightdB = freq => {
-			let db = 0;
+			const f2 = freq ** 2,
+				  linearTodB = value => 20 * Math.log10( value );
 
-			if ( weightingMode == 1 ) { // ITU-R 468 https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting
-				const h1 = -4.737338981378384e-24 * freq ** 6 + 2.043828333606125e-15 * freq ** 4 - 1.363894795463638e-7 * freq ** 2 + 1,
-					  h2 = 1.306612257412824e-19 * freq ** 5 - 2.118150887518656e-11 * freq ** 3 + 5.559488023498642e-4 * freq,
-					  rI = 1.246332637532143e-4 * freq / Math.sqrt( h1 ** 2 + h2 ** 2 );
-				db = 18.2 + 20 * Math.log10( rI );
-			}
-			else if ( weightingMode == 2 ) { // A-weighting https://en.wikipedia.org/wiki/A-weighting
-				const f2 = freq ** 2,
-					  c1 = 12194 ** 2,
-					  rA = ( c1 * f2 ** 2 ) / ( ( f2 + 20.6 ** 2 ) * Math.sqrt( ( f2 + 107.7 ** 2 ) * ( f2 + 737.9 ** 2 ) ) * ( f2 + c1 ) );
-				db = 2 + 20 * Math.log10( rA );
+			switch ( weightingMode ) {
+				case 'A' : // A-weighting https://en.wikipedia.org/wiki/A-weighting
+					const rA = ( SQ12194 * f2 ** 2 ) / ( ( f2 + SQ20_6 ) * Math.sqrt( ( f2 + SQ107_7 ) * ( f2 + SQ737_9 ) ) * ( f2 + SQ12194 ) );
+					return 2 + linearTodB( rA );
+
+				case 'B' :
+					const rB = ( SQ12194 * f2 * freq ) / ( ( f2 + SQ20_6 ) * Math.sqrt( f2 + SQ158_5 ) * ( f2 + SQ12194 ) );
+					return .17 + linearTodB( rB );
+
+				case 'C' :
+					const rC = ( SQ12194 * f2 ) / ( ( f2 + SQ20_6 ) * ( f2 + SQ12194 ) );
+					return .06 + linearTodB( rC );
+
+				case 'D' :
+					const h = ( ( 1037918.48 - f2 ) ** 2 + 1080768.16 * f2 ) / ( ( 9837328 - f2 ) ** 2 + 11723776 * f2 ),
+						  rD = ( freq / 6.8966888496476e-5 ) * Math.sqrt( h / ( ( f2 + 79919.29 ) * ( f2 + 1345600 ) ) );
+					return linearTodB( rD );
+
+				case 'I' : // ITU-R 468 https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting
+					const h1 = -4.737338981378384e-24 * freq ** 6 + 2.043828333606125e-15 * freq ** 4 - 1.363894795463638e-7 * f2 + 1,
+						  h2 = 1.306612257412824e-19 * freq ** 5 - 2.118150887518656e-11 * freq ** 3 + 5.559488023498642e-4 * freq,
+						  rI = 1.246332637532143e-4 * freq / Math.sqrt( h1 ** 2 + h2 ** 2 );
+					return 18.2 + linearTodB( rI );
 			}
 
-			return db;
+			return 0; // unknown mode
 		}
 
 		const strokeIf = flag => {
@@ -2001,7 +2027,7 @@ export default class AudioMotionAnalyzer {
 			stereo       : false,
 			useCanvas    : true,
 			volume       : 1,
-			weightingMode: 0
+			weightingMode: ''
 		};
 
 		// callback functions properties
