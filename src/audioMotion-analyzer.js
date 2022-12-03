@@ -873,6 +873,13 @@ export default class AudioMotionAnalyzer {
 	 */
 
 	/**
+	 * Return the frequency (in Hz) for a given FFT bin
+	 */
+	_binToFreq( bin ) {
+		return bin * this.audioCtx.sampleRate / this.fftSize || 1; // returns 1 for bin 0
+	}
+
+	/**
 	 * Calculate auxiliary values and flags
 	 */
 	_calcAux() {
@@ -928,10 +935,9 @@ export default class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		// helper functions
-		const binToFreq = bin => bin * this.audioCtx.sampleRate / this.fftSize || 1; // returns 1 for bin 0
-		const barsPush  = args => bars.push( { ...args, peak: [0,0], hold: [0], value: [0] } );
+		// helper function
 		// bar object: { posX, freq, freqLo, freqHi, binLo, binHi, ratioLo, ratioHi, peak, hold, value }
+		const barsPush  = args => bars.push( { ...args, peak: [0,0], hold: [0], value: [0] } );
 
 		const analyzerWidth = this._analyzerWidth,
 			  initialX      = this._initialX,
@@ -966,8 +972,8 @@ export default class AudioMotionAnalyzer {
 			// helper function to calculate FFT bin and interpolation ratio for a given frequency
 			const calcRatio = freq => {
 				const bin   = this._freqToBin( freq, 'floor' ), // find closest FFT bin
-					  lower = binToFreq( bin ),
-					  upper = binToFreq( bin + 1 ),
+					  lower = this._binToFreq( bin ),
+					  upper = this._binToFreq( bin + 1 ),
 					  ratio = Math.log2( freq / lower ) / Math.log2( upper / lower );
 
 				return [ bin, ratio ];
@@ -1069,7 +1075,7 @@ export default class AudioMotionAnalyzer {
 	 		let lastPos = -999;
 
 			for ( let i = minIndex; i <= maxIndex; i++ ) {
-				const freq = binToFreq( i ), // frequency represented by this index
+				const freq = this._binToFreq( i ), // frequency represented by this index
 					  posX = initialX + Math.round( logWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
@@ -1453,12 +1459,16 @@ export default class AudioMotionAnalyzer {
 			} // if ( useCanvas )
 
 			// get a new array of data from the FFT
-			const fftData = this._fftData[ channel ],
-				  lastBin = fftData.length - 1;
+			let fftData = this._fftData[ channel ];
 			this._analyzer[ channel ].getFloatFrequencyData( fftData );
 
+			// apply weighting
+			if ( weightingMode )
+				fftData = fftData.map( ( val, idx ) => val + weightdB( this._binToFreq( idx ) ) );
+
 			// helper function for FFT data interpolation
-			const interpolate = ( bin, ratio ) => fftData[ bin ] + ( bin < lastBin ? ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio : 0 );
+			const lastBin = fftData.length - 1,
+				  interpolate = ( bin, ratio ) => fftData[ bin ] + ( bin < lastBin ? ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio : 0 );
 
 			// start drawing path (for mode 10)
 			ctx.beginPath();
@@ -1480,8 +1490,6 @@ export default class AudioMotionAnalyzer {
 					if ( fftData[ j ] > barHeight )
 						barHeight = fftData[ j ];
 				}
-
-				barHeight += weightdB( freq );
 
 				// normalize bar amplitude in [0;1] range
 				barHeight = Math.min( 1, ( barHeight - mindB ) / dbRange );
