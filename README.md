@@ -514,7 +514,8 @@ Highest and lowest frequencies represented in the X-axis of the analyzer. Values
 
 The minimum allowed value is **1**. Trying to set a lower value will throw an `ERR_FREQUENCY_TOO_LOW` [error](#custom-errors).
 
-The maximum practical value is half the sampling rate ([`audioCtx.sampleRate`](#audioctx-audiocontext-object-read-only)), although this is not enforced by **audioMotion-analyzer**.
+The maximum allowed value is half the sampling rate ([`audioCtx.sampleRate`](#audioctx-audiocontext-object-read-only)), known as the [Nyquist frequency](https://en.wikipedia.org/wiki/Nyquist_frequency).
+Values higher than that will be capped.
 
 It is preferable to use the [`setFreqRange()`](#setfreqrange-minfreq-maxfreq-) method and set both values at once, to prevent `minFreq` being higher than the current `maxFreq` or vice-versa at a given moment.
 
@@ -996,6 +997,8 @@ Sets the analyzer nominal dimensions in pixels. See [`height`](#height-number) a
 ### `setFreqRange( minFreq, maxFreq )`
 
 Sets the desired frequency range. Values are expressed in Hz (Hertz).
+
+See [`minFreq` and `maxFreq`](#minfreq-number) for lower and upper limit values.
 
 ### `setLedParams( [params] )`
 

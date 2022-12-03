@@ -6,13 +6,13 @@ Changelog
 ### 🚨BREAKING CHANGES: <!-- {docsify-ignore} -->
 
 + Removed deprecated properties:
-  + ~`energy`~ - use `getEnergy()` instead
-  + ~`isLedDisplay`~ - use `isLedBars` instead
-  + ~`peakEnergy`~ - use `getEnergy('peak')` instead
-  + ~`showLeds`~ - use `ledBars` instead
+  + ~`energy`~ - use [`getEnergy()`](README.md#getenergy-preset-startfreq-endfreq-) instead
+  + ~`isLedDisplay`~ - use [`isLedBars`](README.md#isledbars-boolean-read-only) instead
+  + ~`peakEnergy`~ - use [`getEnergy('peak')`](README.md#getenergy-preset-startfreq-endfreq-) instead
+  + ~`showLeds`~ - use [`ledBars`](README.md#ledbars-boolean) instead
 
-+ `getBars()` elements now contain an extra `freq` property (potentially breaking in TypeScript projects), which represents the bar's center frequency.
-  The range of each bar has also changed from version 3.6.0, with frequencies that were previously at the lower edge (`freqLo`) now placed at the center.
++ [`getBars()`](README.md#getbars) elements now contain an extra `freq` property (potentially breaking in TypeScript projects), which represents the bar's center frequency.
+The range of each bar has also changed from version 3.6.0, with frequencies that were previously at the lower edge (`freqLo`) now placed at the center.
 
 ### Added: <!-- {docsify-ignore} -->
 
@@ -24,8 +24,8 @@ Changelog
 
 + Optimized generation of octave bands, with more accurate bands range and center frequencies;
 + Frequency labels on the X axis now show slightly different values depending on whether the analyzer is set to use the equal-tempered scale
-  (default) or the ANSI standard bands (`ansiBands` == true), to properly match the octave bands center frequencies;
-+ [`maxFreq`] is now capped to half the AudioContext's sample rate (Nyquist frequency);
+(default) or the ANSI standard bands (`ansiBands == true`), to properly match the octave bands center frequencies;
++ [`maxFreq`](README.md#maxfreq-number) is now capped to half the AudioContext's sample rate (Nyquist frequency);
 + Code optimizations, minor fixes and clean-up;
 + Updated demos.
 
