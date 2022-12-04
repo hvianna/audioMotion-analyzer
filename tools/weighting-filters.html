@@ -25,11 +25,14 @@ td {
 tr:hover {
 	background: #e0ffe0 !important;
 }
+.onekhz {
+	background: #f0f0f0;
+}
 </style>
-<title>audioMotion-analyzer - Weighting Modes</title>
+<title>Weighting filters | audioMotion-analyzer</title>
 </head>
 <body>
-	<h1>audioMotion-analyzer - Weighting Modes</h1>
+	<h1>audioMotion-analyzer - Weighting filters</h1>
 	<table id="bands">
 			<tr>
 				<th rowspan="2">Frequency<br>(Hz)</th>
@@ -45,52 +48,23 @@ tr:hover {
 	</table>
 
 	<p>Reference: <a href="https://en.wikipedia.org/wiki/Weighting_filter" target="_blank">https://en.wikipedia.org/wiki/Weighting_filter</a></p>
+
+<script src="weightingdB.js"></script>
+
 <script>
-const SQ20_6  =  20.6 ** 2,
-	  SQ107_7 = 107.7 ** 2,
-	  SQ158_5 = 158.5 ** 2,
-	  SQ737_9 = 737.9 ** 2,
-	  SQ12194 = 12194 ** 2;
-
-const weightdB = ( freq, mode ) => {
-	const f2 = freq ** 2,
-		  linearTodB = value => 20 * Math.log10( value );
-
-	switch ( mode ) {
-		case 'A' : // A-weighting https://en.wikipedia.org/wiki/A-weighting
-			const rA = ( SQ12194 * f2 ** 2 ) / ( ( f2 + SQ20_6 ) * Math.sqrt( ( f2 + SQ107_7 ) * ( f2 + SQ737_9 ) ) * ( f2 + SQ12194 ) );
-			return 2 + linearTodB( rA );
-
-		case 'B' :
-			const rB = ( SQ12194 * f2 * freq ) / ( ( f2 + SQ20_6 ) * Math.sqrt( f2 + SQ158_5 ) * ( f2 + SQ12194 ) );
-			return .17 + linearTodB( rB );
-
-		case 'C' :
-			const rC = ( SQ12194 * f2 ) / ( ( f2 + SQ20_6 ) * ( f2 + SQ12194 ) );
-			return .06 + linearTodB( rC );
-
-		case 'D' :
-			const h = ( ( 1037918.48 - f2 ) ** 2 + 1080768.16 * f2 ) / ( ( 9837328 - f2 ) ** 2 + 11723776 * f2 ),
-				  rD = ( freq / 6.8966888496476e-5 ) * Math.sqrt( h / ( ( f2 + 79919.29 ) * ( f2 + 1345600 ) ) );
-			return linearTodB( rD );
-
-		case 'I' : // ITU-R 468 https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting
-			const h1 = -4.737338981378384e-24 * freq ** 6 + 2.043828333606125e-15 * freq ** 4 - 1.363894795463638e-7 * f2 + 1,
-				  h2 = 1.306612257412824e-19 * freq ** 5 - 2.118150887518656e-11 * freq ** 3 + 5.559488023498642e-4 * freq,
-				  rI = 1.246332637532143e-4 * freq / Math.sqrt( h1 ** 2 + h2 ** 2 );
-			return 18.2 + linearTodB( rI );
-	}
-
-	return 0; // unknown mode
-}
-
 const table = document.getElementById('bands');
 
-//console.log( '20log10(RA(1000)) = ', 20 * Math.log10( weighting( 1000, 'a' ) ) ); // ~ -2
-
-for ( const f of [ 16, 31.5, 63, 100, 125, 200, 250, 400, 500, 800, 1e3, 2e3, 3150, 4e3, 5e3, 6300, 7100, 8e3, 9e3, 10e3, 12500, 14e3, 16e3, 20e3, 31500 ] ) {
-	table.innerHTML += `<tr${ f == 1e3 ? ' style="background:#f0f0f0"' : '' }><td>${ f }<td>${ weightdB( f, 'A' ).toFixed(1) }<td>${ weightdB( f, 'B' ).toFixed(1) }<td>${ weightdB( f, 'C' ).toFixed(1) }<td>${ weightdB( f, 'D' ).toFixed(1) }<td>${ weightdB( f, 'I' ).toFixed(1) }`;
+for ( const freq of [ 16, 31.5, 63, 100, 125, 200, 250, 400, 500, 800, 1e3, 2e3, 3150, 4e3, 5e3, 6300, 7100, 8e3, 9e3, 10e3, 12500, 14e3, 16e3, 20e3, 31500 ] ) {
+	let html = `<tr${ freq == 1e3 ? ' class="onekhz"' : '' }><td>${ freq }`;
+	for ( const filter of [ 'A', 'B', 'C', 'D', 'I' ] ) {
+		let response = Number( weightingdB( freq, filter ).toFixed(1) ).toFixed(1); // workaround to avoid '-0.0'
+		if ( response > 0 )
+			response = '+' + response;
+		html += `<td>${ response }`;
+	}
+	table.innerHTML += html;
 }
 </script>
+
 </body>
 </html>

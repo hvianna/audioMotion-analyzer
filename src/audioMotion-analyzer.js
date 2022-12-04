@@ -25,12 +25,7 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  SCALEX_HIGHLIGHT_COLOR   = '#4f4',
 	  SCALEY_LABEL_COLOR       = '#888',
 	  SCALEY_MIDLINE_COLOR     = '#555',
-	  SQ20_6                   =  20.6 ** 2, // for weighting filters
-	  SQ107_7                  = 107.7 ** 2,
-	  SQ158_5                  = 158.5 ** 2,
-	  SQ737_9                  = 737.9 ** 2,
-	  SQ12194                  = 12194 ** 2,
-	  WEIGHTING_MODES          = [ '', 'A', 'B', 'C', 'D', 'I' ];
+	  WEIGHTING_FILTERS        = [ '', 'A', 'B', 'C', 'D', '468' ];
 
 // custom error messages
 const ERR_AUDIO_CONTEXT_FAIL     = [ 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create audio context. Web Audio API not supported?' ],
@@ -517,11 +512,11 @@ export default class AudioMotionAnalyzer {
 		this._output.gain.value = value;
 	}
 
-	get weightingMode() {
-		return this._weightingMode;
+	get weightingFilter() {
+		return this._weightingFilter;
 	}
-	set weightingMode( value ) {
-		this._weightingMode = WEIGHTING_MODES[ Math.max( 0, WEIGHTING_MODES.indexOf( ( '' + value ).toUpperCase() ) ) ];
+	set weightingFilter( value ) {
+		this._weightingFilter = WEIGHTING_FILTERS[ Math.max( 0, WEIGHTING_FILTERS.indexOf( ( '' + value ).toUpperCase() ) ) ];
 	}
 
 	get width() {
@@ -1314,17 +1309,22 @@ export default class AudioMotionAnalyzer {
 			  mindB			 = this.minDecibels,
 			  dbRange 		 = maxdB - mindB,
 			  useCanvas      = this.useCanvas,
-			  weightingMode  = this._weightingMode;
+			  weightingFilter= this._weightingFilter;
 
 		if ( energy.val > 0 )
 			this._spinAngle += this._spinSpeed * RPM;
 
-		// helper function - return dB correction for a given frequency, according to the selected weighting filter
-		const weightdB = freq => {
+		// helper function - return dB gain for a given frequency, according to the selected weighting filter
+		const weightingdB = freq => {
 			const f2 = freq ** 2,
+				  SQ20_6  =  20.6 ** 2,
+				  SQ107_7 = 107.7 ** 2,
+				  SQ158_5 = 158.5 ** 2,
+				  SQ737_9 = 737.9 ** 2,
+				  SQ12194 = 12194 ** 2,
 				  linearTodB = value => 20 * Math.log10( value );
 
-			switch ( weightingMode ) {
+			switch ( weightingFilter ) {
 				case 'A' : // A-weighting https://en.wikipedia.org/wiki/A-weighting
 					const rA = ( SQ12194 * f2 ** 2 ) / ( ( f2 + SQ20_6 ) * Math.sqrt( ( f2 + SQ107_7 ) * ( f2 + SQ737_9 ) ) * ( f2 + SQ12194 ) );
 					return 2 + linearTodB( rA );
@@ -1342,7 +1342,7 @@ export default class AudioMotionAnalyzer {
 						  rD = ( freq / 6.8966888496476e-5 ) * Math.sqrt( h / ( ( f2 + 79919.29 ) * ( f2 + 1345600 ) ) );
 					return linearTodB( rD );
 
-				case 'I' : // ITU-R 468 https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting
+				case '468' : // ITU-R 468 https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting
 					const h1 = -4.737338981378384e-24 * freq ** 6 + 2.043828333606125e-15 * freq ** 4 - 1.363894795463638e-7 * f2 + 1,
 						  h2 = 1.306612257412824e-19 * freq ** 5 - 2.118150887518656e-11 * freq ** 3 + 5.559488023498642e-4 * freq,
 						  rI = 1.246332637532143e-4 * freq / Math.sqrt( h1 ** 2 + h2 ** 2 );
@@ -1489,8 +1489,8 @@ export default class AudioMotionAnalyzer {
 			this._analyzer[ channel ].getFloatFrequencyData( fftData );
 
 			// apply weighting
-			if ( weightingMode )
-				fftData = fftData.map( ( val, idx ) => val + weightdB( this._binToFreq( idx ) ) );
+			if ( weightingFilter )
+				fftData = fftData.map( ( val, idx ) => val + weightingdB( this._binToFreq( idx ) ) );
 
 			// helper function for FFT data interpolation
 			const lastBin = fftData.length - 1,
@@ -1999,45 +1999,45 @@ export default class AudioMotionAnalyzer {
 
 		// settings defaults
 		const defaults = {
-			alphaBars    : false,
-			ansiBands    : false,
-			barSpace     : 0.1,
-			bgAlpha      : 0.7,
-			fftSize      : 8192,
-			fillAlpha    : 1,
-			gradient     : 'classic',
-			ledBars      : false,
+			alphaBars      : false,
+			ansiBands      : false,
+			barSpace       : 0.1,
+			bgAlpha        : 0.7,
+			fftSize        : 8192,
+			fillAlpha      : 1,
+			gradient       : 'classic',
+			ledBars        : false,
 			linearAmplitude: false,
-			lineWidth    : 0,
-			loRes        : false,
-			lumiBars     : false,
-			maxDecibels  : -25,
-			maxFreq      : 22000,
-			minDecibels  : -85,
-			minFreq      : 20,
-			mirror       : 0,
-			mode         : 0,
-			noteLabels   : false,
-			outlineBars  : false,
-			overlay      : false,
-			radial		 : false,
-			reflexAlpha  : 0.15,
-			reflexBright : 1,
-			reflexFit    : true,
-			reflexRatio  : 0,
-			showBgColor  : true,
-			showFPS      : false,
-			showPeaks    : true,
-			showScaleX   : true,
-			showScaleY   : false,
-			smoothing    : 0.5,
-			spinSpeed    : 0,
-			splitGradient: false,
-			start        : true,
-			stereo       : false,
-			useCanvas    : true,
-			volume       : 1,
-			weightingMode: ''
+			lineWidth      : 0,
+			loRes          : false,
+			lumiBars       : false,
+			maxDecibels    : -25,
+			maxFreq        : 22000,
+			minDecibels    : -85,
+			minFreq        : 20,
+			mirror         : 0,
+			mode           : 0,
+			noteLabels     : false,
+			outlineBars    : false,
+			overlay        : false,
+			radial		   : false,
+			reflexAlpha    : 0.15,
+			reflexBright   : 1,
+			reflexFit      : true,
+			reflexRatio    : 0,
+			showBgColor    : true,
+			showFPS        : false,
+			showPeaks      : true,
+			showScaleX     : true,
+			showScaleY     : false,
+			smoothing      : 0.5,
+			spinSpeed      : 0,
+			splitGradient  : false,
+			start          : true,
+			stereo         : false,
+			useCanvas      : true,
+			volume         : 1,
+			weightingFilter: ''
 		};
 
 		// callback functions properties
