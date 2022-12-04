@@ -17,7 +17,7 @@ h1, h2 {
 	text-align: center;
 }
 
-label {
+label:not(.filterSelector) {
 	display: block;
 	margin: 1em 1em 0 0;
 	white-space: nowrap;
@@ -26,25 +26,39 @@ label {
 
 table {
 	border-collapse: collapse;
-	display: block;
-	height: calc( 100vh - 40px );
-	overflow-y: auto;
 }
 table th,
 table td {
-	border: 1px solid #444;
+	border: 1px solid #888;
 	padding: 6px;
 }
 table th {
-	background: #ccc;
+	background: #ddd;
 }
 table td {
 	position: relative;
 	text-align: right;
 }
-table tr:nth-child(odd),
+
+#tableBands {
+	display: block;
+	height: calc( 100vh - 40px );
+	overflow-y: auto;
+}
+#tableBands tr:nth-child(odd),
 .odd {
-	background: #f0f0f0;
+	background: #f5f5f5;
+}
+
+#tableFilters {
+	table-layout: fixed;
+	width: 700px;
+}
+#tableFilters td {
+	text-align: right;
+}
+#tableFilters tbody tr:hover {
+	background: #e0ffe0;
 }
 
 .bar {
@@ -55,12 +69,27 @@ table tr:nth-child(odd),
 	top: 0;
 }
 
+.bullet {
+	border-radius: 10px;
+	display: inline-block;
+	padding: 6px 12px;
+}
+input:not(:checked) + .bullet {
+	opacity: .2;
+}
+
 .center {
 	text-align: center;
 }
 
 .clamped {
 	color: #e00;
+}
+
+.container {
+	display: flex;
+	justify-content: space-around;
+	margin: 20px;
 }
 
 .credits {
@@ -73,6 +102,19 @@ table tr:nth-child(odd),
 
 .even {
 	background: #fff;
+}
+
+#filterLegend {
+	margin: 2em 0;
+	text-align: center;
+}
+
+.filterSelector {
+	cursor: pointer;
+	margin-right: 1.5em;
+}
+.filterSelector input {
+	display: none;
 }
 
 .flex {
@@ -108,8 +150,6 @@ th .info:hover::before {
 	top: 85px;
 }
 
-.options {
-	display: flex;
-	justify-content: space-around;
-	margin: 20px;
+.onekhz {
+	background: #f0f0f0;
 }
