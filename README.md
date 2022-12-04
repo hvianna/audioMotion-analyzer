@@ -158,6 +158,7 @@ options = {<br>
 &emsp;&emsp;[stereo](#stereo-boolean): **false**,<br>
 &emsp;&emsp;[useCanvas](#usecanvas-boolean): **true**,<br>
 &emsp;&emsp;[volume](#volume-number): **1**,<br>
+&emsp;&emsp;[weightingFilter](#weightingFilter-string): **''**<br>
 &emsp;&emsp;[width](#width-number): *undefined*<br>
 }
 
@@ -783,6 +784,30 @@ Higher values can be used to amplify the input, but it may cause distortion.
 Please note that changing the audio element volume directly will affect the amplitude of analyzer graphs, while this property does not.
 
 Defaults to **1**.
+
+### `weightingFilter` *string*
+
+*Available since v4.0.0*
+
+Select a [weighting filter](https://en.wikipedia.org/wiki/Weighting_filter) for spectrum visualization.
+
+Each filter applies a different curve of gain/attenuation to specific frequency ranges, but the general idea is to adjust the
+visualization of frequencies to which the human ear is more or less sensitive.
+Refer to the [weighting filters viewer tool](/tools/weighting-filters.html) for curves and response tables.
+
+?> Selecting a weighting filter **does NOT** affect the audio output, only the visualization.
+
+weightingFilter | description
+------|------------------------------
+'' (empty string) | No weighting applied (default)
+'A'   | A-weighting
+'B'   | B-weighting
+'C'   | C-weighting
+'D'   | D-weighting
+'468' | ITU-R 468 weighting
+
+Defaults to **''**.
+
 
 ## Static properties
 

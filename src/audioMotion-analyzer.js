@@ -24,7 +24,8 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  SCALEX_LABEL_COLOR       = '#fff',
 	  SCALEX_HIGHLIGHT_COLOR   = '#4f4',
 	  SCALEY_LABEL_COLOR       = '#888',
-	  SCALEY_MIDLINE_COLOR     = '#555';
+	  SCALEY_MIDLINE_COLOR     = '#555',
+	  WEIGHTING_FILTERS        = [ '', 'A', 'B', 'C', 'D', '468' ];
 
 // custom error messages
 const ERR_AUDIO_CONTEXT_FAIL     = [ 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create audio context. Web Audio API not supported?' ],
@@ -295,7 +296,7 @@ export default class AudioMotionAnalyzer {
 		for ( const i of [0,1] )
 			this._analyzer[ i ].fftSize = value;
 		const binCount = this._analyzer[0].frequencyBinCount;
-		this._fftData = [ new Uint8Array( binCount ), new Uint8Array( binCount ) ];
+		this._fftData = [ new Float32Array( binCount ), new Float32Array( binCount ) ];
 		this._calcBars();
 	}
 
@@ -503,6 +504,13 @@ export default class AudioMotionAnalyzer {
 		this._output.gain.value = value;
 	}
 
+	get weightingFilter() {
+		return this._weightingFilter;
+	}
+	set weightingFilter( value ) {
+		this._weightingFilter = WEIGHTING_FILTERS[ Math.max( 0, WEIGHTING_FILTERS.indexOf( ( '' + value ).toUpperCase() ) ) ];
+	}
+
 	get width() {
 		return this._width;
 	}
@@ -701,10 +709,10 @@ export default class AudioMotionAnalyzer {
 		let energy = 0;
 		for ( let channel = 0; channel < chnCount; channel++ ) {
 			for ( let i = startBin; i <= endBin; i++ )
-				energy += this._fftData[ channel ][ i ];
+				energy += this._normalizedB( this._fftData[ channel ][ i ] );
 		}
 
-		return energy / ( endBin - startBin + 1 ) / chnCount / 255;
+		return energy / ( endBin - startBin + 1 ) / chnCount;
 	}
 
 	/**
@@ -856,6 +864,13 @@ export default class AudioMotionAnalyzer {
 	 */
 
 	/**
+	 * Return the frequency (in Hz) for a given FFT bin
+	 */
+	_binToFreq( bin ) {
+		return bin * this.audioCtx.sampleRate / this.fftSize || 1; // returns 1 for bin 0
+	}
+
+	/**
 	 * Calculate auxiliary values and flags
 	 */
 	_calcAux() {
@@ -911,10 +926,9 @@ export default class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		// helper functions
-		const binToFreq = bin => bin * this.audioCtx.sampleRate / this.fftSize || 1; // returns 1 for bin 0
-		const barsPush  = args => bars.push( { ...args, peak: [0,0], hold: [0], value: [0] } );
+		// helper function
 		// bar object: { posX, freq, freqLo, freqHi, binLo, binHi, ratioLo, ratioHi, peak, hold, value }
+		const barsPush  = args => bars.push( { ...args, peak: [0,0], hold: [0], value: [0] } );
 
 		const analyzerWidth = this._analyzerWidth,
 			  initialX      = this._initialX,
@@ -949,8 +963,8 @@ export default class AudioMotionAnalyzer {
 			// helper function to calculate FFT bin and interpolation ratio for a given frequency
 			const calcRatio = freq => {
 				const bin   = this._freqToBin( freq, 'floor' ), // find closest FFT bin
-					  lower = binToFreq( bin ),
-					  upper = binToFreq( bin + 1 ),
+					  lower = this._binToFreq( bin ),
+					  upper = this._binToFreq( bin + 1 ),
 					  ratio = Math.log2( freq / lower ) / Math.log2( upper / lower );
 
 				return [ bin, ratio ];
@@ -1047,7 +1061,7 @@ export default class AudioMotionAnalyzer {
 	 		let lastPos = -999;
 
 			for ( let i = minIndex; i <= maxIndex; i++ ) {
-				const freq = binToFreq( i ), // frequency represented by this index
+				const freq = this._binToFreq( i ), // frequency represented by this index
 					  posX = initialX + Math.round( logWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
@@ -1251,7 +1265,7 @@ export default class AudioMotionAnalyzer {
 			  mode           = this._mode,
 			  isAlphaBars    = this._isAlphaBars,
 			  isLedDisplay   = this._isLedDisplay,
-			  isLinearAmplitude = this.linearAmplitude,
+			  isLinear       = this.linearAmplitude,
 			  isLumiBars     = this._isLumiBars,
 			  isOctaveBands  = this._isOctaveBands,
 			  isOutline      = this._isOutline,
@@ -1271,11 +1285,50 @@ export default class AudioMotionAnalyzer {
 			  maxBarHeight   = isRadial ? Math.min( centerX, centerY ) - radius : analyzerHeight,
 			  maxdB			 = this.maxDecibels,
 			  mindB			 = this.minDecibels,
-			  deltadB 		 = ( maxdB - mindB ) / -20,
-			  useCanvas      = this.useCanvas;
+			  dbRange 		 = maxdB - mindB,
+			  useCanvas      = this.useCanvas,
+			  weightingFilter= this._weightingFilter;
 
 		if ( energy.val > 0 )
 			this._spinAngle += this._spinSpeed * RPM;
+
+		// helper function - return dB gain for a given frequency, according to the selected weighting filter
+		const weightingdB = freq => {
+			const f2 = freq ** 2,
+				  SQ20_6  =  20.6 ** 2,
+				  SQ107_7 = 107.7 ** 2,
+				  SQ158_5 = 158.5 ** 2,
+				  SQ737_9 = 737.9 ** 2,
+				  SQ12194 = 12194 ** 2,
+				  linearTodB = value => 20 * Math.log10( value );
+
+			switch ( weightingFilter ) {
+				case 'A' : // A-weighting https://en.wikipedia.org/wiki/A-weighting
+					const rA = ( SQ12194 * f2 ** 2 ) / ( ( f2 + SQ20_6 ) * Math.sqrt( ( f2 + SQ107_7 ) * ( f2 + SQ737_9 ) ) * ( f2 + SQ12194 ) );
+					return 2 + linearTodB( rA );
+
+				case 'B' :
+					const rB = ( SQ12194 * f2 * freq ) / ( ( f2 + SQ20_6 ) * Math.sqrt( f2 + SQ158_5 ) * ( f2 + SQ12194 ) );
+					return .17 + linearTodB( rB );
+
+				case 'C' :
+					const rC = ( SQ12194 * f2 ) / ( ( f2 + SQ20_6 ) * ( f2 + SQ12194 ) );
+					return .06 + linearTodB( rC );
+
+				case 'D' :
+					const h = ( ( 1037918.48 - f2 ) ** 2 + 1080768.16 * f2 ) / ( ( 9837328 - f2 ) ** 2 + 11723776 * f2 ),
+						  rD = ( freq / 6.8966888496476e-5 ) * Math.sqrt( h / ( ( f2 + 79919.29 ) * ( f2 + 1345600 ) ) );
+					return linearTodB( rD );
+
+				case '468' : // ITU-R 468 https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting
+					const h1 = -4.737338981378384e-24 * freq ** 6 + 2.043828333606125e-15 * freq ** 4 - 1.363894795463638e-7 * f2 + 1,
+						  h2 = 1.306612257412824e-19 * freq ** 5 - 2.118150887518656e-11 * freq ** 3 + 5.559488023498642e-4 * freq,
+						  rI = 1.246332637532143e-4 * freq / Math.sqrt( h1 ** 2 + h2 ** 2 );
+					return 18.2 + linearTodB( rI );
+			}
+
+			return 0; // unknown mode
+		}
 
 		const strokeIf = flag => {
 			if ( flag && lineWidth ) {
@@ -1357,9 +1410,9 @@ export default class AudioMotionAnalyzer {
 				if ( this.showScaleY && ! isLumiBars && ! isRadial ) {
 					const scaleWidth = canvasX.height,
 						  fontSize   = scaleWidth >> 1,
-						  max        = isLinearAmplitude ? 100 : maxdB,
-						  min        = isLinearAmplitude ? 0 : mindB,
-						  incr       = isLinearAmplitude ? 20 : 5,
+						  max        = isLinear ? 100 : maxdB,
+						  min        = isLinear ? 0 : mindB,
+						  incr       = isLinear ? 20 : 5,
 						  interval   = analyzerHeight / ( max - min );
 
 					ctx.fillStyle = SCALEY_LABEL_COLOR;
@@ -1410,12 +1463,16 @@ export default class AudioMotionAnalyzer {
 			} // if ( useCanvas )
 
 			// get a new array of data from the FFT
-			const fftData = this._fftData[ channel ],
-				  lastBin = fftData.length - 1;
-			this._analyzer[ channel ].getByteFrequencyData( fftData );
+			let fftData = this._fftData[ channel ];
+			this._analyzer[ channel ].getFloatFrequencyData( fftData );
+
+			// apply weighting
+			if ( weightingFilter )
+				fftData = fftData.map( ( val, idx ) => val + weightingdB( this._binToFreq( idx ) ) );
 
 			// helper function for FFT data interpolation
-			const interpolate = ( bin, ratio ) => fftData[ bin ] + ( bin < lastBin ? ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio : 0 );
+			const lastBin = fftData.length - 1,
+				  interpolate = ( bin, ratio ) => fftData[ bin ] + ( bin < lastBin ? ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio : 0 );
 
 			// start drawing path (for mode 10)
 			ctx.beginPath();
@@ -1428,7 +1485,7 @@ export default class AudioMotionAnalyzer {
 			for ( let i = 0; i < nBars; i++ ) {
 
 				const bar = this._bars[ i ],
-					  { binLo, binHi, ratioLo, ratioHi } = bar;
+					  { freq, binLo, binHi, ratioLo, ratioHi } = bar;
 
 				let barHeight = Math.max( interpolate( binLo, ratioLo ), interpolate( binHi, ratioHi ) );
 
@@ -1438,9 +1495,9 @@ export default class AudioMotionAnalyzer {
 						barHeight = fftData[ j ];
 				}
 
-				barHeight /= 255;
-				if ( isLinearAmplitude && barHeight ) // avoid residual amplitude if bar value is 0
-					barHeight = 10 ** ( ( 1 - barHeight ) * deltadB );
+				// normalize bar amplitude in [0;1] range
+				barHeight = this._normalizedB( barHeight );
+
 				bar.value[ channel ] = barHeight;
 				currentEnergy += barHeight;
 
@@ -1831,6 +1888,19 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Normalize a dB value in the [0;1] range
+	 */
+	_normalizedB( value ) {
+		const maxdB	   = this.maxDecibels,
+			  mindB	   = this.minDecibels,
+			  dbRange  = maxdB - mindB,
+			  isLinear = this.linearAmplitude,
+			  clamp    = ( val, min, max ) => val <= min ? min : val >= max ? max : val;
+
+		return isLinear ? 10 ** ( ( clamp( value, mindB, maxdB ) - maxdB ) / 20 ) : clamp( ( value - mindB ) / dbRange, 0, 1 );
+	}
+
+	/**
 	 * Internal function to change canvas dimensions on demand
 	 */
 	_setCanvas( reason ) {
@@ -1907,44 +1977,45 @@ export default class AudioMotionAnalyzer {
 
 		// settings defaults
 		const defaults = {
-			alphaBars    : false,
-			ansiBands    : false,
-			barSpace     : 0.1,
-			bgAlpha      : 0.7,
-			fftSize      : 8192,
-			fillAlpha    : 1,
-			gradient     : 'classic',
-			ledBars      : false,
+			alphaBars      : false,
+			ansiBands      : false,
+			barSpace       : 0.1,
+			bgAlpha        : 0.7,
+			fftSize        : 8192,
+			fillAlpha      : 1,
+			gradient       : 'classic',
+			ledBars        : false,
 			linearAmplitude: false,
-			lineWidth    : 0,
-			loRes        : false,
-			lumiBars     : false,
-			maxDecibels  : -25,
-			maxFreq      : 22000,
-			minDecibels  : -85,
-			minFreq      : 20,
-			mirror       : 0,
-			mode         : 0,
-			noteLabels   : false,
-			outlineBars  : false,
-			overlay      : false,
-			radial		 : false,
-			reflexAlpha  : 0.15,
-			reflexBright : 1,
-			reflexFit    : true,
-			reflexRatio  : 0,
-			showBgColor  : true,
-			showFPS      : false,
-			showPeaks    : true,
-			showScaleX   : true,
-			showScaleY   : false,
-			smoothing    : 0.5,
-			spinSpeed    : 0,
-			splitGradient: false,
-			start        : true,
-			stereo       : false,
-			useCanvas    : true,
-			volume       : 1,
+			lineWidth      : 0,
+			loRes          : false,
+			lumiBars       : false,
+			maxDecibels    : -25,
+			maxFreq        : 22000,
+			minDecibels    : -85,
+			minFreq        : 20,
+			mirror         : 0,
+			mode           : 0,
+			noteLabels     : false,
+			outlineBars    : false,
+			overlay        : false,
+			radial		   : false,
+			reflexAlpha    : 0.15,
+			reflexBright   : 1,
+			reflexFit      : true,
+			reflexRatio    : 0,
+			showBgColor    : true,
+			showFPS        : false,
+			showPeaks      : true,
+			showScaleX     : true,
+			showScaleY     : false,
+			smoothing      : 0.5,
+			spinSpeed      : 0,
+			splitGradient  : false,
+			start          : true,
+			stereo         : false,
+			useCanvas      : true,
+			volume         : 1,
+			weightingFilter: ''
 		};
 
 		// callback functions properties
