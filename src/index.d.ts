@@ -48,6 +48,7 @@ export interface Options {
   stereo?: boolean;
   useCanvas?: boolean;
   volume?: number;
+  weightingFilter?: WeightingFilter;
   width?: number;
 }
 
@@ -71,6 +72,8 @@ interface ConstructorOptions extends Options {
 type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "treble";
 
 type GradientColorStop = string | { pos: number; color: string };
+
+type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
 
 type ArrayTwoOrMore<T> = {
   0: T
@@ -210,6 +213,9 @@ declare class AudioMotionAnalyzer {
 
   get volume(): number;
   set volume(value: number);
+
+  get weightingFilter(): WeightingFilter;
+  set weightingFilter(value: WeightingFilter);
 
   static get version(): string;
 
