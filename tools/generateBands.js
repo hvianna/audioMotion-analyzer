@@ -51,18 +51,13 @@ function generateBands( options ) {
 		return [ bin, ratio ];
 	}
 
-	// helper function to round a value to the specified number of significant digits
+	// helper function to round a value to a given number of significant digits
 	// `atLeast` set to true prevents reducing the number of integer significant digits
-	const roundSD = ( value, digits, atLeast ) => {
-		const pow = Math.log10( value ) | 0,
-			  sd  = Math.max( digits, atLeast ? pow + 1 : digits ),
-			  exp = 10 ** ( sd - pow - 1 );
-		return Math.round( value * exp ) / exp;
-	}
+	const roundSD = ( value, digits, atLeast ) => +value.toPrecision( atLeast ? Math.max( digits, 1 + Math.log10( value ) | 0 ) : digits );
 
 	// helper function to find the nearest preferred number (Renard series) for a given value
 	const nearestPreferred = value => {
-		// R20 series provides closer approximations for 1/2 octave bands (non-standard)
+		// R20 series is used here, as it provides closer approximations for 1/2 octave bands (non-standard)
 		const preferred = [ 1, 1.12, 1.25, 1.4, 1.6, 1.8, 2, 2.24, 2.5, 2.8, 3.15, 3.55, 4, 4.5, 5, 5.6, 6.3, 7.1, 8, 9, 10 ],
 			  power = Math.log10( value ) | 0,
 			  normalized = value / 10 ** power;

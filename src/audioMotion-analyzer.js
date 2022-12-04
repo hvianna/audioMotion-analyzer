@@ -2,12 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 3.6.0
+ * @version 4.0.0-beta.0
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const VERSION = '3.6.0';
+const VERSION = '4.0.0-beta.0';
 
 // internal constants
 const TAU     = 2 * Math.PI,
@@ -451,14 +451,6 @@ export default class AudioMotionAnalyzer {
 		}
 	}
 
-	// DEPRECATED - use ledBars instead
-	get showLeds() {
-		return this.ledBars;
-	}
-	set showLeds( value ) {
-		this.ledBars = value;
-	}
-
 	get smoothing() {
 		return this._analyzer[0].smoothingTimeConstant;
 	}
@@ -544,9 +536,6 @@ export default class AudioMotionAnalyzer {
 	get connectedTo() {
 		return this._outNodes;
 	}
-	get energy() { // DEPRECATED - use getEnergy() instead
-		return this.getEnergy();
-	}
 	get fps() {
 		return this._fps;
 	}
@@ -565,9 +554,6 @@ export default class AudioMotionAnalyzer {
 	get isLedBars() {
 		return this._isLedDisplay;
 	}
-	get isLedDisplay() { // DEPRECATED - use isLedBars instead
-		return this.isLedBars;
-	}
 	get isLumiBars() {
 		return this._isLumiBars;
 	}
@@ -579,9 +565,6 @@ export default class AudioMotionAnalyzer {
 	}
 	get isOutlineBars() {
 		return this._isOutline;
-	}
-	get peakEnergy() { // DEPRECATED - use getEnergy('peak') instead
-		return this.getEnergy('peak');
 	}
 	get pixelRatio() {
 		return this._pixelRatio;
@@ -989,16 +972,11 @@ export default class AudioMotionAnalyzer {
 
 			// helper function to round a value to a given number of significant digits
 			// `atLeast` set to true prevents reducing the number of integer significant digits
-			const roundSD = ( value, digits, atLeast ) => {
-				const pow = Math.log10( value ) | 0,
-					  sd  = Math.max( digits, atLeast ? pow + 1 : digits ),
-					  exp = 10 ** ( sd - pow - 1 );
-				return Math.round( value * exp ) / exp;
-			}
+			const roundSD = ( value, digits, atLeast ) => +value.toPrecision( atLeast ? Math.max( digits, 1 + Math.log10( value ) | 0 ) : digits );
 
 			// helper function to find the nearest preferred number (Renard series) for a given value
 			const nearestPreferred = value => {
-				// R20 series provides closer approximations for 1/2 octave bands (non-standard)
+				// R20 series is used here, as it provides closer approximations for 1/2 octave bands (non-standard)
 				const preferred = [ 1, 1.12, 1.25, 1.4, 1.6, 1.8, 2, 2.24, 2.5, 2.8, 3.15, 3.55, 4, 4.5, 5, 5.6, 6.3, 7.1, 8, 9, 10 ],
 					  power = Math.log10( value ) | 0,
 					  normalized = value / 10 ** power;
@@ -2045,10 +2023,6 @@ export default class AudioMotionAnalyzer {
 
 		// build an array of valid properties; `start` is not an actual property and is handled after setting everything else
 		const validProps = Object.keys( defaults ).filter( e => e != 'start' ).concat( callbacks, ['height', 'width'] );
-
-		// handle deprecated `showLeds` property
-		if ( options && options.showLeds !== undefined && options.ledBars === undefined )
-			options.ledBars = options.showLeds;
 
 		if ( useDefaults || options === undefined )
 			options = { ...defaults, ...options }; // merge options with defaults
