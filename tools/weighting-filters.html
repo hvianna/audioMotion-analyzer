@@ -63,9 +63,9 @@ function buildGraph() {
 	canvas.width |= 0; // clear canvas
 
 	ctx.lineWidth = 2;
-	ctx.moveTo( minPos-1, minPos );
+	ctx.moveTo( minPos-1, minPos-1 );
 	ctx.lineTo( minPos-1, maxPos+1 );
-	ctx.lineTo( maxPos, maxPos+1 );
+	ctx.lineTo( maxPos+1, maxPos+1 );
 	ctx.stroke();
 
 	ctx.lineWidth = 1.5;

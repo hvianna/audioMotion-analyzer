@@ -1306,14 +1306,14 @@ export default class AudioMotionAnalyzer {
 		if ( energy.val > 0 )
 			this._spinAngle += this._spinSpeed * RPM;
 
-		// helper function - return dB gain for a given frequency, according to the selected weighting filter
+		// helper function - apply the selected weighting filter and return dB gain for a given frequency
 		const weightingdB = freq => {
 			const f2 = freq ** 2,
-				  SQ20_6  =  20.6 ** 2,
-				  SQ107_7 = 107.7 ** 2,
-				  SQ158_5 = 158.5 ** 2,
-				  SQ737_9 = 737.9 ** 2,
-				  SQ12194 = 12194 ** 2,
+				  SQ20_6  = 424.36,
+				  SQ107_7 = 11599.29,
+				  SQ158_5 = 25122.25,
+				  SQ737_9 = 544496.41,
+				  SQ12194 = 148693636,
 				  linearTodB = value => 20 * Math.log10( value );
 
 			switch ( weightingFilter ) {
@@ -1337,11 +1337,11 @@ export default class AudioMotionAnalyzer {
 				case '468' : // ITU-R 468 https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting
 					const h1 = -4.737338981378384e-24 * freq ** 6 + 2.043828333606125e-15 * freq ** 4 - 1.363894795463638e-7 * f2 + 1,
 						  h2 = 1.306612257412824e-19 * freq ** 5 - 2.118150887518656e-11 * freq ** 3 + 5.559488023498642e-4 * freq,
-						  rI = 1.246332637532143e-4 * freq / Math.sqrt( h1 ** 2 + h2 ** 2 );
+						  rI = 1.246332637532143e-4 * freq / Math.hypot( h1, h2 );
 					return 18.2 + linearTodB( rI );
 			}
 
-			return 0; // unknown mode
+			return 0; // unknown filter
 		}
 
 		const strokeIf = flag => {
