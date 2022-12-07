@@ -451,10 +451,23 @@ Defaults to **false**.
 
 *Available since v4.0.0*
 
-When set to *true* uses linear values, instead of decibels, for displaying bars' amplitudes.
+When set to *true*, spectrum amplitudes are represented in linear scale instead of decibels (logarithmic).
+
 This may improve the visualization of predominant tones, especially at higher frequencies, but it will make the entire spectrum look much quieter.
 
+See also [`linearBoost`](#linearboost-number).
+
 Defaults to **false**.
+
+### `linearBoost` *number*
+
+*Available since v4.0.0*
+
+Performs an *n*th-root to amplify low energy values when using linear amplitude.
+
+It should be a number >= 1, while 1 means no boosting. Only effective when [`linearAmplitude`](#linearamplitude-boolean) is set to *true*.
+
+Defaults to **1**.
 
 ### `lineWidth` *number*
 

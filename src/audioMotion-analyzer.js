@@ -327,6 +327,20 @@ export default class AudioMotionAnalyzer {
 		this._calcAux();
 	}
 
+	get linearAmplitude() {
+		return this._linearAmplitude;
+	}
+	set linearAmplitude( value ) {
+		this._linearAmplitude = !! value;
+	}
+
+	get linearBoost() {
+		return this._linearBoost;
+	}
+	set linearBoost( value ) {
+		this._linearBoost = value >= 1 ? +value : 1;
+	}
+
 	get loRes() {
 		return this._loRes;
 	}
@@ -1265,7 +1279,7 @@ export default class AudioMotionAnalyzer {
 			  mode           = this._mode,
 			  isAlphaBars    = this._isAlphaBars,
 			  isLedDisplay   = this._isLedDisplay,
-			  isLinear       = this.linearAmplitude,
+			  isLinear       = this._linearAmplitude,
 			  isLumiBars     = this._isLumiBars,
 			  isOctaveBands  = this._isOctaveBands,
 			  isOutline      = this._isOutline,
@@ -1891,13 +1905,21 @@ export default class AudioMotionAnalyzer {
 	 * Normalize a dB value in the [0;1] range
 	 */
 	_normalizedB( value ) {
-		const maxdB	   = this.maxDecibels,
-			  mindB	   = this.minDecibels,
-			  dbRange  = maxdB - mindB,
-			  isLinear = this.linearAmplitude,
-			  clamp    = ( val, min, max ) => val <= min ? min : val >= max ? max : val;
+		const isLinear   = this._linearAmplitude,
+			  boost      = isLinear ? 1 / this._linearBoost : 1,
+			  clamp      = ( val, min, max ) => val <= min ? min : val >= max ? max : val,
+			  dBToLinear = val => 10 ** ( val / 20 );
 
-		return isLinear ? 10 ** ( ( clamp( value, mindB, maxdB ) - maxdB ) / 20 ) : clamp( ( value - mindB ) / dbRange, 0, 1 );
+		let maxValue = this.maxDecibels,
+			minValue = this.minDecibels;
+
+		if ( isLinear ) {
+			maxValue = dBToLinear( maxValue );
+			minValue = dBToLinear( minValue );
+			value = dBToLinear( value ) ** boost;
+		}
+
+		return clamp( ( value - minValue ) / ( maxValue - minValue ) ** boost, 0, 1 );
 	}
 
 	/**
@@ -1986,6 +2008,7 @@ export default class AudioMotionAnalyzer {
 			gradient       : 'classic',
 			ledBars        : false,
 			linearAmplitude: false,
+			linearBoost    : 1,
 			lineWidth      : 0,
 			loRes          : false,
 			lumiBars       : false,

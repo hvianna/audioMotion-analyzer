@@ -17,6 +17,7 @@ export interface Options {
   height?: number;
   ledBars?: boolean;
   linearAmplitude?: boolean;
+  linearBoost?: boolean;
   lineWidth?: number;
   loRes?: boolean;
   lumiBars?: boolean;
@@ -144,7 +145,12 @@ declare class AudioMotionAnalyzer {
   get ledBars(): boolean;
   set ledBars(value: boolean);
 
-  public linearAmplitude: boolean;
+  get linearAmplitude(): boolean;
+  set linearAmplitude(value: boolean);
+
+  get linearBoost(): number;
+  set linearBoost(value: number);
+
   public lineWidth: number;
 
   get loRes(): boolean;
