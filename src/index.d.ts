@@ -82,8 +82,8 @@ export interface GradientOptions {
 
 export interface LedParameters {
   maxLeds: number;
-  spaceVRatio: number;
-  spaceHRatio: number;
+  spaceV: number;
+  spaceH: number;
 }
 
 declare class AudioMotionAnalyzer {
