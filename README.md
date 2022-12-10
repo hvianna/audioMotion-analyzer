@@ -939,7 +939,8 @@ Use this method inside your callback function to create additional visual effect
 
 Registers a custom color gradient.
 
-`name` must be a non-empty *string* that will be used when setting the [`gradient`](#gradient-string) property. `options` must be an object as shown below:
+`name` must be a non-empty *string* that will be used to select this gradient, via the [`gradient`](#gradient-string) property.
+`options` must be an object as shown below:
 
 ```js
 const options = {
@@ -947,12 +948,21 @@ const options = {
     dir: 'h',           // add this property to create a horizontal gradient (optional)
     colorStops: [       // list your gradient colors in this array (at least 2 entries are required)
         'red',                      // colors may be defined in any valid CSS format
-        { pos: .6, color: '#ff0' }, // use an object to adjust the position (0 to 1) of a color
+        { pos: .6, color: '#ff0' }, // use an object to adjust the offset (0 to 1) of a colorStop
         'hsl( 120, 100%, 50% )'     // colors may be defined in any valid CSS format
     ]
 }
 
-audioMotion.registerGradient( 'my-grad', options );
+audioMotion.registerGradient( 'myGradient', options );
+```
+
+!> In TypeScript projects make sure to import the `GradientOptions` definition and use it as the type of your object, like so:
+
+```js
+import AudioMotionAnalyzer, { GradientOptions } from 'audiomotion-analyzer'
+
+const options: GradientOptions = {
+	⋮
 ```
 
 Additional information about [gradient color-stops](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop).
