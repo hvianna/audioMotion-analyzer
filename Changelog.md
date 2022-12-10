@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## version 3.6.1 (2022-12-09)
+
++ Minor update to fix wrong property names in the `LedParameters` interface in the TS definition file;
++ Improved documentation of [`registerGradient()`](README.md#registergradient-name-options-) usage in TypeScript projects [(#37)](https://github.com/hvianna/audioMotion-analyzer/issues/37).
+
 ## version 3.6.0 (2021-10-10)
 
 ### Added: <!-- {docsify-ignore} -->
