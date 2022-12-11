@@ -1563,7 +1563,7 @@ export default class AudioMotionAnalyzer {
 				if ( mode == 10 ) {
 					// compute the average between the initial bar (i==0) and the next one
 					// used to smooth the curve when the initial posX is off the screen, in mirror and radial modes
-					const nextBarAvg = i ? 0 : ( fftData[ this._bars[1].binLo ] / 255 * maxBarHeight * ( ! isRadial || ! channel || - 1 ) + barHeight ) / 2;
+					const nextBarAvg = i ? 0 : ( this._normalizedB( fftData[ this._bars[1].binLo ] ) * maxBarHeight * ( ! isRadial || ! channel || - 1 ) + barHeight ) / 2;
 
 					if ( isRadial ) {
 						if ( i == 0 )
@@ -1579,7 +1579,7 @@ export default class AudioMotionAnalyzer {
 						if ( i == 0 ) {
 							// start the line off-screen using the previous FFT bin value as the initial amplitude
 							if ( mirrorMode != -1 ) {
-								const prevFFTData = binLo ? fftData[ binLo - 1 ] / 255 * maxBarHeight : barHeight; // use previous FFT bin value, when available
+								const prevFFTData = binLo ? this._normalizedB( fftData[ binLo - 1 ] ) * maxBarHeight : barHeight; // use previous FFT bin value, when available
 								ctx.moveTo( initialX - lineWidth, analyzerBottom - prevFFTData );
 							}
 							else
