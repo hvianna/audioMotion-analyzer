@@ -1,6 +1,13 @@
 Changelog
 =========
 
+## version 4.0.0-beta.1 (2022-12-11)
+
+### Added: <!-- {docsify-ignore} -->
+
++ [`linearBoost`](README.md#linearboost-number) property - amplify low energy values when using [linear amplitude](README.md#linearamplitude-boolean);
++ [`weightingFilter`](README.md#weightingfilter-string) property - select from five different weighting filters for improved spectrum visualization.
+
 ## version 4.0.0-beta.0 (2022-05-08)
 
 ### 🚨BREAKING CHANGES: <!-- {docsify-ignore} -->
