@@ -1485,8 +1485,10 @@ export default class AudioMotionAnalyzer {
 				fftData = fftData.map( ( val, idx ) => val + weightingdB( this._binToFreq( idx ) ) );
 
 			// helper function for FFT data interpolation
-			const lastBin = fftData.length - 1,
-				  interpolate = ( bin, ratio ) => fftData[ bin ] + ( bin < lastBin ? ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio : 0 );
+			const interpolate = ( bin, ratio ) => {
+				const value = fftData[ bin ] + ( bin < fftData.length - 1 ? ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio : 0 );
+				return isNaN( value ) ? -Infinity : value;
+			}
 
 			// start drawing path (for mode 10)
 			ctx.beginPath();
