@@ -463,7 +463,7 @@ Defaults to **false**.
 
 *Available since v4.0.0*
 
-Performs an *n*th-root to amplify low energy values when using linear amplitude.
+Performs an *n*th-root to amplify low energy values when using linear scale for the amplitude.
 
 It should be a number >= 1, while 1 means no boosting. Only effective when [`linearAmplitude`](#linearamplitude-boolean) is set to *true*.
 
@@ -1052,7 +1052,7 @@ See [`minFreq` and `maxFreq`](#minfreq-number) for lower and upper limit values.
 
 *Available since v3.2.0*
 
-Customize parameters used to create the [LEDs display effect](#ledbars-boolean).
+Customize parameters used to create the [`ledBars`](#ledbars-boolean) effect.
 
 `params` should be an object with the following structure:
 
@@ -1066,9 +1066,9 @@ const params = {
 
 property  | description
 ----------|-------------
-`maxLeds` | maximum desired number of LED elements per analyzer bar
+`maxLeds` | **maximum** desired number of LED elements per analyzer bar
 `spaceV`  | vertical spacing ratio, relative to the LED height (**1** means spacing is the same as the LED height)
-`spaceH`  | **minimum** horizontal spacing ratio, relative to the available width (**0.5** means half of the width is used for spacing and half for the LED); behaves exactly like [barSpace](#barspace-number) (values >= 1 are considered as literal pixel values) and will override it if larger
+`spaceH`  | **minimum** horizontal spacing ratio, relative to the available width for each band, or a literal pixel value if **>= 1**;<br>this behaves exactly like [`barSpace`](#barspace-number) and the largest spacing (resulting from either `barSpace` or `spaceH`) will prevail.
 
 The available canvas height is initially divided by `maxLeds` and vertical spacing is calculated observing the `spaceV` ratio;
 if necessary, the led count is decreased until both the led segment and the vertical spacing are at least 2px tall.
