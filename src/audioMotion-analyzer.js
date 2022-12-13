@@ -310,6 +310,7 @@ export default class AudioMotionAnalyzer {
 	set frequencyScale( value ) {
 		const FREQUENCY_SCALES = [ SCALE_LOG, SCALE_BARK, SCALE_MEL, SCALE_LINEAR ];
 		this._frequencyScale = FREQUENCY_SCALES[ Math.max( 0, FREQUENCY_SCALES.indexOf( ( '' + value ).toLowerCase() ) ) ];
+		this._calcAux();
 		this._calcBars();
 	}
 
@@ -574,6 +575,9 @@ export default class AudioMotionAnalyzer {
 	}
 	get isAlphaBars() {
 		return this._isAlphaBars;
+	}
+	get isBandsMode() {
+		return this._isBandsMode;
 	}
 	get isFullscreen() {
 		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._fsEl;
@@ -908,11 +912,12 @@ export default class AudioMotionAnalyzer {
 
 		this._radius         = Math.min( canvas.width, canvas.height ) * ( this._stereo ? .375 : .125 ) | 0;
 		this._barSpacePx     = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
-		this._isOctaveBands  = this._mode % 10 != 0;
-		this._isLedDisplay   = this._showLeds && this._isOctaveBands && ! isRadial;
-		this._isLumiBars     = this._lumiBars && this._isOctaveBands && ! isRadial;
+		this._isBandsMode    = this._mode % 10 != 0;
+		this._isOctaveBands  = this._isBandsMode && this._frequencyScale == SCALE_LOG;
+		this._isLedDisplay   = this._showLeds && this._isBandsMode && ! isRadial;
+		this._isLumiBars     = this._lumiBars && this._isBandsMode && ! isRadial;
 		this._isAlphaBars    = this._alphaBars && ! this._isLumiBars && this._mode != 10;
-		this._isOutline      = this._outlineBars && this._isOctaveBands && ! this._isLumiBars && ! this._isLedDisplay;
+		this._isOutline      = this._outlineBars && this._isBandsMode && ! this._isLumiBars && ! this._isLedDisplay;
 		this._maximizeLeds   = ! this._stereo || this._reflexRatio > 0 && ! this._isLumiBars;
 
 		this._channelHeight  = canvas.height - ( isDual && ! this._isLedDisplay ? .5 : 0 ) >> isDual;
@@ -939,6 +944,37 @@ export default class AudioMotionAnalyzer {
 		// bar object: { posX, freq, freqLo, freqHi, binLo, binHi, ratioLo, ratioHi, peak, hold, value }
 		const barsPush  = args => bars.push( { ...args, peak: [0,0], hold: [0], value: [0] } );
 
+		/*
+			A simple interpolation is used to obtain an approximate amplitude value for any given frequency,
+			from the available FFT data. We find the FFT bin which closer matches the desired frequency	and
+			interpolate its value with that of the next adjacent bin, like so:
+
+				v = v0 + ( v1 - v0 ) * ( log2( f / f0 ) / log2( f1 / f0 ) )
+				                       \__________________________________/
+				                                        |
+				                                      ratio
+				where:
+
+				f  - desired frequency
+				v  - amplitude (volume) of desired frequency
+				f0 - frequency represented by the lower FFT bin
+				f1 - frequency represented by the upper FFT bin
+				v0 - amplitude of f0
+				v1 - amplitude of f1
+
+			ratio is calculated in advance here, to reduce computational complexity during real-time rendering.
+		*/
+
+		// helper function to calculate FFT bin and interpolation ratio for a given frequency
+		const calcRatio = freq => {
+			const bin   = this._freqToBin( freq, 'floor' ), // find closest FFT bin
+				  lower = this._binToFreq( bin ),
+				  upper = this._binToFreq( bin + 1 ),
+				  ratio = Math.log2( freq / lower ) / Math.log2( upper / lower );
+
+			return [ bin, ratio ];
+		}
+
 		const analyzerWidth = this._analyzerWidth,
 			  initialX      = this._initialX,
 			  isAnsiBands   = this._ansiBands,
@@ -948,37 +984,6 @@ export default class AudioMotionAnalyzer {
 		let scaleMin, unitWidth;
 
 		if ( this._isOctaveBands ) {
-			/*
-				A simple interpolation is used to obtain an approximate amplitude value for any given frequency,
-				from the available FFT data. We find the FFT bin which closer matches the desired frequency	and
-				interpolate its value with that of the next adjacent bin, like so:
-
-					v = v0 + ( v1 - v0 ) * ( log2( f / f0 ) / log2( f1 / f0 ) )
-					                       \__________________________________/
-					                                        |
-					                                      ratio
-					where:
-
-					f  - desired frequency
-					v  - amplitude (volume) of desired frequency
-					f0 - frequency represented by the lower FFT bin
-					f1 - frequency represented by the upper FFT bin
-					v0 - amplitude of f0
-					v1 - amplitude of f1
-
-				ratio is calculated in advance here, to reduce computational complexity during real-time rendering.
-			*/
-
-			// helper function to calculate FFT bin and interpolation ratio for a given frequency
-			const calcRatio = freq => {
-				const bin   = this._freqToBin( freq, 'floor' ), // find closest FFT bin
-					  lower = this._binToFreq( bin ),
-					  upper = this._binToFreq( bin + 1 ),
-					  ratio = Math.log2( freq / lower ) / Math.log2( upper / lower );
-
-				return [ bin, ratio ];
-			}
-
 			// helper function to round a value to a given number of significant digits
 			// `atLeast` set to true prevents reducing the number of integer significant digits
 			const roundSD = ( value, digits, atLeast ) => +value.toPrecision( atLeast ? Math.max( digits, 1 + Math.log10( value ) | 0 ) : digits );
@@ -1055,10 +1060,38 @@ export default class AudioMotionAnalyzer {
 				[ lastBar.binHi, lastBar.ratioHi ] = calcRatio( maxFreq );
 			}
 		}
-		else {
+		else if ( this._isBandsMode ) { // a bands mode is selected, but frequency scale is not logarithmic
 
-			// Discrete frequencies modes
+			const bands = [0,24,12,8,6,4,3,2,1][ this._mode ] * 10;
 
+			const invFreqScaling = x => {
+				switch ( this._frequencyScale ) {
+					case SCALE_BARK :
+						return 1960 / ( 26.81 / ( x + .53 ) - 1 );
+					case SCALE_MEL :
+						return 700 * ( 2 ** x - 1 );
+					case SCALE_LINEAR :
+						return x;
+				}
+			}
+
+			this._barWidth = analyzerWidth / bands;
+
+			scaleMin = this._freqScaling( minFreq );
+			unitWidth = analyzerWidth / ( this._freqScaling( maxFreq ) - scaleMin );
+
+			for ( let i = 0, posX = 0; i < bands; i++, posX += this._barWidth ) {
+				const freqLo = invFreqScaling( scaleMin + posX / unitWidth ),
+					  freq   = invFreqScaling( scaleMin + ( posX + this._barWidth / 2 ) / unitWidth ),
+					  freqHi = invFreqScaling( scaleMin + ( posX + this._barWidth ) / unitWidth ),
+					  [ binLo, ratioLo ] = calcRatio( freqLo ),
+					  [ binHi, ratioHi ] = calcRatio( freqHi );
+
+				barsPush( { posX, freq, freqLo, freqHi, binLo, binHi, ratioLo, ratioHi } );
+			}
+
+		}
+		else {	// Discrete frequencies modes
 			this._barWidth = 1;
 
 			scaleMin = this._freqScaling( minFreq );
@@ -1105,7 +1138,7 @@ export default class AudioMotionAnalyzer {
 	 * Calculate attributes for the vintage LEDs effect, based on visualization mode and canvas resolution
 	 */
 	_calcLeds() {
-		if ( ! this._isOctaveBands || ! this._ready )
+		if ( ! this._isBandsMode || ! this._ready )
 			return;
 
 		// adjustment for high pixel-ratio values on low-resolution screens (Android TV)
@@ -1276,7 +1309,7 @@ export default class AudioMotionAnalyzer {
 			  isLedDisplay   = this._isLedDisplay,
 			  isLinear       = this._linearAmplitude,
 			  isLumiBars     = this._isLumiBars,
-			  isOctaveBands  = this._isOctaveBands,
+			  isBandsMode    = this._isBandsMode,
 			  isOutline      = this._isOutline,
 			  isRadial       = this._radial,
 			  isStereo       = this._stereo,
@@ -1379,7 +1412,7 @@ export default class AudioMotionAnalyzer {
 
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing from led definitions
-		let width = this._barWidth - ( ! isOctaveBands ? 0 : Math.max( isLedDisplay ? ledSpaceH : 0, this._barSpacePx ) );
+		let width = this._barWidth - ( ! isBandsMode ? 0 : Math.max( isLedDisplay ? ledSpaceH : 0, this._barSpacePx ) );
 
 		// make sure width is integer for pixel accurate calculation, when no bar spacing is required
 		if ( this._barSpace == 0 && ! isLedDisplay )
