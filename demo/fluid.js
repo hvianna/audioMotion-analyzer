@@ -77,6 +77,16 @@ const presets = [
 		}
 	},
 	{
+		name: 'Bark + Linear',
+		options: {
+			mode: 0,
+			frequencyScale: 'bark',
+			linearAmplitude: true,
+			linearBoost: 1.8,
+			weightingFilter: 'D'
+		}
+	},
+	{
 		name: 'Testing config 1',
 		options: {
 			mode: 10,

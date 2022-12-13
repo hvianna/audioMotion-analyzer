@@ -25,6 +25,10 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  SCALEX_HIGHLIGHT_COLOR   = '#4f4',
 	  SCALEY_LABEL_COLOR       = '#888',
 	  SCALEY_MIDLINE_COLOR     = '#555',
+	  SCALE_BARK               = 'bark',
+	  SCALE_LINEAR             = 'linear',
+	  SCALE_LOG                = 'log',
+	  SCALE_MEL                = 'mel',
 	  WEIGHTING_FILTERS        = [ '', 'A', 'B', 'C', 'D', '468' ];
 
 // custom error messages
@@ -297,6 +301,15 @@ export default class AudioMotionAnalyzer {
 			this._analyzer[ i ].fftSize = value;
 		const binCount = this._analyzer[0].frequencyBinCount;
 		this._fftData = [ new Float32Array( binCount ), new Float32Array( binCount ) ];
+		this._calcBars();
+	}
+
+	get frequencyScale() {
+		return this._frequencyScale;
+	}
+	set frequencyScale( value ) {
+		const FREQUENCY_SCALES = [ SCALE_LOG, SCALE_BARK, SCALE_MEL, SCALE_LINEAR ];
+		this._frequencyScale = FREQUENCY_SCALES[ Math.max( 0, FREQUENCY_SCALES.indexOf( ( '' + value ).toLowerCase() ) ) ];
 		this._calcBars();
 	}
 
@@ -914,27 +927,9 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Precalculate the actual X-coordinate on screen for each analyzer bar
+	 * Calculate the X-coordinate on canvas for each analyzer bar
 	 */
 	_calcBars() {
-		/*
-	 	   Since the frequency scale is logarithmic, each position in the X-axis actually represents a power of 10.
-	 	   To improve performace, the position of each frequency is calculated in advance and stored in an array.
-	 	   Canvas space usage is optimized to accommodate exactly the frequency range the user needs.
-	 	   Positions need to be recalculated whenever the frequency range, FFT size or canvas size change.
-
-	 	                                +-------------------------- canvas --------------------------+
-	 	                                |                                                            |
-	 	      |-------------------|-----|-------------|-------------------|-------------------|------|------------|
-	 	      1                  10     |            100                  1K                 10K     |           100K (Hz)
-	 	   (10^0)              (10^1)   |          (10^2)               (10^3)              (10^4)   |          (10^5)
-	 	                                |-------------|<--- logWidth ---->|--------------------------|
-	 	                    minFreq--> 20                   (pixels)                                22K <--maxFreq
-	 	                            (10^1.3)                                                     (10^4.34)
-	 	                                 ^
-	 	                               minLog
-	 	*/
-
 		const bars = this._bars = []; // initialize object property
 
 		if ( ! this._ready )
@@ -950,7 +945,7 @@ export default class AudioMotionAnalyzer {
 			  maxFreq       = this._maxFreq,
 			  minFreq       = this._minFreq;
 
-		let minLog,	logWidth;
+		let scaleMin, unitWidth;
 
 		if ( this._isOctaveBands ) {
 			/*
@@ -1045,11 +1040,11 @@ export default class AudioMotionAnalyzer {
 			const firstBar = bars[0],
 				  lastBar  = bars[ bars.length - 1 ];
 
-			minLog = Math.log10( firstBar.freqLo );
-			logWidth = analyzerWidth / ( Math.log10( lastBar.freqHi ) - minLog );
+			scaleMin = this._freqScaling( firstBar.freqLo );
+			unitWidth = analyzerWidth / ( this._freqScaling( lastBar.freqHi ) - scaleMin );
 
 			// clamp edge frequencies to minFreq / maxFreq, if necessary
-			// this is done after computing minLog and logWidth, for the proper positioning of labels on the X-axis
+			// this is done after computing scaleMin and unitWidth, for the proper positioning of labels on the X-axis
 			if ( firstBar.freqLo < minFreq ) {
 				firstBar.freqLo = minFreq;
 				[ firstBar.binLo, firstBar.ratioLo ] = calcRatio( minFreq );
@@ -1066,8 +1061,8 @@ export default class AudioMotionAnalyzer {
 
 			this._barWidth = 1;
 
-			minLog = Math.log10( minFreq );
-			logWidth = analyzerWidth / ( Math.log10( maxFreq ) - minLog );
+			scaleMin = this._freqScaling( minFreq );
+			unitWidth = analyzerWidth / ( this._freqScaling( maxFreq ) - scaleMin );
 
 			const minIndex = this._freqToBin( minFreq, 'floor' ),
 				  maxIndex = this._freqToBin( maxFreq );
@@ -1076,7 +1071,7 @@ export default class AudioMotionAnalyzer {
 
 			for ( let i = minIndex; i <= maxIndex; i++ ) {
 				const freq = this._binToFreq( i ), // frequency represented by this index
-					  posX = initialX + Math.round( logWidth * ( Math.log10( freq ) - minLog ) ); // avoid fractionary pixel values
+					  posX = initialX + Math.round( unitWidth * ( this._freqScaling( freq ) - scaleMin ) ); // avoid fractionary pixel values
 
 				// if it's on a different X-coordinate, create a new bar for this frequency
 				if ( posX > lastPos ) {
@@ -1093,8 +1088,8 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// save these for scale generation
-		this._minLog = minLog;
-		this._logWidth = logWidth;
+		this._scaleMin = scaleMin;
+		this._unitWidth = unitWidth;
 
 		// update internal variables
 		this._calcAux();
@@ -1245,10 +1240,10 @@ export default class AudioMotionAnalyzer {
 
 		for ( const item of freqLabels ) {
 			const [ freq, label ] = Array.isArray( item ) ? item : [ item, item < 1e3 ? item | 0 : `${ ( item / 100 | 0 ) / 10 }k` ],
-				  x    = this._logWidth * ( Math.log10( freq ) - this._minLog ),
+				  x    = this._unitWidth * ( this._freqScaling( freq ) - this._scaleMin ),
 				  y    = canvasX.height * .75,
 				  isC  = label[0] == 'C',
-	  			  maxW = isNoteLabels && ! isMirror ? this._logWidth * ( isC ? .03 : .015 ) : 99;
+	  			  maxW = isNoteLabels && ! isMirror ? this._unitWidth * ( isC ? .03 : .015 ) : 99;
 
 			if ( x >= 0 && x <= analyzerWidth ) {
 				scaleX.fillStyle = scaleR.fillStyle = isC && ! isMirror ? SCALEX_HIGHLIGHT_COLOR : SCALEX_LABEL_COLOR;
@@ -1806,6 +1801,22 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Return scaled frequency according to the selected scale
+	 */
+	_freqScaling( freq ) {
+		switch ( this._frequencyScale ) {
+			case SCALE_LOG :
+				return Math.log2( freq );
+			case SCALE_BARK :
+				return ( 26.81 * freq ) / ( 1960 + freq ) - .53;
+			case SCALE_MEL :
+				return Math.log2( 1 + freq / 700 );
+			case SCALE_LINEAR :
+				return freq;
+		}
+	}
+
+	/**
 	 * Return the FFT data bin (array index) which represents a given frequency
 	 */
 	_freqToBin( freq, method = 'round' ) {
@@ -2007,6 +2018,7 @@ export default class AudioMotionAnalyzer {
 			bgAlpha        : 0.7,
 			fftSize        : 8192,
 			fillAlpha      : 1,
+			frequencyScale : 'log',
 			gradient       : 'classic',
 			ledBars        : false,
 			linearAmplitude: false,
