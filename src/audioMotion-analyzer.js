@@ -1208,6 +1208,7 @@ export default class AudioMotionAnalyzer {
 			  canvasX       = scaleX.canvas,
 			  canvasR       = scaleR.canvas,
 			  freqLabels    = [],
+			  frequencyScale= this._frequencyScale,
 			  initialX      = this._initialX,
 			  isStereo      = this._stereo,
 			  isMirror      = this._mirror,
@@ -1216,8 +1217,12 @@ export default class AudioMotionAnalyzer {
 			  scaleHeight   = Math.min( canvas.width, canvas.height ) * .03 | 0, // circular scale height (radial mode)
 		  	  root12        = 2 ** ( 1 / 12 );
 
-		if ( this._ansiBands && ! isNoteLabels )
-			freqLabels.push(16,31.5,63,125,250,500,1e3,2e3,4e3,8e3,16e3);
+		if ( ! isNoteLabels && ( this._ansiBands || frequencyScale != 'log' ) ) {
+			if ( frequencyScale == SCALE_LINEAR )
+				freqLabels.push(125,500,1e3,2e3,4e3,6e3,8e3,10e3,12e3,14e3,16e3,18e3,20e3);
+			else
+				freqLabels.push(16,31.5,63,125,250,500,1e3,2e3,4e3,8e3,16e3);
+		}
 		else {
 			let freq = C_1;
 			for ( let octave = -1; octave < 11; octave++ ) {
