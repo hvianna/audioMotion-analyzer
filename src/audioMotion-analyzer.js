@@ -1215,13 +1215,16 @@ export default class AudioMotionAnalyzer {
 			  isNoteLabels  = this._noteLabels,
 			  scale         = [ 'C',, 'D',, 'E', 'F',, 'G',, 'A',, 'B' ], // for note labels (no sharp notes)
 			  scaleHeight   = Math.min( canvas.width, canvas.height ) * .03 | 0, // circular scale height (radial mode)
+  			  fontSizeX     = canvasX.height >> 1,
+			  fontSizeR     = scaleHeight >> 1,
 		  	  root12        = 2 ** ( 1 / 12 );
 
-		if ( ! isNoteLabels && ( this._ansiBands || frequencyScale != 'log' ) ) {
+		if ( ! isNoteLabels && ( this._ansiBands || frequencyScale != SCALE_LOG ) ) {
+			freqLabels.push( 16, 31.5, 63, 125, 250, 500, 1e3, 2e3, 4e3 );
 			if ( frequencyScale == SCALE_LINEAR )
-				freqLabels.push(125,500,1e3,2e3,4e3,6e3,8e3,10e3,12e3,14e3,16e3,18e3,20e3);
+				freqLabels.push( 6e3, 8e3, 10e3, 12e3, 14e3, 16e3, 18e3, 20e3 );
 			else
-				freqLabels.push(16,31.5,63,125,250,500,1e3,2e3,4e3,8e3,16e3);
+				freqLabels.push( 8e3, 16e3 );
 		}
 		else {
 			let freq = C_1;
@@ -1272,28 +1275,35 @@ export default class AudioMotionAnalyzer {
 		scaleR.stroke();
 
 		scaleX.fillStyle = scaleR.fillStyle = SCALEX_LABEL_COLOR;
-		scaleX.font = `${ canvasX.height >> 1 }px ${FONT_FAMILY}`;
-		scaleR.font = `${ scaleHeight >> 1 }px ${FONT_FAMILY}`;
+		scaleX.font = `${ fontSizeX }px ${FONT_FAMILY}`;
+		scaleR.font = `${ fontSizeR }px ${FONT_FAMILY}`;
 		scaleX.textAlign = scaleR.textAlign = 'center';
+
+		let prevX = 0, prevR = 0;
 
 		for ( const item of freqLabels ) {
 			const [ freq, label ] = Array.isArray( item ) ? item : [ item, item < 1e3 ? item | 0 : `${ ( item / 100 | 0 ) / 10 }k` ],
 				  x    = this._unitWidth * ( this._freqScaling( freq ) - this._scaleMin ),
 				  y    = canvasX.height * .75,
 				  isC  = label[0] == 'C',
-	  			  maxW = isNoteLabels && ! isMirror ? this._unitWidth * ( isC ? .03 : .015 ) : 99;
+	  			  maxW = fontSizeX * ( isNoteLabels && ! isMirror ? ( isC ? 1.2 : .6 ) : 3 );
 
 			if ( x >= 0 && x <= analyzerWidth ) {
+
 				scaleX.fillStyle = scaleR.fillStyle = isC && ! isMirror ? SCALEX_HIGHLIGHT_COLOR : SCALEX_LABEL_COLOR;
 
-				scaleX.fillText( label, initialX + x, y, maxW );
-				if ( x < analyzerWidth ) // avoid wrapping-around the last label and overlapping the first one
-					radialLabel( x, label );
+				if ( x > prevX + fontSizeX / 2 ) {
+					scaleX.fillText( label, initialX + x, y, maxW );
+					if ( isMirror )
+						scaleX.fillText( label, ( initialX || canvas.width ) - x, y, maxW );
+					prevX = x + Math.min( maxW, scaleX.measureText( label ).width ) / 2;
+				}
 
-				if ( isMirror ) {
-					scaleX.fillText( label, ( initialX || canvas.width ) - x, y, maxW );
-					if ( x > 10 ) // avoid overlapping of first labels on mirror mode
+				if ( x < analyzerWidth && ( x > prevR + fontSizeR || isC ) ) { // avoid wrapping-around the last label and overlapping the first one
+					radialLabel( x, label );
+					if ( isMirror && x > fontSizeR ) // avoid overlapping of first labels on mirror mode
 						radialLabel( -x, label );
+					prevR = x;
 				}
 			}
 		}
