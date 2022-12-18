@@ -16,13 +16,16 @@ const presets = [
 		options: undefined
 	},
 	{
-		name: 'Classic LEDs',
+		name: 'Classic LED bars',
 		options: {
 			mode: 3,
+			ansiBands: true,
 			barSpace: .4,
+			frequencyScale: 'log',
 			gradient: 'classic',
 			ledBars: true,
 			lumiBars: false,
+			mirror: 0,
 			radial: false,
 			reflexRatio: 0,
 			showBgColor: true,
@@ -45,7 +48,7 @@ const presets = [
 		}
 	},
 	{
-		name: 'Radial overlay',
+		name: 'Radial spectrum + Overlay',
 		options: {
 			mode: 5,
 			barSpace: .1,
@@ -59,21 +62,22 @@ const presets = [
 		}
 	},
 	{
-		name: 'Reflex Bars',
+		name: 'Bark scale + Linear amplitude',
 		options: {
-			mode: 5,
-			barSpace: .25,
+			mode: 0,
+			frequencyScale: 'bark',
 			gradient: 'rainbow',
-			ledBars: false,
-			lumiBars: false,
+			linearAmplitude: true,
+			linearBoost: 1.8,
+			mirror: 0,
+			overlay: false,
 			radial: false,
 			reflexAlpha: .25,
 			reflexBright: 1,
 			reflexFit: true,
 			reflexRatio: .3,
-			showBgColor: false,
 			showPeaks: true,
-			overlay: false
+			weightingFilter: 'D'
 		}
 	},
 	{
