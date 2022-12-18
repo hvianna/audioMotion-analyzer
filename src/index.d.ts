@@ -13,6 +13,7 @@ export interface Options {
   bgAlpha?: number;
   fftSize?: number;
   fillAlpha?: number;
+  frequencyScale?: FrequencyScale;
   gradient?: string;
   height?: number;
   ledBars?: boolean;
@@ -72,6 +73,8 @@ interface ConstructorOptions extends Options {
 
 type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "treble";
 
+type FrequencyScale = "bark" | "linear" | "log" | "mel";
+
 type GradientColorStop = string | { pos: number; color: string };
 
 type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
@@ -124,6 +127,9 @@ declare class AudioMotionAnalyzer {
   get fsHeight(): number;
   get fsWidth(): number;
 
+  get frequencyScale(): FrequencyScale;
+  set frequencyScale(value: FrequencyScale);
+
   get gradient(): string;
   set gradient(value: string);
 
@@ -134,6 +140,7 @@ declare class AudioMotionAnalyzer {
   set width(w: number);
 
   get isAlphaBars(): boolean;
+  get isBandsMode(): boolean;
   get isFullscreen(): boolean;
   get isLedBars(): boolean;
   get isLumiBars(): boolean;
