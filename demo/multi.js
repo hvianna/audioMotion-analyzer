@@ -6,9 +6,6 @@
 
 import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
 
-const mindB = [ -70, -80, -85, -90, -100 ], // for sensitivity presets
-	  maxdB = [ -10, -20, -25, -30, -40 ];
-
 let audioMotion = [],
 	selectedAnalyzer = 0;
 
@@ -30,6 +27,7 @@ try {
 		audioMotion[ i ] = new AudioMotionAnalyzer(	document.getElementById( `container${i}` ), {
 			source: isFirst ? document.getElementById('audio') : audioMotion[0].connectedSources[0],
 			connectSpeakers: isFirst,
+			height: isFirst ? 340 : 160,
 
 			onCanvasResize: ( reason, instance ) => {
 				const instNo = instance.canvas.parentElement.id.slice(-1); // get instance number from container id
@@ -49,35 +47,49 @@ document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 // Set options for each instance
 
+// main analyzer
 audioMotion[0].setOptions({
-	mode: 3,
+	mode: 4,
+	barSpace: .4,
+	frequencyScale: 'bark',
 	ledBars: true,
-	showScaleY: true,
-	barSpace: 0.5
+	linearAmplitude: true,
+	linearBoost: 1.6,
+	maxFreq: 20000,
+	reflexRatio: .2,
+	reflexAlpha: .25,
+	weightingFilter: 'D'
 });
 
+// top right
 audioMotion[1].setOptions({
 	mode: 10,
+	fillAlpha: .3,
 	gradient: 'rainbow',
+	linearAmplitude: true,
+	linearBoost: 1.2,
+	lineWidth: 1.5,
 	minFreq: 30,
 	maxFreq: 16000,
 	showScaleX: false,
 	showPeaks: false,
-	lineWidth: 2,
-	fillAlpha: .3
 });
 
+// bottom right
 audioMotion[2].setOptions({
 	mode: 2,
+	barSpace: .1,
+	frequencyScale: 'bark',
 	gradient: 'prism',
+	lumiBars: true,
+	minDecibels: -60,
+	maxDecibels: -30,
 	minFreq: 30,
 	maxFreq: 16000,
 	showBgColor: false,
-	showScaleX: false,
 	showPeaks: false,
-	lumiBars: true,
-	minDecibels: -80,
-	maxDecibels: -20
+	showScaleX: false,
+	weightingFilter: 'D'
 });
 
 // Analyzer selector
@@ -114,13 +126,6 @@ document.querySelectorAll('[data-setting]').forEach( el => {
 	el.addEventListener( 'change', () => audioMotion[ selectedAnalyzer ][ el.dataset.setting ] = el.value );
 });
 
-document.getElementById('range').addEventListener( 'change', e => {
-	const selected = e.target[ e.target.selectedIndex ];
-	audioMotion[ selectedAnalyzer ].setFreqRange( selected.dataset.min, selected.dataset.max );
-});
-
-document.getElementById('sensitivity').addEventListener( 'change', e => audioMotion[ selectedAnalyzer ].setSensitivity( mindB[ e.target.value ], maxdB[ e.target.value ] ) );
-
 // Display value of ranged input elements
 document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
 
@@ -153,9 +158,6 @@ function updateUI() {
 	document.querySelectorAll('canvas').forEach( el => el.classList.toggle( 'selected', el.parentElement.id.slice(-1) == selectedAnalyzer ) );
 
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ selectedAnalyzer ][ el.dataset.setting ] );
-
-	document.getElementById('range').selectedIndex = [20,30,100].indexOf( audioMotion[ selectedAnalyzer ].minFreq );
-	document.getElementById('sensitivity').value = maxdB.indexOf( audioMotion[ selectedAnalyzer ].maxDecibels );
 
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
 	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', audioMotion[ selectedAnalyzer ][ el.dataset.prop ] ) );

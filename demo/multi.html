@@ -39,27 +39,27 @@
 	</div>
 
 	<div class="analyzer-configuration center">
-
-		<div class="selector">
-			Selected analyzer:
-			<label><input type="radio" name="analyzer" value="0" checked> Main &nbsp;</label>
-			<label><input type="radio" name="analyzer" value="1"> Top &nbsp;</label>
-			<label><input type="radio" name="analyzer" value="2"> Bottom</label>
-		</div>
-
 		<div class="box">
+			<fieldset class="slim">
+				<legend>Selected analyzer</legend>
+
+				<label><input type="radio" name="analyzer" value="0" checked> Main &nbsp;</label>
+				<label><input type="radio" name="analyzer" value="1"> Top &nbsp;</label>
+				<label><input type="radio" name="analyzer" value="2"> Bottom</label>
+			</fieldset>
+
 			<label class="label">mode
 				<select data-setting="mode">
-					<option value="0">0 - Discrete frequencies</option>
-					<option value="1">1 - 1/24th octave bands</option>
-					<option value="2">2 - 1/12th octave bands</option>
-					<option value="3">3 - 1/8th octave bands</option>
-					<option value="4">4 - 1/6th octave bands</option>
-					<option value="5">5 - 1/4th octave bands</option>
-					<option value="6">6 - 1/3rd octave bands</option>
-					<option value="7">7 - Half octave bands</option>
-					<option value="8">8 - Full octave bands</option>
-					<option value="10">10 - Line / Area graph</option>
+					<option value="0">[ 0 ] Discrete frequencies</option>
+					<option value="1">[ 1 ] 1/24th octave / 240 bands</option>
+					<option value="2">[ 2 ] 1/12th octave / 120 bands</option>
+					<option value="3">[ 3 ] 1/8th octave / 80 bands</option>
+					<option value="4">[ 4 ] 1/6th octave / 60 bands</option>
+					<option value="5">[ 5 ] 1/4th octave / 40 bands</option>
+					<option value="6">[ 6 ] 1/3rd octave / 30 bands</option>
+					<option value="7">[ 7 ] Half octave / 20 bands</option>
+					<option value="8">[ 8 ] Full octave / 10 bands</option>
+					<option value="10">[10] Line / Area graph</option>
 				</select>
 			</label>
 
@@ -71,55 +71,105 @@
 				</select>
 			</label>
 
-			<label class="label">fftSize
-				<select data-setting="fftSize">
-					<option value="1024">1024</option>
-					<option value="2048">2048</option>
-					<option value="4096">4096</option>
-					<option value="8192">8192</option>
-					<option value="16384">16384</option>
-					<option value="32768">32768</option>
-				</select>
-			</label>
-
-			<label class="label">Frequency range
-				<select id="range">
-					<option data-min="20" data-max="22000">20Hz - 22KHz</option>
-					<option data-min="30" data-max="16000">30Hz - 16KHz</option>
-					<option data-min="100" data-max="10000">100Hz - 10KHz</option>
-				</select>
-			</label>
-
-			<label class="label">weightingFilter
-				<select data-setting="weightingFilter">
-					<option value="">none</option>
-					<option value="A">A-weighting</option>
-					<option value="B">B-weighting</option>
-					<option value="C">C-weighting</option>
-					<option value="D">D-weighting</option>
-					<option value="468">ITU-R 468</option>
-				</select>
-			</label>
-
-			<label class="label">linearBoost
-				<input type="range" min="1" max="4" step=".2" data-setting="linearBoost">
-				<div class="value"></div>
-			</label>
-
-			<label class="label">Sensitivity
-				<input type="range" id="sensitivity" min="0" max="4">
-				<div class="value"></div>
-			</label>
-
-			<label class="label">smoothing
-				<input type="range" min="0" max=".9" step=".1" data-setting="smoothing">
-				<div class="value"></div>
-			</label>
-
 			<label class="label">volume
 				<input type="range" min="0" max="1" step=".1" data-setting="volume">
 				<div class="value"></div>
 			</label>
+		</div>
+
+		<div class="box center">
+			<fieldset>
+				<legend>FFT</legend>
+
+				<label class="label">fftSize
+					<select data-setting="fftSize">
+						<option value="1024">1024</option>
+						<option value="2048">2048</option>
+						<option value="4096">4096</option>
+						<option value="8192">8192</option>
+						<option value="16384">16384</option>
+						<option value="32768">32768</option>
+					</select>
+				</label>
+				<label class="label">smoothing
+					<input type="range" min="0" max=".9" step=".1" data-setting="smoothing">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Frequency range & scaling</legend>
+
+				<label class="label">minFreq
+					<select data-setting="minFreq">
+						<option value="10">10</option>
+						<option value="16">16</option>
+						<option value="20">20</option>
+						<option value="30">30</option>
+						<option value="40">40</option>
+						<option value="60">60</option>
+						<option value="100">100</option>
+						<option value="500">500</option>
+						<option value="1000">1000</option>
+					</select>
+				</label>
+
+				<label class="label">maxFreq
+					<select data-setting="maxFreq">
+						<option value="8000">8000</option>
+						<option value="10000">10000</option>
+						<option value="12000">12000</option>
+						<option value="16000">16000</option>
+						<option value="20000">20000</option>
+						<option value="22000">22000</option>
+						<option value="24000">24000</option>
+					</select>
+				</label>
+
+				<label class="label">frequencyScale
+					<select data-setting="frequencyScale">
+						<option value="bark">Bark</option>
+						<option value="linear">Linear</option>
+						<option value="log">Log</option>
+						<option value="mel">Mel</option>
+					</select>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Sensitivity</legend>
+
+				<label class="label">weightingFilter
+					<select data-setting="weightingFilter">
+						<option value="">none</option>
+						<option value="A">A</option>
+						<option value="B">B</option>
+						<option value="C">C</option>
+						<option value="D">D</option>
+						<option value="468">468</option>
+					</select>
+				</label>
+
+				<label class="label">minDecibels
+					<input type="range" min="-120" max="-60" step="5" data-setting="minDecibels">
+					<div class="value"></div>
+				</label>
+
+				<label class="label">maxDecibels
+					<input type="range" min="-40" max="0" step="5" data-setting="maxDecibels">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Linear amplitude</legend>
+
+				<button data-prop="linearAmplitude">linearAmplitude</button>
+				<label class="label">linearBoost
+					<input type="range" min="1" max="4" step=".2" data-setting="linearBoost">
+					<div class="value"></div>
+				</label>
+			</fieldset>
 		</div>
 
 		<div class="box center">
@@ -130,6 +180,7 @@
 						<option value="0">0</option>
 						<option value="0.1">0.1</option>
 						<option value="0.25">0.25</option>
+						<option value="0.4">0.4</option>
 						<option value="0.5">0.5</option>
 						<option value="0.75">0.75</option>
 						<option value="1">1 (legacy)</option>
@@ -140,7 +191,7 @@
 			<fieldset>
 				<legend>mode 10 / outlineBars</legend>
 				<label class="label">lineWidth
-					<input type="range" id="line_width" min="0" max="5" step="1" data-setting="lineWidth">
+					<input type="range" id="line_width" min="0" max="4" step=".5" data-setting="lineWidth">
 					<div class="value"></div>
 				</label>
 
@@ -190,7 +241,6 @@
 			<button data-prop="alphaBars">alphaBars</button>
 			<button data-prop="ansiBands">ansiBands</button>
 			<button data-prop="ledBars">ledBars</button>
-			<button data-prop="linearAmplitude">linearAmplitude</button>
 			<button data-prop="lumiBars">lumiBars</button>
 			<button data-prop="noteLabels">noteLabels</button>
 			<button data-prop="outlineBars">outlineBars</button>
