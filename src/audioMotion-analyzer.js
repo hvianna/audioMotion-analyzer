@@ -1420,7 +1420,7 @@ export default class AudioMotionAnalyzer {
 
 		// LED attributes and helper function for bar height calculation
 		const [ ledCount, ledSpaceH, ledSpaceV, ledHeight ] = this._leds || [];
-		const ledPosY = height => ( height * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV;
+		const ledPosY = height => Math.max( 0, ( height * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV );
 
 		// select background color
 		const bgColor = ( ! this.showBgColor || isLedDisplay && ! this.overlay ) ? '#000' : this._gradients[ this._gradient ].bgColor;
@@ -1584,14 +1584,8 @@ export default class AudioMotionAnalyzer {
 				else if ( isOutline )
 					ctx.globalAlpha = this.fillAlpha;
 
-				// normalize barHeight
-				if ( isLedDisplay ) {
-					barHeight = ledPosY( barHeight );
-					if ( barHeight < 0 )
-						barHeight = 0; // prevent showing leds below 0 when overlay and reflex are active
-				}
-				else
-					barHeight = barHeight * maxBarHeight | 0;
+				// compute actual bar height on screen
+				barHeight = isLedDisplay ? ledPosY( barHeight ) : barHeight * maxBarHeight | 0;
 
 				// invert bar for radial channel 1
 				if ( isRadial && channel == 1 )
@@ -1702,8 +1696,11 @@ export default class AudioMotionAnalyzer {
 						ctx.globalAlpha = peak;
 
 					// render peak according to current mode / effect
-					if ( isLedDisplay )
-						ctx.fillRect( posX,	analyzerBottom - ledPosY( peak ), width, ledHeight );
+					if ( isLedDisplay ) {
+						const ledPeak = ledPosY( peak );
+						if ( ledPeak >= ledHeight ) // avoid peak below zero level
+							ctx.fillRect( posX,	analyzerBottom - ledPeak, width, ledHeight );
+					}
 					else if ( ! isRadial )
 						ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, adjWidth, 2 );
 					else if ( mode != 10 ) // radial - no peaks for mode 10
