@@ -121,11 +121,13 @@ options = {<br>
 &emsp;&emsp;[connectSpeakers](#connectspeakers-boolean): **true**, // constructor only<br>
 &emsp;&emsp;[fftSize](#fftsize-number): **8192**,<br>
 &emsp;&emsp;[fillAlpha](#fillalpha-number): **1**,<br>
+&emsp;&emsp;[frequencyScale](#frequencyscale-string): **'log'**,<br>
 &emsp;&emsp;[fsElement](#fselement-htmlelement-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[gradient](#gradient-string): **'classic'**,<br>
 &emsp;&emsp;[height](#height-number): *undefined*,<br>
 &emsp;&emsp;[ledBars](#ledbars-boolean): **false**,<br>
 &emsp;&emsp;[linearAmplitude](#linearamplitude-boolean): **false**,<br>
+&emsp;&emsp;[linearBoost](#linearboost-number): **1**,<br>
 &emsp;&emsp;[lineWidth](#linewidth-number): **0**,<br>
 &emsp;&emsp;[loRes](#lores-boolean): **false**,<br>
 &emsp;&emsp;[lumiBars](#lumibars-boolean): **false**,<br>
@@ -281,7 +283,7 @@ See also the [fluid demo](/demo/fluid.html) and the [multi-instance demo](/demo/
 
 *Available since v2.0.0*
 
-Customize the spacing between bars in **octave bands** [modes](#mode-number).
+Customize the spacing between bars in [bands modes](#mode-number).
 
 Use a value between 0 and 1 for spacing proportional to the band width. Values >= 1 will be considered as a literal number of pixels.
 
@@ -341,13 +343,13 @@ Defaults to **8192**.
 
 *Available since v2.0.0*
 
-Opacity of the area fill in **Graph** [mode](#mode-number), or inner fill of bars in **octave bands** modes when [`outlineBars`](#outlinebars-boolean) is *true*.
+Opacity of the area fill in [Graph mode](#mode-number), or inner fill of bars in [bands modes](#mode-number) when [`outlineBars`](#outlinebars-boolean) is *true*.
 
 It must be a number between 0 (completely transparent) and 1 (completely opaque).
 
 Please note that the line stroke (when [`lineWidth`](#linewidth-number) > 0) is always drawn at full opacity, regardless of the `fillAlpha` value.
 
-Also, for octave bands modes, [`alphaBars`](#alphabars-boolean) set to *true* takes precedence over `fillAlpha`.
+Also, for [bands modes](#mode-number), [`alphaBars`](#alphabars-boolean) set to *true* takes precedence over `fillAlpha`.
 
 Defaults to **1**.
 
@@ -356,6 +358,25 @@ Defaults to **1**.
 ### `fps` *number* *(Read only)*
 
 Current frame rate.
+
+### `frequencyScale` *string*
+
+*Available since v4.0.0*
+
+Scale used to represent frequencies in the horizontal axis.
+
+frequencyScale | description
+---------------|------------
+'bark' | [Bark scale](https://en.wikipedia.org/wiki/Bark_scale)
+'linear' | Linear scale
+'log' | Logarithmic scale
+'mel' | [Mel scale](https://en.wikipedia.org/wiki/Mel_scale)
+
+Logarithmic scale is required to visualize proper [octave bands](#mode-number) and it's also recommended when using [`noteLabels`](#notelabels-boolean).
+
+*Bark* and *Mel* are perceptual pitch scales which provide better visualization of midrange and high frequencies, especially in the [discrete frequencies mode](#mode-number).
+
+Defaults to **'log'**.
 
 ### `fsElement` *HTMLElement object* *(Read only)*
 
@@ -396,7 +417,13 @@ You can set both values at once using the [`setCanvasSize()`](#setcanvassize-wid
 *Available since v3.6.0*
 
 ***true*** when alpha bars are effectively being displayed, i.e., [`alphaBars`](#alphabars-boolean) is set to *true* and [`mode`](#mode-number) is set to discrete frequencies
-or one of the octave bands modes, in which case [`lumiBars`](#lumibars-boolean) must be set to *false* or [`radial`](#radial-boolean) must be set to *true*.
+or one of the bands modes, in which case [`lumiBars`](#lumibars-boolean) must be set to *false* or [`radial`](#radial-boolean) must be set to *true*.
+
+### `isBandsMode` *boolean* *(Read only)*
+
+*Available since v4.0.0*
+
+***true*** when [`mode`](#mode-number) is set to one of the bands mode (modes 1 to 8).
 
 ### `isFullscreen` *boolean* *(Read only)*
 
@@ -408,19 +435,19 @@ See [`toggleFullscreen()`](#togglefullscreen).
 
 *Available since v3.6.0* (formerly `isLedDisplay`)
 
-***true*** when LED bars are effectively being displayed, i.e., [`ledBars`](#ledBars-boolean) is set to *true* and [`mode`](#mode-number) is set to an octave bands mode and [`radial`](#radial-boolean) is *false*.
+***true*** when LED bars are effectively being displayed, i.e., [`isBandsMode`](#isbandsmode-boolean-read-only) is *true*, [`ledBars`](#ledBars-boolean) is set to *true* and [`radial`](#radial-boolean) is set to *false*.
 
 ### `isLumiBars` *boolean* *(Read only)*
 
 *Available since v3.0.0*
 
-***true*** when luminance bars are effectively being displayed, i.e., [`lumiBars`](#lumibars-boolean) is set to *true* and [`mode`](#mode-number) is set to an octave bands mode and [`radial`](#radial-boolean) is *false*.
+***true*** when luminance bars are effectively being displayed, i.e., [`isBandsMode`](#isbandsmode-boolean-read-only) is *true*, [`lumiBars`](#lumibars-boolean) is set to *true* and [`radial`](#radial-boolean) is set to *false*.
 
 ### `isOctaveBands` *boolean* *(Read only)*
 
 *Available since v3.0.0*
 
-***true*** when [`mode`](#mode-number) is set to one of the octave bands modes.
+***true*** when [`isBandsMode`](#isbandsmode-boolean-read-only) is *true* and [`frequencyScale`](#frequencyscale-string) is set to *'log'*.
 
 ### `isOn` *boolean* *(Read only)*
 
@@ -432,14 +459,14 @@ See [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
 
 *Available since v3.6.0*
 
-***true*** when outlined bars are effectively being displayed, i.e., [`outlineBars`](#outlinebars-boolean) is set to *true*, [`mode`](#mode-number) is set to
-one of the octave bands modes and both [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) are set to *false*, or [`radial`](#radial-boolean) is set to *true*.
+***true*** when outlined bars are effectively being displayed, i.e., [`isBandsMode`](#isbandsmode-boolean-read-only) is *true*, [`outlineBars`](#outlinebars-boolean) is set to *true*
+and both [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) are set to *false*, or [`radial`](#radial-boolean) is set to *true*.
 
 ### `ledBars` *boolean*
 
 *Available since v3.6.0* (formerly `showLeds`)
 
-*true* to activate a vintage LEDs display effect. Only effective for **octave bands** [modes](#mode-number).
+*true* to activate the vintage LED bars effect for [bands modes](#mode-number).
 
 This effect can be customized via [`setLedParams()`](#setledparams-params-) method.
 
@@ -473,7 +500,7 @@ Defaults to **1**.
 
 *Available since v2.0.0*
 
-Line width for **Graph** [mode](#mode-number), or outline stroke in **octave bands** modes when [`outlineBars`](#outlinebars-boolean) is *true*.
+Line width for [Graph mode](#mode-number), or outline stroke in [bands modes](#mode-number) when [`outlineBars`](#outlinebars-boolean) is *true*.
 
 For the line to be distinguishable, set also [`fillAlpha`](#fillalpha-number) < 1.
 
@@ -500,7 +527,7 @@ This will prevent the canvas size from changing, when switching the low resoluti
 
 *Available since v1.1.0*
 
-This is only effective for **octave bands** [modes](#mode-number).
+This is only effective for [bands modes](#mode-number).
 
 When set to *true* all analyzer bars will be displayed at full height with varying luminance (opacity, actually) instead.
 
@@ -553,25 +580,25 @@ Defaults to **0**.
 
 ### `mode` *number*
 
-Current visualization mode.
-
-+ **Discrete** mode provides the highest resolution, allowing you to visualize individual frequencies amplitudes as provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform) computation;
-+ **Octave bands** modes display wider vertical bars, each one representing the *n*th part of an octave, based on a [24-tone equal tempered scale](https://en.wikipedia.org/wiki/Quarter_tone);
-+ **Graph** mode uses the discrete data points to draw a continuous line and/or filled area graph (see [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number) properties).
+Visualization mode.
 
 mode | description | notes
-------:|:-------------:|------
+----:|:-----------:|------
 0 | Discrete frequencies |
-1 | 1/24th octave bands |
-2 | 1/12th octave bands |
-3 | 1/8th octave bands |
-4 | 1/6th octave bands |
-5 | 1/4th octave bands |
-6 | 1/3rd octave bands |
-7 | Half octave bands |
-8 | Full octave bands |
+1 | 1/24th octave bands or 240 bands |
+2 | 1/12th octave bands or 120 bands |
+3 | 1/8th octave bands or 80 bands |
+4 | 1/6th octave bands or 60 bands |
+5 | 1/4th octave bands or 40 bands |
+6 | 1/3rd octave bands or 30 bands |
+7 | Half octave bands or 20 bands |
+8 | Full octave bands or 10 bands |
 9 | *(not valid)* | *reserved*
 10 | Graph | *added in v1.1.0*
+
++ **Mode 0** provides the highest resolution, allowing you to visualize individual frequencies as provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform) computation;
++ **Modes 1 - 8** divide the frequency spectrum in bands; when using the default **logarithmic** [frequency scale](#frequencyscale-string), each band represents the *n*th part of an octave (see also [`ansiBands`](#ansibands-boolean)); otherwise, a fixed number of bands is used for each mode;
++ **Mode 10** uses the discrete FFT data points to draw a continuous line and/or a filled area graph (see [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number) properties).
 
 Defaults to **0**.
 
@@ -581,7 +608,7 @@ Defaults to **0**.
 
 When set to *true* displays musical note labels instead of frequency values, in the X axis (when [`showScaleX`](#showscalex-boolean) is also set to *true*).
 
-For best visualization in octave bands modes, make sure [`ansiBands`](#ansibands-boolean) is set to *false*, so all bands will be perfectly aligned with notes frequencies.
+For best visualization in [octave bands modes](#mode-number), make sure [`frequencyScale`](#frequencyscale-string) is set to *'log'* and [`ansiBands`](#ansibands-boolean) is set to *false*, so all bands will be perfectly aligned with notes frequencies.
 
 Defaults to **false**.
 
@@ -589,7 +616,7 @@ Defaults to **false**.
 
 *Available since v3.6.0*
 
-When *true* and [`mode`](#mode-number) is set to one of the **octave bands** modes, draws outlined bars with customizable [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number).
+When *true* and [`mode`](#mode-number) is set to one of the **bands** modes, analyzer bars are rendered outlined, with customizable [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number).
 
 For effect priority when combined with other settings, see [`isOutlineBars`](#isoutlinebars-boolean-read-only).
 
@@ -802,13 +829,16 @@ Defaults to **1**.
 
 *Available since v4.0.0*
 
-Select a [weighting filter](https://en.wikipedia.org/wiki/Weighting_filter) for spectrum visualization.
+[Weighting filter](https://en.wikipedia.org/wiki/Weighting_filter) applied to frequency data for spectrum visualization.
+
+?> Selecting a weighting filter **does NOT** affect the audio output.
 
 Each filter applies a different curve of gain/attenuation to specific frequency ranges, but the general idea is to adjust the
 visualization of frequencies to which the human ear is more or less sensitive.
-Refer to the [weighting filters viewer tool](/tools/weighting-filters.html) for curves and response tables.
 
-?> Selecting a weighting filter **does NOT** affect the audio output, only the visualization.
+Refer to the [weighting filters viewer tool](/tools/weighting-filters.html) for response tables and an interactive version of the curves graph seen below.
+
+<img src="img/weigthing-filters-curves.png" class="align-right">
 
 weightingFilter | description
 ------|------------------------------
