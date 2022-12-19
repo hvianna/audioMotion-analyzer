@@ -1,4 +1,4 @@
-![demo-animation](demo/media/demo.gif)
+![demo-animation](img/demo.gif)
 
 # audioMotion-analyzer
 
@@ -6,7 +6,7 @@
 
 - Visualize discrete frequencies or octave bands
 - High-resolution (retina / HiDPI ready) fullscreen support
-- Easy to use, yet very customizable
+- Easy to use, yet super customizable
 - No dependencies, \~20kB minified file
 
 [Demos](/demo/)

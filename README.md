@@ -28,17 +28,18 @@ What users are saying:
 ## Features
 
 + High-resolution real-time dual channel audio spectrum analyzer
-+ Logarithmic frequency scale with customizable range
-+ Visualize discrete FFT frequencies or octave bands
-+ Optional effects: vintage LEDs, luminance bars, mirroring and reflection, radial visualization
-+ Customizable sensitivity, FFT size and time-smoothing constant
++ Logarithmic, linear and perceptual (Bark/Mel) frequency scales, with customizable range
++ Visualization of discrete FFT frequencies or up to 240 frequency bands (supports ANSI and equal-tempered octave bands)
++ Decibel and linear amplitude scales, with customizable sensitivity
++ A, B, C, D and ITU-R 468 weighting filters
++ Optional effects: LED bars, luminance bars, mirroring and reflection, radial spectrum
 + Comes with 3 predefined color gradients - easily add your own!
 + Fullscreen support, ready for retina / HiDPI displays
 + Zero-dependency native ES6+ module (ESM), \~20kB minified
 
 ## Online demos
 
-[![demo-animation](demo/media/demo.gif)](https://audiomotion.dev/demo/)
+[![demo-animation](img/demo.gif)](https://audiomotion.dev/demo/)
 
 ?> https://audiomotion.dev/demo/
 
@@ -393,9 +394,9 @@ Canvas dimensions used during fullscreen mode. These take the current pixel rati
 
 ### `gradient` *string*
 
-Currently selected color gradient used for analyzer graphs.
+Name of the color gradient used for analyzer graphs.
 
-It must be the name of a built-in or [registered](#registergradient-name-options-) gradient. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*.
+It must be a built-in or [registered](#registergradient-name-options-) gradient name. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*.
 
 Defaults to **'classic'**.
 
@@ -406,7 +407,7 @@ Nominal dimensions of the analyzer.
 
 If one or both of these are `undefined`, the analyzer will try to adjust to the container's width and/or height.
 If the container's width and/or height are 0 (inline elements), a reference size of **640 x 270 pixels** will be used to replace the missing dimension(s).
-This should be considered the minimum dimensions for proper visualization of all available modes with the [LED effect](#ledbars-boolean) on.
+This should be considered the minimum dimensions for proper visualization of all available modes and effects.
 
 You can set both values at once using the [`setCanvasSize()`](#setcanvassize-width-height-) method.
 
@@ -424,6 +425,8 @@ or one of the bands modes, in which case [`lumiBars`](#lumibars-boolean) must be
 *Available since v4.0.0*
 
 ***true*** when [`mode`](#mode-number) is set to one of the bands mode (modes 1 to 8).
+
+See also [`isOctaveBands`](#isoctavebands-boolean-read-only).
 
 ### `isFullscreen` *boolean* *(Read only)*
 
@@ -777,9 +780,9 @@ When *true*, the gradient will be split between both channels, so each channel w
 
 | splitGradient: *true* | splitGradient: *false* |
 |:--:|:--:|
-| ![split-on](demo/media/splitGradient_on.png) | ![split-off](demo/media/splitGradient_off.png) |
+| ![split-on](img/splitGradient_on.png) | ![split-off](img/splitGradient_off.png) |
 
-This option has no effect in horizontal gradients, or when [`stereo`](#stereo-boolean) is set to *false*.
+This option has no effect on horizontal gradients, or when [`stereo`](#stereo-boolean) is set to *false*.
 
 Defaults to **false**.
 
@@ -1105,7 +1108,7 @@ if necessary, the led count is decreased until both the led segment and the vert
 
 You can try different values in the [fluid demo](https://audiomotion.dev/demo/fluid.html).
 
-**If called with no arguments or any invalid property, clears custom parameters previously set.**
+?> If called with no arguments or any invalid property, clears custom parameters previously set.
 
 ### `setOptions( [options] )`
 
@@ -1216,15 +1219,16 @@ myAudio.crossOrigin = 'anonymous';
 
 ### Sound only plays after the user clicks somewhere on the page. <!-- {docsify-ignore} -->
 
-**audioMotion-analyzer** automatically unlocks the audio context on the first click on the page,
-since browsers' autoplay policy requires audio output to be initiated on user gesture only.
+Browser autoplay policy dictates that audio output can only be initiated by a user gesture, and this is enforced by WebAudio API
+by creating [*AudioContext*](#audioctx-audiocontext-object-read-only) objects in *suspended* mode.
 
-However, if you're using an `audio` or `video` element with the `controls` property, clicks on those native media
-controls can't be detected, so the audio will only be enabled if/when the user clicks somewhere else.
+**audioMotion-analyzer** tries to automatically start its audio context on the first click on the page.
+However, if you're using an `audio` or `video` element with the `controls` property, clicks on those native media controls cannot be detected
+by JavaScript, so the audio will only be enabled if/when the user clicks somewhere else.
 
 Two possible solutions: **1)** make **sure** your users have to click somewhere else before using the media controls,
 like a "power on" button, or simply clicking to select a song from a list will do; or **2)** don't use the native
-controls at all, and create your own custom 'Play' and 'Stop' buttons. A very simple example:
+controls at all, and create your own custom play and stop buttons. A very simple example:
 
 ```html
 <audio id="myAudio" src="track.mp3" crossorigin="anonymous"></audio> <!-- do not add the 'controls' property! -->
