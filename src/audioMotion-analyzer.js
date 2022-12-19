@@ -17,9 +17,23 @@ const TAU     = 2 * Math.PI,
 
 const CANVAS_BACKGROUND_COLOR  = '#000',
  	  GRADIENT_DEFAULT_BGCOLOR = '#111',
+ 	  FILTER_NONE              = '',
+ 	  FILTER_A                 = 'A',
+ 	  FILTER_B                 = 'B',
+ 	  FILTER_C                 = 'C',
+ 	  FILTER_D                 = 'D',
+ 	  FILTER_468               = '468',
 	  FONT_FAMILY              = 'sans-serif',
 	  FPS_COLOR                = '#0f0',
+	  GRADIENT_CLASSIC         = 'classic',
+	  GRADIENT_PRISM           = 'prism',
+	  GRADIENT_RAINBOW         = 'rainbow',
 	  LEDS_UNLIT_COLOR         = '#7f7f7f22',
+	  REASON_CREATE            = 'create',
+	  REASON_FSCHANGE          = 'fschange',
+	  REASON_LORES             = 'lores',
+	  REASON_RESIZE            = 'resize',
+	  REASON_USER              = 'user',
 	  SCALEX_BACKGROUND_COLOR  = '#000c',
 	  SCALEX_LABEL_COLOR       = '#fff',
 	  SCALEX_HIGHLIGHT_COLOR   = '#4f4',
@@ -28,8 +42,7 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  SCALE_BARK               = 'bark',
 	  SCALE_LINEAR             = 'linear',
 	  SCALE_LOG                = 'log',
-	  SCALE_MEL                = 'mel',
-	  WEIGHTING_FILTERS        = [ '', 'A', 'B', 'C', 'D', '468' ];
+	  SCALE_MEL                = 'mel';
 
 // custom error messages
 const ERR_AUDIO_CONTEXT_FAIL     = [ 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create audio context. Web Audio API not supported?' ],
@@ -67,41 +80,38 @@ export default class AudioMotionAnalyzer {
 
 		this._ready = false;
 
-		// Gradient definitions
+		// Initialize internal gradients object
+		this._gradients = {};
 
-		this._gradients = {
-			classic: {
-				bgColor: GRADIENT_DEFAULT_BGCOLOR,
-				colorStops: [
-					'hsl( 0, 100%, 50% )',
-					{ pos: .6, color: 'hsl( 60, 100%, 50% )' },
-					'hsl( 120, 100%, 50% )'
-				]
-			},
-			prism:   {
-				bgColor: GRADIENT_DEFAULT_BGCOLOR,
-				colorStops: [
-					'hsl( 0, 100%, 50% )',
-					'hsl( 60, 100%, 50% )',
-					'hsl( 120, 100%, 50% )',
-					'hsl( 180, 100%, 50% )',
-					'hsl( 240, 100%, 50% )'
-				]
-			},
-			rainbow: {
-				bgColor: GRADIENT_DEFAULT_BGCOLOR,
-				dir: 'h',
-				colorStops: [
-					'hsl( 0, 100%, 50% )',
-					'hsl( 60, 100%, 50% )',
-					'hsl( 120, 100%, 50% )',
-					'hsl( 180, 100%, 47% )',
-					'hsl( 240, 100%, 58% )',
-					'hsl( 300, 100%, 50% )',
-					'hsl( 360, 100%, 50% )'
-				]
-			},
-		};
+		// Register built-in gradients
+		this.registerGradient( GRADIENT_CLASSIC, {
+			colorStops: [
+				'hsl( 0, 100%, 50% )',
+				{ pos: .6, color: 'hsl( 60, 100%, 50% )' },
+				'hsl( 120, 100%, 50% )'
+			]
+		});
+		this.registerGradient( GRADIENT_PRISM, {
+			colorStops: [
+				'hsl( 0, 100%, 50% )',
+				'hsl( 60, 100%, 50% )',
+				'hsl( 120, 100%, 50% )',
+				'hsl( 180, 100%, 50% )',
+				'hsl( 240, 100%, 50% )'
+			]
+		});
+		this.registerGradient( GRADIENT_RAINBOW, {
+			dir: 'h',
+			colorStops: [
+				'hsl( 0, 100%, 50% )',
+				'hsl( 60, 100%, 50% )',
+				'hsl( 120, 100%, 50% )',
+				'hsl( 180, 100%, 47% )',
+				'hsl( 240, 100%, 58% )',
+				'hsl( 300, 100%, 50% )',
+				'hsl( 360, 100%, 50% )'
+			]
+		});
 
 		// Set container
 		this._container = container || document.body;
@@ -203,7 +213,7 @@ export default class AudioMotionAnalyzer {
 				// delay the resize to prioritize a possible following `fullscreenchange` event
 				this._fsTimeout = window.setTimeout( () => {
 					if ( ! this._fsChanging ) {
-						this._setCanvas('resize');
+						this._setCanvas( REASON_RESIZE );
 						this._fsTimeout = 0;
 					}
 				}, 60 );
@@ -229,7 +239,7 @@ export default class AudioMotionAnalyzer {
 				window.clearTimeout( this._fsTimeout );
 
 			// update the canvas
-			this._setCanvas('fschange');
+			this._setCanvas( REASON_FSCHANGE );
 
 			// delay clearing the flag to prevent any shortly following resize event
 			this._fsTimeout = window.setTimeout( () => {
@@ -258,7 +268,7 @@ export default class AudioMotionAnalyzer {
 
 		// Finish canvas setup
 		this._ready = true;
-		this._setCanvas('create');
+		this._setCanvas( REASON_CREATE );
 	}
 
 	/**
@@ -330,7 +340,7 @@ export default class AudioMotionAnalyzer {
 	}
 	set height( h ) {
 		this._height = h;
-		this._setCanvas('user');
+		this._setCanvas( REASON_USER );
 	}
 
 	get ledBars() {
@@ -360,7 +370,7 @@ export default class AudioMotionAnalyzer {
 	}
 	set loRes( value ) {
 		this._loRes = !! value;
-		this._setCanvas('lores');
+		this._setCanvas( REASON_LORES );
 	}
 
 	get lumiBars() {
@@ -536,6 +546,7 @@ export default class AudioMotionAnalyzer {
 		return this._weightingFilter;
 	}
 	set weightingFilter( value ) {
+		const WEIGHTING_FILTERS = [ FILTER_NONE, FILTER_A, FILTER_B, FILTER_C, FILTER_D, FILTER_468 ];
 		this._weightingFilter = WEIGHTING_FILTERS[ Math.max( 0, WEIGHTING_FILTERS.indexOf( ( '' + value ).toUpperCase() ) ) ];
 	}
 
@@ -544,7 +555,7 @@ export default class AudioMotionAnalyzer {
 	}
 	set width( w ) {
 		this._width = w;
-		this._setCanvas('user');
+		this._setCanvas( REASON_USER );
 	}
 
 	// Read only properties
@@ -782,7 +793,7 @@ export default class AudioMotionAnalyzer {
 	setCanvasSize( w, h ) {
 		this._width = w;
 		this._height = h;
-		this._setCanvas('user');
+		this._setCanvas( REASON_USER );
 	}
 
 	/**
@@ -1360,24 +1371,24 @@ export default class AudioMotionAnalyzer {
 				  linearTodB = value => 20 * Math.log10( value );
 
 			switch ( weightingFilter ) {
-				case 'A' : // A-weighting https://en.wikipedia.org/wiki/A-weighting
+				case FILTER_A : // A-weighting https://en.wikipedia.org/wiki/A-weighting
 					const rA = ( SQ12194 * f2 ** 2 ) / ( ( f2 + SQ20_6 ) * Math.sqrt( ( f2 + SQ107_7 ) * ( f2 + SQ737_9 ) ) * ( f2 + SQ12194 ) );
 					return 2 + linearTodB( rA );
 
-				case 'B' :
+				case FILTER_B :
 					const rB = ( SQ12194 * f2 * freq ) / ( ( f2 + SQ20_6 ) * Math.sqrt( f2 + SQ158_5 ) * ( f2 + SQ12194 ) );
 					return .17 + linearTodB( rB );
 
-				case 'C' :
+				case FILTER_C :
 					const rC = ( SQ12194 * f2 ) / ( ( f2 + SQ20_6 ) * ( f2 + SQ12194 ) );
 					return .06 + linearTodB( rC );
 
-				case 'D' :
+				case FILTER_D :
 					const h = ( ( 1037918.48 - f2 ) ** 2 + 1080768.16 * f2 ) / ( ( 9837328 - f2 ) ** 2 + 11723776 * f2 ),
 						  rD = ( freq / 6.8966888496476e-5 ) * Math.sqrt( h / ( ( f2 + 79919.29 ) * ( f2 + 1345600 ) ) );
 					return linearTodB( rD );
 
-				case '468' : // ITU-R 468 https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting
+				case FILTER_468 : // ITU-R 468 https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting
 					const h1 = -4.737338981378384e-24 * freq ** 6 + 2.043828333606125e-15 * freq ** 4 - 1.363894795463638e-7 * f2 + 1,
 						  h2 = 1.306612257412824e-19 * freq ** 5 - 2.118150887518656e-11 * freq ** 3 + 5.559488023498642e-4 * freq,
 						  rI = 1.246332637532143e-4 * freq / Math.hypot( h1, h2 );
@@ -2042,7 +2053,7 @@ export default class AudioMotionAnalyzer {
 
 		// detect fullscreen changes (for Safari)
 		if ( this._fsStatus !== undefined && this._fsStatus !== isFullscreen )
-			reason = 'fschange';
+			reason = REASON_FSCHANGE;
 		this._fsStatus = isFullscreen;
 
 		// call the callback function, if defined
@@ -2063,8 +2074,8 @@ export default class AudioMotionAnalyzer {
 			bgAlpha        : 0.7,
 			fftSize        : 8192,
 			fillAlpha      : 1,
-			frequencyScale : 'log',
-			gradient       : 'classic',
+			frequencyScale : SCALE_LOG,
+			gradient       : GRADIENT_CLASSIC,
 			ledBars        : false,
 			linearAmplitude: false,
 			linearBoost    : 1,
@@ -2097,7 +2108,7 @@ export default class AudioMotionAnalyzer {
 			stereo         : false,
 			useCanvas      : true,
 			volume         : 1,
-			weightingFilter: ''
+			weightingFilter: FILTER_NONE
 		};
 
 		// callback functions properties
