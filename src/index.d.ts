@@ -17,7 +17,7 @@ export interface Options {
   height?: number;
   ledBars?: boolean;
   linearAmplitude?: boolean;
-  linearBoost?: boolean;
+  linearBoost?: number;
   lineWidth?: number;
   loRes?: boolean;
   lumiBars?: boolean;
