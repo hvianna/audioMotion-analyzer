@@ -1,16 +1,9 @@
 Changelog
 =========
 
-## version 4.0.0-beta.1 (2022-12-11)
+## version 4.0.0-beta.2 (2022-12-19)
 
-### Added: <!-- {docsify-ignore} -->
-
-+ [`linearBoost`](README.md#linearboost-number) property - amplify low energy values when using [linear amplitude](README.md#linearamplitude-boolean);
-+ [`weightingFilter`](README.md#weightingfilter-string) property - select from five different weighting filters for improved spectrum visualization.
-
-## version 4.0.0-beta.0 (2022-05-08)
-
-### 🚨BREAKING CHANGES: <!-- {docsify-ignore} -->
+### 🚨 v4 BREAKING CHANGES: <!-- {docsify-ignore} -->
 
 + Removed deprecated properties:
   + ~`energy`~ - use [`getEnergy()`](README.md#getenergy-preset-startfreq-endfreq-) instead
@@ -23,14 +16,30 @@ The range of each bar has also changed from version 3.6.0, with frequencies that
 
 ### Added: <!-- {docsify-ignore} -->
 
-+ [`ansiBands`](README.md#ansibands-boolean) property, to use ANSI/IEC preferred frequencies for the octave bands - thanks [**@jonathan-annett** for suggesting this](https://github.com/hvianna/audioMotion.js/issues/28);
-+ [`linearAmplitude`](README.md#linearamplitude-boolean) property, to use linear values instead of dB for bar amplitudes - thanks [**@TF3RDL** for the idea](https://github.com/hvianna/audioMotion-analyzer/issues/30);
-+ [`noteLabels`](README.md#notelabels-boolean) property, to show musical note labels instead of frequency values on the X axis.
+in 4.0.0-beta.2:
+
++ [`frequencyScale`](README.md#frequencyscale-string) property - adds linear and perceptual (Bark/Mel) frequency scales (thanks [**@TF3RDL**](https://github.com/hvianna/audioMotion-analyzer/issues/30));
++ [`isBandsMode`](README.md#isbandsmode-boolean-read-only) read-only property.
+
+in 4.0.0-beta.1:
+
++ [`linearBoost`](README.md#linearboost-number) property - amplify low energy values when using [linear amplitude](README.md#linearamplitude-boolean);
++ [`weightingFilter`](README.md#weightingfilter-string) property - select from five different weighting filters for improved spectrum visualization.
+
+in 4.0.0-beta.0:
+
++ [`ansiBands`](README.md#ansibands-boolean) property - use ANSI/IEC preferred frequencies for the octave bands (thanks [**@jonathan-annett**](https://github.com/hvianna/audioMotion.js/issues/28));
++ [`linearAmplitude`](README.md#linearamplitude-boolean) property - use linear values instead of dB for spectrum amplitudes (thanks [**@TF3RDL**](https://github.com/hvianna/audioMotion-analyzer/issues/30));
++ [`noteLabels`](README.md#notelabels-boolean) property - display musical note labels instead of frequency values on the X axis.
+
+### Fixed: <!-- {docsify-ignore} -->
+
++ LED peaks showing below zero level when reflex effect is on;
 
 ### Changed and improved: <!-- {docsify-ignore} -->
 
 + Optimized generation of octave bands, with more accurate bands range and center frequencies;
-+ Frequency labels on the X axis now show slightly different values depending on whether the analyzer is set to use the equal-tempered scale
++ Frequency labels on the X axis now show different values depending on whether the analyzer is set to use the equal-tempered scale
 (default) or the ANSI standard bands (`ansiBands == true`), to properly match the octave bands center frequencies;
 + [`maxFreq`](README.md#maxfreq-number) is now capped to half the AudioContext's sample rate (Nyquist frequency);
 + Code optimizations, minor fixes and clean-up;
