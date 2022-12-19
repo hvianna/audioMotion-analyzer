@@ -4,7 +4,7 @@ type OnCanvasResizeFunction = (
   instance: AudioMotionAnalyzer
 ) => unknown;
 
-type CanvasResizeReason = "create" | "fschange" | "lores" | "resize" | "user";
+export type CanvasResizeReason = "create" | "fschange" | "lores" | "resize" | "user";
 
 export interface Options {
   alphaBars?: boolean;
@@ -54,7 +54,7 @@ export interface Options {
   width?: number;
 }
 
-interface AnalyzerBarData {
+export interface AnalyzerBarData {
   posX: number;
   freq: number;
   freqLo: number;
@@ -64,20 +64,20 @@ interface AnalyzerBarData {
   value: [ number, number? ];
 }
 
-interface ConstructorOptions extends Options {
+export interface ConstructorOptions extends Options {
   audioCtx?: AudioContext;
   connectSpeakers?: boolean;
   fsElement?: HTMLElement;
   source?: HTMLMediaElement | AudioNode;
 }
 
-type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "treble";
+export type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "treble";
 
-type FrequencyScale = "bark" | "linear" | "log" | "mel";
+export type FrequencyScale = "bark" | "linear" | "log" | "mel";
 
-type GradientColorStop = string | { pos: number; color: string };
+export type GradientColorStop = string | { pos: number; color: string };
 
-type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
+export type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
 
 type ArrayTwoOrMore<T> = {
   0: T
