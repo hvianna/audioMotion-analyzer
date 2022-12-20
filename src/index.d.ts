@@ -79,15 +79,10 @@ export type GradientColorStop = string | { pos: number; color: string };
 
 export type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
 
-type ArrayTwoOrMore<T> = {
-  0: T
-  1: T
-} & Array<T>;
-
 export interface GradientOptions {
   bgColor: string;
   dir?: "h";
-  colorStops: ArrayTwoOrMore<GradientColorStop>
+  colorStops: GradientColorStop[];
 }
 
 export interface LedParameters {

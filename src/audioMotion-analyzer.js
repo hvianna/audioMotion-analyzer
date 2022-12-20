@@ -57,7 +57,7 @@ const ERR_AUDIO_CONTEXT_FAIL     = [ 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create
 	  ERR_INVALID_AUDIO_SOURCE   = [ 'ERR_INVALID_AUDIO_SOURCE', 'Audio source must be an instance of HTMLMediaElement or AudioNode' ],
 	  ERR_GRADIENT_INVALID_NAME  = [ 'ERR_GRADIENT_INVALID_NAME', 'Gradient name must be a non-empty string' ],
 	  ERR_GRADIENT_NOT_AN_OBJECT = [ 'ERR_GRADIENT_NOT_AN_OBJECT', 'Gradient options must be an object' ],
-	  ERR_GRADIENT_MISSING_COLOR = [ 'ERR_GRADIENT_MISSING_COLOR', 'Gradient must define at least two colors' ];
+	  ERR_GRADIENT_MISSING_COLOR = [ 'ERR_GRADIENT_MISSING_COLOR', 'Gradient colorStops must be a non-empty array' ];
 
 class AudioMotionError extends Error {
 	constructor( error, value ) {
@@ -774,7 +774,7 @@ export default class AudioMotionAnalyzer {
 		if ( typeof options !== 'object' )
 			throw new AudioMotionError( ERR_GRADIENT_NOT_AN_OBJECT );
 
-		if ( options.colorStops === undefined || options.colorStops.length < 2 )
+		if ( ! Array.isArray( options.colorStops ) || ! options.colorStops.length )
 			throw new AudioMotionError( ERR_GRADIENT_MISSING_COLOR );
 
 		this._gradients[ name ] = {
@@ -1929,7 +1929,7 @@ export default class AudioMotionAnalyzer {
 			for ( let channel = 0; channel < 1 + dual; channel++ ) {
 				colorStops.forEach( ( colorInfo, index ) => {
 
-					const maxIndex = colorStops.length - 1;
+					const maxIndex = Math.max( 1, colorStops.length - 1 );
 
 					let offset = colorInfo.pos !== undefined ? colorInfo.pos : index / maxIndex;
 
