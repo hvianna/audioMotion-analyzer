@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## version 4.0.0-beta.2 (2022-12-19)
+## version 4.0.0-beta.3 (2022-12-19)
 
 ### 🚨 v4 BREAKING CHANGES: <!-- {docsify-ignore} -->
 
