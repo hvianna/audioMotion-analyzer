@@ -83,8 +83,10 @@ export default class AudioMotionAnalyzer {
 
 		this._ready = false;
 
-		// Initialize internal gradients object
-		this._gradients = {};
+		// Initialize internal gradient objects
+		this._gradients = {};       // registered gradients
+		this._gradientNames = [];   // names of the currently selected gradients for channels 0 and 1
+		this._canvasGradients = []; // actual CanvasGradient objects for channels 0 and 1
 
 		// Register built-in gradients
 		this.registerGradient( GRADIENT_CLASSIC, {
@@ -328,14 +330,24 @@ export default class AudioMotionAnalyzer {
 	}
 
 	get gradient() {
-		return this._gradient;
+		return this._gradientNames[0];
 	}
 	set gradient( value ) {
-		if ( ! this._gradients.hasOwnProperty( value ) )
-			throw new AudioMotionError( ERR_UNKNOWN_GRADIENT, value );
+		this._setGradient( value );
+	}
 
-		this._gradient = value;
-		this._makeGrad();
+	get gradientLeft() {
+		return this._gradientNames[0];
+	}
+	set gradientLeft( value ) {
+		this._setGradient( value, 0 );
+	}
+
+	get gradientRight() {
+		return this._gradientNames[1];
+	}
+	set gradientRight( value ) {
+		this._setGradient( value, 1 );
 	}
 
 	get height() {
@@ -783,8 +795,8 @@ export default class AudioMotionAnalyzer {
 			colorStops: options.colorStops
 		};
 
-		// if the registered gradient is the current one, regenerate it
-		if ( name == this._gradient )
+		// if the registered gradient is one of the currently selected gradients, regenerate them
+		if ( this._gradientNames.includes( name ) )
 			this._makeGrad();
 	}
 
@@ -1438,7 +1450,7 @@ export default class AudioMotionAnalyzer {
 		const ledPosY = height => Math.max( 0, ( height * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV );
 
 		// select background color
-		const bgColor = ( ! this.showBgColor || isLedDisplay && ! this.overlay ) ? '#000' : this._gradients[ this._gradient ].bgColor;
+		const bgColor = ( ! this.showBgColor || isLedDisplay && ! this.overlay ) ? '#000' : this._gradients[ this._gradientNames[0] ].bgColor;
 
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing from led definitions
@@ -1532,7 +1544,7 @@ export default class AudioMotionAnalyzer {
 					ctx.lineWidth = isOutline ? Math.min( lineWidth, width / 2 ) : lineWidth;
 
 				// set selected gradient for fill and stroke
-				ctx.fillStyle = ctx.strokeStyle = this._canvasGradient;
+				ctx.fillStyle = ctx.strokeStyle = this._canvasGradients[ channel ];
 			} // if ( useCanvas )
 
 			// get a new array of data from the FFT
@@ -1852,7 +1864,7 @@ export default class AudioMotionAnalyzer {
 		// call callback function, if defined
 		if ( this.onCanvasDraw ) {
 			ctx.save();
-			ctx.fillStyle = ctx.strokeStyle = this._canvasGradient;
+			ctx.fillStyle = ctx.strokeStyle = this._canvasGradients[0];
 			this.onCanvasDraw( this );
 			ctx.restore();
 		}
@@ -1909,70 +1921,72 @@ export default class AudioMotionAnalyzer {
 			  maxRadius = Math.min( centerX, centerY ),
 			  radius    = this._radius;
 
-		const currGradient = this._gradients[ this._gradient ],
-			  colorStops   = currGradient.colorStops,
-			  isHorizontal = currGradient.dir == 'h';
+		for ( let chn = 0; chn < 2; chn++ ) {
+			const currGradient = this._gradients[ this._gradientNames[ chn ] ],
+				  colorStops   = currGradient.colorStops,
+				  isHorizontal = currGradient.dir == 'h';
 
-		let grad;
+			let grad;
 
-		if ( this._radial )
-			grad = ctx.createRadialGradient( centerX, centerY, maxRadius, centerX, centerY, radius - ( maxRadius - radius ) * ( this._stereo != STEREO_OFF ) );
-		else
-			grad = ctx.createLinearGradient( ...( isHorizontal ? [ initialX, 0, initialX + this._analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
+			if ( this._radial )
+				grad = ctx.createRadialGradient( centerX, centerY, maxRadius, centerX, centerY, radius - ( maxRadius - radius ) * ( this._stereo != STEREO_OFF ) );
+			else
+				grad = ctx.createLinearGradient( ...( isHorizontal ? [ initialX, 0, initialX + this._analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
 
-		if ( colorStops ) {
-			const dual = this._stereo == STEREO_VERTICAL && ! this._splitGradient && ! isHorizontal;
+			if ( colorStops ) {
+				const dual = this._stereo == STEREO_VERTICAL && ! this._splitGradient && ! isHorizontal;
 
-			// helper function
-			const addColorStop = ( offset, colorInfo ) => grad.addColorStop( offset, colorInfo.color || colorInfo );
+				// helper function
+				const addColorStop = ( offset, colorInfo ) => grad.addColorStop( offset, colorInfo.color || colorInfo );
 
-			for ( let channel = 0; channel < 1 + dual; channel++ ) {
-				colorStops.forEach( ( colorInfo, index ) => {
+				for ( let channel = 0; channel < 1 + dual; channel++ ) {
+					colorStops.forEach( ( colorInfo, index ) => {
 
-					const maxIndex = Math.max( 1, colorStops.length - 1 );
+						const maxIndex = Math.max( 1, colorStops.length - 1 );
 
-					let offset = colorInfo.pos !== undefined ? colorInfo.pos : index / maxIndex;
+						let offset = colorInfo.pos !== undefined ? colorInfo.pos : index / maxIndex;
 
-					// in dual mode (not split), use half the original offset for each channel
-					if ( dual )
-						offset /= 2;
+						// in dual mode (not split), use half the original offset for each channel
+						if ( dual )
+							offset /= 2;
 
-					// constrain the offset within the useful analyzer areas (avoid reflex areas)
-					if ( this._stereo == STEREO_VERTICAL && ! isLumiBars && ! this._radial && ! isHorizontal ) {
-						offset *= analyzerRatio;
-						// skip the first reflex area in split mode
-						if ( ! dual && offset > .5 * analyzerRatio )
-							offset += .5 * this._reflexRatio;
-					}
-
-					// only for split mode
-					if ( channel == 1 ) {
-						// add colors in reverse order if radial or lumi are active
-						if ( this._radial || isLumiBars ) {
-							const revIndex = maxIndex - index;
-							colorInfo = colorStops[ revIndex ];
-							offset = 1 - ( colorInfo.pos !== undefined ? colorInfo.pos : revIndex / maxIndex ) / 2;
+						// constrain the offset within the useful analyzer areas (avoid reflex areas)
+						if ( this._stereo == STEREO_VERTICAL && ! isLumiBars && ! this._radial && ! isHorizontal ) {
+							offset *= analyzerRatio;
+							// skip the first reflex area in split mode
+							if ( ! dual && offset > .5 * analyzerRatio )
+								offset += .5 * this._reflexRatio;
 						}
-						else {
-							// if the first offset is not 0, create an additional color stop to prevent bleeding from the first channel
-							if ( index == 0 && offset > 0 )
-								addColorStop( .5, colorInfo );
-							// bump the offset to the second half of the gradient
-							offset += .5;
+
+						// only for split mode
+						if ( channel == 1 ) {
+							// add colors in reverse order if radial or lumi are active
+							if ( this._radial || isLumiBars ) {
+								const revIndex = maxIndex - index;
+								colorInfo = colorStops[ revIndex ];
+								offset = 1 - ( colorInfo.pos !== undefined ? colorInfo.pos : revIndex / maxIndex ) / 2;
+							}
+							else {
+								// if the first offset is not 0, create an additional color stop to prevent bleeding from the first channel
+								if ( index == 0 && offset > 0 )
+									addColorStop( .5, colorInfo );
+								// bump the offset to the second half of the gradient
+								offset += .5;
+							}
 						}
-					}
 
-					// add gradient color stop
-					addColorStop( offset, colorInfo );
+						// add gradient color stop
+						addColorStop( offset, colorInfo );
 
-					// create additional color stop at the end of first channel to prevent bleeding
-					if ( this._stereo == STEREO_VERTICAL && index == maxIndex && offset < .5 )
-						addColorStop( .5, colorInfo );
-				});
+						// create additional color stop at the end of first channel to prevent bleeding
+						if ( this._stereo == STEREO_VERTICAL && index == maxIndex && offset < .5 )
+							addColorStop( .5, colorInfo );
+					});
+				}
 			}
-		}
 
-		this._canvasGradient = grad;
+			this._canvasGradients[ chn ] = grad;
+		} // for (chn)
 	}
 
 	/**
@@ -2067,6 +2081,25 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Select a gradient for one or both stereo channels
+	 *
+	 * @param {string} name gradient name
+	 * @param [{number}] desired channel (0 or 1) - if empty or invalid, sets both channels
+	 */
+	_setGradient( name, channel ) {
+		if ( ! this._gradients.hasOwnProperty( name ) )
+			throw new AudioMotionError( ERR_UNKNOWN_GRADIENT, name );
+
+		if ( ! [0,1].includes( channel ) ) {
+			this._gradientNames[1] = name;
+			channel = 0;
+		}
+
+		this._gradientNames[ channel ] = name;
+		this._makeGrad();
+	}
+
+	/**
 	 * Set object properties
 	 */
 	_setProps( options, useDefaults ) {
@@ -2119,8 +2152,11 @@ export default class AudioMotionAnalyzer {
 		// callback functions properties
 		const callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
 
+		// properties undefined by default
+		const defaultUndefined = [ 'gradientLeft', 'gradientRight', 'height', 'width' ];
+
 		// build an array of valid properties; `start` is not an actual property and is handled after setting everything else
-		const validProps = Object.keys( defaults ).filter( e => e != 'start' ).concat( callbacks, ['height', 'width'] );
+		const validProps = Object.keys( defaults ).filter( e => e != 'start' ).concat( callbacks, defaultUndefined );
 
 		if ( useDefaults || options === undefined )
 			options = { ...defaults, ...options }; // merge options with defaults
