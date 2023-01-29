@@ -16,6 +16,9 @@ const TAU     = 2 * Math.PI,
 	  C_1     = 8.17579892;  // frequency for C -1
 
 const CANVAS_BACKGROUND_COLOR  = '#000',
+	  CHANNEL_COMBINED         = 'dualCombined',
+	  CHANNEL_SINGLE           = 'single',
+	  CHANNEL_VERTICAL         = 'dualVertical',
  	  GRADIENT_DEFAULT_BGCOLOR = '#111',
  	  FILTER_NONE              = '',
  	  FILTER_A                 = 'A',
@@ -42,10 +45,7 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  SCALE_BARK               = 'bark',
 	  SCALE_LINEAR             = 'linear',
 	  SCALE_LOG                = 'log',
-	  SCALE_MEL                = 'mel',
-	  STEREO_COMBINED          = 'combined',
-	  STEREO_OFF               = 'off',
-	  STEREO_VERTICAL          = 'vertical';
+	  SCALE_MEL                = 'mel';
 
 // custom error messages
 const ERR_AUDIO_CONTEXT_FAIL     = [ 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create audio context. Web Audio API not supported?' ],
@@ -67,6 +67,9 @@ class AudioMotionError extends Error {
 		this.code = code;
 	}
 }
+
+// helper function
+const deprecate = ( name, alternative ) => console.warn( `${name} is deprecated. Use ${alternative} instead.` );
 
 // AudioMotionAnalyzer class
 
@@ -152,13 +155,13 @@ export default class AudioMotionAnalyzer {
 			Connection routing:
 			===================
 
-			for STEREO:                              +--->  analyzer[0]  ---+
+			for dual channel modes:                  +--->  analyzer[0]  ---+
 		    	                                     |                      |
 			(source) --->  input  --->  splitter  ---+                      +--->  merger  --->  output  ---> (destination)
 		    	                                     |                      |
 		        	                                 +--->  analyzer[1]  ---+
 
-			for MONO:
+			for single channel mode:
 
 			(source) --->  input  ----------------------->  analyzer[0]  --------------------->  output  ---> (destination)
 
@@ -306,6 +309,27 @@ export default class AudioMotionAnalyzer {
 	set barSpace( value ) {
 		this._barSpace = +value || 0;
 		this._calcAux();
+	}
+
+	get channelLayout() {
+		return this._chLayout;
+	}
+	set channelLayout( value ) {
+		const MODES = [ CHANNEL_SINGLE, CHANNEL_VERTICAL, CHANNEL_COMBINED ];
+		this._chLayout = MODES[ Math.max( 0, MODES.findIndex( el => el.toLowerCase() == ( '' + value ).toLowerCase() ) ) ];
+
+		// update node connections
+		this._input.disconnect();
+		this._input.connect( this._chLayout != CHANNEL_SINGLE ? this._splitter : this._analyzer[0] );
+		this._analyzer[0].disconnect();
+		if ( this._outNodes.length ) // connect analyzer only if the output is connected to other nodes
+			this._analyzer[0].connect( this._chLayout != CHANNEL_SINGLE ? this._merger : this._output );
+
+		// update properties affected by channel layout
+		this._calcAux();
+		this._createScales();
+		this._calcLeds();
+		this._makeGrad();
 	}
 
 	get fftSize() {
@@ -531,24 +555,12 @@ export default class AudioMotionAnalyzer {
 	}
 
 	get stereo() {
-		return this._stereo;
+		deprecate( 'stereo', 'channelLayout' );
+		return this._chLayout != CHANNEL_SINGLE;
 	}
 	set stereo( value ) {
-		const STEREO_MODES = [ STEREO_OFF, STEREO_VERTICAL, STEREO_COMBINED ];
-		this._stereo = STEREO_MODES[ Math.max( 0, STEREO_MODES.indexOf( ( '' + value ).toLowerCase() ) ) ];
-
-		// update node connections
-		this._input.disconnect();
-		this._input.connect( this._stereo != STEREO_OFF ? this._splitter : this._analyzer[0] );
-		this._analyzer[0].disconnect();
-		if ( this._outNodes.length ) // connect analyzer only if the output is connected to other nodes
-			this._analyzer[0].connect( this._stereo != STEREO_OFF ? this._merger : this._output );
-
-		// update properties affected by stereo
-		this._calcAux();
-		this._createScales();
-		this._calcLeds();
-		this._makeGrad();
+		deprecate( 'stereo', 'channelLayout' );
+		this.channelLayout = value ? CHANNEL_VERTICAL : CHANNEL_SINGLE;
 	}
 
 	get volume() {
@@ -677,7 +689,7 @@ export default class AudioMotionAnalyzer {
 		// when connecting the first node, also connect the analyzer nodes to the merger / output nodes
 		if ( this._outNodes.length == 1 ) {
 			for ( const i of [0,1] )
-				this._analyzer[ i ].connect( ( this._stereo == STEREO_OFF && ! i ? this._output : this._merger ), 0, i );
+				this._analyzer[ i ].connect( ( this._chLayout == CHANNEL_SINGLE && ! i ? this._output : this._merger ), 0, i );
 		}
 	}
 
@@ -762,7 +774,7 @@ export default class AudioMotionAnalyzer {
 
 		const startBin = this._freqToBin( startFreq ),
 		      endBin   = endFreq ? this._freqToBin( endFreq ) : startBin,
-		      chnCount = this._stereo == STEREO_OFF ? 1 : 2;
+		      chnCount = this._chLayout == CHANNEL_SINGLE ? 1 : 2;
 
 		let energy = 0;
 		for ( let channel = 0; channel < chnCount; channel++ ) {
@@ -934,10 +946,10 @@ export default class AudioMotionAnalyzer {
 	_calcAux() {
 		const canvas   = this.canvas,
 			  isRadial = this._radial,
-			  isDual   = this._stereo == STEREO_VERTICAL && ! isRadial,
+			  isDual   = this._chLayout == CHANNEL_VERTICAL && ! isRadial,
 			  centerX  = canvas.width >> 1;
 
-		this._radius         = Math.min( canvas.width, canvas.height ) * ( this._stereo != STEREO_OFF ? .375 : .125 ) | 0;
+		this._radius         = Math.min( canvas.width, canvas.height ) * ( this._chLayout != CHANNEL_SINGLE ? .375 : .125 ) | 0;
 		this._barSpacePx     = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
 		this._isBandsMode    = this._mode % 10 != 0;
 		this._isOctaveBands  = this._isBandsMode && this._frequencyScale == SCALE_LOG;
@@ -945,7 +957,7 @@ export default class AudioMotionAnalyzer {
 		this._isLumiBars     = this._lumiBars && this._isBandsMode && ! isRadial;
 		this._isAlphaBars    = this._alphaBars && ! this._isLumiBars && this._mode != 10;
 		this._isOutline      = this._outlineBars && this._isBandsMode && ! this._isLumiBars && ! this._isLedDisplay;
-		this._maximizeLeds   = this._stereo != STEREO_VERTICAL || this._reflexRatio > 0 && ! this._isLumiBars;
+		this._maximizeLeds   = this._chLayout != CHANNEL_VERTICAL || this._reflexRatio > 0 && ! this._isLumiBars;
 
 		this._channelHeight  = canvas.height - ( isDual && ! this._isLedDisplay ? .5 : 0 ) >> isDual;
 		this._analyzerHeight = this._channelHeight * ( this._isLumiBars || isRadial ? 1 : 1 - this._reflexRatio ) | 0;
@@ -1237,7 +1249,7 @@ export default class AudioMotionAnalyzer {
 			  freqLabels    = [],
 			  frequencyScale= this._frequencyScale,
 			  initialX      = this._initialX,
-			  isStereo      = this._stereo != STEREO_OFF,
+			  isDual        = this._chLayout == CHANNEL_VERTICAL,
 			  isMirror      = this._mirror,
 			  isNoteLabels  = this._noteLabels,
 			  scale         = [ 'C',, 'D',, 'E', 'F',, 'G',, 'A',, 'B' ], // for note labels (no sharp notes)
@@ -1269,14 +1281,14 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// in radial stereo mode, the scale is positioned exactly between both channels, by making the canvas a bit larger than the inner diameter
-		canvasR.width = canvasR.height = ( this._radius << 1 ) + ( isStereo * scaleHeight );
+		canvasR.width = canvasR.height = ( this._radius << 1 ) + ( isDual * scaleHeight );
 
 		const radius  = canvasR.width >> 1, // this is also used as the center X and Y coordinates of the circular scale canvas
 			  radialY = radius - scaleHeight * .7;	// vertical position of text labels in the circular scale
 
 		// helper function
 		const radialLabel = ( x, label ) => {
-			if ( isNoteLabels && ! isStereo && ! ['C','E','G'].includes( label[0] ) )
+			if ( isNoteLabels && ! isDual && ! ['C','E','G'].includes( label[0] ) )
 				return;
 
 			const angle  = TAU * ( x / canvas.width ),
@@ -1354,7 +1366,7 @@ export default class AudioMotionAnalyzer {
 			  isBandsMode    = this._isBandsMode,
 			  isOutline      = this._isOutline,
 			  isRadial       = this._radial,
-			  stereoMode     = this._stereo,
+			  channelLayout  = this._chLayout,
 			  lineWidth      = +this.lineWidth, // make sure the damn thing is a number!
 			  mirrorMode     = this._mirror,
 			  channelHeight  = this._channelHeight,
@@ -1463,11 +1475,11 @@ export default class AudioMotionAnalyzer {
 		let currentEnergy = 0;
 
 		const nBars     = this._bars.length,
-			  nChannels = stereoMode == STEREO_OFF ? 1 : 2;
+			  nChannels = channelLayout == CHANNEL_SINGLE ? 1 : 2;
 
 		for ( let channel = 0; channel < nChannels; channel++ ) {
 
-			const channelTop     = stereoMode == STEREO_VERTICAL ? channelHeight * channel + channelGap * channel : 0,
+			const channelTop     = channelLayout == CHANNEL_VERTICAL ? channelHeight * channel + channelGap * channel : 0,
 				  channelBottom  = channelTop + channelHeight,
 				  analyzerBottom = channelTop + analyzerHeight - ( isLedDisplay && ! this._maximizeLeds ? ledSpaceV : 0 );
 
@@ -1485,7 +1497,7 @@ export default class AudioMotionAnalyzer {
 					ctx.fillStyle = bgColor;
 
 					// exclude the reflection area when overlay is true and reflexAlpha == 1 (avoids alpha over alpha difference, in case bgAlpha < 1)
-					if ( ! isRadial && stereoMode != STEREO_COMBINED || channel == 0 )
+					if ( ! isRadial && channelLayout != CHANNEL_COMBINED || channel == 0 )
 						ctx.fillRect( initialX, channelTop - channelGap, analyzerWidth, ( this.overlay && this.reflexAlpha == 1 ? analyzerHeight : channelHeight ) + channelGap );
 
 					ctx.globalAlpha = 1;
@@ -1778,8 +1790,8 @@ export default class AudioMotionAnalyzer {
 			// Reflex effect
 			if ( this._reflexRatio > 0 && ! isLumiBars ) {
 				let posY, height;
-				if ( this.reflexFit || stereoMode == STEREO_VERTICAL ) { // always fit reflex in vertical stereo mode
-					posY   = stereoMode == STEREO_VERTICAL && channel == 0 ? channelHeight + channelGap : 0;
+				if ( this.reflexFit || channelLayout == CHANNEL_VERTICAL ) { // always fit reflex in vertical stereo mode
+					posY   = channelLayout == CHANNEL_VERTICAL && channel == 0 ? channelHeight + channelGap : 0;
 					height = channelHeight - analyzerHeight;
 				}
 				else {
@@ -1910,7 +1922,7 @@ export default class AudioMotionAnalyzer {
 		const ctx            = this._canvasCtx,
 			  canvas         = ctx.canvas,
 			  isLumiBars     = this._isLumiBars,
-			  gradientHeight = isLumiBars ? canvas.height : canvas.height * ( 1 - this._reflexRatio * ( this._stereo != STEREO_VERTICAL ) ) | 0,
+			  gradientHeight = isLumiBars ? canvas.height : canvas.height * ( 1 - this._reflexRatio * ( this._chLayout != CHANNEL_VERTICAL ) ) | 0,
 			  				   // for vertical stereo we keep the full canvas height and handle the reflex areas while generating the color stops
 			  analyzerRatio  = 1 - this._reflexRatio,
 			  initialX       = this._initialX;
@@ -1929,12 +1941,12 @@ export default class AudioMotionAnalyzer {
 			let grad;
 
 			if ( this._radial )
-				grad = ctx.createRadialGradient( centerX, centerY, maxRadius, centerX, centerY, radius - ( maxRadius - radius ) * ( this._stereo != STEREO_OFF ) );
+				grad = ctx.createRadialGradient( centerX, centerY, maxRadius, centerX, centerY, radius - ( maxRadius - radius ) * ( this._chLayout != CHANNEL_SINGLE ) );
 			else
 				grad = ctx.createLinearGradient( ...( isHorizontal ? [ initialX, 0, initialX + this._analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
 
 			if ( colorStops ) {
-				const dual = this._stereo == STEREO_VERTICAL && ! this._splitGradient && ! isHorizontal;
+				const dual = this._chLayout == CHANNEL_VERTICAL && ! this._splitGradient && ! isHorizontal;
 
 				// helper function
 				const addColorStop = ( offset, colorInfo ) => grad.addColorStop( offset, colorInfo.color || colorInfo );
@@ -1951,7 +1963,7 @@ export default class AudioMotionAnalyzer {
 							offset /= 2;
 
 						// constrain the offset within the useful analyzer areas (avoid reflex areas)
-						if ( this._stereo == STEREO_VERTICAL && ! isLumiBars && ! this._radial && ! isHorizontal ) {
+						if ( this._chLayout == CHANNEL_VERTICAL && ! isLumiBars && ! this._radial && ! isHorizontal ) {
 							offset *= analyzerRatio;
 							// skip the first reflex area in split mode
 							if ( ! dual && offset > .5 * analyzerRatio )
@@ -1979,7 +1991,7 @@ export default class AudioMotionAnalyzer {
 						addColorStop( offset, colorInfo );
 
 						// create additional color stop at the end of first channel to prevent bleeding
-						if ( this._stereo == STEREO_VERTICAL && index == maxIndex && offset < .5 )
+						if ( this._chLayout == CHANNEL_VERTICAL && index == maxIndex && offset < .5 )
 							addColorStop( .5, colorInfo );
 					});
 				}
@@ -2081,7 +2093,7 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Select a gradient for one or both stereo channels
+	 * Select a gradient for one or both channels
 	 *
 	 * @param {string} name gradient name
 	 * @param [{number}] desired channel (0 or 1) - if empty or invalid, sets both channels
@@ -2110,6 +2122,7 @@ export default class AudioMotionAnalyzer {
 			ansiBands      : false,
 			barSpace       : 0.1,
 			bgAlpha        : 0.7,
+			channelLayout  : CHANNEL_SINGLE,
 			fftSize        : 8192,
 			fillAlpha      : 1,
 			frequencyScale : SCALE_LOG,
@@ -2143,7 +2156,6 @@ export default class AudioMotionAnalyzer {
 			spinSpeed      : 0,
 			splitGradient  : false,
 			start          : true,
-			stereo         : STEREO_OFF,
 			useCanvas      : true,
 			volume         : 1,
 			weightingFilter: FILTER_NONE
@@ -2153,7 +2165,7 @@ export default class AudioMotionAnalyzer {
 		const callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
 
 		// properties undefined by default
-		const defaultUndefined = [ 'gradientLeft', 'gradientRight', 'height', 'width' ];
+		const defaultUndefined = [ 'gradientLeft', 'gradientRight', 'height', 'width', 'stereo' ];
 
 		// build an array of valid properties; `start` is not an actual property and is handled after setting everything else
 		const validProps = Object.keys( defaults ).filter( e => e != 'start' ).concat( callbacks, defaultUndefined );
