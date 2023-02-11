@@ -1954,9 +1954,9 @@ export default class AudioMotionAnalyzer {
 				for ( let channel = 0; channel < 1 + dual; channel++ ) {
 					colorStops.forEach( ( colorInfo, index ) => {
 
-						const maxIndex = Math.max( 1, colorStops.length - 1 );
+						const maxIndex = colorStops.length - 1;
 
-						let offset = colorInfo.pos !== undefined ? colorInfo.pos : index / maxIndex;
+						let offset = colorInfo.pos !== undefined ? colorInfo.pos : index / Math.max( 1, maxIndex );
 
 						// in dual mode (not split), use half the original offset for each channel
 						if ( dual )
@@ -1976,7 +1976,7 @@ export default class AudioMotionAnalyzer {
 							if ( this._radial || isLumiBars ) {
 								const revIndex = maxIndex - index;
 								colorInfo = colorStops[ revIndex ];
-								offset = 1 - ( colorInfo.pos !== undefined ? colorInfo.pos : revIndex / maxIndex ) / 2;
+								offset = 1 - ( colorInfo.pos !== undefined ? colorInfo.pos : revIndex / Math.max( 1, maxIndex ) ) / 2;
 							}
 							else {
 								// if the first offset is not 0, create an additional color stop to prevent bleeding from the first channel
