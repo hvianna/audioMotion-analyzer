@@ -949,7 +949,7 @@ export default class AudioMotionAnalyzer {
 			  isDual   = this._chLayout == CHANNEL_VERTICAL && ! isRadial,
 			  centerX  = canvas.width >> 1;
 
-		this._radius         = Math.min( canvas.width, canvas.height ) * ( this._chLayout != CHANNEL_SINGLE ? .375 : .125 ) | 0;
+		this._radius         = Math.min( canvas.width, canvas.height ) * ( this._chLayout == CHANNEL_VERTICAL ? .375 : .125 ) | 0;
 		this._barSpacePx     = Math.min( this._barWidth - 1, ( this._barSpace > 0 && this._barSpace < 1 ) ? this._barWidth * this._barSpace : this._barSpace );
 		this._isBandsMode    = this._mode % 10 != 0;
 		this._isOctaveBands  = this._isBandsMode && this._frequencyScale == SCALE_LOG;
@@ -1628,7 +1628,7 @@ export default class AudioMotionAnalyzer {
 				barHeight = isLedDisplay ? ledPosY( barHeight ) : barHeight * maxBarHeight | 0;
 
 				// invert bar for radial channel 1
-				if ( isRadial && channel == 1 )
+				if ( isRadial && channel == 1 && channelLayout == CHANNEL_VERTICAL )
 					barHeight *= -1;
 
 				// bar width may need small adjustments for some bars, when barSpace == 0
@@ -1941,7 +1941,7 @@ export default class AudioMotionAnalyzer {
 			let grad;
 
 			if ( this._radial )
-				grad = ctx.createRadialGradient( centerX, centerY, maxRadius, centerX, centerY, radius - ( maxRadius - radius ) * ( this._chLayout != CHANNEL_SINGLE ) );
+				grad = ctx.createRadialGradient( centerX, centerY, maxRadius, centerX, centerY, radius - ( maxRadius - radius ) * ( this._chLayout == CHANNEL_VERTICAL ) );
 			else
 				grad = ctx.createLinearGradient( ...( isHorizontal ? [ initialX, 0, initialX + this._analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
 
