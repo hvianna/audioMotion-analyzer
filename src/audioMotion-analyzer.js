@@ -1922,6 +1922,7 @@ export default class AudioMotionAnalyzer {
 		const ctx            = this._canvasCtx,
 			  canvas         = ctx.canvas,
 			  isLumiBars     = this._isLumiBars,
+			  isRadial       = this._radial,
 			  gradientHeight = isLumiBars ? canvas.height : canvas.height * ( 1 - this._reflexRatio * ( this._chLayout != CHANNEL_VERTICAL ) ) | 0,
 			  				   // for vertical stereo we keep the full canvas height and handle the reflex areas while generating the color stops
 			  analyzerRatio  = 1 - this._reflexRatio,
@@ -1940,13 +1941,13 @@ export default class AudioMotionAnalyzer {
 
 			let grad;
 
-			if ( this._radial )
+			if ( isRadial )
 				grad = ctx.createRadialGradient( centerX, centerY, maxRadius, centerX, centerY, radius - ( maxRadius - radius ) * ( this._chLayout == CHANNEL_VERTICAL ) );
 			else
 				grad = ctx.createLinearGradient( ...( isHorizontal ? [ initialX, 0, initialX + this._analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
 
 			if ( colorStops ) {
-				const dual = this._chLayout == CHANNEL_VERTICAL && ! this._splitGradient && ! isHorizontal;
+				const dual = this._chLayout == CHANNEL_VERTICAL && ! this._splitGradient && ( ! isHorizontal || isRadial );
 
 				// helper function
 				const addColorStop = ( offset, colorInfo ) => grad.addColorStop( offset, colorInfo.color || colorInfo );
@@ -1963,17 +1964,17 @@ export default class AudioMotionAnalyzer {
 							offset /= 2;
 
 						// constrain the offset within the useful analyzer areas (avoid reflex areas)
-						if ( this._chLayout == CHANNEL_VERTICAL && ! isLumiBars && ! this._radial && ! isHorizontal ) {
+						if ( this._chLayout == CHANNEL_VERTICAL && ! isLumiBars && ! isRadial && ! isHorizontal ) {
 							offset *= analyzerRatio;
 							// skip the first reflex area in split mode
 							if ( ! dual && offset > .5 * analyzerRatio )
 								offset += .5 * this._reflexRatio;
 						}
 
-						// only for split mode
+						// only for non-split gradient
 						if ( channel == 1 ) {
 							// add colors in reverse order if radial or lumi are active
-							if ( this._radial || isLumiBars ) {
+							if ( isRadial || isLumiBars ) {
 								const revIndex = maxIndex - index;
 								colorInfo = colorStops[ revIndex ];
 								offset = 1 - ( colorInfo.pos !== undefined ? colorInfo.pos : revIndex / Math.max( 1, maxIndex ) ) / 2;
