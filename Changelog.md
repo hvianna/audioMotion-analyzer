@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## version 4.0.0-beta.3 (2022-12-19)
+## version 4.0.0-beta.4 (2023-02-12)
 
 ### 🚨 v4 BREAKING CHANGES: <!-- {docsify-ignore} -->
 
@@ -16,7 +16,13 @@ The range of each bar has also changed from version 3.6.0, with frequencies that
 
 ### Added: <!-- {docsify-ignore} -->
 
-in 4.0.0-beta.2:
+in 4.0.0-beta.4:
+
++ [`channelLayout`](README.md#channellayout-string) property - adds option for dual channel combined spectrum, with both channel graphs overlaid;
++ [`gradientLeft`](README.md#gradientleft-string) and [`gradientRight`](README.md#gradientright-string) properties - allow to select different gradients for each channel;
++ `stereo` property has been DEPRECATED - use `channelLayout` instead.
+
+in 4.0.0-beta.3:
 
 + [`frequencyScale`](README.md#frequencyscale-string) property - adds linear and perceptual (Bark/Mel) frequency scales (thanks [**@TF3RDL**](https://github.com/hvianna/audioMotion-analyzer/issues/30));
 + [`isBandsMode`](README.md#isbandsmode-boolean-read-only) read-only property.
@@ -34,10 +40,12 @@ in 4.0.0-beta.0:
 
 ### Fixed: <!-- {docsify-ignore} -->
 
-+ LED peaks showing below zero level when reflex effect is on;
++ LED peaks showing below zero level when `reflexRatio` > 0.
 
 ### Changed and improved: <!-- {docsify-ignore} -->
 
++ Custom gradients can now register a single color;
++ [`splitGradient`](README.md#splitgradient-boolean) now works for horizontal gradients in [`radial`](README.md#radial-boolean) visualization;
 + Optimized generation of octave bands, with more accurate bands range and center frequencies;
 + Frequency labels on the X axis now show different values depending on whether the analyzer is set to use the equal-tempered scale
 (default) or the ANSI standard bands (`ansiBands == true`), to properly match the octave bands center frequencies;
