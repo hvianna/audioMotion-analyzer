@@ -35,7 +35,7 @@ What users are saying:
 + Optional effects: LED bars, luminance bars, mirroring and reflection, radial spectrum
 + Comes with 3 predefined color gradients - easily add your own!
 + Fullscreen support, ready for retina / HiDPI displays
-+ Zero-dependency native ES6+ module (ESM), \~20kB minified
++ Zero-dependency native ES6+ module (ESM), \~25kB minified
 
 ## Online demos
 
@@ -815,7 +815,7 @@ When *true*, the gradient will be split between both channels, so each channel w
 |:--:|:--:|
 | ![split-on](img/splitGradient_on.png) | ![split-off](img/splitGradient_off.png) |
 
-This option has no effect on horizontal gradients, or when [`channelLayout`](#channellayout-string) is set to *'single'* or *'dualCombined'*.
+This option has no effect on horizontal gradients (except in [`radial`](#radial-boolean) visualization - see note in [`registerGradient()`](#registergradient-name-options-)), or when [`channelLayout`](#channellayout-string) is set to *'single'* or *'dualCombined'*.
 
 Defaults to **false**.
 
@@ -1083,6 +1083,8 @@ const options = {
 audioMotion.registerGradient( 'myGradient', options );
 ```
 
+?> During [`radial`](#radial-boolean) visualization all gradients are rendered in radial direction, so the horizontal flag (`dir: 'h'`) has no effect.
+
 Additional information about [gradient color-stops](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop).
 
 ### `setCanvasSize( width, height )`
@@ -1278,11 +1280,15 @@ document.getElementById('stop').addEventListener( 'click', () => myAudio.pause()
 See [Changelog.md](Changelog.md)
 
 
-## Get in touch!
+## Contributing
 
-If you create something cool with **audioMotion-analyzer**, or simply think it's useful, I would love to know! Please drop me an e-mail at hvianna@gmail.com
+If you want to send feedback, ask a question, or need help with something, please use the [**Discussions**](https://github.com/hvianna/audioMotion-analyzer/discussions) area on GitHub.
 
-For feature requests, suggestions or feedback, please see the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+I would love to see your cool projects using **audioMotion-analyzer** -- post them in the *Show and tell* section of [Discussions](https://github.com/hvianna/audioMotion-analyzer/discussions)!
+
+For **bug reports** and **feature requests**, feel free to [open an issue](https://github.com/hvianna/audioMotion-analyzer/issues).
+
+If you want to submit a **Pull Request**, please branch it off the project's `develop` branch.
 
 And if you're feeling generous, maybe:
 
@@ -1293,5 +1299,5 @@ And if you're feeling generous, maybe:
 
 ## License
 
-audioMotion-analyzer copyright (c) 2018-2022 [Henrique Avila Vianna](https://henriquevianna.com)<br>
+audioMotion-analyzer copyright (c) 2018-2023 [Henrique Avila Vianna](https://henriquevianna.com)<br>
 Licensed under the [GNU Affero General Public License, version 3 or later](https://www.gnu.org/licenses/agpl.html).
