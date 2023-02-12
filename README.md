@@ -119,12 +119,15 @@ options = {<br>
 &emsp;&emsp;[audioCtx](#audioctx-audiocontext-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[barSpace](#barspace-number): **0.1**,<br>
 &emsp;&emsp;[bgAlpha](#bgalpha-number): **0.7**,<br>
+&emsp;&emsp;[channelLayout](#channellayout-string): **'single'**,<br>
 &emsp;&emsp;[connectSpeakers](#connectspeakers-boolean): **true**, // constructor only<br>
 &emsp;&emsp;[fftSize](#fftsize-number): **8192**,<br>
 &emsp;&emsp;[fillAlpha](#fillalpha-number): **1**,<br>
 &emsp;&emsp;[frequencyScale](#frequencyscale-string): **'log'**,<br>
 &emsp;&emsp;[fsElement](#fselement-htmlelement-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[gradient](#gradient-string): **'classic'**,<br>
+&emsp;&emsp;[gradientLeft](#gradientleft-string): *undefined*,<br>
+&emsp;&emsp;[gradientRight](#gradientright-string): *undefined*,<br>
 &emsp;&emsp;[height](#height-number): *undefined*,<br>
 &emsp;&emsp;[ledBars](#ledbars-boolean): **false**,<br>
 &emsp;&emsp;[linearAmplitude](#linearamplitude-boolean): **false**,<br>
@@ -158,7 +161,7 @@ options = {<br>
 &emsp;&emsp;[spinSpeed](#spinspeed-number): **0**,<br>
 &emsp;&emsp;[splitGradient](#splitgradient-boolean): **false**,<br>
 &emsp;&emsp;[start](#start-boolean): **true**,<br>
-&emsp;&emsp;[stereo](#stereo-boolean): **false**,<br>
+&emsp;&emsp;[stereo](#stereo-deprecated-boolean): **false**, // DEPRECATED - use channelLayout instead<br>
 &emsp;&emsp;[useCanvas](#usecanvas-boolean): **true**,<br>
 &emsp;&emsp;[volume](#volume-number): **1**,<br>
 &emsp;&emsp;[weightingFilter](#weightingFilter-string): **''**<br>
@@ -315,6 +318,23 @@ Defaults to **0.7**.
 
 [2D rendering context](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D) used for drawing in audioMotion's *Canvas*.
 
+### `channelLayout` *string*
+
+*Available since v4.0.0*
+
+Defines the number and layout of analyzer channels.
+
+channelLayout  | description
+-------------- |------------
+'single'       | Single channel analyzer, representing the combined output of both left and right channels.
+'dualVertical' | Dual channel analyzer, with left channel shown at the top and right channel at the bottom.
+'dualCombined' | Left and right channel graphs are shown overlaid. Works best with semi-transparent **Graph** [`mode`](#mode-number) or [`outlineBars`](#outlinebars-boolean).
+
+!> When a *dual* layout is selected, any mono (single channel) audio source connected to the analyzer will output sound only from the left speaker,
+unless a stereo source is simultaneously connected to the analyzer, which will force the mono input to be upmixed to stereo.
+
+See also [`gradientLeft`](#gradientleft-string), [`gradientRight`](#gradientright-string) and [`splitGradient`](#splitgradient-boolean).
+
 ### `connectedSources` *array* *(Read only)*
 
 *Available since v3.0.0*
@@ -398,7 +418,20 @@ Name of the color gradient used for analyzer graphs.
 
 It must be a built-in or [registered](#registergradient-name-options-) gradient name. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*.
 
+See also [`gradientLeft`](#gradientleft-string) and [`gradientRight`](#gradientright-string).
+
 Defaults to **'classic'**.
+
+### `gradientLeft` *string*
+### `gradientRight` *string*
+
+*Available since v4.0.0*
+
+When using a dual [`channelLayout`](#channellayout-string), different gradients can be selected for the left and right channels.
+
+When [`channelLayout`](#channellayout-string) is set to *'single'*, the gradient selected by `gradientLeft` is used.
+
+The [`gradient`](#gradient-string) property can be used as a shorthand to set the same gradient for both channels. Its read value returns only the left (or single) channel gradient though.
 
 ### `height` *number*
 ### `width` *number*
@@ -655,7 +688,7 @@ When *true*, the spectrum analyzer is rendered in a circular shape, with radial 
 In radial visualization, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) effects are disabled, and
 [`showPeaks`](#showpeaks-boolean) has no effect for [**Graph** mode](#mode-number).
 
-When [`stereo`](#stereo-boolean) is *true*, a larger diameter is used and the right channel bars are rendered towards the center of the analyzer.
+When [`channelLayout`](#channellayout-string) is set to *'dualVertical'*, a larger diameter is used and the right channel bars are rendered towards the center of the analyzer.
 
 See also [`spinSpeed`](#spinspeed-number).
 
@@ -782,24 +815,13 @@ When *true*, the gradient will be split between both channels, so each channel w
 |:--:|:--:|
 | ![split-on](img/splitGradient_on.png) | ![split-off](img/splitGradient_off.png) |
 
-This option has no effect on horizontal gradients, or when [`stereo`](#stereo-boolean) is set to *false*.
+This option has no effect on horizontal gradients, or when [`channelLayout`](#channellayout-string) is set to *'single'* or *'dualCombined'*.
 
 Defaults to **false**.
 
-### `stereo` *boolean*
+### `stereo` **(DEPRECATED)** *boolean*
 
-*Available since v3.0.0*
-
-When *true*, the spectrum analyzer will display separate graphs for the left and right audio channels.
-
-Notes:
-- Stereo tracks will always output stereo audio, even if `stereo` is set to *false* (in such case the analyzer graph will represent both channels combined);
-- Mono (single channel) tracks will output audio only on the left channel when `stereo` is *true*, unless you have another stereo source simultaneously
-connected to the analyzer, which will force the mono source to be upmixed to stereo.
-
-See also [`splitGradient`](#splitgradient-boolean).
-
-Defaults to **false**.
+**This property will be removed in version 5** - Use [`channelLayout`](#channellayout-string) instead.
 
 ### `useCanvas` *boolean*
 
@@ -1010,7 +1032,7 @@ Returns an array with current data for each analyzer bar. Each array element is 
 
 `hold` values are integers and indicate the hold time (in frames) for the current peak. The maximum value is 30 and means the peak has just been set, while negative values mean the peak is currently falling down.
 
-Please note that `hold` and `value` will have only one element when [`stereo`](#stereo-boolean) is *false*, but `peak` is always a two-element array.
+Please note that `hold` and `value` will have only one element when [`channelLayout`](#channellayout-string) is set to *'single'*, but `peak` is always a two-element array.
 
 You can use this method to create your own visualizations using the analyzer data. See [this pen](https://codepen.io/hvianna/pen/ZEKWWJb) for usage example.
 
@@ -1043,30 +1065,22 @@ Use this method inside your callback function to create additional visual effect
 
 Registers a custom color gradient.
 
-`name` must be a non-empty *string* that will be used to select this gradient, via the [`gradient`](#gradient-string) property.
+`name` must be a non-empty string that will be used to select this gradient, via the [`gradient`](#gradient-string) property.
+
 `options` must be an object as shown below:
 
 ```js
 const options = {
     bgColor: '#011a35', // background color (optional) - defaults to '#111'
     dir: 'h',           // add this property to create a horizontal gradient (optional)
-    colorStops: [       // list your gradient colors in this array (at least 2 entries are required)
+    colorStops: [       // list your gradient colors in this array (at least one color is required)
         'red',                      // colors may be defined in any valid CSS format
         { pos: .6, color: '#ff0' }, // use an object to adjust the offset (0 to 1) of a colorStop
-        'hsl( 120, 100%, 50% )'     // colors may be defined in any valid CSS format
+        'hsl( 120, 100%, 50% )'
     ]
 }
 
 audioMotion.registerGradient( 'myGradient', options );
-```
-
-!> In TypeScript projects make sure to import the `GradientOptions` definition and use it as the type of your object, like so:
-
-```js
-import AudioMotionAnalyzer, { GradientOptions } from 'audiomotion-analyzer'
-
-const options: GradientOptions = {
-	⋮
 ```
 
 Additional information about [gradient color-stops](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop).

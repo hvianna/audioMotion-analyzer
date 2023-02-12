@@ -81,6 +81,26 @@ const presets = [
 		}
 	},
 	{
+		name: 'Combined stereo + custom gradients',
+		options: {
+			mode: 10,
+			channelLayout: 'dualCombined',
+			fillAlpha: .25,
+			frequencyScale: 'bark',
+			gradientLeft: 'SteelBlue',
+			gradientRight: 'OrangeRed',
+			linearAmplitude: true,
+			linearBoost: 1.8,
+			lineWidth: 1.5,
+			mirror: 0,
+			overlay: false,
+			radial: false,
+			reflexRatio: 0,
+			showPeaks: false,
+			weightingFilter: 'D'
+		}
+	},
+	{
 		name: 'Testing config 1',
 		options: {
 			mode: 10,
@@ -124,6 +144,10 @@ try {
 catch( err ) {
 	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: ${ err.code ? '<strong>' + err.code + '</strong>' : '' } <em>${ err.code ? err.message : err }</em></p>`;
 }
+
+// register custom gradients
+audioMotion.registerGradient( 'OrangeRed', { colorStops: [ 'OrangeRed' ] } );
+audioMotion.registerGradient( 'SteelBlue', { colorStops: [ 'SteelBlue' ] } );
 
 // Display package version at the footer
 document.getElementById('version').innerText = AudioMotionAnalyzer.version;

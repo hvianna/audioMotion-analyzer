@@ -100,6 +100,10 @@ catch( err ) {
 // Display package version at the footer
 document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
+// register custom gradients
+audioMotion.registerGradient( 'OrangeRed', { colorStops: [ 'OrangeRed' ] } );
+audioMotion.registerGradient( 'SteelBlue', { colorStops: [ 'SteelBlue' ] } );
+
 // Event listeners for UI controls
 
 document.querySelectorAll('button[data-prop]').forEach( el => {
