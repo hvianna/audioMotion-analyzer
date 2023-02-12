@@ -1640,7 +1640,7 @@ export default class AudioMotionAnalyzer {
 				if ( mode == 10 ) {
 					// compute the average between the initial bar (i==0) and the next one
 					// used to smooth the curve when the initial posX is off the screen, in mirror and radial modes
-					const nextBarAvg = i ? 0 : ( this._normalizedB( fftData[ this._bars[1].binLo ] ) * maxBarHeight * ( ! isRadial || ! channel || - 1 ) + barHeight ) / 2;
+					const nextBarAvg = i ? 0 : ( this._normalizedB( fftData[ this._bars[1].binLo ] ) * maxBarHeight * ( channel && isRadial && channelLayout == CHANNEL_VERTICAL ? -1 : 1 ) + barHeight ) / 2;
 
 					if ( isRadial ) {
 						if ( i == 0 )
@@ -1744,7 +1744,7 @@ export default class AudioMotionAnalyzer {
 					else if ( ! isRadial )
 						ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, adjWidth, 2 );
 					else if ( mode != 10 ) // radial - no peaks for mode 10
-						radialPoly( posX, peak * maxBarHeight * ( ! channel || -1 ), adjWidth, -2 );
+						radialPoly( posX, peak * maxBarHeight * ( channel && channelLayout == CHANNEL_VERTICAL ? -1 : 1 ), adjWidth, -2 );
 				}
 
 			} // for ( let i = 0; i < nBars; i++ )
