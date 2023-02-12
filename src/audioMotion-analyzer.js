@@ -1486,7 +1486,7 @@ export default class AudioMotionAnalyzer {
 			if ( useCanvas ) {
 				// clear the channel area, if in overlay mode
 				// this is done per channel to clear any residue below 0 off the top channel (especially in line graph mode with lineWidth > 1)
-				if ( this.overlay )
+				if ( this.overlay && ( ! isRadial || channel == 0 ) )
 					ctx.clearRect( 0, channelTop - channelGap, canvas.width, channelHeight + channelGap );
 
 				// fill the analyzer background if needed (not overlay or overlay + showBgColor)
