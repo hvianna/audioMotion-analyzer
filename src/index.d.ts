@@ -11,10 +11,13 @@ export interface Options {
   ansiBands?: boolean;
   barSpace?: number;
   bgAlpha?: number;
+  channelLayout?: ChannelLayout;
   fftSize?: number;
   fillAlpha?: number;
   frequencyScale?: FrequencyScale;
   gradient?: string;
+  gradientLeft?: string;
+  gradientRight?: string;
   height?: number;
   ledBars?: boolean;
   linearAmplitude?: boolean;
@@ -71,6 +74,8 @@ export interface ConstructorOptions extends Options {
   source?: HTMLMediaElement | AudioNode;
 }
 
+export type ChannelLayout = "single" | "dualVertical" | "dualCombined";
+
 export type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "treble";
 
 export type FrequencyScale = "bark" | "linear" | "log" | "mel";
@@ -109,6 +114,9 @@ declare class AudioMotionAnalyzer {
 
   public bgAlpha: number;
 
+  get channelLayout(): ChannelLayout;
+  set channelLayout(value: ChannelLayout);
+
   get connectedSources(): AudioNode[];
   get connectedTo(): AudioNode[];
 
@@ -127,6 +135,12 @@ declare class AudioMotionAnalyzer {
 
   get gradient(): string;
   set gradient(value: string);
+
+  get gradientLeft(): string;
+  set gradientLeft(value: string);
+
+  get gradientRight(): string;
+  set gradientRight(value: string);
 
   get height(): number;
   set height(h: number);
