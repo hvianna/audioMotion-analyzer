@@ -38,8 +38,8 @@ try {
 		});
 
 		// register custom gradients
-		audioMotion[ i ].registerGradient( 'OrangeRed', { colorStops: [ 'OrangeRed' ] } );
-		audioMotion[ i ].registerGradient( 'SteelBlue', { colorStops: [ 'SteelBlue' ] } );
+		audioMotion[ i ].registerGradient( 'OrangeRed', { bgColor: '#3e2f29', colorStops: [ 'OrangeRed' ] } );
+		audioMotion[ i ].registerGradient( 'SteelBlue', { bgColor: '#222c35', colorStops: [ 'SteelBlue' ] } );
 	}
 }
 catch( err ) {

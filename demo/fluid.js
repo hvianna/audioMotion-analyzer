@@ -146,8 +146,8 @@ catch( err ) {
 }
 
 // register custom gradients
-audioMotion.registerGradient( 'OrangeRed', { colorStops: [ 'OrangeRed' ] } );
-audioMotion.registerGradient( 'SteelBlue', { colorStops: [ 'SteelBlue' ] } );
+audioMotion.registerGradient( 'OrangeRed', { bgColor: '#3e2f29', colorStops: [ 'OrangeRed' ] } );
+audioMotion.registerGradient( 'SteelBlue', { bgColor: '#222c35', colorStops: [ 'SteelBlue' ] } );
 
 // Display package version at the footer
 document.getElementById('version').innerText = AudioMotionAnalyzer.version;

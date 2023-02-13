@@ -101,8 +101,8 @@ catch( err ) {
 document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 // register custom gradients
-audioMotion.registerGradient( 'OrangeRed', { colorStops: [ 'OrangeRed' ] } );
-audioMotion.registerGradient( 'SteelBlue', { colorStops: [ 'SteelBlue' ] } );
+audioMotion.registerGradient( 'OrangeRed', { bgColor: '#3e2f29', colorStops: [ 'OrangeRed' ] } );
+audioMotion.registerGradient( 'SteelBlue', { bgColor: '#222c35', colorStops: [ 'SteelBlue' ] } );
 
 // Event listeners for UI controls
 
