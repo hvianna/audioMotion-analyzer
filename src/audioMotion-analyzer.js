@@ -1461,9 +1461,6 @@ export default class AudioMotionAnalyzer {
 		const [ ledCount, ledSpaceH, ledSpaceV, ledHeight ] = this._leds || [];
 		const ledPosY = height => Math.max( 0, ( height * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV );
 
-		// select background color
-		const bgColor = ( ! this.showBgColor || isLedDisplay && ! this.overlay ) ? '#000' : this._gradients[ this._gradientNames[0] ].bgColor;
-
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing from led definitions
 		let width = this._barWidth - ( ! isBandsMode ? 0 : Math.max( isLedDisplay ? ledSpaceH : 0, this._barSpacePx ) );
@@ -1481,7 +1478,8 @@ export default class AudioMotionAnalyzer {
 
 			const channelTop     = channelLayout == CHANNEL_VERTICAL ? channelHeight * channel + channelGap * channel : 0,
 				  channelBottom  = channelTop + channelHeight,
-				  analyzerBottom = channelTop + analyzerHeight - ( isLedDisplay && ! this._maximizeLeds ? ledSpaceV : 0 );
+				  analyzerBottom = channelTop + analyzerHeight - ( isLedDisplay && ! this._maximizeLeds ? ledSpaceV : 0 ),
+				  bgColor = ( ! this.showBgColor || isLedDisplay && ! this.overlay ) ? '#000' : this._gradients[ this._gradientNames[ channel ] ].bgColor;
 
 			if ( useCanvas ) {
 				// clear the channel area, if in overlay mode
