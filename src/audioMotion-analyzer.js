@@ -1353,11 +1353,14 @@ export default class AudioMotionAnalyzer {
 	 * this is called 60 times per second by requestAnimationFrame()
 	 */
 	_draw( timestamp ) {
-		const ctx            = this._canvasCtx,
+		const barSpace       = this._barSpace,
+			  barSpacePx     = this._barSpacePx,
+			  ctx            = this._canvasCtx,
 			  canvas         = ctx.canvas,
 			  canvasX        = this._scaleX.canvas,
 			  canvasR        = this._scaleR.canvas,
 			  energy         = this._energy,
+			  fillAlpha      = this.fillAlpha,
 			  mode           = this._mode,
 			  isAlphaBars    = this._isAlphaBars,
 			  isLedDisplay   = this._isLedDisplay,
@@ -1365,6 +1368,7 @@ export default class AudioMotionAnalyzer {
 			  isLumiBars     = this._isLumiBars,
 			  isBandsMode    = this._isBandsMode,
 			  isOutline      = this._isOutline,
+			  isOverlay      = this.overlay,
 			  isRadial       = this._radial,
 			  channelLayout  = this._chLayout,
 			  lineWidth      = +this.lineWidth, // make sure the damn thing is a number!
@@ -1378,6 +1382,7 @@ export default class AudioMotionAnalyzer {
 			  centerX        = canvas.width >> 1,
 			  centerY        = canvas.height >> 1,
 			  radius         = this._radius,
+			  showBgColor    = this.showBgColor,
 			  maxBarHeight   = isRadial ? Math.min( centerX, centerY ) - radius : analyzerHeight,
 			  maxdB			 = this.maxDecibels,
 			  mindB			 = this.minDecibels,
@@ -1463,10 +1468,10 @@ export default class AudioMotionAnalyzer {
 
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing from led definitions
-		let width = this._barWidth - ( ! isBandsMode ? 0 : Math.max( isLedDisplay ? ledSpaceH : 0, this._barSpacePx ) );
+		let width = this._barWidth - ( ! isBandsMode ? 0 : Math.max( isLedDisplay ? ledSpaceH : 0, barSpacePx ) );
 
 		// make sure width is integer for pixel accurate calculation, when no bar spacing is required
-		if ( this._barSpace == 0 && ! isLedDisplay )
+		if ( barSpace == 0 && ! isLedDisplay )
 			width |= 0;
 
 		let currentEnergy = 0;
@@ -1479,25 +1484,25 @@ export default class AudioMotionAnalyzer {
 			const channelTop     = channelLayout == CHANNEL_VERTICAL ? channelHeight * channel + channelGap * channel : 0,
 				  channelBottom  = channelTop + channelHeight,
 				  analyzerBottom = channelTop + analyzerHeight - ( isLedDisplay && ! this._maximizeLeds ? ledSpaceV : 0 ),
-				  bgColor        = ( ! this.showBgColor || isLedDisplay && ! this.overlay ) ? '#000' : this._gradients[ this._gradientNames[ channel ] ].bgColor,
+				  bgColor        = ( ! showBgColor || isLedDisplay && ! isOverlay ) ? '#000' : this._gradients[ this._gradientNames[ channel ] ].bgColor,
 				  mustClear      = channel == 0 || ! isRadial && channelLayout != CHANNEL_COMBINED;
 
 			if ( useCanvas ) {
 				// clear the channel area, if in overlay mode
 				// this is done per channel to clear any residue below 0 off the top channel (especially in line graph mode with lineWidth > 1)
-				if ( this.overlay && mustClear )
+				if ( isOverlay && mustClear )
 					ctx.clearRect( 0, channelTop - channelGap, canvas.width, channelHeight + channelGap );
 
 				// fill the analyzer background if needed (not overlay or overlay + showBgColor)
-				if ( ! this.overlay || this.showBgColor ) {
-					if ( this.overlay )
+				if ( ! isOverlay || showBgColor ) {
+					if ( isOverlay )
 						ctx.globalAlpha = this.bgAlpha;
 
 					ctx.fillStyle = bgColor;
 
 					// exclude the reflection area when overlay is true and reflexAlpha == 1 (avoids alpha over alpha difference, in case bgAlpha < 1)
 					if ( mustClear )
-						ctx.fillRect( initialX, channelTop - channelGap, analyzerWidth, ( this.overlay && this.reflexAlpha == 1 ? analyzerHeight : channelHeight ) + channelGap );
+						ctx.fillRect( initialX, channelTop - channelGap, analyzerWidth, ( isOverlay && this.reflexAlpha == 1 ? analyzerHeight : channelHeight ) + channelGap );
 
 					ctx.globalAlpha = 1;
 				}
@@ -1621,7 +1626,7 @@ export default class AudioMotionAnalyzer {
 				if ( isLumiBars || isAlphaBars )
 					ctx.globalAlpha = barHeight;
 				else if ( isOutline )
-					ctx.globalAlpha = this.fillAlpha;
+					ctx.globalAlpha = fillAlpha;
 
 				// compute actual bar height on screen
 				barHeight = isLedDisplay ? ledPosY( barHeight ) : barHeight * maxBarHeight | 0;
@@ -1670,9 +1675,9 @@ export default class AudioMotionAnalyzer {
 				else {
 					if ( mode > 0 ) {
 						if ( isLedDisplay )
-							posX += Math.max( ledSpaceH / 2, this._barSpacePx / 2 );
+							posX += Math.max( ledSpaceH / 2, barSpacePx / 2 );
 						else {
-							if ( this._barSpace == 0 ) {
+							if ( barSpace == 0 ) {
 								posX |= 0;
 								if ( i > 0 && posX > this._bars[ i - 1 ].posX + width ) {
 									posX--;
@@ -1680,14 +1685,14 @@ export default class AudioMotionAnalyzer {
 								}
 							}
 							else
-								posX += this._barSpacePx / 2;
+								posX += barSpacePx / 2;
 						}
 					}
 
 					if ( isLedDisplay ) {
 						const x = posX + width / 2;
 						// draw "unlit" leds
-						if ( this.showBgColor && ! this.overlay ) {
+						if ( showBgColor && ! isOverlay ) {
 							const alpha = ctx.globalAlpha;
 							ctx.beginPath();
 							ctx.moveTo( x, channelTop );
@@ -1769,7 +1774,7 @@ export default class AudioMotionAnalyzer {
 				if ( lineWidth > 0 )
 					ctx.stroke();
 
-				if ( this.fillAlpha > 0 ) {
+				if ( fillAlpha > 0 ) {
 					if ( isRadial ) {
 						// exclude the center circle from the fill area
 						ctx.moveTo( centerX + radius, centerY );
@@ -1780,7 +1785,7 @@ export default class AudioMotionAnalyzer {
 						ctx.lineTo( initialX, analyzerBottom );
 					}
 
-					ctx.globalAlpha = this.fillAlpha;
+					ctx.globalAlpha = fillAlpha;
 					ctx.fill();
 					ctx.globalAlpha = 1;
 				}
