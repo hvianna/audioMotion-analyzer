@@ -1479,12 +1479,13 @@ export default class AudioMotionAnalyzer {
 			const channelTop     = channelLayout == CHANNEL_VERTICAL ? channelHeight * channel + channelGap * channel : 0,
 				  channelBottom  = channelTop + channelHeight,
 				  analyzerBottom = channelTop + analyzerHeight - ( isLedDisplay && ! this._maximizeLeds ? ledSpaceV : 0 ),
-				  bgColor = ( ! this.showBgColor || isLedDisplay && ! this.overlay ) ? '#000' : this._gradients[ this._gradientNames[ channel ] ].bgColor;
+				  bgColor        = ( ! this.showBgColor || isLedDisplay && ! this.overlay ) ? '#000' : this._gradients[ this._gradientNames[ channel ] ].bgColor,
+				  mustClear      = channel == 0 || ! isRadial && channelLayout != CHANNEL_COMBINED;
 
 			if ( useCanvas ) {
 				// clear the channel area, if in overlay mode
 				// this is done per channel to clear any residue below 0 off the top channel (especially in line graph mode with lineWidth > 1)
-				if ( this.overlay && ( ! isRadial || channel == 0 ) )
+				if ( this.overlay && mustClear )
 					ctx.clearRect( 0, channelTop - channelGap, canvas.width, channelHeight + channelGap );
 
 				// fill the analyzer background if needed (not overlay or overlay + showBgColor)
@@ -1495,7 +1496,7 @@ export default class AudioMotionAnalyzer {
 					ctx.fillStyle = bgColor;
 
 					// exclude the reflection area when overlay is true and reflexAlpha == 1 (avoids alpha over alpha difference, in case bgAlpha < 1)
-					if ( ! isRadial && channelLayout != CHANNEL_COMBINED || channel == 0 )
+					if ( mustClear )
 						ctx.fillRect( initialX, channelTop - channelGap, analyzerWidth, ( this.overlay && this.reflexAlpha == 1 ? analyzerHeight : channelHeight ) + channelGap );
 
 					ctx.globalAlpha = 1;
