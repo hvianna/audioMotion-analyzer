@@ -114,8 +114,9 @@ function buildGraph() {
 			ctx.strokeStyle = colors[ i ] + 'cc';
 			for ( let p = 1; p < 5; p += .05 ) {
 				const freq   = 10 ** p,
-					  method = p == 1 ? 'moveTo' : 'lineTo';
-				ctx[ method ]( graphX( freq ), graphY( weightingdB( freq, filter ) ) );
+					  gain   = weightingdB( freq, filter ),
+					  method = p == 1 || gain < -50 ? 'moveTo' : 'lineTo';
+				ctx[ method ]( graphX( freq ), graphY( gain ) );
 			}
 			ctx.stroke();
 		}
