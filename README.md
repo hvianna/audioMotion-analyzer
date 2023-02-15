@@ -161,7 +161,6 @@ options = {<br>
 &emsp;&emsp;[spinSpeed](#spinspeed-number): **0**,<br>
 &emsp;&emsp;[splitGradient](#splitgradient-boolean): **false**,<br>
 &emsp;&emsp;[start](#start-boolean): **true**,<br>
-&emsp;&emsp;[stereo](#stereo-deprecated-boolean): **false**, // DEPRECATED - use channelLayout instead<br>
 &emsp;&emsp;[useCanvas](#usecanvas-boolean): **true**,<br>
 &emsp;&emsp;[volume](#volume-number): **1**,<br>
 &emsp;&emsp;[weightingFilter](#weightingFilter-string): **''**<br>
@@ -236,7 +235,7 @@ Defaults to **true**, so the analyzer will start running right after initializat
 
 When set to *true* each bar's amplitude affects its opacity, i.e., higher bars are rendered more opaque while shorter bars are more transparent.
 
-This is similar to the [`lumiBars`](#lumibars-boolean) effect, but bars' amplitudes are preserved and it also works on **Discrete** [mode](#mode-number) and [radial](#radial-boolean) visualization.
+This is similar to the [`lumiBars`](#lumibars-boolean) effect, but bars' amplitudes are preserved and it also works on **Discrete** [mode](#mode-number) and [radial](#radial-boolean) spectrum.
 
 For effect priority when combined with other settings, see [`isAlphaBars`](#isalphabars-boolean-read-only).
 
@@ -416,9 +415,19 @@ Canvas dimensions used during fullscreen mode. These take the current pixel rati
 
 Name of the color gradient used for analyzer graphs.
 
-It must be a built-in or [registered](#registergradient-name-options-) gradient name. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*.
+It must be a built-in or registered gradient name (see [`registerGradient()`](#registergradient-name-options-)).
 
-See also [`gradientLeft`](#gradientleft-string) and [`gradientRight`](#gradientright-string).
+Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*:
+
+'classic' | 'prism' | 'rainbow'
+----------|---------|----------
+![classic](img/gradient-classic.png) | ![prism](img/gradient-prism.png) | ![rainbow](img/gradient-rainbow.png)
+
+`gradient` sets the gradient for both analyzer channels, but its read value represents only the gradient on the left (or single) channel.
+
+When using a dual [`channelLayout`](#channellayout-string), use [`gradientLeft`](#gradientleft-string) and [`gradientRight`](#gradientright-string) if you want to individually set/read the gradient for each channel.
+
+See also [`splitGradient`](#splitgradient-boolean).
 
 Defaults to **'classic'**.
 
@@ -427,11 +436,13 @@ Defaults to **'classic'**.
 
 *Available since v4.0.0*
 
-When using a dual [`channelLayout`](#channellayout-string), different gradients can be selected for the left and right channels.
+Select gradients for the left and right analyzer channels independently, for use with a dual [`channelLayout`](#channellayout-string).
 
-When [`channelLayout`](#channellayout-string) is set to *'single'*, the gradient selected by `gradientLeft` is used.
+**_Single_** channel layout will use the gradient selected by `gradientLeft`.
 
-The [`gradient`](#gradient-string) property can be used as a shorthand to set the same gradient for both channels. Its read value returns only the left (or single) channel gradient though.
+For **_dualCombined_** channel layout or [`radial`](#radial-boolean) spectrum, only the background color defined by `gradientLeft` will be applied when [`showBgColor`](#showbgcolor-boolean) is *true*.
+
+See also [`gradient`](#gradient-string) and [`splitGradient`](#splitgradient-boolean).
 
 ### `height` *number*
 ### `width` *number*
@@ -567,7 +578,7 @@ This is only effective for [bands modes](#mode-number).
 
 When set to *true* all analyzer bars will be displayed at full height with varying luminance (opacity, actually) instead.
 
-`lumiBars` takes precedence over [`alphaBars`](#alphabars-boolean) and [`outlineBars`](#outlinebars-boolean), except in [`radial`](#radial-boolean) visualization.
+`lumiBars` takes precedence over [`alphaBars`](#alphabars-boolean) and [`outlineBars`](#outlinebars-boolean), except on [`radial`](#radial-boolean) spectrum.
 
 For effect priority when combined with other settings, see [`isLumiBars`](#islumibars-boolean-read-only).
 
@@ -685,7 +696,7 @@ You can refer to this value to adjust any additional drawings done in the canvas
 
 When *true*, the spectrum analyzer is rendered in a circular shape, with radial frequency bars spreading from its center.
 
-In radial visualization, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) effects are disabled, and
+On radial spectrum, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) effects are disabled, and
 [`showPeaks`](#showpeaks-boolean) has no effect for [**Graph** mode](#mode-number).
 
 When [`channelLayout`](#channellayout-string) is set to *'dualVertical'*, a larger diameter is used and the right channel bars are rendered towards the center of the analyzer.
@@ -749,6 +760,8 @@ Opacity can be adjusted via [`bgAlpha`](#bgalpha-number) property, when [`overla
 If ***false***, the canvas background will be painted black when [`overlay`](#overlay-boolean) is ***false***,
 or transparent when [`overlay`](#overlay-boolean) is ***true***.
 
+See also [`registerGradient()`](#registergradient-name-options-).
+
 Defaults to **true**.
 
 ?> Please note that when [`overlay`](#overlay-boolean) is ***false*** and [`ledBars`](#ledbars-boolean) is ***true***, the background color will always be black,
@@ -809,13 +822,15 @@ Defaults to **0**.
 
 *Available since v3.0.0*
 
-When *true*, the gradient will be split between both channels, so each channel will have different colors. If *false*, both channels will use the full gradient.
+When set to *true* and [`channelLayout`](#channellayout-string) is **_dualVertical_**, the gradient will be split between channels.
 
-| splitGradient: *true* | splitGradient: *false* |
+When *false*, both channels will use the full gradient.
+
+| gradient: *'classic'* - splitGradient: *false* | gradient: *'classic'* - splitGradient: *true* |
 |:--:|:--:|
-| ![split-on](img/splitGradient_on.png) | ![split-off](img/splitGradient_off.png) |
+| ![split-off](img/splitGradient_off.png) | ![split-on](img/splitGradient_on.png) |
 
-This option has no effect on horizontal gradients (except in [`radial`](#radial-boolean) visualization - see note in [`registerGradient()`](#registergradient-name-options-)), or when [`channelLayout`](#channellayout-string) is set to *'single'* or *'dualCombined'*.
+This option has no effect on horizontal gradients, except on [`radial`](#radial-boolean) spectrum - see note in [`registerGradient()`](#registergradient-name-options-).
 
 Defaults to **false**.
 
@@ -1083,9 +1098,11 @@ const options = {
 audioMotion.registerGradient( 'myGradient', options );
 ```
 
-?> During [`radial`](#radial-boolean) visualization all gradients are rendered in radial direction, so the horizontal flag (`dir: 'h'`) has no effect.
+Check the [built-in **_'rainbow'_** gradient](#gradient-string) for an example of horizontal gradient.
 
-Additional information about [gradient color-stops](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop).
+**Note:** the horizontal flag (`dir: 'h'`) has no effect on [`radial`](#radial-boolean) spectrum, because in that mode all gradients are rendered in radial direction.
+
+?> Any gradient, including the built-in ones, may be modified by (re-)registering the same gradient name (names are case sensitive).
 
 ### `setCanvasSize( width, height )`
 
@@ -1190,7 +1207,7 @@ which is [currently not supported in some browsers](https://caniuse.com/#feat=md
 
 ### alphaBars and fillAlpha won't work with Radial on Firefox <!-- {docsify-ignore} -->
 
-On Firefox, [`alphaBars`](#alphaBars-boolean) and [`fillAlpha`](#fillalpha-number) won't work with [`radial`](#radial-boolean) visualization when using hardware acceleration, due to [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912).
+On Firefox, [`alphaBars`](#alphaBars-boolean) and [`fillAlpha`](#fillalpha-number) won't work with [`radial`](#radial-boolean) spectrum when using hardware acceleration, due to [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912).
 
 ### Visualization of live streams won't work on Safari {docsify-ignore}
 
