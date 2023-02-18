@@ -81,14 +81,14 @@ const presets = [
 		}
 	},
 	{
-		name: 'Combined stereo + custom gradients',
+		name: 'Dual channel combined',
 		options: {
 			mode: 10,
 			channelLayout: 'dualCombined',
 			fillAlpha: .25,
 			frequencyScale: 'bark',
-			gradientLeft: 'SteelBlue',
-			gradientRight: 'OrangeRed',
+			gradientLeft: 'steelblue',
+			gradientRight: 'orangered',
 			linearAmplitude: true,
 			linearBoost: 1.8,
 			lineWidth: 1.5,
@@ -144,10 +144,6 @@ try {
 catch( err ) {
 	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: ${ err.code ? '<strong>' + err.code + '</strong>' : '' } <em>${ err.code ? err.message : err }</em></p>`;
 }
-
-// register custom gradients
-audioMotion.registerGradient( 'OrangeRed', { bgColor: '#3e2f29', colorStops: [ 'OrangeRed' ] } );
-audioMotion.registerGradient( 'SteelBlue', { bgColor: '#222c35', colorStops: [ 'SteelBlue' ] } );
 
 // Display package version at the footer
 document.getElementById('version').innerText = AudioMotionAnalyzer.version;

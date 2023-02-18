@@ -36,10 +36,6 @@ try {
 					updateUI();
 			}
 		});
-
-		// register custom gradients
-		audioMotion[ i ].registerGradient( 'OrangeRed', { bgColor: '#3e2f29', colorStops: [ 'OrangeRed' ] } );
-		audioMotion[ i ].registerGradient( 'SteelBlue', { bgColor: '#222c35', colorStops: [ 'SteelBlue' ] } );
 	}
 }
 catch( err ) {
@@ -70,8 +66,8 @@ audioMotion[1].setOptions({
 	mode: 10,
 	channelLayout: 'dualCombined',
 	fillAlpha: .3,
-	gradientLeft: 'SteelBlue',
-	gradientRight: 'OrangeRed',
+	gradientLeft: 'steelblue',
+	gradientRight: 'orangered',
 	linearAmplitude: true,
 	linearBoost: 1.2,
 	lineWidth: 1.5,

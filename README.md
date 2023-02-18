@@ -417,15 +417,19 @@ Name of the color gradient used for analyzer graphs.
 
 It must be a built-in or registered gradient name (see [`registerGradient()`](#registergradient-name-options-)).
 
-Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*:
-
-'classic' | 'prism' | 'rainbow'
-----------|---------|----------
-![classic](img/gradient-classic.png) | ![prism](img/gradient-prism.png) | ![rainbow](img/gradient-rainbow.png)
-
 `gradient` sets the gradient for both analyzer channels, but its read value represents only the gradient on the left (or single) channel.
 
 When using a dual [`channelLayout`](#channellayout-string), use [`gradientLeft`](#gradientleft-string) and [`gradientRight`](#gradientright-string) if you want to individually set/read the gradient for each channel.
+
+Built-in gradients are shown below:
+
+gradient    | preview
+------------|---------
+'classic'   | ![classic](img/gradient-classic.png)
+'orangered' | ![orangered](img/gradient-orangered.png)
+'prism'     | ![prism](img/gradient-prism.png)
+'rainbow'   | ![rainbow](img/gradient-rainbow.png)
+'steelblue' | ![steelblue](img/gradient-steelblue.png)
 
 See also [`splitGradient`](#splitgradient-boolean).
 

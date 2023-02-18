@@ -28,9 +28,6 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
  	  FILTER_468               = '468',
 	  FONT_FAMILY              = 'sans-serif',
 	  FPS_COLOR                = '#0f0',
-	  GRADIENT_CLASSIC         = 'classic',
-	  GRADIENT_PRISM           = 'prism',
-	  GRADIENT_RAINBOW         = 'rainbow',
 	  LEDS_UNLIT_COLOR         = '#7f7f7f22',
 	  REASON_CREATE            = 'create',
 	  REASON_FSCHANGE          = 'fschange',
@@ -46,6 +43,46 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  SCALE_LINEAR             = 'linear',
 	  SCALE_LOG                = 'log',
 	  SCALE_MEL                = 'mel';
+
+// built-in gradients
+const GRADIENTS = [
+	  [ 'classic', {
+			colorStops: [
+				'hsl( 0, 100%, 50% )',
+				{ pos: .6, color: 'hsl( 60, 100%, 50% )' },
+				'hsl( 120, 100%, 50% )'
+			]
+	  }],
+	  [ 'prism', {
+			colorStops: [
+				'hsl( 0, 100%, 50% )',
+				'hsl( 60, 100%, 50% )',
+				'hsl( 120, 100%, 50% )',
+				'hsl( 180, 100%, 50% )',
+				'hsl( 240, 100%, 50% )'
+			]
+	  }],
+	  [ 'rainbow', {
+			dir: 'h',
+			colorStops: [
+				'hsl( 0, 100%, 50% )',
+				'hsl( 60, 100%, 50% )',
+				'hsl( 120, 100%, 50% )',
+				'hsl( 180, 100%, 47% )',
+				'hsl( 240, 100%, 58% )',
+				'hsl( 300, 100%, 50% )',
+				'hsl( 360, 100%, 50% )'
+			]
+	  }],
+	  [ 'orangered', {
+	  		bgColor: '#3e2f29',
+	  		colorStops: [ 'OrangeRed' ]
+	  }],
+	  [ 'steelblue', {
+	  		bgColor: '#222c35',
+	  		colorStops: [ 'SteelBlue' ]
+	  }]
+];
 
 // custom error messages
 const ERR_AUDIO_CONTEXT_FAIL     = [ 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create audio context. Web Audio API not supported?' ],
@@ -92,34 +129,8 @@ export default class AudioMotionAnalyzer {
 		this._canvasGradients = []; // actual CanvasGradient objects for channels 0 and 1
 
 		// Register built-in gradients
-		this.registerGradient( GRADIENT_CLASSIC, {
-			colorStops: [
-				'hsl( 0, 100%, 50% )',
-				{ pos: .6, color: 'hsl( 60, 100%, 50% )' },
-				'hsl( 120, 100%, 50% )'
-			]
-		});
-		this.registerGradient( GRADIENT_PRISM, {
-			colorStops: [
-				'hsl( 0, 100%, 50% )',
-				'hsl( 60, 100%, 50% )',
-				'hsl( 120, 100%, 50% )',
-				'hsl( 180, 100%, 50% )',
-				'hsl( 240, 100%, 50% )'
-			]
-		});
-		this.registerGradient( GRADIENT_RAINBOW, {
-			dir: 'h',
-			colorStops: [
-				'hsl( 0, 100%, 50% )',
-				'hsl( 60, 100%, 50% )',
-				'hsl( 120, 100%, 50% )',
-				'hsl( 180, 100%, 47% )',
-				'hsl( 240, 100%, 58% )',
-				'hsl( 300, 100%, 50% )',
-				'hsl( 360, 100%, 50% )'
-			]
-		});
+		for ( const [ name, options ] of GRADIENTS )
+			this.registerGradient( name, options );
 
 		// Set container
 		this._container = container || document.body;
@@ -2131,7 +2142,7 @@ export default class AudioMotionAnalyzer {
 			fftSize        : 8192,
 			fillAlpha      : 1,
 			frequencyScale : SCALE_LOG,
-			gradient       : GRADIENT_CLASSIC,
+			gradient       : GRADIENTS[0][0],
 			ledBars        : false,
 			linearAmplitude: false,
 			linearBoost    : 1,
