@@ -74,7 +74,7 @@ export interface ConstructorOptions extends Options {
   source?: HTMLMediaElement | AudioNode;
 }
 
-export type ChannelLayout = "single" | "dualVertical" | "dualCombined";
+export type ChannelLayout = "single" | "dual-vertical" | "dual-combined";
 
 export type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "treble";
 

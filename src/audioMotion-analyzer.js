@@ -16,9 +16,9 @@ const TAU     = 2 * Math.PI,
 	  C_1     = 8.17579892;  // frequency for C -1
 
 const CANVAS_BACKGROUND_COLOR  = '#000',
-	  CHANNEL_COMBINED         = 'dualCombined',
+	  CHANNEL_COMBINED         = 'dual-combined',
 	  CHANNEL_SINGLE           = 'single',
-	  CHANNEL_VERTICAL         = 'dualVertical',
+	  CHANNEL_VERTICAL         = 'dual-vertical',
  	  GRADIENT_DEFAULT_BGCOLOR = '#111',
  	  FILTER_NONE              = '',
  	  FILTER_A                 = 'A',
@@ -326,8 +326,8 @@ export default class AudioMotionAnalyzer {
 		return this._chLayout;
 	}
 	set channelLayout( value ) {
-		const MODES = [ CHANNEL_SINGLE, CHANNEL_VERTICAL, CHANNEL_COMBINED ];
-		this._chLayout = MODES[ Math.max( 0, MODES.findIndex( el => el.toLowerCase() == ( '' + value ).toLowerCase() ) ) ];
+		const LAYOUTS = [ CHANNEL_SINGLE, CHANNEL_VERTICAL, CHANNEL_COMBINED ];
+		this._chLayout = LAYOUTS[ Math.max( 0, LAYOUTS.indexOf( ( '' + value ).toLowerCase() ) ) ];
 
 		// update node connections
 		this._input.disconnect();
@@ -1986,7 +1986,7 @@ export default class AudioMotionAnalyzer {
 								offset += .5 * this._reflexRatio;
 						}
 
-						// only for dualVertical non-split gradient (creates full gradient on both halves of the canvas)
+						// only for dual-vertical non-split gradient (creates full gradient on both halves of the canvas)
 						if ( channelArea == 1 ) {
 							// add colors in reverse order if radial or lumi are active
 							if ( isRadial || isLumiBars ) {

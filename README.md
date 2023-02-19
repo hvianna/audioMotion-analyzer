@@ -323,11 +323,11 @@ Defaults to **0.7**.
 
 Defines the number and layout of analyzer channels.
 
-channelLayout  | description
--------------- |------------
-'single'       | Single channel analyzer, representing the combined output of both left and right channels.
-'dualVertical' | Dual channel analyzer, with left channel shown at the top and right channel at the bottom.
-'dualCombined' | Left and right channel graphs are shown overlaid. Works best with semi-transparent **Graph** [`mode`](#mode-number) or [`outlineBars`](#outlinebars-boolean).
+channelLayout   | description
+----------------|------------
+'single'        | Single channel analyzer, representing the combined output of both left and right channels.
+'dual-vertical' | Dual channel analyzer, with left channel shown at the top and right channel at the bottom.
+'dual-combined' | Left and right channel graphs are shown overlaid. Works best with semi-transparent **Graph** [`mode`](#mode-number) or [`outlineBars`](#outlinebars-boolean).
 
 !> When a *dual* layout is selected, any mono (single channel) audio source connected to the analyzer will output sound only from the left speaker,
 unless a stereo source is simultaneously connected to the analyzer, which will force the mono input to be upmixed to stereo.
@@ -444,7 +444,7 @@ Select gradients for the left and right analyzer channels independently, for use
 
 **_Single_** channel layout will use the gradient selected by `gradientLeft`.
 
-For **_dualCombined_** channel layout or [`radial`](#radial-boolean) spectrum, only the background color defined by `gradientLeft` will be applied when [`showBgColor`](#showbgcolor-boolean) is *true*.
+For **_dual-combined_** channel layout or [`radial`](#radial-boolean) spectrum, only the background color defined by `gradientLeft` will be applied when [`showBgColor`](#showbgcolor-boolean) is *true*.
 
 See also [`gradient`](#gradient-string) and [`splitGradient`](#splitgradient-boolean).
 
@@ -703,7 +703,7 @@ When *true*, the spectrum analyzer is rendered in a circular shape, with radial 
 On radial spectrum, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) effects are disabled, and
 [`showPeaks`](#showpeaks-boolean) has no effect for [**Graph** mode](#mode-number).
 
-When [`channelLayout`](#channellayout-string) is set to *'dualVertical'*, a larger diameter is used and the right channel bars are rendered towards the center of the analyzer.
+When [`channelLayout`](#channellayout-string) is set to *'dual-vertical'*, a larger diameter is used and the right channel bars are rendered towards the center of the analyzer.
 
 See also [`spinSpeed`](#spinspeed-number).
 
@@ -826,7 +826,7 @@ Defaults to **0**.
 
 *Available since v3.0.0*
 
-When set to *true* and [`channelLayout`](#channellayout-string) is **_dualVertical_**, the gradient will be split between channels.
+When set to *true* and [`channelLayout`](#channellayout-string) is **_dual-vertical_**, the gradient will be split between channels.
 
 When *false*, both channels will use the full gradient.
 
