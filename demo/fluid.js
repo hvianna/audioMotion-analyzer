@@ -21,6 +21,7 @@ const presets = [
 			mode: 3,
 			ansiBands: true,
 			barSpace: .4,
+			channelLayout: 'single',
 			frequencyScale: 'log',
 			gradient: 'classic',
 			ledBars: true,
@@ -36,6 +37,7 @@ const presets = [
 		name: 'Mirror wave',
 		options: {
 			mode: 10,
+			channelLayout: 'single',
 			fillAlpha: .6,
 			gradient: 'rainbow',
 			lineWidth: 2,
@@ -52,8 +54,10 @@ const presets = [
 		options: {
 			mode: 5,
 			barSpace: .1,
+			channelLayout: 'single',
 			gradient: 'prism',
 			ledBars: false,
+			mirror: 0,
 			radial: true,
 			showBgColor: true,
 			showPeaks: true,
@@ -65,6 +69,7 @@ const presets = [
 		name: 'Bark scale + Linear amplitude',
 		options: {
 			mode: 0,
+			channelLayout: 'single',
 			frequencyScale: 'bark',
 			gradient: 'rainbow',
 			linearAmplitude: true,
@@ -84,7 +89,7 @@ const presets = [
 		name: 'Dual channel combined',
 		options: {
 			mode: 10,
-			channelLayout: 'dualCombined',
+			channelLayout: 'dual-combined',
 			fillAlpha: .25,
 			frequencyScale: 'bark',
 			gradientLeft: 'steelblue',
@@ -104,6 +109,7 @@ const presets = [
 		name: 'Testing config 1',
 		options: {
 			mode: 10,
+			channelLayout: 'single',
 			gradient: 'rainbow',
 			reflexRatio: .4,
 			showBgColor: true,

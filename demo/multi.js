@@ -64,7 +64,7 @@ audioMotion[0].setOptions({
 // top right
 audioMotion[1].setOptions({
 	mode: 10,
-	channelLayout: 'dualCombined',
+	channelLayout: 'dual-combined',
 	fillAlpha: .3,
 	gradientLeft: 'steelblue',
 	gradientRight: 'orangered',
