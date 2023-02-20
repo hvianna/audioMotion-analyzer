@@ -1,7 +1,14 @@
 Changelog
 =========
 
-## version 4.0.0-beta.4 (2023-02-12)
+## version 4.0.0-beta.5 (2023-02-20)
+
+New in 4.0.0-beta.5:
+
++ **Strings for dual [`channelLayout`](README.md#channellayout-string) modes changed from camelCase to hyphen-separated words;**
++ The _dual-vertical_ channel layout now properly displays background colors from both selected gradients;
++ Fixed [`overlay`](README.md#overlay-boolean) display in _dual-combined_ channel layout;
++ Added two new built-in [gradients](README.md#gradient-string): _'orangered'_ and _'steelblue'_.
 
 ### 🚨 v4 BREAKING CHANGES: <!-- {docsify-ignore} -->
 
@@ -11,32 +18,25 @@ Changelog
   + ~`peakEnergy`~ - use [`getEnergy('peak')`](README.md#getenergy-preset-startfreq-endfreq-) instead
   + ~`showLeds`~ - use [`ledBars`](README.md#ledbars-boolean) instead
 
-+ [`getBars()`](README.md#getbars) elements now contain an extra `freq` property (potentially breaking in TypeScript projects), which represents the bar's center frequency.
-The range of each bar has also changed from version 3.6.0, with frequencies that were previously at the lower edge (`freqLo`) now placed at the center.
++ [`getBars()`](README.md#getbars) elements now contain an extra `freq` property (potentially breaking in TypeScript projects), which represents the band's center frequency.
+The range of each band has also changed - frequencies that were previously at the lower edge (`freqLo`) are now placed at the center of the band.
+
++ Also, **`stereo` has been DEPRECATED** and should be removed in version 5 - use [`channelLayout`](README.md#channellayout-string) instead.
 
 ### Added: <!-- {docsify-ignore} -->
 
-in 4.0.0-beta.4:
++ [`ansiBands`](README.md#ansibands-boolean) - use ANSI/IEC preferred frequencies for the octave bands;
++ [`channelLayout`](README.md#channellayout-string) - adds option for dual channel combined spectrum, with both channel graphs overlaid;
++ [`frequencyScale`](README.md#frequencyscale-string) - adds linear and perceptual (Bark/Mel) frequency scales;
++ [`gradientLeft`](README.md#gradientleft-string) and [`gradientRight`](README.md#gradientright-string) - allow to select different gradients for each channel;
++ [`isBandsMode`](README.md#isbandsmode-boolean-read-only) read-only property;
++ [`linearAmplitude`](README.md#linearamplitude-boolean) - use linear values instead of dB for spectrum amplitudes;
++ [`linearBoost`](README.md#linearboost-number) - amplify low energy values when using linear amplitude;
++ [`noteLabels`](README.md#notelabels-boolean) - display musical note labels instead of frequency values on the X axis;
++ [`weightingFilter`](README.md#weightingfilter-string) - select from five different weighting filters for improved spectrum visualization.
 
-+ [`channelLayout`](README.md#channellayout-string) property - adds option for dual channel combined spectrum, with both channel graphs overlaid;
-+ [`gradientLeft`](README.md#gradientleft-string) and [`gradientRight`](README.md#gradientright-string) properties - allow to select different gradients for each channel;
-+ `stereo` property has been DEPRECATED - use `channelLayout` instead.
-
-in 4.0.0-beta.3:
-
-+ [`frequencyScale`](README.md#frequencyscale-string) property - adds linear and perceptual (Bark/Mel) frequency scales (thanks [**@TF3RDL**](https://github.com/hvianna/audioMotion-analyzer/issues/30));
-+ [`isBandsMode`](README.md#isbandsmode-boolean-read-only) read-only property.
-
-in 4.0.0-beta.1:
-
-+ [`linearBoost`](README.md#linearboost-number) property - amplify low energy values when using [linear amplitude](README.md#linearamplitude-boolean);
-+ [`weightingFilter`](README.md#weightingfilter-string) property - select from five different weighting filters for improved spectrum visualization.
-
-in 4.0.0-beta.0:
-
-+ [`ansiBands`](README.md#ansibands-boolean) property - use ANSI/IEC preferred frequencies for the octave bands (thanks [**@jonathan-annett**](https://github.com/hvianna/audioMotion.js/issues/28));
-+ [`linearAmplitude`](README.md#linearamplitude-boolean) property - use linear values instead of dB for spectrum amplitudes (thanks [**@TF3RDL**](https://github.com/hvianna/audioMotion-analyzer/issues/30));
-+ [`noteLabels`](README.md#notelabels-boolean) property - display musical note labels instead of frequency values on the X axis.
+Thank you **@jonathan-annett** [(#28)](https://github.com/hvianna/audioMotion.js/issues/28) and **@TF3RDL** ([#30](https://github.com/hvianna/audioMotion-analyzer/issues/30) and [#38](https://github.com/hvianna/audioMotion-analyzer/issues/38))
+for the suggestions that led to the implementation of several of these new features.
 
 ### Fixed: <!-- {docsify-ignore} -->
 
@@ -44,14 +44,13 @@ in 4.0.0-beta.0:
 
 ### Changed and improved: <!-- {docsify-ignore} -->
 
++ Optimized generation of octave bands, with more accurate ranges and center frequencies;
++ Frequency labels on the X-axis now show different values depending on the value of [`ansiBands`](README.md#ansibands-boolean), to properly match the bands' center frequencies;
 + Custom gradients can now register a single color;
 + [`splitGradient`](README.md#splitgradient-boolean) now works for horizontal gradients in [`radial`](README.md#radial-boolean) visualization;
-+ Optimized generation of octave bands, with more accurate bands range and center frequencies;
-+ Frequency labels on the X axis now show different values depending on whether the analyzer is set to use the equal-tempered scale
-(default) or the ANSI standard bands (`ansiBands == true`), to properly match the octave bands center frequencies;
 + [`maxFreq`](README.md#maxfreq-number) is now capped to half the AudioContext's sample rate (Nyquist frequency);
 + Code optimizations, minor fixes and clean-up;
-+ Updated demos.
++ Revised and improved demos and documentation.
 
 
 ## version 3.6.1 (2022-12-09)
