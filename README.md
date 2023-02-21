@@ -27,13 +27,13 @@ What users are saying:
 
 ## Features
 
-+ High-resolution real-time dual channel audio spectrum analyzer
-+ Logarithmic, linear and perceptual (Bark/Mel) frequency scales, with customizable range
++ Dual-channel high-resolution real-time audio spectrum analyzer
++ Logarithmic, linear and perceptual (Bark and Mel) frequency scales, with customizable range
 + Visualization of discrete FFT frequencies or up to 240 frequency bands (supports ANSI and equal-tempered octave bands)
 + Decibel and linear amplitude scales, with customizable sensitivity
-+ A, B, C, D and ITU-R 468 weighting filters
-+ Optional effects: LED bars, luminance bars, mirroring and reflection, radial spectrum
-+ Comes with 3 predefined color gradients - easily add your own!
++ Optional A, B, C, D and ITU-R 468 weighting filters
++ Additional effects: LED bars, luminance bars, mirroring and reflection, radial spectrum
++ Choose from 5 built-in color gradients or easily add your own!
 + Fullscreen support, ready for retina / HiDPI displays
 + Zero-dependency native ES6+ module (ESM), \~25kB minified
 
@@ -247,11 +247,16 @@ Defaults to **false**.
 
 *Available since v4.0.0*
 
-When set to *true* uses ANSI/IEC preferred frequencies to generate the bands for [octave bands modes](#mode-number).
+When set to *true*, ANSI/IEC preferred frequencies are used to generate the bands for **octave bands** modes (see [`mode`](#mode-number)).
 The preferred base-10 scale is used to compute the center and bandedge frequencies, as specified in the [ANSI S1.11-2004 standard](https://archive.org/details/gov.law.ansi.s1.11.2004).
 
-The default is to use the [equal temperament scale](http://hyperphysics.phy-astr.gsu.edu/hbase/Music/et.html), so that in 1/12 octave bands
+When *false*, bands are based on the [equal-tempered scale](http://hyperphysics.phy-astr.gsu.edu/hbase/Music/et.html), so that in 1/12 octave bands
 the center of each band is perfectly tuned to a musical note.
+
+ansiBands | bands standard | octaves' center frequencies
+----------|----------------|----------------------------
+false     | Equal temperament (A-440 Hz) | ![scale-log-equal-temperament](img/scale-log-equal-temperament.png)
+true      | ANSI S1.11-2004 | ![scale-log-ansi](img/scale-log-ansi.png)
 
 Defaults to **false**.
 
@@ -326,8 +331,8 @@ Defines the number and layout of analyzer channels.
 channelLayout   | description
 ----------------|------------
 'single'        | Single channel analyzer, representing the combined output of both left and right channels.
-'dual-vertical' | Dual channel analyzer, with left channel shown at the top and right channel at the bottom.
-'dual-combined' | Left and right channel graphs are shown overlaid. Works best with semi-transparent **Graph** [`mode`](#mode-number) or [`outlineBars`](#outlinebars-boolean).
+'dual-combined' | Dual channel analyzer, with both channel graphs overlaid. Works best with semi-transparent **Graph** [`mode`](#mode-number) or [`outlineBars`](#outlinebars-boolean).
+'dual-vertical' | Left channel shown at the top half of the canvas and right channel at the bottom.
 
 !> When a *dual* layout is selected, any mono (single channel) audio source connected to the analyzer will output sound only from the left speaker,
 unless a stereo source is simultaneously connected to the analyzer, which will force the mono input to be upmixed to stereo.
@@ -385,16 +390,16 @@ Current frame rate.
 
 Scale used to represent frequencies in the horizontal axis.
 
-frequencyScale | description
----------------|------------
-'bark' | [Bark scale](https://en.wikipedia.org/wiki/Bark_scale)
-'linear' | Linear scale
-'log' | Logarithmic scale
-'mel' | [Mel scale](https://en.wikipedia.org/wiki/Mel_scale)
+frequencyScale | description | scale preview (20Hz - 22kHz range)
+---------------|-------------|-----------------------------------
+'bark' | [Bark scale](https://en.wikipedia.org/wiki/Bark_scale) | ![scale-bark](img/scale-bark.png)
+'linear' | Linear scale | ![scale-linear](img/scale-linear.png)
+'log' | Logarithmic scale | ![scale-log-ansi](img/scale-log-ansi.png)
+'mel' | [Mel scale](https://en.wikipedia.org/wiki/Mel_scale) | ![scale-mel](img/scale-mel.png)
 
-Logarithmic scale is required to visualize proper [octave bands](#mode-number) and it's also recommended when using [`noteLabels`](#notelabels-boolean).
+Logarithmic scale allows visualization of proper **octave bands** (see [`mode`](#mode-number)) and it's also recommended when using [`noteLabels`](#notelabels-boolean).
 
-*Bark* and *Mel* are perceptual pitch scales which provide better visualization of midrange and high frequencies, especially in the [discrete frequencies mode](#mode-number).
+*Bark* and *Mel* are perceptual pitch scales, which provide better visualization of mid-range to high frequencies.
 
 Defaults to **'log'**.
 
@@ -419,7 +424,7 @@ It must be a built-in or registered gradient name (see [`registerGradient()`](#r
 
 `gradient` sets the gradient for both analyzer channels, but its read value represents only the gradient on the left (or single) channel.
 
-When using a dual [`channelLayout`](#channellayout-string), use [`gradientLeft`](#gradientleft-string) and [`gradientRight`](#gradientright-string) if you want to individually set/read the gradient for each channel.
+When using a dual [`channelLayout`](#channellayout-string), use [`gradientLeft`](#gradientleft-string) and [`gradientRight`](#gradientright-string) to set/read the gradient on each channel individually.
 
 Built-in gradients are shown below:
 
@@ -635,21 +640,23 @@ Visualization mode.
 
 mode | description | notes
 ----:|:-----------:|------
-0 | Discrete frequencies |
-1 | 1/24th octave bands or 240 bands |
-2 | 1/12th octave bands or 120 bands |
-3 | 1/8th octave bands or 80 bands |
-4 | 1/6th octave bands or 60 bands |
-5 | 1/4th octave bands or 40 bands |
-6 | 1/3rd octave bands or 30 bands |
-7 | Half octave bands or 20 bands |
-8 | Full octave bands or 10 bands |
+0 | Discrete frequencies | *default*
+1 | 1/24th octave bands or 240 bands | *use 'log' `frequencyScale` for octave bands*
+2 | 1/12th octave bands or 120 bands | *use 'log' `frequencyScale` for octave bands*
+3 | 1/8th octave bands or 80 bands | *use 'log' `frequencyScale` for octave bands*
+4 | 1/6th octave bands or 60 bands | *use 'log' `frequencyScale` for octave bands*
+5 | 1/4th octave bands or 40 bands | *use 'log' `frequencyScale` for octave bands*
+6 | 1/3rd octave bands or 30 bands | *use 'log' `frequencyScale` for octave bands*
+7 | Half octave bands or 20 bands | *use 'log' `frequencyScale` for octave bands*
+8 | Full octave bands or 10 bands | *use 'log' `frequencyScale` for octave bands*
 9 | *(not valid)* | *reserved*
 10 | Graph | *added in v1.1.0*
 
 + **Mode 0** provides the highest resolution, allowing you to visualize individual frequencies as provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform) computation;
-+ **Modes 1 - 8** divide the frequency spectrum in bands; when using the default **logarithmic** [frequency scale](#frequencyscale-string), each band represents the *n*th part of an octave (see also [`ansiBands`](#ansibands-boolean)); otherwise, a fixed number of bands is used for each mode;
++ **Modes 1 - 8** divide the frequency spectrum in bands; when using the default **logarithmic** [`frequencyScale`](#frequencyscale-string), each band represents the *n*th part of an octave; otherwise, a fixed number of bands is used for each mode;
 + **Mode 10** uses the discrete FFT data points to draw a continuous line and/or a filled area graph (see [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number) properties).
+
+See also [`ansiBands`](#ansibands-boolean).
 
 Defaults to **0**.
 
