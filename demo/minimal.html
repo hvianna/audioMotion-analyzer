@@ -18,7 +18,23 @@
 		</ul>
 	</header>
 
-	<div id="container"></div>
+	<div id="container">
+		<div id="notice">
+			<p><strong>Notes:</strong></p>
+			<p>
+				<strong>audioMotion-analyzer</strong> can only start its AudioContext after it detects a user gesture.
+				However, clicks on the native controls of an <code>&lt;audio&gt;</code> element, such as the one below,
+				cannot be detected by JavaScript.
+				Therefore, we need to ensure that the user clicks somewhere else before attempting to use the native <em>play</em> button.
+			</p>
+			<p>
+				Additionally, the <strong>audioMotion-analyzer</strong> object can be instantiated within a function triggered by a user click,
+				in order to prevent the <em>"The AudioContext was not allowed to start"</em> warning message in the browser console.
+				See the source code of this page for an example.
+			</p>
+			<button id="start-button">Start audioMotion</button>
+		</div>
+	</div>
 	<audio id="audio" src="https://icecast2.ufpel.edu.br/live" controls crossorigin="anonymous"></audio>
 
 	<div class="credits">
@@ -29,13 +45,24 @@
 	<script type="module">
 		import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
 
-		const audioMotion = new AudioMotionAnalyzer(
-			document.getElementById('container'),
-			{
-				source: document.getElementById('audio'),
+		const startButton = document.getElementById('start-button');
+		startButton.addEventListener( 'click', initialize );
+
+		let audioMotion; // global variable for the analyzer object
+
+		function initialize() {
+			const container = document.getElementById('container'),
+				  source = document.getElementById('audio');
+
+			audioMotion = new AudioMotionAnalyzer( container, {
+				source,
 				// set your preferred options here
-			}
-		);
+			});
+
+			document.getElementById('notice').remove();
+			startButton.removeEventListener( 'click', initialize );
+			source.play();
+		}
 	</script>
 
 </body>
