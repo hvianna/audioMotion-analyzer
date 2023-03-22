@@ -1300,7 +1300,8 @@ document.getElementById('stop').addEventListener( 'click', () => myAudio.pause()
 * [Equations for equal-tempered scale frequencies](http://pages.mtu.edu/~suits/NoteFreqCalcs.html)
 * [Making Audio Reactive Visuals](https://www.airtightinteractive.com/2013/10/making-audio-reactive-visuals/)
 * The font used in audioMotion's logo is [Orbitron](https://fonts.google.com/specimen/Orbitron) by Matt McInerney
-* This documentation website is powered by [GitHub Pages](https://pages.github.com/), [docsify](https://docsify.js.org/) and [docsify-themeable](https://jhildenbiddle.github.io/docsify-themeable).
+* The _prism_ and _rainbow_ gradients are based on the [12-bit rainbow palette](https://iamkate.com/data/12-bit-rainbow/) by Kate Morley
+* This documentation website is powered by [GitHub Pages](https://pages.github.com/), [docsify](https://docsify.js.org/) and [docsify-themeable](https://jhildenbiddle.github.io/docsify-themeable)
 
 
 ## Changelog

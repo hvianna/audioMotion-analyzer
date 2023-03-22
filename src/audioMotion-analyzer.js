@@ -45,7 +45,8 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  SCALE_MEL                = 'mel';
 
 // built-in gradients
-const GRADIENTS = [
+const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', '#09c', '#36b' ],
+	  GRADIENTS = [
 	  [ 'classic', {
 			colorStops: [
 				'hsl( 0, 100%, 50% )',
@@ -54,25 +55,11 @@ const GRADIENTS = [
 			]
 	  }],
 	  [ 'prism', {
-			colorStops: [
-				'hsl( 0, 100%, 50% )',
-				'hsl( 60, 100%, 50% )',
-				'hsl( 120, 100%, 50% )',
-				'hsl( 180, 100%, 50% )',
-				'hsl( 240, 100%, 50% )'
-			]
+			colorStops: PRISM
 	  }],
 	  [ 'rainbow', {
 			dir: 'h',
-			colorStops: [
-				'hsl( 0, 100%, 50% )',
-				'hsl( 60, 100%, 50% )',
-				'hsl( 120, 100%, 50% )',
-				'hsl( 180, 100%, 47% )',
-				'hsl( 240, 100%, 58% )',
-				'hsl( 300, 100%, 50% )',
-				'hsl( 360, 100%, 50% )'
-			]
+			colorStops: [ ...PRISM, '#639', '#817' ]
 	  }],
 	  [ 'orangered', {
 	  		bgColor: '#3e2f29',
