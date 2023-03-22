@@ -49,14 +49,15 @@ document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 // main analyzer
 audioMotion[0].setOptions({
-	mode: 4,
+	mode: 6,
 	barSpace: .4,
 	frequencyScale: 'bark',
 	ledBars: true,
 	linearAmplitude: true,
 	linearBoost: 1.6,
 	maxFreq: 20000,
-	reflexRatio: .2,
+	minFreq: 30,
+	reflexRatio: .1,
 	reflexAlpha: .25,
 	weightingFilter: 'D'
 });
@@ -71,8 +72,8 @@ audioMotion[1].setOptions({
 	linearAmplitude: true,
 	linearBoost: 1.2,
 	lineWidth: 1.5,
-	minFreq: 30,
 	maxFreq: 16000,
+	minFreq: 30,
 	showScaleX: false,
 	showPeaks: false,
 });
@@ -81,13 +82,12 @@ audioMotion[1].setOptions({
 audioMotion[2].setOptions({
 	mode: 2,
 	barSpace: .1,
-	frequencyScale: 'bark',
 	gradient: 'prism',
 	lumiBars: true,
 	minDecibels: -60,
 	maxDecibels: -30,
-	minFreq: 30,
 	maxFreq: 16000,
+	minFreq: 30,
 	showBgColor: false,
 	showPeaks: false,
 	showScaleX: false,
