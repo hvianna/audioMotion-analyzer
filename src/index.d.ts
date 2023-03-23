@@ -1,5 +1,14 @@
-type OnCanvasDrawFunction = (instance: AudioMotionAnalyzer) => unknown;
-type OnCanvasResizeFunction = (
+export type OnCanvasDrawFunction = (
+  instance: AudioMotionAnalyzer,
+  info: CanvasDrawInfo
+) => unknown;
+
+export type CanvasDrawInfo = {
+  timestamp: DOMHighResTimeStamp,
+  canvasGradients: CanvasGradient[]
+}
+
+export type OnCanvasResizeFunction = (
   reason: CanvasResizeReason,
   instance: AudioMotionAnalyzer
 ) => unknown;

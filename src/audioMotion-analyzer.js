@@ -1357,6 +1357,7 @@ export default class AudioMotionAnalyzer {
 			  canvas         = ctx.canvas,
 			  canvasX        = this._scaleX.canvas,
 			  canvasR        = this._scaleR.canvas,
+			  canvasGradients= this._canvasGradients,
 			  energy         = this._energy,
 			  fillAlpha      = this.fillAlpha,
 			  mode           = this._mode,
@@ -1558,7 +1559,7 @@ export default class AudioMotionAnalyzer {
 					ctx.lineWidth = isOutline ? Math.min( lineWidth, width / 2 ) : lineWidth;
 
 				// set selected gradient for fill and stroke
-				ctx.fillStyle = ctx.strokeStyle = this._canvasGradients[ channel ];
+				ctx.fillStyle = ctx.strokeStyle = canvasGradients[ channel ];
 			} // if ( useCanvas )
 
 			// get a new array of data from the FFT
@@ -1878,8 +1879,8 @@ export default class AudioMotionAnalyzer {
 		// call callback function, if defined
 		if ( this.onCanvasDraw ) {
 			ctx.save();
-			ctx.fillStyle = ctx.strokeStyle = this._canvasGradients[0];
-			this.onCanvasDraw( this );
+			ctx.fillStyle = ctx.strokeStyle = canvasGradients[0];
+			this.onCanvasDraw( this, { timestamp, canvasGradients } );
 			ctx.restore();
 		}
 
