@@ -918,11 +918,15 @@ Since this is a static property, you should always access it as `AudioMotionAnal
 
 ### `onCanvasDraw` *function*
 
-If defined, this function will be called after rendering each frame.
+If defined, this function will be called after **audioMotion-analyzer** finishes rendering each animation frame.
 
-The audioMotion object will be passed as an argument to the callback function.
+The callback function is passed two arguments: an *AudioMotionAnalyzer* object, and an object with the following properties:
+- `timestamp`, a [*DOMHighResTimeStamp*](https://developer.mozilla.org/en-US/docs/Web/API/DOMHighResTimeStamp)
+which indicates the elapsed time in milliseconds since the analyzer started running;
+- `canvasGradients`, an array of [*CanvasGradient*](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient])
+objects currently in use on the left (or single) and right analyzer channels.
 
-Canvas properties `fillStyle` and `strokeStyle` will be set to the current gradient when the function is called.
+The canvas properties `fillStyle` and `strokeStyle` will be set to the left/single channel gradient before the function is called.
 
 Usage example:
 
@@ -935,16 +939,26 @@ const audioMotion = new AudioMotionAnalyzer(
     }
 );
 
-function drawCallback( instance ) {
-	const ctx      = instance.canvasCtx,
-    	  baseSize = ( instance.isFullscreen ? 40 : 20 ) * instance.pixelRatio;
+function drawCallback( instance, info ) {
+    const baseSize  = ( instance.isFullscreen ? 40 : 20 ) * instance.pixelRatio,
+          canvas    = instance.canvas,
+          centerX   = canvas.width / 2,
+          centerY   = canvas.height / 2,
+          ctx       = instance.canvasCtx,
+          maxHeight = centerY / 2,
+          maxWidth  = centerX - baseSize * 5,
+          time      = info.timestamp / 1e4;
 
-    // use the 'energy' value to increase the font size and make the logo pulse to the beat
+    // the energy value is used here to increase the font size and make the logo pulsate to the beat
     ctx.font = `${ baseSize + instance.getEnergy() * 25 * instance.pixelRatio }px Orbitron, sans-serif`;
 
-    ctx.fillStyle = '#fff8';
+    // use the right-channel gradient to fill text
+    ctx.fillStyle = info.canvasGradients[1];
     ctx.textAlign = 'center';
-    ctx.fillText( 'audioMotion', instance.canvas.width - baseSize * 8, baseSize * 2 );
+    ctx.globalCompositeOperation = 'lighter';
+
+    // the timestamp can be used to create effects and animations based on the elapsed time
+    ctx.fillText( 'audioMotion', centerX + maxWidth * Math.cos( time % Math.PI * 2 ), centerY + maxHeight * Math.sin( time % Math.PI * 16 ) );
 }
 ```
 
@@ -954,7 +968,7 @@ For more examples, see the fluid demo [source code](https://github.com/hvianna/a
 
 If defined, this function will be called whenever the canvas is resized.
 
-Two arguments are passed: a string with the reason why the function was called (see below) and the audioMotion object.
+The callback function is passed two arguments: a string which indicates the reason that triggered the call (see below) and the *AudioMotionAnalyzer* object.
 
 Reason | Description
 -------|------------
@@ -1266,11 +1280,11 @@ myAudio.crossOrigin = 'anonymous';
 Browser autoplay policy dictates that audio output can only be initiated by a user gesture, and this is enforced by WebAudio API
 by creating [*AudioContext*](#audioctx-audiocontext-object-read-only) objects in *suspended* mode.
 
-**audioMotion-analyzer** tries to automatically start its audio context on the first click on the page.
+**audioMotion-analyzer** tries to automatically start its AudioContext on the first click on the page.
 However, if you're using an `audio` or `video` element with the `controls` property, clicks on those native media controls cannot be detected
 by JavaScript, so the audio will only be enabled if/when the user clicks somewhere else.
 
-Two possible solutions: **1)** make **sure** your users have to click somewhere else before using the media controls,
+Two possible solutions are: **1)** ensure your users have to click somewhere else before using the media controls,
 like a "power on" button, or simply clicking to select a song from a list will do; or **2)** don't use the native
 controls at all, and create your own custom play and stop buttons. A very simple example:
 
@@ -1288,6 +1302,9 @@ document.getElementById('play').addEventListener( 'click', () => myAudio.play() 
 document.getElementById('stop').addEventListener( 'click', () => myAudio.pause() );
 ```
 
+You can also prevent the _"The AudioContext was not allowed to start"_ warning message from appearing in the browser console, by instantiating
+your **audioMotion-analyzer** object within a function triggered by a user click. See the [minimal demo](/demo/minimal.html) code for an example.
+
 
 ## References and acknowledgments
 
@@ -1300,7 +1317,8 @@ document.getElementById('stop').addEventListener( 'click', () => myAudio.pause()
 * [Equations for equal-tempered scale frequencies](http://pages.mtu.edu/~suits/NoteFreqCalcs.html)
 * [Making Audio Reactive Visuals](https://www.airtightinteractive.com/2013/10/making-audio-reactive-visuals/)
 * The font used in audioMotion's logo is [Orbitron](https://fonts.google.com/specimen/Orbitron) by Matt McInerney
-* The _prism_ and _rainbow_ gradients are based on the [12-bit rainbow palette](https://iamkate.com/data/12-bit-rainbow/) by Kate Morley
+* The _prism_ and _rainbow_ gradients use the [12-bit rainbow palette](https://iamkate.com/data/12-bit-rainbow/) by Kate Morley
+* The cover page animation was recorded with [ScreenToGif](https://github.com/NickeManarin/ScreenToGif) by Nicke Manarin
 * This documentation website is powered by [GitHub Pages](https://pages.github.com/), [docsify](https://docsify.js.org/) and [docsify-themeable](https://jhildenbiddle.github.io/docsify-themeable)
 
 
@@ -1311,18 +1329,20 @@ See [Changelog.md](Changelog.md)
 
 ## Contributing
 
-If you want to send feedback, ask a question, or need help with something, please use the [**Discussions**](https://github.com/hvianna/audioMotion-analyzer/discussions) area on GitHub.
+I kindly request that you only [open an issue](https://github.com/hvianna/audioMotion-analyzer/issues) for submitting a **bug report**.
 
-I would love to see your cool projects using **audioMotion-analyzer** -- post them in the *Show and tell* section of [Discussions](https://github.com/hvianna/audioMotion-analyzer/discussions)!
+If you need help integrating *audioMotion-analyzer* with your project, have ideas for **new features** or any other questions or feedback,
+please use the [**Discussions**](https://github.com/hvianna/audioMotion-analyzer/discussions) section on GitHub.
 
-For **bug reports** and **feature requests**, feel free to [open an issue](https://github.com/hvianna/audioMotion-analyzer/issues).
+Additionally, I would love it if you could showcase your project using *audioMotion-analyzer* in [**Show and Tell**](https://github.com/hvianna/audioMotion-analyzer/discussions/categories/show-and-tell),
+and share your custom gradients with the community in [**Gradients**](https://github.com/hvianna/audioMotion-analyzer/discussions/categories/gradients)!
 
-If you want to submit a **Pull Request**, please branch it off the project's `develop` branch.
+When submitting a **Pull Request**, please branch it off the project's `develop` branch.
 
 And if you're feeling generous, maybe:
 
 * [Buy me a coffee](https://ko-fi.com/Q5Q6157GZ) on Ko-fi ☕😁
-* Gift me something from my [Bandcamp wishlist](https://bandcamp.com/henriquevianna/wishlist) 🎁🥰
+* Gift me something from my [Bandcamp wishlist](https://bandcamp.com/henriquevianna/wishlist) 🎁🎶🥰
 * Tip me via [Brave Rewards](https://brave.com/brave-rewards/) using Brave browser 🤓
 
 
