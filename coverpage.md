@@ -1,4 +1,4 @@
-![demo-animation](img/demo.gif)
+![demo-animation](img/demo.webp)
 
 # audioMotion-analyzer
 

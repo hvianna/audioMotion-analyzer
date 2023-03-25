@@ -39,7 +39,7 @@ What users are saying:
 
 ## Online demos
 
-[![demo-animation](img/demo.gif)](https://audiomotion.dev/demo/)
+[![demo-animation](img/demo.webp)](https://audiomotion.dev/demo/)
 
 ?> https://audiomotion.dev/demo/
 
