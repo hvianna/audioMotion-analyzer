@@ -59,7 +59,7 @@ const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', 
 	  }],
 	  [ 'rainbow', {
 			dir: 'h',
-			colorStops: [ ...PRISM, '#639', '#817' ]
+			colorStops: [ '#817', ...PRISM, '#639' ]
 	  }],
 	  [ 'orangered', {
 	  		bgColor: '#3e2f29',
