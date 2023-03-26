@@ -5,9 +5,6 @@ body {
 	font-size: 13px;
 	margin: 0 auto;
 	max-width: 100%;
-	width: 1000px;
-}
-body.wide {
 	width: 1200px;
 }
 
@@ -81,13 +78,14 @@ img {
 	max-width: 100%;
 }
 
-input[type="range"],
-input[type="number"] {
-	width: 50px;
+input[type="number"],
+input[type="range"] {
+	width: 70px;
 }
 
-input[type="text"],
+input[type="file"],
 input[type="number"],
+input[type="text"],
 select {
 	margin-top: 6px;
 	padding: 6px;
@@ -110,7 +108,6 @@ ul {
 	margin-right: 1em;
 }
 
-
 .label {
 	color: #fff;
 	display: inline-block;
@@ -121,6 +118,10 @@ ul {
 .label input,
 .label select {
 	display: block;
+}
+
+.slim {
+	min-height: 40px;
 }
 
 .logo {
@@ -161,8 +162,8 @@ ul {
 .analyzer-configuration {
 	background: #fff1;
 	border: 1px solid #ccc8;
-	margin-bottom: 20px;
-	padding: 10px 0;
+	margin: 10px 0 20px;
+	padding-bottom: 10px;
 }
 
 .credits {
@@ -187,7 +188,26 @@ ul {
 
 /* minimal demo */
 #container {
+	display: flex;
 	height: 60vh;
+}
+
+#notice {
+	font-size: 15px;
+	line-height: 1.6;
+	margin: auto;
+	max-width: 100%;
+	width: 800px;
+}
+#notice p {
+	margin: 1.6em 0;
+}
+
+#start-button {
+	display: block;
+	margin: 40px auto;
+	padding: 10px;
+	width: 200px;
 }
 
 /* fluid full-width analyzer (single instance demo) */
@@ -257,12 +277,8 @@ ul {
 	grid-row: span 2;
 }
 
-.selector {
-	margin-bottom: 20px;
-}
-
 .selected {
-	outline: 3px solid #c00;
+	outline: 3px solid #fff4;
 }
 
 .stretch {

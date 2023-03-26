@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link href="styles.css" rel="stylesheet">
+	<title>Weighting filters viewer | audioMotion-analyzer</title>
+</head>
+<body>
+	<div class="container">
+		<div>
+			<h1>audioMotion-analyzer</h1>
+			<h2>weighting filters viewer tool</h2>
+			<canvas id="canvas" width="400" height="400"></canvas>
+			<div id="filterLegend"></div>
+			<p>References:</p>
+			<ul>
+				<li><a href="https://en.wikipedia.org/wiki/Weighting_filter" target="_blank">https://en.wikipedia.org/wiki/Weighting_filter</a></li>
+				<li><a href="https://en.wikipedia.org/wiki/A-weighting" target="_blank">https://en.wikipedia.org/wiki/A-weighting</a></li>
+				<li><a href="https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting" target="_blank">https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting</a></li>
+			</ul>
+
+			<p class="credits">
+				<strong>audioMotion-analyzer</strong> Copyright &copy; 2018-2023 Henrique Avila Vianna.<br>
+				Licensed under AGPL-3.0 or later. Source code is available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
+			</p>
+		</div>
+		<table id="tableFilters">
+				<tr>
+					<th rowspan="2">Frequency<br>(Hz)</th>
+					<th colspan="5">Response (dB)</th>
+				</tr>
+				<tr>
+					<th>A</th>
+					<th>B</th>
+					<th>C</th>
+					<th>D</th>
+					<th>ITU-R 468</th>
+				</tr>
+		</table>
+	</div>
+
+
+<script src="weightingdB.js"></script>
+
+<script>
+const table   = document.getElementById('tableFilters').tBodies[0],
+	  canvas  = document.getElementById('canvas'),
+	  filterLegend = document.getElementById('filterLegend'),
+	  ctx     = canvas.getContext('2d'),
+	  colors  = [ '#039aff', '#ffd800', '#ff3500', '#000000', '#00aa2e' ],
+	  filters = [ 'A', 'B', 'C', 'D', '468' ];
+
+function buildGraph() {
+
+	const maxPos  = 350,
+		  minPos  = 50,
+		  maxdB   = 20,
+		  mindB   = -50,
+		  dbRange = maxdB - mindB,
+		  graphX  = val => ( maxPos - minPos ) / 4 * ( Math.log10( val ) - 1 ) + minPos,
+		  graphY  = val => ( maxPos - minPos ) / dbRange * ( maxdB - val ) + minPos;
+
+	canvas.width |= 0; // clear canvas
+
+	ctx.lineWidth = 2;
+	ctx.moveTo( minPos-1, minPos-1 );
+	ctx.lineTo( minPos-1, maxPos+1 );
+	ctx.lineTo( maxPos+1, maxPos+1 );
+	ctx.stroke();
+
+	ctx.lineWidth = 1.5;
+	ctx.strokeStyle = '#ccc';
+	ctx.font = '14px sans-serif';
+
+	ctx.textAlign = 'right';
+	ctx.beginPath();
+	for ( let gain = 20; gain >= -50; gain -= 10 ) {
+		const y = graphY( gain ) | 0;
+		ctx.fillText( ( gain > 0 ? '+' : '' ) + gain, minPos - 7, y + 5 );
+		if ( gain > -50 ) {
+			ctx.moveTo( minPos, y );
+			ctx.lineTo( maxPos, y );
+		}
+	}
+
+	ctx.textAlign = 'center';
+	ctx.fillText( 'Frequency (Hz)', canvas.width / 2, canvas.height - 5 );
+
+	ctx.save();
+	ctx.rotate( -Math.PI / 2 );
+	ctx.fillText( 'Gain (dB)', -canvas.width / 2, 10 );
+	ctx.restore();
+
+	for ( let pow = 1; pow <= 5; pow++ ) {
+		const freq = 10 ** pow;
+		ctx.fillText( freq > 1000 ? freq / 1000 + 'k' : freq, graphX( freq ), maxPos + 20 );
+		if ( pow < 5 ) {
+			for ( let i = 2; i < 11; i++ ) {
+				const x = graphX( freq * i );
+				ctx.moveTo( x, minPos );
+				ctx.lineTo( x, maxPos );
+			}
+		}
+	}
+	ctx.stroke();
+
+	// plot curves
+
+	ctx.lineWidth = 2.5;
+	for ( let i = 0; i < filters.length; i ++ ) {
+		const filter = filters[ i ];
+		if ( document.getElementById(`filter-${ filter }`).checked ) {
+			ctx.beginPath();
+			ctx.strokeStyle = colors[ i ] + 'cc';
+			for ( let p = 1; p < 5; p += .05 ) {
+				const freq   = 10 ** p,
+					  gain   = weightingdB( freq, filter ),
+					  method = p == 1 || gain < -50 ? 'moveTo' : 'lineTo';
+				ctx[ method ]( graphX( freq ), graphY( gain ) );
+			}
+			ctx.stroke();
+		}
+	}
+
+}
+
+/* main */
+
+for ( const freq of [ 16, 31.5, 63, 100, 125, 200, 250, 400, 500, 800, 1e3, 2e3, 3150, 4e3, 5e3, 6300, 7100, 8e3, 9e3, 10e3, 12500, 14e3, 16e3, 20e3, 31500 ] ) {
+	let html = `<tr${ freq == 1e3 ? ' class="onekhz"' : '' }><td>${ freq }`;
+	for ( const filter of filters ) {
+		let response = Number( weightingdB( freq, filter ).toFixed(1) ).toFixed(1); // workaround to avoid '-0.0'
+		if ( response > 0 )
+			response = '+' + response;
+		html += `<td>${ response }`;
+	}
+	table.innerHTML += html;
+}
+
+for ( let i = 0; i < filters.length; i++ )
+	filterLegend.innerHTML += `<label class="filterSelector"><input type="checkbox" id="filter-${ filters[ i ] }" checked> <span class="bullet" style="background: ${ colors[ i ] }"></span> ${ filters[ i ] }</label>`;
+
+for ( const el of document.querySelectorAll('input[id^="filter-"]') )
+	el.addEventListener( 'click', () => buildGraph() );
+
+buildGraph();
+
+</script>
+
+</body>
+</html>

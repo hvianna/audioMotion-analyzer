@@ -16,13 +16,17 @@ const presets = [
 		options: undefined
 	},
 	{
-		name: 'Classic LEDs',
+		name: 'Classic LED bars',
 		options: {
 			mode: 3,
+			ansiBands: true,
 			barSpace: .4,
+			channelLayout: 'single',
+			frequencyScale: 'log',
 			gradient: 'classic',
 			ledBars: true,
 			lumiBars: false,
+			mirror: 0,
 			radial: false,
 			reflexRatio: 0,
 			showBgColor: true,
@@ -33,6 +37,7 @@ const presets = [
 		name: 'Mirror wave',
 		options: {
 			mode: 10,
+			channelLayout: 'single',
 			fillAlpha: .6,
 			gradient: 'rainbow',
 			lineWidth: 2,
@@ -45,12 +50,14 @@ const presets = [
 		}
 	},
 	{
-		name: 'Radial overlay',
+		name: 'Radial spectrum + Overlay',
 		options: {
 			mode: 5,
 			barSpace: .1,
+			channelLayout: 'single',
 			gradient: 'prism',
 			ledBars: false,
+			mirror: 0,
 			radial: true,
 			showBgColor: true,
 			showPeaks: true,
@@ -59,27 +66,50 @@ const presets = [
 		}
 	},
 	{
-		name: 'Reflex Bars',
+		name: 'Bark scale + Linear amplitude',
 		options: {
-			mode: 5,
-			barSpace: .25,
+			mode: 0,
+			channelLayout: 'single',
+			frequencyScale: 'bark',
 			gradient: 'rainbow',
-			ledBars: false,
-			lumiBars: false,
+			linearAmplitude: true,
+			linearBoost: 1.8,
+			mirror: 0,
+			overlay: false,
 			radial: false,
 			reflexAlpha: .25,
 			reflexBright: 1,
 			reflexFit: true,
 			reflexRatio: .3,
-			showBgColor: false,
 			showPeaks: true,
-			overlay: false
+			weightingFilter: 'D'
+		}
+	},
+	{
+		name: 'Dual channel combined',
+		options: {
+			mode: 10,
+			channelLayout: 'dual-combined',
+			fillAlpha: .25,
+			frequencyScale: 'bark',
+			gradientLeft: 'steelblue',
+			gradientRight: 'orangered',
+			linearAmplitude: true,
+			linearBoost: 1.8,
+			lineWidth: 1.5,
+			mirror: 0,
+			overlay: false,
+			radial: false,
+			reflexRatio: 0,
+			showPeaks: false,
+			weightingFilter: 'D'
 		}
 	},
 	{
 		name: 'Testing config 1',
 		options: {
 			mode: 10,
+			channelLayout: 'single',
 			gradient: 'rainbow',
 			reflexRatio: .4,
 			showBgColor: true,
@@ -118,7 +148,7 @@ try {
 	);
 }
 catch( err ) {
-	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: <em>${err}</em></p>`;
+	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: ${ err.code ? '<strong>' + err.code + '</strong>' : '' } <em>${ err.code ? err.message : err }</em></p>`;
 }
 
 // Display package version at the footer
@@ -195,26 +225,33 @@ presetSelection.addEventListener( 'change', () => {
 	updateUI();
 });
 
-// Create piano keyboard
+// Create an 88-key piano keyboard
 
 const ROOT12 = 2 ** ( 1 / 12 ),
-	  C0 = 440 * ROOT12 ** -57;
+	  scale = [ 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B' ];
 
-let html = '';
+let html   = '',
+	freq   = 27.50, // A0 (first key)
+	octave = 0,
+	note   = 9;
 
-for ( let octave = 1; octave < 8; octave++ ) {
-	for ( let note = 0; note < 12; note++ ) {
+do {
+	const key     = scale[ note ],
+		  isSharp = key.endsWith('#');
 
-		const key  = [1,3,6,8,10].includes( note ) ? 'black' : 'white',
-			  freq = C0 * ROOT12 ** ( octave * 12 + note );
+	html += `
+		${ isSharp ? '' : '<div class="key">' }
+		<div class="${ isSharp ? 'black' : 'white' }${ octave == 4 && note == 0 ? ' c4' : '' }" data-freq="${ freq.toFixed(2) }" title="${ key + octave }"></div>
+		${ isSharp || key == 'E' || key == 'B' ? '</div>' : '' }
+	`;
 
-		html += `
-			${ key == 'white' ? '<div class="key">' : '' }
-			<div class="${key}${ octave == 4 && note == 0 ? ' c4' : '' }" data-freq="${ freq.toFixed(2) }"></div>
-			${ note == 4 || note == 11 || key == 'black' ? '</div>' : '' }
-		`;
+	freq *= ROOT12;
+	note++;
+	if ( note > 11 ) {
+		note = 0;
+		octave++;
 	}
-}
+} while ( freq < 4200 ); // go up to C8 (4186 Hz)
 
 document.getElementById('piano').innerHTML = html;
 

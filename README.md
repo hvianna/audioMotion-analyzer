@@ -3,8 +3,8 @@
 
 **audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer built upon **Web Audio** and **Canvas** JavaScript APIs.
 
-It was originally conceived as part of a full-featured music player called [**audioMotion**](https://audiomotion.me), but I later decided to make just
-the spectrum analyzer available as a self-contained module, so other developers could use it in their own projects.
+It was originally conceived as part of a full-featured music player called [**audioMotion**](https://audiomotion.me),
+but I later decided to make only the spectrum analyzer available as a self-contained module, so other developers could use it in their own projects.
 
 My goal is to make this the best looking, most accurate and customizable spectrum analyzer around, in a small-footprint and high-performance package.
 
@@ -27,18 +27,19 @@ What users are saying:
 
 ## Features
 
-+ High-resolution real-time dual channel audio spectrum analyzer
-+ Logarithmic frequency scale with customizable range
-+ Visualize discrete frequencies or octave bands based on the equal tempered scale
-+ Optional effects: vintage LEDs, luminance bars, mirroring and reflection, radial visualization
-+ Customizable sensitivity, FFT size and time-smoothing constant
-+ Comes with 3 predefined color gradients - easily add your own!
++ Dual-channel high-resolution real-time audio spectrum analyzer
++ Logarithmic, linear and perceptual (Bark and Mel) frequency scales, with customizable range
++ Visualization of discrete FFT frequencies or up to 240 frequency bands (supports ANSI and equal-tempered octave bands)
++ Decibel and linear amplitude scales, with customizable sensitivity
++ Optional A, B, C, D and ITU-R 468 weighting filters
++ Additional effects: LED bars, luminance bars, mirroring and reflection, radial spectrum
++ Choose from 5 built-in color gradients or easily add your own!
 + Fullscreen support, ready for retina / HiDPI displays
-+ Zero-dependency native ES6+ module (ESM), \~20kB minified
++ Zero-dependency native ES6+ module (ESM), \~25kB minified
 
 ## Online demos
 
-[![demo-animation](demo/media/demo.gif)](https://audiomotion.dev/demo/)
+[![demo-animation](img/demo.webp)](https://audiomotion.dev/demo/)
 
 ?> https://audiomotion.dev/demo/
 
@@ -48,7 +49,10 @@ What users are saying:
 - [Using microphone input](https://codepen.io/hvianna/pen/VwKZgEE)
 - [Creating additional effects with `getEnergy()`](https://codepen.io/hvianna/pen/poNmVYo)
 - [No canvas example](https://codepen.io/hvianna/pen/ZEKWWJb) (create your own visualization using analyzer data)
-- [Integration with Pizzicato library](https://codesandbox.io/s/9y6qb) - see [this discussion](https://github.com/hvianna/audioMotion-analyzer/issues/10) for more info
+- Example integrations with other audio libraries:
+  - [Icecast Metadata Player](https://codepen.io/hvianna/pen/YzrgWVe)
+  - [Pizzicato](https://codesandbox.io/s/9y6qb)
+  - [jPlayer](https://codepen.io/hvianna/pen/dyVrMJX)
 - [See more code examples on CodePen](https://codepen.io/collection/ABbbKr)
 
 ## Usage
@@ -71,7 +75,7 @@ Or download the [latest version](https://github.com/hvianna/audioMotion-analyzer
 Install as a dependency:
 
 ```console
-$ npm i --save audiomotion-analyzer
+$ npm i audiomotion-analyzer
 ```
 
 Use ES6 import syntax:
@@ -111,16 +115,23 @@ Properties marked as *constructor only* can only be set by the constructor call,
 
 options = {<br>
 &emsp;&emsp;[alphaBars](#alphabars-boolean): **false**,<br>
+&emsp;&emsp;[ansiBands](#ansibands-boolean): **false**,<br>
 &emsp;&emsp;[audioCtx](#audioctx-audiocontext-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[barSpace](#barspace-number): **0.1**,<br>
 &emsp;&emsp;[bgAlpha](#bgalpha-number): **0.7**,<br>
+&emsp;&emsp;[channelLayout](#channellayout-string): **'single'**,<br>
 &emsp;&emsp;[connectSpeakers](#connectspeakers-boolean): **true**, // constructor only<br>
 &emsp;&emsp;[fftSize](#fftsize-number): **8192**,<br>
 &emsp;&emsp;[fillAlpha](#fillalpha-number): **1**,<br>
+&emsp;&emsp;[frequencyScale](#frequencyscale-string): **'log'**,<br>
 &emsp;&emsp;[fsElement](#fselement-htmlelement-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[gradient](#gradient-string): **'classic'**,<br>
+&emsp;&emsp;[gradientLeft](#gradientleft-string): *undefined*,<br>
+&emsp;&emsp;[gradientRight](#gradientright-string): *undefined*,<br>
 &emsp;&emsp;[height](#height-number): *undefined*,<br>
 &emsp;&emsp;[ledBars](#ledbars-boolean): **false**,<br>
+&emsp;&emsp;[linearAmplitude](#linearamplitude-boolean): **false**,<br>
+&emsp;&emsp;[linearBoost](#linearboost-number): **1**,<br>
 &emsp;&emsp;[lineWidth](#linewidth-number): **0**,<br>
 &emsp;&emsp;[loRes](#lores-boolean): **false**,<br>
 &emsp;&emsp;[lumiBars](#lumibars-boolean): **false**,<br>
@@ -130,6 +141,7 @@ options = {<br>
 &emsp;&emsp;[minFreq](#minfreq-number): **20**,<br>
 &emsp;&emsp;[mirror](#mirror-number): **0**,<br>
 &emsp;&emsp;[mode](#mode-number): **0**,<br>
+&emsp;&emsp;[noteLabels](#notelabels-boolean): **false**,<br>
 &emsp;&emsp;[onCanvasDraw](#oncanvasdraw-function): *undefined*,<br>
 &emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *undefined*,<br>
 &emsp;&emsp;[outlineBars](#outlinebars-boolean): **false**,<br>
@@ -141,7 +153,6 @@ options = {<br>
 &emsp;&emsp;[reflexRatio](#reflexratio-number): **0**,<br>
 &emsp;&emsp;[showBgColor](#showbgcolor-boolean): **true**,<br>
 &emsp;&emsp;[showFPS](#showfps-boolean): **false**,<br>
-&emsp;&emsp;[showLeds](#showleds-deprecated): **false**, // DEPRECATED - use ledBars instead<br>
 &emsp;&emsp;[showPeaks](#showpeaks-boolean): **true**,<br>
 &emsp;&emsp;[showScaleX](#showscalex-boolean): **true**,<br>
 &emsp;&emsp;[showScaleY](#showscaley-boolean): **false**,<br>
@@ -150,9 +161,9 @@ options = {<br>
 &emsp;&emsp;[spinSpeed](#spinspeed-number): **0**,<br>
 &emsp;&emsp;[splitGradient](#splitgradient-boolean): **false**,<br>
 &emsp;&emsp;[start](#start-boolean): **true**,<br>
-&emsp;&emsp;[stereo](#stereo-boolean): **false**,<br>
 &emsp;&emsp;[useCanvas](#usecanvas-boolean): **true**,<br>
 &emsp;&emsp;[volume](#volume-number): **1**,<br>
+&emsp;&emsp;[weightingFilter](#weightingFilter-string): **''**<br>
 &emsp;&emsp;[width](#width-number): *undefined*<br>
 }
 
@@ -186,9 +197,9 @@ only one of them needs to be connected to the speakers, otherwise the volume wil
 
 After instantiation, use [`connectOutput()`](#connectoutput-node-) and [`disconnectOutput()`](#disconnectoutput-node-) to connect or disconnect the output from the speakers (or other nodes).
 
-Defaults to **true**.
-
 See also [`connectedTo`](#connectedto-array-read-only).
+
+Defaults to **true**.
 
 #### `fsElement` *HTMLElement object*
 
@@ -224,13 +235,30 @@ Defaults to **true**, so the analyzer will start running right after initializat
 
 When set to *true* each bar's amplitude affects its opacity, i.e., higher bars are rendered more opaque while shorter bars are more transparent.
 
-This is similar to the [`lumiBars`](#lumibars-boolean) effect, but bars' amplitudes are preserved and it also works on **Discrete** [mode](#mode-number) and [radial](#radial-boolean) visualization.
+This is similar to the [`lumiBars`](#lumibars-boolean) effect, but bars' amplitudes are preserved and it also works on **Discrete** [mode](#mode-number) and [radial](#radial-boolean) spectrum.
 
 For effect priority when combined with other settings, see [`isAlphaBars`](#isalphabars-boolean-read-only).
 
 Defaults to **false**.
 
 !> [See related known issue](#alphabars-and-fillalpha-wont-work-with-radial-on-firefox)
+
+### `ansiBands` *boolean*
+
+*Available since v4.0.0*
+
+When set to *true*, ANSI/IEC preferred frequencies are used to generate the bands for **octave bands** modes (see [`mode`](#mode-number)).
+The preferred base-10 scale is used to compute the center and bandedge frequencies, as specified in the [ANSI S1.11-2004 standard](https://archive.org/details/gov.law.ansi.s1.11.2004).
+
+When *false*, bands are based on the [equal-tempered scale](http://hyperphysics.phy-astr.gsu.edu/hbase/Music/et.html), so that in 1/12 octave bands
+the center of each band is perfectly tuned to a musical note.
+
+ansiBands | bands standard | octaves' center frequencies
+----------|----------------|----------------------------
+false     | Equal temperament (A-440 Hz) | ![scale-log-equal-temperament](img/scale-log-equal-temperament.png)
+true      | ANSI S1.11-2004 | ![scale-log-ansi](img/scale-log-ansi.png)
+
+Defaults to **false**.
 
 ### `audioCtx` *AudioContext object* *(Read only)*
 
@@ -263,7 +291,7 @@ See also the [fluid demo](/demo/fluid.html) and the [multi-instance demo](/demo/
 
 *Available since v2.0.0*
 
-Customize the spacing between bars in **octave bands** [modes](#mode-number).
+Customize the spacing between bars in [bands modes](#mode-number).
 
 Use a value between 0 and 1 for spacing proportional to the band width. Values >= 1 will be considered as a literal number of pixels.
 
@@ -294,6 +322,23 @@ Defaults to **0.7**.
 
 [2D rendering context](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D) used for drawing in audioMotion's *Canvas*.
 
+### `channelLayout` *string*
+
+*Available since v4.0.0*
+
+Defines the number and layout of analyzer channels.
+
+channelLayout   | description
+----------------|------------
+'single'        | Single channel analyzer, representing the combined output of both left and right channels.
+'dual-combined' | Dual channel analyzer, with both channel graphs overlaid. Works best with semi-transparent **Graph** [`mode`](#mode-number) or [`outlineBars`](#outlinebars-boolean).
+'dual-vertical' | Left channel shown at the top half of the canvas and right channel at the bottom.
+
+!> When a *dual* layout is selected, any mono (single channel) audio source connected to the analyzer will output sound only from the left speaker,
+unless a stereo source is simultaneously connected to the analyzer, which will force the mono input to be upmixed to stereo.
+
+See also [`gradientLeft`](#gradientleft-string), [`gradientRight`](#gradientright-string) and [`splitGradient`](#splitgradient-boolean).
+
 ### `connectedSources` *array* *(Read only)*
 
 *Available since v3.0.0*
@@ -310,10 +355,6 @@ By default, **audioMotion-analyzer** is connected to the *AudioContext* `destina
 
 See also [`connectOutput()`](#connectoutput-node-).
 
-### `energy` **(DEPRECATED)**
-
-**This property will be removed in version 4.0.0** - Use [`getEnergy()`](#getenergy-preset-startfreq-endfreq-) instead.
-
 ### `fftSize` *number*
 
 Number of samples used for the FFT performed by the [*AnalyzerNode*](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode).
@@ -327,13 +368,13 @@ Defaults to **8192**.
 
 *Available since v2.0.0*
 
-Opacity of the area fill in **Graph** [mode](#mode-number), or inner fill of bars in **octave bands** modes when [`outlineBars`](#outlinebars-boolean) is *true*.
+Opacity of the area fill in [Graph mode](#mode-number), or inner fill of bars in [bands modes](#mode-number) when [`outlineBars`](#outlinebars-boolean) is *true*.
 
 It must be a number between 0 (completely transparent) and 1 (completely opaque).
 
 Please note that the line stroke (when [`lineWidth`](#linewidth-number) > 0) is always drawn at full opacity, regardless of the `fillAlpha` value.
 
-Also, for octave bands modes, [`alphaBars`](#alphabars-boolean) set to *true* takes precedence over `fillAlpha`.
+Also, for [bands modes](#mode-number), [`alphaBars`](#alphabars-boolean) set to *true* takes precedence over `fillAlpha`.
 
 Defaults to **1**.
 
@@ -342,6 +383,25 @@ Defaults to **1**.
 ### `fps` *number* *(Read only)*
 
 Current frame rate.
+
+### `frequencyScale` *string*
+
+*Available since v4.0.0*
+
+Scale used to represent frequencies in the horizontal axis.
+
+frequencyScale | description | scale preview (20Hz - 22kHz range)
+---------------|-------------|-----------------------------------
+'bark' | [Bark scale](https://en.wikipedia.org/wiki/Bark_scale) | ![scale-bark](img/scale-bark.png)
+'linear' | Linear scale | ![scale-linear](img/scale-linear.png)
+'log' | Logarithmic scale | ![scale-log-ansi](img/scale-log-ansi.png)
+'mel' | [Mel scale](https://en.wikipedia.org/wiki/Mel_scale) | ![scale-mel](img/scale-mel.png)
+
+Logarithmic scale allows visualization of proper **octave bands** (see [`mode`](#mode-number)) and it's also recommended when using [`noteLabels`](#notelabels-boolean).
+
+*Bark* and *Mel* are perceptual pitch scales, which provide better visualization of mid-range to high frequencies.
+
+Defaults to **'log'**.
 
 ### `fsElement` *HTMLElement object* *(Read only)*
 
@@ -358,11 +418,40 @@ Canvas dimensions used during fullscreen mode. These take the current pixel rati
 
 ### `gradient` *string*
 
-Currently selected color gradient used for analyzer graphs.
+Name of the color gradient used for analyzer graphs.
 
-It must be the name of a built-in or [registered](#registergradient-name-options-) gradient. Built-in gradients are *'classic'*, *'prism'* and *'rainbow'*.
+It must be a built-in or registered gradient name (see [`registerGradient()`](#registergradient-name-options-)).
+
+`gradient` sets the gradient for both analyzer channels, but its read value represents only the gradient on the left (or single) channel.
+
+When using a dual [`channelLayout`](#channellayout-string), use [`gradientLeft`](#gradientleft-string) and [`gradientRight`](#gradientright-string) to set/read the gradient on each channel individually.
+
+Built-in gradients are shown below:
+
+gradient    | preview
+------------|---------
+'classic'   | ![classic](img/gradient-classic.png)
+'orangered' | ![orangered](img/gradient-orangered.png)
+'prism'     | ![prism](img/gradient-prism.png)
+'rainbow'   | ![rainbow](img/gradient-rainbow.png)
+'steelblue' | ![steelblue](img/gradient-steelblue.png)
+
+See also [`splitGradient`](#splitgradient-boolean).
 
 Defaults to **'classic'**.
+
+### `gradientLeft` *string*
+### `gradientRight` *string*
+
+*Available since v4.0.0*
+
+Select gradients for the left and right analyzer channels independently, for use with a dual [`channelLayout`](#channellayout-string).
+
+**_Single_** channel layout will use the gradient selected by `gradientLeft`.
+
+For **_dual-combined_** channel layout or [`radial`](#radial-boolean) spectrum, only the background color defined by `gradientLeft` will be applied when [`showBgColor`](#showbgcolor-boolean) is *true*.
+
+See also [`gradient`](#gradient-string) and [`splitGradient`](#splitgradient-boolean).
 
 ### `height` *number*
 ### `width` *number*
@@ -371,7 +460,7 @@ Nominal dimensions of the analyzer.
 
 If one or both of these are `undefined`, the analyzer will try to adjust to the container's width and/or height.
 If the container's width and/or height are 0 (inline elements), a reference size of **640 x 270 pixels** will be used to replace the missing dimension(s).
-This should be considered the minimum dimensions for proper visualization of all available modes with the [LED effect](#ledbars-boolean) on.
+This should be considered the minimum dimensions for proper visualization of all available modes and effects.
 
 You can set both values at once using the [`setCanvasSize()`](#setcanvassize-width-height-) method.
 
@@ -382,7 +471,15 @@ You can set both values at once using the [`setCanvasSize()`](#setcanvassize-wid
 *Available since v3.6.0*
 
 ***true*** when alpha bars are effectively being displayed, i.e., [`alphaBars`](#alphabars-boolean) is set to *true* and [`mode`](#mode-number) is set to discrete frequencies
-or one of the octave bands modes, in which case [`lumiBars`](#lumibars-boolean) must be set to *false* or [`radial`](#radial-boolean) must be set to *true*.
+or one of the bands modes, in which case [`lumiBars`](#lumibars-boolean) must be set to *false* or [`radial`](#radial-boolean) must be set to *true*.
+
+### `isBandsMode` *boolean* *(Read only)*
+
+*Available since v4.0.0*
+
+***true*** when [`mode`](#mode-number) is set to one of the bands mode (modes 1 to 8).
+
+See also [`isOctaveBands`](#isoctavebands-boolean-read-only).
 
 ### `isFullscreen` *boolean* *(Read only)*
 
@@ -394,23 +491,19 @@ See [`toggleFullscreen()`](#togglefullscreen).
 
 *Available since v3.6.0* (formerly `isLedDisplay`)
 
-***true*** when LED bars are effectively being displayed, i.e., [`ledBars`](#ledBars-boolean) is set to *true* and [`mode`](#mode-number) is set to an octave bands mode and [`radial`](#radial-boolean) is *false*.
-
-### `isLedDisplay` **(DEPRECATED)**
-
-**This property will be removed in version 4.0.0** - Use [`isLedBars`](#isledbars-boolean-read-only) instead.
+***true*** when LED bars are effectively being displayed, i.e., [`isBandsMode`](#isbandsmode-boolean-read-only) is *true*, [`ledBars`](#ledBars-boolean) is set to *true* and [`radial`](#radial-boolean) is set to *false*.
 
 ### `isLumiBars` *boolean* *(Read only)*
 
 *Available since v3.0.0*
 
-***true*** when luminance bars are effectively being displayed, i.e., [`lumiBars`](#lumibars-boolean) is set to *true* and [`mode`](#mode-number) is set to an octave bands mode and [`radial`](#radial-boolean) is *false*.
+***true*** when luminance bars are effectively being displayed, i.e., [`isBandsMode`](#isbandsmode-boolean-read-only) is *true*, [`lumiBars`](#lumibars-boolean) is set to *true* and [`radial`](#radial-boolean) is set to *false*.
 
 ### `isOctaveBands` *boolean* *(Read only)*
 
 *Available since v3.0.0*
 
-***true*** when [`mode`](#mode-number) is set to one of the octave bands modes.
+***true*** when [`isBandsMode`](#isbandsmode-boolean-read-only) is *true* and [`frequencyScale`](#frequencyscale-string) is set to *'log'*.
 
 ### `isOn` *boolean* *(Read only)*
 
@@ -422,14 +515,14 @@ See [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
 
 *Available since v3.6.0*
 
-***true*** when outlined bars are effectively being displayed, i.e., [`outlineBars`](#outlinebars-boolean) is set to *true*, [`mode`](#mode-number) is set to
-one of the octave bands modes and both [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) are set to *false*, or [`radial`](#radial-boolean) is set to *true*.
+***true*** when outlined bars are effectively being displayed, i.e., [`isBandsMode`](#isbandsmode-boolean-read-only) is *true*, [`outlineBars`](#outlinebars-boolean) is set to *true*
+and both [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) are set to *false*, or [`radial`](#radial-boolean) is set to *true*.
 
 ### `ledBars` *boolean*
 
 *Available since v3.6.0* (formerly `showLeds`)
 
-*true* to activate a vintage LEDs display effect. Only effective for **octave bands** [modes](#mode-number).
+*true* to activate the vintage LED bars effect for [bands modes](#mode-number).
 
 This effect can be customized via [`setLedParams()`](#setledparams-params-) method.
 
@@ -437,11 +530,33 @@ For effect priority when combined with other settings, see [`isLedBars`](#isledb
 
 Defaults to **false**.
 
+### `linearAmplitude` *boolean*
+
+*Available since v4.0.0*
+
+When set to *true*, spectrum amplitudes are represented in linear scale instead of decibels (logarithmic).
+
+This may improve the visualization of predominant tones, especially at higher frequencies, but it will make the entire spectrum look much quieter.
+
+See also [`linearBoost`](#linearboost-number).
+
+Defaults to **false**.
+
+### `linearBoost` *number*
+
+*Available since v4.0.0*
+
+Performs an *n*th-root to amplify low energy values when using linear scale for the amplitude.
+
+It should be a number >= 1, while 1 means no boosting. Only effective when [`linearAmplitude`](#linearamplitude-boolean) is set to *true*.
+
+Defaults to **1**.
+
 ### `lineWidth` *number*
 
 *Available since v2.0.0*
 
-Line width for **Graph** [mode](#mode-number), or outline stroke in **octave bands** modes when [`outlineBars`](#outlinebars-boolean) is *true*.
+Line width for [Graph mode](#mode-number), or outline stroke in [bands modes](#mode-number) when [`outlineBars`](#outlinebars-boolean) is *true*.
 
 For the line to be distinguishable, set also [`fillAlpha`](#fillalpha-number) < 1.
 
@@ -468,11 +583,11 @@ This will prevent the canvas size from changing, when switching the low resoluti
 
 *Available since v1.1.0*
 
-This is only effective for **octave bands** [modes](#mode-number).
+This is only effective for [bands modes](#mode-number).
 
 When set to *true* all analyzer bars will be displayed at full height with varying luminance (opacity, actually) instead.
 
-`lumiBars` takes precedence over [`alphaBars`](#alphabars-boolean) and [`outlineBars`](#outlinebars-boolean), except in [`radial`](#radial-boolean) visualization.
+`lumiBars` takes precedence over [`alphaBars`](#alphabars-boolean) and [`outlineBars`](#outlinebars-boolean), except on [`radial`](#radial-boolean) spectrum.
 
 For effect priority when combined with other settings, see [`isLumiBars`](#islumibars-boolean-read-only).
 
@@ -496,7 +611,8 @@ Highest and lowest frequencies represented in the X-axis of the analyzer. Values
 
 The minimum allowed value is **1**. Trying to set a lower value will throw an `ERR_FREQUENCY_TOO_LOW` [error](#custom-errors).
 
-The maximum practical value is half the sampling rate ([`audioCtx.sampleRate`](#audioctx-audiocontext-object-read-only)), although this is not enforced by **audioMotion-analyzer**.
+The maximum allowed value is half the sampling rate ([`audioCtx.sampleRate`](#audioctx-audiocontext-object-read-only)), known as the [Nyquist frequency](https://en.wikipedia.org/wiki/Nyquist_frequency).
+Values higher than that will be capped.
 
 It is preferable to use the [`setFreqRange()`](#setfreqrange-minfreq-maxfreq-) method and set both values at once, to prevent `minFreq` being higher than the current `maxFreq` or vice-versa at a given moment.
 
@@ -520,33 +636,45 @@ Defaults to **0**.
 
 ### `mode` *number*
 
-Current visualization mode.
-
-+ **Discrete** mode provides the highest resolution, allowing you to visualize individual frequencies amplitudes as provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform) computation;
-+ **Octave bands** modes display wider vertical bars, each one representing the *n*th part of an octave, based on a [24-tone equal tempered scale](https://en.wikipedia.org/wiki/Quarter_tone);
-+ **Graph** mode uses the discrete data points to draw a continuous line and/or filled area graph (see [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number) properties).
+Visualization mode.
 
 mode | description | notes
-------:|:-------------:|------
-0 | Discrete frequencies |
-1 | 1/24th octave bands |
-2 | 1/12th octave bands |
-3 | 1/8th octave bands |
-4 | 1/6th octave bands |
-5 | 1/4th octave bands |
-6 | 1/3rd octave bands |
-7 | Half octave bands |
-8 | Full octave bands |
+----:|:-----------:|------
+0 | Discrete frequencies | *default*
+1 | 1/24th octave bands or 240 bands | *use 'log' `frequencyScale` for octave bands*
+2 | 1/12th octave bands or 120 bands | *use 'log' `frequencyScale` for octave bands*
+3 | 1/8th octave bands or 80 bands | *use 'log' `frequencyScale` for octave bands*
+4 | 1/6th octave bands or 60 bands | *use 'log' `frequencyScale` for octave bands*
+5 | 1/4th octave bands or 40 bands | *use 'log' `frequencyScale` for octave bands*
+6 | 1/3rd octave bands or 30 bands | *use 'log' `frequencyScale` for octave bands*
+7 | Half octave bands or 20 bands | *use 'log' `frequencyScale` for octave bands*
+8 | Full octave bands or 10 bands | *use 'log' `frequencyScale` for octave bands*
 9 | *(not valid)* | *reserved*
 10 | Graph | *added in v1.1.0*
 
++ **Mode 0** provides the highest resolution, allowing you to visualize individual frequencies as provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform) computation;
++ **Modes 1 - 8** divide the frequency spectrum in bands; when using the default **logarithmic** [`frequencyScale`](#frequencyscale-string), each band represents the *n*th part of an octave; otherwise, a fixed number of bands is used for each mode;
++ **Mode 10** uses the discrete FFT data points to draw a continuous line and/or a filled area graph (see [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number) properties).
+
+See also [`ansiBands`](#ansibands-boolean).
+
 Defaults to **0**.
+
+### `noteLabels` *boolean*
+
+*Available since v4.0.0*
+
+When set to *true* displays musical note labels instead of frequency values, in the X axis (when [`showScaleX`](#showscalex-boolean) is also set to *true*).
+
+For best visualization in [octave bands modes](#mode-number), make sure [`frequencyScale`](#frequencyscale-string) is set to *'log'* and [`ansiBands`](#ansibands-boolean) is set to *false*, so all bands will be perfectly aligned with notes frequencies.
+
+Defaults to **false**.
 
 ### `outlineBars` *boolean*
 
 *Available since v3.6.0*
 
-When *true* and [`mode`](#mode-number) is set to one of the **octave bands** modes, draws outlined bars with customizable [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number).
+When *true* and [`mode`](#mode-number) is set to one of the **bands** modes, analyzer bars are rendered outlined, with customizable [`fillAlpha`](#fillalpha-number) and [`lineWidth`](#linewidth-number).
 
 For effect priority when combined with other settings, see [`isOutlineBars`](#isoutlinebars-boolean-read-only).
 
@@ -564,27 +692,25 @@ Defaults to **false**.
 
 ?> In order to keep elements other than the canvas visible in fullscreen, you'll need to set the [`fsElement`](#fselement-htmlelement-object) property in the [constructor](#constructor) options.
 
-### `peakEnergy` **(DEPRECATED)**
-
-**This property will be removed in version 4.0.0** - Use [`getEnergy('peak')`](#getenergy-preset-startfreq-endfreq-) instead.
-
 ### `pixelRatio` *number* *(Read only)*
 
 Current [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio).
 This is usually **1** for standard displays and **2** for retina / Hi-DPI screens.
 
-You can refer to this value to adjust any additional drawings done in the canvas (via [callback function](#oncanvasdraw-function)).
+When [`loRes`](#lores-boolean) is *true*, the value of `pixelRatio` is halved, i.e. **0.5** for standard displays and **1** for retina / Hi-DPI.
 
-When [`loRes`](#lores-boolean) is *true* `pixelRatio` is halved, i.e. **0.5** for standard displays and **1** for retina / Hi-DPI.
+You can refer to this value to adjust any additional drawings done in the canvas (via [callback function](#oncanvasdraw-function)).
 
 ### `radial` *boolean*
 
 *Available since v2.4.0*
 
-When *true*, the spectrum analyzer is rendered as a circle, with radial frequency bars spreading from the center of the canvas.
+When *true*, the spectrum analyzer is rendered in a circular shape, with radial frequency bars spreading from its center.
 
-When radial mode is active, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) have no effect, and
-also [`showPeaks`](#showpeaks-boolean) has no effect in radial **Graph** mode.
+On radial spectrum, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) effects are disabled, and
+[`showPeaks`](#showpeaks-boolean) has no effect for [**Graph** mode](#mode-number).
+
+When [`channelLayout`](#channellayout-string) is set to *'dual-vertical'*, a larger diameter is used and the right channel bars are rendered towards the center of the analyzer.
 
 See also [`spinSpeed`](#spinspeed-number).
 
@@ -645,6 +771,8 @@ Opacity can be adjusted via [`bgAlpha`](#bgalpha-number) property, when [`overla
 If ***false***, the canvas background will be painted black when [`overlay`](#overlay-boolean) is ***false***,
 or transparent when [`overlay`](#overlay-boolean) is ***true***.
 
+See also [`registerGradient()`](#registergradient-name-options-).
+
 Defaults to **true**.
 
 ?> Please note that when [`overlay`](#overlay-boolean) is ***false*** and [`ledBars`](#ledbars-boolean) is ***true***, the background color will always be black,
@@ -654,29 +782,34 @@ and setting `showBgColor` to ***true*** will make the "unlit" LEDs visible inste
 
 *true* to display the current frame rate. Defaults to **false**.
 
-### `showLeds` **(DEPRECATED)**
-
-**This property will be removed in version 4.0.0** - Use [`ledBars`](#ledbars-boolean) instead.
-
 ### `showPeaks` *boolean*
 
 *true* to show amplitude peaks for each frequency. Defaults to **true**.
 
 ### `showScaleX` *boolean*
 
-*Available since v3.0.0*
+*Available since v3.0.0 - this property was named `showScale` in earlier versions*
 
-*true* to display the frequency (Hz) scale on the X axis. Defaults to **true**.
+*true* to display scale labels on the X axis.
 
-*NOTE: this property was named `showScale` in versions prior to v3.0.0*
+See also [`noteLabels`](#notelabels-boolean).
+
+Defaults to **true**.
 
 ### `showScaleY` *boolean*
 
 *Available since v2.4.0*
 
-*true* to display the level (dB) scale on the Y axis. Defaults to **false**.
+*true* to display the level/amplitude scale on the Y axis.
 
 This option has no effect when [`radial`](#radial-boolean) or [`lumiBars`](#lumibars-boolean) are set to *true*.
+
+When [`linearAmplitude`](#linearamplitude-boolean) is set to *false* (default), labels are shown in decibels (dB);
+otherwise, values represent a percentage (0-100%) of the maximum amplitude.
+
+See also [`minDecibels`](#mindecibels-number) and [`maxDecibels`](#maxdecibels-number).
+
+Defaults to **false**.
 
 ### `smoothing` *number*
 
@@ -700,30 +833,21 @@ Defaults to **0**.
 
 *Available since v3.0.0*
 
-When *true*, the gradient will be split between both channels, so each channel will have different colors. If *false*, both channels will use the full gradient.
+When set to *true* and [`channelLayout`](#channellayout-string) is **_dual-vertical_**, the gradient will be split between channels.
 
-| splitGradient: *true* | splitGradient: *false* |
+When *false*, both channels will use the full gradient.
+
+| gradient: *'classic'* - splitGradient: *false* | gradient: *'classic'* - splitGradient: *true* |
 |:--:|:--:|
-| ![split-on](demo/media/splitGradient_on.png) | ![split-off](demo/media/splitGradient_off.png) |
+| ![split-off](img/splitGradient_off.png) | ![split-on](img/splitGradient_on.png) |
 
-This option has no effect in horizontal gradients, or when [`stereo`](#stereo-boolean) is set to *false*.
-
-Defaults to **false**.
-
-### `stereo` *boolean*
-
-*Available since v3.0.0*
-
-When *true*, the spectrum analyzer will display separate graphs for the left and right audio channels.
-
-Notes:
-- Stereo tracks will always output stereo audio, even if `stereo` is set to *false* (in such case the analyzer graph will represent both channels combined);
-- Mono (single channel) tracks will output audio only on the left channel when `stereo` is *true*, unless you have another stereo source simultaneously
-connected to the analyzer, which will force the mono source to be upmixed to stereo.
-
-See also [`splitGradient`](#splitgradient-boolean).
+This option has no effect on horizontal gradients, except on [`radial`](#radial-boolean) spectrum - see note in [`registerGradient()`](#registergradient-name-options-).
 
 Defaults to **false**.
+
+### `stereo` **(DEPRECATED)** *boolean*
+
+**This property will be removed in version 5** - Use [`channelLayout`](#channellayout-string) instead.
 
 ### `useCanvas` *boolean*
 
@@ -752,6 +876,33 @@ Please note that changing the audio element volume directly will affect the ampl
 
 Defaults to **1**.
 
+### `weightingFilter` *string*
+
+*Available since v4.0.0*
+
+[Weighting filter](https://en.wikipedia.org/wiki/Weighting_filter) applied to frequency data for spectrum visualization.
+
+?> Selecting a weighting filter **does NOT** affect the audio output.
+
+Each filter applies a different curve of gain/attenuation to specific frequency ranges, but the general idea is to adjust the
+visualization of frequencies to which the human ear is more or less sensitive.
+
+Refer to the [weighting filters viewer tool](/tools/weighting-filters.html) for response tables and an interactive version of the curves graph seen below.
+
+<img src="img/weigthing-filters-curves.png" class="align-right">
+
+weightingFilter | description
+------|------------------------------
+'' (empty string) | No weighting applied (default)
+'A'   | A-weighting
+'B'   | B-weighting
+'C'   | C-weighting
+'D'   | D-weighting
+'468' | ITU-R 468 weighting
+
+Defaults to **''**.
+
+
 ## Static properties
 
 ### `AudioMotionAnalyzer.version` *string* *(Read only)*
@@ -767,11 +918,15 @@ Since this is a static property, you should always access it as `AudioMotionAnal
 
 ### `onCanvasDraw` *function*
 
-If defined, this function will be called after rendering each frame.
+If defined, this function will be called after **audioMotion-analyzer** finishes rendering each animation frame.
 
-The audioMotion object will be passed as an argument to the callback function.
+The callback function is passed two arguments: an *AudioMotionAnalyzer* object, and an object with the following properties:
+- `timestamp`, a [*DOMHighResTimeStamp*](https://developer.mozilla.org/en-US/docs/Web/API/DOMHighResTimeStamp)
+which indicates the elapsed time in milliseconds since the analyzer started running;
+- `canvasGradients`, an array of [*CanvasGradient*](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient])
+objects currently in use on the left (or single) and right analyzer channels.
 
-Canvas properties `fillStyle` and `strokeStyle` will be set to the current gradient when the function is called.
+The canvas properties `fillStyle` and `strokeStyle` will be set to the left/single channel gradient before the function is called.
 
 Usage example:
 
@@ -784,16 +939,26 @@ const audioMotion = new AudioMotionAnalyzer(
     }
 );
 
-function drawCallback( instance ) {
-	const ctx      = instance.canvasCtx,
-    	  baseSize = ( instance.isFullscreen ? 40 : 20 ) * instance.pixelRatio;
+function drawCallback( instance, info ) {
+    const baseSize  = ( instance.isFullscreen ? 40 : 20 ) * instance.pixelRatio,
+          canvas    = instance.canvas,
+          centerX   = canvas.width / 2,
+          centerY   = canvas.height / 2,
+          ctx       = instance.canvasCtx,
+          maxHeight = centerY / 2,
+          maxWidth  = centerX - baseSize * 5,
+          time      = info.timestamp / 1e4;
 
-    // use the 'energy' value to increase the font size and make the logo pulse to the beat
+    // the energy value is used here to increase the font size and make the logo pulsate to the beat
     ctx.font = `${ baseSize + instance.getEnergy() * 25 * instance.pixelRatio }px Orbitron, sans-serif`;
 
-    ctx.fillStyle = '#fff8';
+    // use the right-channel gradient to fill text
+    ctx.fillStyle = info.canvasGradients[1];
     ctx.textAlign = 'center';
-    ctx.fillText( 'audioMotion', instance.canvas.width - baseSize * 8, baseSize * 2 );
+    ctx.globalCompositeOperation = 'lighter';
+
+    // the timestamp can be used to create effects and animations based on the elapsed time
+    ctx.fillText( 'audioMotion', centerX + maxWidth * Math.cos( time % Math.PI * 2 ), centerY + maxHeight * Math.sin( time % Math.PI * 16 ) );
 }
 ```
 
@@ -803,7 +968,7 @@ For more examples, see the fluid demo [source code](https://github.com/hvianna/a
 
 If defined, this function will be called whenever the canvas is resized.
 
-Two arguments are passed: a string with the reason why the function was called (see below) and the audioMotion object.
+The callback function is passed two arguments: a string which indicates the reason that triggered the call (see below) and the *AudioMotionAnalyzer* object.
 
 Reason | Description
 -------|------------
@@ -894,8 +1059,9 @@ Returns an array with current data for each analyzer bar. Each array element is 
 ```js
 {
 	posX: <number>,   // horizontal position of this bar on the canvas
-	freqLo: <number>, // starting frequency for this bar
-	freqHi: <number>, // ending frequency for this bar
+	freq: <number>,   // center frequency for this bar (added in v4.0.0)
+	freqLo: <number>, // lower edge frequency
+	freqHi: <number>, // upper edge frequency
 	peak: <array>,    // peak values for left and right channels
 	hold: <array>,    // peak hold frames for left and right channels - values < 0 mean the peak is falling down
 	value: <array>    // current amplitude on left and right channels
@@ -906,11 +1072,11 @@ Returns an array with current data for each analyzer bar. Each array element is 
 
 `hold` values are integers and indicate the hold time (in frames) for the current peak. The maximum value is 30 and means the peak has just been set, while negative values mean the peak is currently falling down.
 
-Please note that `hold` and `value` will have only one element when [`stereo`](#stereo-boolean) is *false*, but `peak` is always a two-element array.
+Please note that `hold` and `value` will have only one element when [`channelLayout`](#channellayout-string) is set to *'single'*, but `peak` is always a two-element array.
 
 You can use this method to create your own visualizations using the analyzer data. See [this pen](https://codepen.io/hvianna/pen/ZEKWWJb) for usage example.
 
-### `getEnergy( [preset | startFreq], [endFreq] )`
+### `getEnergy( [preset | startFreq [, endFreq] ] )`
 
 *Available since v3.2.0*
 
@@ -939,33 +1105,29 @@ Use this method inside your callback function to create additional visual effect
 
 Registers a custom color gradient.
 
-`name` must be a non-empty *string* that will be used to select this gradient, via the [`gradient`](#gradient-string) property.
+`name` must be a non-empty string that will be used to select this gradient, via the [`gradient`](#gradient-string) property.
+
 `options` must be an object as shown below:
 
 ```js
 const options = {
     bgColor: '#011a35', // background color (optional) - defaults to '#111'
     dir: 'h',           // add this property to create a horizontal gradient (optional)
-    colorStops: [       // list your gradient colors in this array (at least 2 entries are required)
+    colorStops: [       // list your gradient colors in this array (at least one color is required)
         'red',                      // colors may be defined in any valid CSS format
         { pos: .6, color: '#ff0' }, // use an object to adjust the offset (0 to 1) of a colorStop
-        'hsl( 120, 100%, 50% )'     // colors may be defined in any valid CSS format
+        'hsl( 120, 100%, 50% )'
     ]
 }
 
 audioMotion.registerGradient( 'myGradient', options );
 ```
 
-!> In TypeScript projects make sure to import the `GradientOptions` definition and use it as the type of your object, like so:
+Check the [built-in **_'rainbow'_** gradient](#gradient-string) for an example of horizontal gradient.
 
-```js
-import AudioMotionAnalyzer, { GradientOptions } from 'audiomotion-analyzer'
+**Note:** the horizontal flag (`dir: 'h'`) has no effect on [`radial`](#radial-boolean) spectrum, because in that mode all gradients are rendered in radial direction.
 
-const options: GradientOptions = {
-	⋮
-```
-
-Additional information about [gradient color-stops](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop).
+?> Any gradient, including the built-in ones, may be modified by (re-)registering the same gradient name (names are case sensitive).
 
 ### `setCanvasSize( width, height )`
 
@@ -975,11 +1137,13 @@ Sets the analyzer nominal dimensions in pixels. See [`height`](#height-number) a
 
 Sets the desired frequency range. Values are expressed in Hz (Hertz).
 
+See [`minFreq` and `maxFreq`](#minfreq-number) for lower and upper limit values.
+
 ### `setLedParams( [params] )`
 
 *Available since v3.2.0*
 
-Customize parameters used to create the [LEDs display effect](#ledbars-boolean).
+Customize parameters used to create the [`ledBars`](#ledbars-boolean) effect.
 
 `params` should be an object with the following structure:
 
@@ -993,16 +1157,16 @@ const params = {
 
 property  | description
 ----------|-------------
-`maxLeds` | maximum desired number of LED elements per analyzer bar
+`maxLeds` | **maximum** desired number of LED elements per analyzer bar
 `spaceV`  | vertical spacing ratio, relative to the LED height (**1** means spacing is the same as the LED height)
-`spaceH`  | **minimum** horizontal spacing ratio, relative to the available width (**0.5** means half of the width is used for spacing and half for the LED); behaves exactly like [barSpace](#barspace-number) (values >= 1 are considered as literal pixel values) and will override it if larger
+`spaceH`  | **minimum** horizontal spacing ratio, relative to the available width for each band, or a literal pixel value if **>= 1**;<br>this behaves exactly like [`barSpace`](#barspace-number) and the largest spacing (resulting from either `barSpace` or `spaceH`) will prevail.
 
 The available canvas height is initially divided by `maxLeds` and vertical spacing is calculated observing the `spaceV` ratio;
 if necessary, the led count is decreased until both the led segment and the vertical spacing are at least 2px tall.
 
 You can try different values in the [fluid demo](https://audiomotion.dev/demo/fluid.html).
 
-**If called with no arguments or any invalid property, disables previously set parameters.**
+?> If called with no arguments or any invalid property, clears custom parameters previously set.
 
 ### `setOptions( [options] )`
 
@@ -1061,30 +1225,101 @@ ERR_UNKNOWN_GRADIENT       | User tried to [select a gradient](#gradient-string)
 
 ## Known Issues
 
-### reflexBright won't work on some browsers {docsify-ignore}
+### reflexBright won't work on some browsers <!-- {docsify-ignore} -->
 
 [`reflexBright`](#reflexbright-number) feature relies on the [`filter`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter) property of the Canvas API,
 which is [currently not supported in some browsers](https://caniuse.com/#feat=mdn-api_canvasrenderingcontext2d_filter) (notably, Opera and Safari).
 
-### alphaBars and fillAlpha won't work with Radial on Firefox {docsify-ignore}
+### alphaBars and fillAlpha won't work with Radial on Firefox <!-- {docsify-ignore} -->
 
-On Firefox, [`alphaBars`](#alphaBars-boolean) and [`fillAlpha`](#fillalpha-number) won't work with [`radial`](#radial-boolean) visualization when using hardware acceleration, due to [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912).
+On Firefox, [`alphaBars`](#alphaBars-boolean) and [`fillAlpha`](#fillalpha-number) won't work with [`radial`](#radial-boolean) spectrum when using hardware acceleration, due to [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912).
 
 ### Visualization of live streams won't work on Safari {docsify-ignore}
 
 Safari's implementation of Web Audio won't return analyzer data for live streams, as documented in [this bug report](https://bugs.webkit.org/show_bug.cgi?id=195043).
 
 
+## Troubleshooting
+
+Common problems and solutions. Remember to check the browser console for error messages.
+
+### Error message: `Cannot use import statement outside a module` <!-- {docsify-ignore} -->
+
+The `import` statement must be inside a `script` which has the `type="module"` property (and no `type="text/javascript"`), like so:
+
+```html
+  <script type="module">
+    import AudioMotionAnalyzer from 'https://cdn.skypack.dev/audiomotion-analyzer?min';
+
+    // your code here
+  </script>
+```
+
+Or
+
+```html
+  <script src="main.js" type="module"></script>
+```
+
+### Error message: `MediaElementAudioSource outputs zeroes due to CORS access restrictions` <!-- {docsify-ignore} -->
+
+Make sure the media element (`audio` or `video` tag) connected to **audioMotion-analyzer** has the `crossorigin = "anonymous"` property, like so:
+
+```html
+<audio id="myAudio" src="https://example.com/stream" controls crossorigin="anonymous"></audio>
+```
+
+You can also set the `crossOrigin` (mind the uppercase "O") property via JavaScript, like so:
+
+```js
+myAudio.crossOrigin = 'anonymous';
+```
+
+### Sound only plays after the user clicks somewhere on the page. <!-- {docsify-ignore} -->
+
+Browser autoplay policy dictates that audio output can only be initiated by a user gesture, and this is enforced by WebAudio API
+by creating [*AudioContext*](#audioctx-audiocontext-object-read-only) objects in *suspended* mode.
+
+**audioMotion-analyzer** tries to automatically start its AudioContext on the first click on the page.
+However, if you're using an `audio` or `video` element with the `controls` property, clicks on those native media controls cannot be detected
+by JavaScript, so the audio will only be enabled if/when the user clicks somewhere else.
+
+Two possible solutions are: **1)** ensure your users have to click somewhere else before using the media controls,
+like a "power on" button, or simply clicking to select a song from a list will do; or **2)** don't use the native
+controls at all, and create your own custom play and stop buttons. A very simple example:
+
+```html
+<audio id="myAudio" src="track.mp3" crossorigin="anonymous"></audio> <!-- do not add the 'controls' property! -->
+
+<button id="play"> Play </button>
+<button id="stop"> Stop </button>
+```
+
+```js
+const myAudio = document.getElementById('audio');
+
+document.getElementById('play').addEventListener( 'click', () => myAudio.play() );
+document.getElementById('stop').addEventListener( 'click', () => myAudio.pause() );
+```
+
+You can also prevent the _"The AudioContext was not allowed to start"_ warning message from appearing in the browser console, by instantiating
+your **audioMotion-analyzer** object within a function triggered by a user click. See the [minimal demo](/demo/minimal.html) code for an example.
+
+
 ## References and acknowledgments
 
+* Thanks to my wife, Virginia, for her never-ending love and support! 💞
 * Thanks to [Yuji Koike](http://www.ykcircus.com) for his awesome [Soniq Viewer for iOS](https://itunes.apple.com/us/app/soniq-viewer/id448343005), which inspired me to create **audioMotion**
 * [HTML Canvas Reference @W3Schools](https://www.w3schools.com/tags/ref_canvas.asp)
+* [Web Audio API specification](https://webaudio.github.io/web-audio-api/)
 * [Web Audio API documentation @MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 * [What does the FFT data in the Web Audio API correspond to?](https://stackoverflow.com/a/14789992/2370385)
 * [Equations for equal-tempered scale frequencies](http://pages.mtu.edu/~suits/NoteFreqCalcs.html)
 * [Making Audio Reactive Visuals](https://www.airtightinteractive.com/2013/10/making-audio-reactive-visuals/)
 * The font used in audioMotion's logo is [Orbitron](https://fonts.google.com/specimen/Orbitron) by Matt McInerney
-* This documentation website is powered by [GitHub Pages](https://pages.github.com/), [docsify](https://docsify.js.org/) and [docsify-themeable](https://jhildenbiddle.github.io/docsify-themeable).
+* The _prism_ and _rainbow_ gradients use the [12-bit rainbow palette](https://iamkate.com/data/12-bit-rainbow/) by Kate Morley
+* The cover page animation was recorded with [ScreenToGif](https://github.com/NickeManarin/ScreenToGif) by Nicke Manarin
+* This documentation website is powered by [GitHub Pages](https://pages.github.com/), [docsify](https://docsify.js.org/) and [docsify-themeable](https://jhildenbiddle.github.io/docsify-themeable)
 
 
 ## Changelog
@@ -1092,20 +1327,26 @@ Safari's implementation of Web Audio won't return analyzer data for live streams
 See [Changelog.md](Changelog.md)
 
 
-## Get in touch!
+## Contributing
 
-If you create something cool with **audioMotion-analyzer**, or simply think it's useful, I would love to know! Please drop me an e-mail at hvianna@gmail.com
+I kindly request that you only [open an issue](https://github.com/hvianna/audioMotion-analyzer/issues) for submitting a **bug report**.
 
-For feature requests, suggestions or feedback, please see the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+If you need help integrating *audioMotion-analyzer* with your project, have ideas for **new features** or any other questions or feedback,
+please use the [**Discussions**](https://github.com/hvianna/audioMotion-analyzer/discussions) section on GitHub.
+
+Additionally, I would love it if you could showcase your project using *audioMotion-analyzer* in [**Show and Tell**](https://github.com/hvianna/audioMotion-analyzer/discussions/categories/show-and-tell),
+and share your custom gradients with the community in [**Gradients**](https://github.com/hvianna/audioMotion-analyzer/discussions/categories/gradients)!
+
+When submitting a **Pull Request**, please branch it off the project's `develop` branch.
 
 And if you're feeling generous, maybe:
 
 * [Buy me a coffee](https://ko-fi.com/Q5Q6157GZ) on Ko-fi ☕😁
-* Gift me something from my [Bandcamp wishlist](https://bandcamp.com/henriquevianna/wishlist) 🎁🥰
+* Gift me something from my [Bandcamp wishlist](https://bandcamp.com/henriquevianna/wishlist) 🎁🎶🥰
 * Tip me via [Brave Rewards](https://brave.com/brave-rewards/) using Brave browser 🤓
 
 
 ## License
 
-audioMotion-analyzer copyright (c) 2018-2021 [Henrique Avila Vianna](https://henriquevianna.com)<br>
+audioMotion-analyzer copyright (c) 2018-2023 [Henrique Avila Vianna](https://henriquevianna.com)<br>
 Licensed under the [GNU Affero General Public License, version 3 or later](https://www.gnu.org/licenses/agpl.html).

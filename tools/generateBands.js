@@ -10,108 +10,107 @@
 
 function generateBands( options ) {
 
-	const { fftSize, sampleRate, mode, minFreq, maxFreq } = options;
-
-	const scale = [ 'C', 'C𝄱', 'C♯', 'C𝄰', 'D', 'D𝄱', 'D♯', 'D𝄰', 'E', 'E𝄱', 'F', 'F𝄱', 'F♯', 'F𝄰', 'G', 'G𝄱', 'G♯', 'G𝄰', 'A', 'A𝄱', 'A♯', 'A𝄰', 'B', 'B𝄱' ];
-
-	const ROOT24 = 2 ** ( 1 / 24 ),      // 24th root of 2
-		  C0     = 440 * ROOT24 ** -114; // ~16.35 Hz
+	const { fftSize, sampleRate, mode, minFreq, maxFreq, ansiBands } = options;
 
 	// helper functions
-	const freqToBin = ( freq, method = 'round' ) => Math[ method ]( freq * fftSize / sampleRate );
+	const freqToBin = ( freq, method = 'round' ) => {
+		const max = fftSize / 2 - 1,
+			  bin = Math[ method ]( freq * fftSize / sampleRate );
+		return bin < max ? bin : max;
+	}
 	const binToFreq = bin => bin * sampleRate / fftSize || 1; // returns 1 for bin 0
 
-	// generate a 11-octave 24-tone equal tempered scale
-
 	/*
-		A simple linear interpolation is used to obtain an approximate amplitude value for the desired frequency
-		from available FFT data, like so:
+		A simple interpolation is used to obtain an approximate amplitude value for any given frequency,
+		from the available FFT data. We find the FFT bin which closer matches the desired frequency	and
+		interpolate its value with that of the next adjacent bin, like so:
 
-		h = hLo + ( hHi - hLo ) * ( f - fLo ) / ( fHi - fLo )
-		                         \___________________________/
-		                                       |
-		                                     ratio
-		where:
+			v = v0 + ( v1 - v0 ) * ( log2( f / f0 ) / log2( f1 / f0 ) )
+			                       \__________________________________/
+			                                        |
+			                                      ratio
+			where:
 
-		f   - desired frequency
-		h   - amplitude of desired frequency
-		fLo - frequency represented by the lower FFT bin
-		fHi - frequency represented by the higher FFT bin
-		hLo - amplitude of fLo
-		hHi - amplitude of fHi
+			f  - desired frequency
+			v  - amplitude (volume) of desired frequency
+			f0 - frequency represented by the lower FFT bin
+			f1 - frequency represented by the upper FFT bin
+			v0 - amplitude of f0
+			v1 - amplitude of f1
 
-		ratio is calculated in advance here, to reduce computational complexity during real-time rendering
+		ratio is calculated in advance here, to reduce computational complexity during real-time rendering.
 	*/
 
-	let temperedScale = [];
+	// helper function to calculate FFT bin and interpolation ratio for a given frequency
+	const calcRatio = freq => {
+		const bin   = freqToBin( freq, 'floor' ), // find closest FFT bin
+			  lower = binToFreq( bin ),
+			  upper = binToFreq( bin + 1 ),
+			  ratio = Math.log2( freq / lower ) / Math.log2( upper / lower );
 
-	for ( let octave = 0; octave < 11; octave++ ) {
-		for ( let note = 0; note < 24; note++ ) {
-
-			const freq       = C0 * ROOT24 ** ( octave * 24 + note ),
-				  bin        = freqToBin( freq, 'floor' ),
-				  binFreq    = binToFreq( bin ),
-				  nextFreq   = binToFreq( bin + 1 ),
-				  ratio      = ( freq - binFreq ) / ( nextFreq - binFreq );
-
-			temperedScale.push( { octave, note: scale[ note ], freq, bin, ratio, range: [ binFreq, nextFreq ] } );
-		}
+		return [ bin, ratio ];
 	}
 
-	// generate the frequency bands according to user's selected parameters
+	// helper function to round a value to a given number of significant digits
+	// `atLeast` set to true prevents reducing the number of integer significant digits
+	const roundSD = ( value, digits, atLeast ) => +value.toPrecision( atLeast ? Math.max( digits, 1 + Math.log10( value ) | 0 ) : digits );
 
-	const steps = [0,1,2,3,4,6,8,12,24][ mode ]; // number of notes grouped per band for each mode
+	// helper function to find the nearest preferred number (Renard series) for a given value
+	const nearestPreferred = value => {
+		// R20 series is used here, as it provides closer approximations for 1/2 octave bands (non-standard)
+		const preferred = [ 1, 1.12, 1.25, 1.4, 1.6, 1.8, 2, 2.24, 2.5, 2.8, 3.15, 3.55, 4, 4.5, 5, 5.6, 6.3, 7.1, 8, 9, 10 ],
+			  power = Math.log10( value ) | 0,
+			  normalized = value / 10 ** power;
 
-	let analyzerBars = [];
+		let i = 1;
+		while ( i < preferred.length && normalized > preferred[ i ] )
+			i++;
 
-	for ( let index = 0; index < temperedScale.length; index += steps ) {
-		let { octave, freq: freqLo, bin: binLo, ratio: ratioLo } = temperedScale[ index ],     // band start
-			{ freq: freqHi, bin: binHi, ratio: ratioHi } = temperedScale[ index + steps - 1 ]; // band end
+		if ( normalized - preferred[ i - 1 ] < preferred[ i ] - normalized )
+			i--;
 
-		const nBars   = analyzerBars.length,
-			  prevBar = analyzerBars[ nBars - 1 ];
-
-		// if the ending frequency is out of range, we're done here
-		if ( freqHi > maxFreq || binHi >= fftSize / 2 ) {
-			prevBar.binHi++;     // add an extra bin to the last bar, to fully include the last valid band
-			prevBar.ratioHi = 0; // disable interpolation
-			prevBar.freqHi = binToFreq( prevBar.binHi ); // update ending frequency
-			break;
-		}
-
-		// is the starting frequency in the selected range?
-		if ( freqLo >= minFreq ) {
-			if ( nBars > 0 ) {
-				const diff = binLo - prevBar.binHi;
-
-				// check if we skipped any available FFT bins since the last bar
-				if ( diff > 1 ) {
-					// allocate half of the unused bins to the previous bar
-					prevBar.binHi = binLo - ( diff >> 1 );
-					prevBar.ratioHi = 0;
-					prevBar.freqHi = binToFreq( prevBar.binHi ); // update ending frequency
-
-					// if the previous bar doesn't share any bins with other bars, no need for interpolation
-					if ( nBars > 1 && prevBar.binHi > prevBar.binLo && prevBar.binLo > analyzerBars[ nBars - 2 ].binHi ) {
-						prevBar.ratioLo = 0;
-						prevBar.freqLo = binToFreq( prevBar.binLo ); // update starting frequency
-					}
-
-					// start the current bar at the bin following the last allocated bin
-					binLo = prevBar.binHi + 1;
-				}
-
-				// if the lower bin is not shared with the ending frequency nor the previous bar, no need to interpolate it
-				if ( binHi > binLo && binLo > prevBar.binHi ) {
-					ratioLo = 0;
-					freqLo = binToFreq( binLo );
-				}
-			}
-
-			analyzerBars.push( { octave, binLo, binHi, freqLo, freqHi, ratioLo, ratioHi } );
-		}
-
+		return ( preferred[ i ] * 10 ** ( power + 5 ) | 0 ) / 1e5; // keep 5 significant digits
 	}
 
-	return { temperedScale, analyzerBars };
+	// ANSI standard octave bands use the base-10 frequency ratio, as preferred by [ANSI S1.11-2004, p.2]
+	// The equal-tempered scale uses the base-2 ratio
+	const bands = [0,24,12,8,6,4,3,2,1][ mode ],
+		  bandWidth = ansiBands ? 10 ** ( 3 / ( bands * 10 ) ) : 2 ** ( 1 / bands ), // 10^(3/10N) or 2^(1/N)
+		  halfBand  = bandWidth ** .5;
+
+	let analyzerBars = [],
+		currFreq = ansiBands ? 7.94328235 / ( bands % 2 ? 1 : halfBand ) : 8.17579892; // C -1
+		// For ANSI bands with even denominators (all except 1/1 and 1/3), the reference frequency (1 kHz)
+		// must fall on the edges of a pair of adjacent bands, instead of midband [ANSI S1.11-2004, p.2]
+		// In the equal-tempered scale, all midband frequencies represent a musical note or quarter-tone.
+
+	do {
+		let freq = currFreq; // midband frequency
+
+		const freqLo = roundSD( freq / halfBand, 4, true ), // lower edge frequency
+			  freqHi = roundSD( freq * halfBand, 4, true ), // upper edge frequency
+			  [ binLo, ratioLo ] = calcRatio( freqLo ),
+			  [ binHi, ratioHi ] = calcRatio( freqHi );
+
+		// for ANSI 1/1, 1/2 and 1/3 bands, use the preferred numbers to find the nominal midband frequency
+		// for ANSI 1/4 to 1/24, round to 2 or 3 significant digits, depending on the MSD [ANSI S1.11-2004, p.12]
+		if ( ansiBands )
+			freq = bands < 4 ? nearestPreferred( freq ) : roundSD( freq, freq.toString()[0] < 5 ? 3 : 2 );
+		else
+			freq = roundSD( freq, 4, true );
+
+		// for viewer tool only
+		const clamped = freqLo < minFreq
+						? 'l' // lower edge clamped by minFreq
+		  				: freqHi > maxFreq || ratioHi > 1
+		  				  ? 'u' // upper edge clamped by maxFreq (or sample rate)
+		  				  : '';
+
+		if ( freq >= minFreq )
+			analyzerBars.push( { freq, freqLo, freqHi, binLo, ratioLo, binHi, ratioHi: Math.min( ratioHi, 1 ), clamped } );
+
+		currFreq *= bandWidth;
+	} while ( currFreq <= maxFreq );
+
+	return analyzerBars;
 }

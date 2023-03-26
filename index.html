@@ -36,6 +36,10 @@
 				--cover-max-width: 1200px;
 				--content-max-width: 1200px;
 			}
+
+			img.align-right {
+				float: right;
+			}
 		}
 
 		.sidebar > h1 .app-name-link {
@@ -126,7 +130,7 @@
 			name: 'audioMotion-analyzer',
 			repo: 'https://github.com/hvianna/audioMotion-analyzer',
 			auto2top: true,
-			noCompileLinks: ['/demo/.*'],
+			noCompileLinks: [ '/demo/.*', '/tools/.*' ],
 			coverpage: 'coverpage.md',
 			search: {
 				depth: 3,

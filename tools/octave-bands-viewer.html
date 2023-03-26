@@ -7,24 +7,7 @@
 </head>
 
 <body>
-<div class="options">
-	<table id="tableScale">
-		<thead>
-			<tr>
-				<th colspan="5">24-tone Tempered Scale</th>
-			</tr>
-			<tr>
-				<th>Note</th>
-				<th>Frequency<br>(Hz)</th>
-				<th>FFT bin</th>
-				<th><span class="info" data-text="The selected FFT bin is interpolated with the next bin to obtain an approximate value for the desired frequency">Interpolation<br>Ratio</span></th>
-				<th><span class="info" data-text="Actual frequencies of the selected FFT bins, with green bar representing the interpolated frequency">Actual range</span><br>(Hz)</th>
-			</tr>
-		</thead>
-		<tbody>
-		</tbody>
-	</table>
-
+<div class="container">
 	<div>
 		<h1>audioMotion-analyzer</h1>
 		<h2>octave bands viewer tool</h2>
@@ -45,7 +28,7 @@
 			<label><span class="info" data-text="[audioCtx.sampleRate] The sample rate depends on the output device, but it's usually 44100 or 48000 Hz.">Sample rate</span> (Hz)</label>
 			<select id="samplerate">
 				<option>44100</option>
-				<option selected>48000</option>
+				<option>48000</option>
 				<option>96000</option>
 			</select>
 		</div>
@@ -74,22 +57,30 @@
 			</select>
 		</div>
 
+		<div class="flex">
+			<label for="ansi"><span class="info" data-text="[audioMotion.ansiBands]">ANSI Standard Octave Bands</span></label>
+			<input id="ansi" type="checkbox">
+		</div>
+
 		<label>
-			<button id="generate">Generate Tempered Scale & Analyzer Bars</button>
+			<button id="generate">Generate Analyzer Bars</button>
 		</label>
 
 		<div>
 			<h4>References:</h4>
 			<ul>
-				<li><a href="https://en.wikipedia.org/wiki/Quarter_tone">https://en.wikipedia.org/wiki/Quarter_tone</a></li>
-				<li><a href="https://pages.mtu.edu/~suits/notefreqs.html">https://pages.mtu.edu/~suits/notefreqs.html</a></li>
-				<li><a href="http://hyperphysics.phy-astr.gsu.edu/hbase/Music/et.html">http://hyperphysics.phy-astr.gsu.edu/hbase/Music/et.html</a></li>
-				<li><a href="https://www.dacapoalcoda.com/quarter-tones">https://www.dacapoalcoda.com/quarter-tones</a></li>
+				<li><a href="https://en.wikipedia.org/wiki/Quarter_tone">Quarter tone</a></li>
+				<li><a href="https://pages.mtu.edu/~suits/notefreqs.html">Frequencies for equal-tempered scale, A4 = 440 Hz</a></li>
+				<li><a href="http://hyperphysics.phy-astr.gsu.edu/hbase/Music/et.html">Equal temperament</a></li>
+				<li><a href="https://www.dacapoalcoda.com/quarter-tones">Quarter tones</a></li>
+				<li><a href="https://blog.prosig.com/2006/02/17/standard-octave-bands/">Standard Octave Bands</a></li>
+				<li><a href="https://www.engineeringtoolbox.com/octave-bands-frequency-limits-d_1602.html">Octave Band Frequencies</a></li>
+				<li><a href="https://archive.org/details/gov.law.ansi.s1.11.2004">ANSI S1.11-2004: Specification for Octave-Band and<br>Fractional-Octave-Band Analog and Digital Filters</a></li>
 			</ul>
 		</div>
 
 		<div class="credits">
-			<strong>audioMotion-analyzer</strong> Copyright &copy; 2018-2021 Henrique Avila Vianna.<br>
+			<strong>audioMotion-analyzer</strong> Copyright &copy; 2018-2023 Henrique Avila Vianna.<br>
 			Licensed under AGPL-3.0 or later. Source code is available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
 		</div>
 	</div>
@@ -97,15 +88,20 @@
 	<table id="tableBands">
 		<thead>
 			<tr>
-				<th colspan="5">Analyzer bars</th>
+				<th rowspan="2"><span class="info" data-text="Index in the array returned by getBars()">Bar #</span></th>
+				<th colspan="3">Frequency range (Hz)</th>
+				<th colspan="2"><span class="info" data-text="FFT bin selected for the lower edge">Lower FFT bin</span></th>
+				<th colspan="2"><span class="info" data-text="FFT bin selected for the upper edge">Upper FFT bin</span></th>
 			</tr>
 			<tr>
-				<th>Bar</th>
-				<th>Octave</th>
-				<th><span class="info" data-text="Initial FFT bin and interpolation ratio (0 means no interpolation)">Initial bin / ratio</span></th>
-				<th><span class="info" data-text="Final FFT bin and interpolation ratio (0 means no interpolation)">Final bin / ratio</span></th>
-				<th><span class="info" data-text="Resulting frequency range for this bar">Frequency range (Hz)</span></th>
-			</tr>
+				<th>Lower</th>
+				<th>Center</th>
+				<th>Upper</th>
+				<th><span class="info" data-text="FFT bin index">#</span></th>
+				<th><span class="info" data-text="Actual FFT frequencies and interpolation ratio applied">Frequency (Hz)</span></th>
+				<th><span class="info" data-text="FFT bin index">#</span></th>
+				<th><span class="info" data-text="Actual FFT frequencies and interpolation ratio applied">Frequency (Hz)</span></th>
+			</th>
 		</thead>
 		<tbody>
 		</tbody>
@@ -117,45 +113,46 @@
 <script>
 	function update() {
 
-		const fftSize    = +document.getElementById('fftsize').value,
-			  sampleRate = +document.getElementById('samplerate').value,
-			  mode       = +document.getElementById('mode').value,
-			  minFreq    = +document.getElementById('minFreq').value,
-			  maxFreq    = +document.getElementById('maxFreq').value;
+		let fftSize    = +document.getElementById('fftsize').value,
+			sampleRate = +document.getElementById('samplerate').value,
+			mode       = +document.getElementById('mode').value,
+			minFreq    = +document.getElementById('minFreq').value,
+			maxFreq    = +document.getElementById('maxFreq').value,
+			ansiBands  = document.getElementById('ansi').checked,
+			bodyBands  = document.getElementById('tableBands').tBodies[0];
 
-		const { temperedScale, analyzerBars } = generateBands( { fftSize, sampleRate, mode, minFreq, maxFreq } );
+		// make sure maxFreq is not higher than the Nyquist frequency (enforced on module by maxFreq setter)
+		maxFreq = Math.min( maxFreq, sampleRate / 2 );
+		document.getElementById('maxFreq').value = maxFreq;
 
-		const bodyScale = document.getElementById('tableScale').tBodies[0],
-			  bodyBands = document.getElementById('tableBands').tBodies[0];
+		// generate analyzer bands
+		const analyzerBars = generateBands( { fftSize, sampleRate, mode, minFreq, maxFreq, ansiBands } );
 
-		bodyScale.innerHTML = '';
-
-		temperedScale.forEach( band => {
-			bodyScale.innerHTML += `<tr><td>${band.note}${band.octave}<td>${band.freq.toFixed(2)}<td>${band.bin}<td>${band.ratio.toFixed(3)}<td><span class="bar" style="width: ${ band.ratio * 100 }%"></span>${band.range[0].toFixed(2)} - ${band.range[1].toFixed(2)}`;
-		});
+		// helper functions
+		const round = freq => freq.toFixed( Math.max( 0, 3 - ( Math.log10( freq ) | 0 ) ) );
+		const binToFreq = bin => round( bin * sampleRate / fftSize || 1 );
 
 		bodyBands.innerHTML = '';
 
-		let prevOctave = -1,
-			octaveChanges = 0;
-
 		analyzerBars.forEach( ( bar, index ) => {
-			let html = `<tr><td>${index}`;
-			if ( bar.octave != prevOctave ) {
-				prevOctave = bar.octave;
-				octaveChanges++;
-				let rows = 1;
-				while ( analyzerBars[ index + rows ] && analyzerBars[ index + rows ].octave == bar.octave )
-					rows++;
-				html += `<td rowspan="${rows}" class="center${ octaveChanges % 2 ? ' odd' : ' even' }">${bar.octave}`;
-			}
-			html += `
-				<td>${ bar.binLo } / ${ bar.ratioLo.toFixed(3) }
-				<td>${ bar.binHi } / ${ bar.ratioHi.toFixed(3) }
-				<td class="center">${ bar.freqLo.toFixed(2) } - ${ bar.freqHi.toFixed(2) }`;
+			let html = `
+				<tr>
+					<td class="center">${index}</td>
+					<td class="center${ bar.clamped == 'l' ? ' clamped" title="Lower edge will be clamped to ' + minFreq + 'Hz (minFreq)' : '' }">${ bar.freqLo }</td>
+					<td class="center">${ bar.freq }</td>
+					<td class="center${ bar.clamped == 'u' ? ' clamped" title="Upper edge will be clamped to ' + maxFreq + 'Hz (maxFreq)' : '' }">${ bar.freqHi }</td>
+					<td>${ bar.binLo }</td>
+					<td title="Interpolation ratio: ${ bar.ratioLo.toFixed(3) }"><span class="bar" style="width: ${ bar.ratioLo * 100 }%"></span>${ binToFreq( bar.binLo ) } - ${ binToFreq( bar.binLo + 1 ) }</td>
+					<td>${ bar.binHi }</td>
+					<td title="Interpolation ratio: ${ bar.ratioHi.toFixed(3) }"><span class="bar" style="width: ${ bar.ratioHi * 100 }%"></span>${ binToFreq( bar.binHi ) } - ${ binToFreq( bar.binHi + 1 ) }</td>
+				</tr>
+			`;
 			bodyBands.innerHTML += html;
 		});
 	}
+
+	const audioCtx = new ( window.AudioContext || window.webkitAudioContext )();
+	document.getElementById('samplerate').value = audioCtx.sampleRate;
 
 	update();
 	document.getElementById('generate').addEventListener( 'click', () => update() );
