@@ -1124,7 +1124,7 @@ export default class AudioMotionAnalyzer {
 					  [ binLo, ratioLo ] = calcRatio( freqLo ),
 					  [ binHi, ratioHi ] = calcRatio( freqHi );
 
-				barsPush( { posX, freq, freqLo, freqHi, binLo, binHi, ratioLo, ratioHi } );
+				barsPush( { posX: initialX + posX, freq, freqLo, freqHi, binLo, binHi, ratioLo, ratioHi } );
 			}
 
 		}
