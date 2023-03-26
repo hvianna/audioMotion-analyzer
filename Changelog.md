@@ -1,16 +1,9 @@
 Changelog
 =========
 
-## version 4.0.0-beta.5 (2023-02-20)
+## version 4.0.0 (2023-03-26)
 
-New in 4.0.0-beta.5:
-
-+ **Strings for dual [`channelLayout`](README.md#channellayout-string) modes changed from camelCase to hyphen-separated words;**
-+ The _dual-vertical_ channel layout now properly displays background colors from both selected gradients;
-+ Fixed [`overlay`](README.md#overlay-boolean) display in _dual-combined_ channel layout;
-+ Added two new built-in [gradients](README.md#gradient-string): _'orangered'_ and _'steelblue'_.
-
-### 🚨 v4 BREAKING CHANGES: <!-- {docsify-ignore} -->
+### 🚨 BREAKING CHANGES: <!-- {docsify-ignore} -->
 
 + Removed deprecated properties:
   + ~`energy`~ - use [`getEnergy()`](README.md#getenergy-preset-startfreq-endfreq-) instead
@@ -18,10 +11,10 @@ New in 4.0.0-beta.5:
   + ~`peakEnergy`~ - use [`getEnergy('peak')`](README.md#getenergy-preset-startfreq-endfreq-) instead
   + ~`showLeds`~ - use [`ledBars`](README.md#ledbars-boolean) instead
 
-+ [`getBars()`](README.md#getbars) elements now contain an extra `freq` property (potentially breaking in TypeScript projects), which represents the band's center frequency.
-The range of each band has also changed - frequencies that were previously at the lower edge (`freqLo`) are now placed at the center of the band.
++ [`getBars()`](README.md#getbars) now includes an additional `freq` property for each element, representing the center frequency of the band.
+In addition, the range of each band has been adjusted so that frequencies that were previously at the lower edge (`freqLo`) are now located at the center of the band.
 
-+ Also, **`stereo` has been DEPRECATED** and should be removed in version 5 - use [`channelLayout`](README.md#channellayout-string) instead.
++ **`stereo` has been DEPRECATED** and will be removed in version 5 - use [`channelLayout`](README.md#channellayout-string) instead.
 
 ### Added: <!-- {docsify-ignore} -->
 
@@ -32,8 +25,9 @@ The range of each band has also changed - frequencies that were previously at th
 + [`isBandsMode`](README.md#isbandsmode-boolean-read-only) read-only property;
 + [`linearAmplitude`](README.md#linearamplitude-boolean) - use linear values instead of dB for spectrum amplitudes;
 + [`linearBoost`](README.md#linearboost-number) - amplify low energy values when using linear amplitude;
-+ [`noteLabels`](README.md#notelabels-boolean) - display musical note labels instead of frequency values on the X axis;
-+ [`weightingFilter`](README.md#weightingfilter-string) - select from five different weighting filters for improved spectrum visualization.
++ [`noteLabels`](README.md#notelabels-boolean) - display musical note labels instead of frequency values on the X-axis;
++ [`weightingFilter`](README.md#weightingfilter-string) - select from five different weighting filters for improved spectrum visualization;
++ Two new built-in [gradients](README.md#gradient-string): _orangered_ and _steelblue_.
 
 Thank you **@jonathan-annett** [(#28)](https://github.com/hvianna/audioMotion.js/issues/28) and **@TF3RDL** ([#30](https://github.com/hvianna/audioMotion-analyzer/issues/30) and [#38](https://github.com/hvianna/audioMotion-analyzer/issues/38))
 for the suggestions that led to the implementation of several of these new features.
@@ -46,9 +40,12 @@ for the suggestions that led to the implementation of several of these new featu
 
 + Optimized generation of octave bands, with more accurate ranges and center frequencies;
 + Frequency labels on the X-axis now show different values depending on the value of [`ansiBands`](README.md#ansibands-boolean), to properly match the bands' center frequencies;
++ The [`onCanvasDraw`](README.md#oncanvasdraw-function) callback is now passed an additional object with timestamp and gradients information;
++ The _prism_ and _rainbow_ gradients were recreated using the beautiful [12-bit rainbow palette](https://iamkate.com/data/12-bit-rainbow/) by Kate Morley - If you need the old colors [check this post](https://github.com/hvianna/audioMotion-analyzer/discussions/44);
 + Custom gradients can now register a single color;
 + [`splitGradient`](README.md#splitgradient-boolean) now works for horizontal gradients in [`radial`](README.md#radial-boolean) visualization;
 + [`maxFreq`](README.md#maxfreq-number) is now capped to half the AudioContext's sample rate (Nyquist frequency);
++ Export additional types and interfaces in the TypeScript definition file;
 + Code optimizations, minor fixes and clean-up;
 + Revised and improved demos and documentation.
 
