@@ -19,6 +19,9 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  CHANNEL_COMBINED         = 'dual-combined',
 	  CHANNEL_SINGLE           = 'single',
 	  CHANNEL_VERTICAL         = 'dual-vertical',
+	  COLOR_BAR_INDEX          = 'bar-index',
+	  COLOR_BAR_LEVEL          = 'bar-level',
+	  COLOR_GRADIENT           = 'gradient',
  	  GRADIENT_DEFAULT_BGCOLOR = '#111',
  	  FILTER_NONE              = '',
  	  FILTER_A                 = 'A',
@@ -92,8 +95,12 @@ class AudioMotionError extends Error {
 	}
 }
 
-// helper function
+// helper function - output deprecation warning message on console
 const deprecate = ( name, alternative ) => console.warn( `${name} is deprecated. Use ${alternative} instead.` );
+
+// helper function - validate a given value with an array of strings (by default, all lowercase)
+// returns the validated value, or the first element of `list` if `value` is not found in the array
+const validateFromList = ( value, list, modifier = 'toLowerCase' ) => list[ Math.max( 0, list.indexOf( ( '' + value )[ modifier ]() ) ) ];
 
 // AudioMotionAnalyzer class
 
@@ -313,8 +320,7 @@ export default class AudioMotionAnalyzer {
 		return this._chLayout;
 	}
 	set channelLayout( value ) {
-		const LAYOUTS = [ CHANNEL_SINGLE, CHANNEL_VERTICAL, CHANNEL_COMBINED ];
-		this._chLayout = LAYOUTS[ Math.max( 0, LAYOUTS.indexOf( ( '' + value ).toLowerCase() ) ) ];
+		this._chLayout = validateFromList( value, [ CHANNEL_SINGLE, CHANNEL_VERTICAL, CHANNEL_COMBINED ] );
 
 		// update node connections
 		this._input.disconnect();
@@ -328,6 +334,13 @@ export default class AudioMotionAnalyzer {
 		this._createScales();
 		this._calcLeds();
 		this._makeGrad();
+	}
+
+	get colorMode() {
+		return this._colorMode;
+	}
+	set colorMode( value ) {
+		this._colorMode = validateFromList( value, [ COLOR_GRADIENT, COLOR_BAR_INDEX, COLOR_BAR_LEVEL ] );
 	}
 
 	get fftSize() {
@@ -345,8 +358,7 @@ export default class AudioMotionAnalyzer {
 		return this._frequencyScale;
 	}
 	set frequencyScale( value ) {
-		const FREQUENCY_SCALES = [ SCALE_LOG, SCALE_BARK, SCALE_MEL, SCALE_LINEAR ];
-		this._frequencyScale = FREQUENCY_SCALES[ Math.max( 0, FREQUENCY_SCALES.indexOf( ( '' + value ).toLowerCase() ) ) ];
+		this._frequencyScale = validateFromList( value, [ SCALE_LOG, SCALE_BARK, SCALE_MEL, SCALE_LINEAR ] );
 		this._calcAux();
 		this._calcBars();
 	}
@@ -572,8 +584,7 @@ export default class AudioMotionAnalyzer {
 		return this._weightingFilter;
 	}
 	set weightingFilter( value ) {
-		const WEIGHTING_FILTERS = [ FILTER_NONE, FILTER_A, FILTER_B, FILTER_C, FILTER_D, FILTER_468 ];
-		this._weightingFilter = WEIGHTING_FILTERS[ Math.max( 0, WEIGHTING_FILTERS.indexOf( ( '' + value ).toUpperCase() ) ) ];
+		this._weightingFilter = validateFromList( value, [ FILTER_NONE, FILTER_A, FILTER_B, FILTER_C, FILTER_D, FILTER_468 ], 'toUpperCase' );
 	}
 
 	get width() {
@@ -1358,6 +1369,7 @@ export default class AudioMotionAnalyzer {
 			  canvasX        = this._scaleX.canvas,
 			  canvasR        = this._scaleR.canvas,
 			  canvasGradients= this._canvasGradients,
+			  colorMode      = this._colorMode,
 			  energy         = this._energy,
 			  fillAlpha      = this.fillAlpha,
 			  mode           = this._mode,
@@ -1483,7 +1495,9 @@ export default class AudioMotionAnalyzer {
 			const channelTop     = channelLayout == CHANNEL_VERTICAL ? channelHeight * channel + channelGap * channel : 0,
 				  channelBottom  = channelTop + channelHeight,
 				  analyzerBottom = channelTop + analyzerHeight - ( isLedDisplay && ! this._maximizeLeds ? ledSpaceV : 0 ),
-				  bgColor        = ( ! showBgColor || isLedDisplay && ! isOverlay ) ? '#000' : this._gradients[ this._selectedGrads[ channel ] ].bgColor,
+				  channelGradient= this._gradients[ this._selectedGrads[ channel ] ],
+				  colorStops     = channelGradient.colorStops,
+				  bgColor        = ( ! showBgColor || isLedDisplay && ! isOverlay ) ? '#000' : channelGradient.bgColor,
 				  mustClear      = channel == 0 || ! isRadial && channelLayout != CHANNEL_COMBINED;
 
 			if ( useCanvas ) {
@@ -1584,9 +1598,9 @@ export default class AudioMotionAnalyzer {
 
 			// draw bars / lines
 
-			for ( let i = 0; i < nBars; i++ ) {
+			for ( let barIndex = 0; barIndex < nBars; barIndex++ ) {
 
-				const bar = this._bars[ i ],
+				const bar = this._bars[ barIndex ],
 					  { freq, binLo, binHi, ratioLo, ratioHi } = bar;
 
 				let barHeight = Math.max( interpolate( binLo, ratioLo ), interpolate( binHi, ratioHi ) );
@@ -1641,12 +1655,12 @@ export default class AudioMotionAnalyzer {
 				// Draw current bar or line segment
 
 				if ( mode == 10 ) {
-					// compute the average between the initial bar (i==0) and the next one
+					// compute the average between the initial bar (barIndex==0) and the next one
 					// used to smooth the curve when the initial posX is off the screen, in mirror and radial modes
-					const nextBarAvg = i ? 0 : ( this._normalizedB( fftData[ this._bars[1].binLo ] ) * maxBarHeight * ( channel && isRadial && channelLayout == CHANNEL_VERTICAL ? -1 : 1 ) + barHeight ) / 2;
+					const nextBarAvg = barIndex ? 0 : ( this._normalizedB( fftData[ this._bars[1].binLo ] ) * maxBarHeight * ( channel && isRadial && channelLayout == CHANNEL_VERTICAL ? -1 : 1 ) + barHeight ) / 2;
 
 					if ( isRadial ) {
-						if ( i == 0 )
+						if ( barIndex == 0 )
 							ctx.lineTo( ...radialXY( 0, ( posX < 0 ? nextBarAvg : barHeight ), 1 ) );
 						// draw line to the current point, avoiding overlapping wrap-around frequencies
 						if ( posX >= 0 ) {
@@ -1656,7 +1670,7 @@ export default class AudioMotionAnalyzer {
 						}
 					}
 					else { // Linear
-						if ( i == 0 ) {
+						if ( barIndex == 0 ) {
 							// start the line off-screen using the previous FFT bin value as the initial amplitude
 							if ( mirrorMode != -1 ) {
 								const prevFFTData = binLo ? this._normalizedB( fftData[ binLo - 1 ] ) * maxBarHeight : barHeight; // use previous FFT bin value, when available
@@ -1678,7 +1692,7 @@ export default class AudioMotionAnalyzer {
 						else {
 							if ( barSpace == 0 ) {
 								posX |= 0;
-								if ( i > 0 && posX > this._bars[ i - 1 ].posX + width ) {
+								if ( barIndex > 0 && posX > this._bars[ barIndex - 1 ].posX + width ) {
 									posX--;
 									adjWidth++;
 								}
@@ -1686,6 +1700,11 @@ export default class AudioMotionAnalyzer {
 							else
 								posX += barSpacePx / 2;
 						}
+					}
+
+					if ( colorMode != COLOR_GRADIENT ) {
+						const selectedColorStop = colorStops[ colorMode == COLOR_BAR_INDEX ? barIndex % colorStops.length : Math.round( ( 1 - bar.value[ channel ] ) * ( colorStops.length - 1 ) ) ];
+						ctx.fillStyle = ctx.strokeStyle = selectedColorStop.color || selectedColorStop;
 					}
 
 					if ( isLedDisplay ) {
@@ -1732,11 +1751,17 @@ export default class AudioMotionAnalyzer {
 				// Draw peak
 				const peak = bar.peak[ channel ];
 				if ( peak > 0 && this.showPeaks && ! isLumiBars && posX >= initialX && posX < finalX ) {
-					// choose the best opacity for the peaks
+					// set opacity
 					if ( isOutline && lineWidth > 0 )
 						ctx.globalAlpha = 1;
 					else if ( isAlphaBars )
 						ctx.globalAlpha = peak;
+
+					// use the peak level to select the peak color when colorMode is set to 'bar-level'
+					if ( colorMode == COLOR_BAR_LEVEL && mode != 10 ) {
+						const selectedColorStop = colorStops[ Math.round( ( 1 - peak ) * ( colorStops.length - 1 ) ) ];
+						ctx.fillStyle = ctx.strokeStyle = selectedColorStop.color || selectedColorStop;
+					}
 
 					// render peak according to current mode / effect
 					if ( isLedDisplay ) {
@@ -1750,7 +1775,7 @@ export default class AudioMotionAnalyzer {
 						radialPoly( posX, peak * maxBarHeight * ( channel && channelLayout == CHANNEL_VERTICAL ? -1 : 1 ), adjWidth, -2 );
 				}
 
-			} // for ( let i = 0; i < nBars; i++ )
+			} // for ( let barIndex = 0; barIndex < nBars; barIndex++ )
 
 			// if not using the canvas, move earlier to the next channel
 			if ( ! useCanvas )
@@ -2127,6 +2152,7 @@ export default class AudioMotionAnalyzer {
 			barSpace       : 0.1,
 			bgAlpha        : 0.7,
 			channelLayout  : CHANNEL_SINGLE,
+			colorMode      : COLOR_GRADIENT,
 			fftSize        : 8192,
 			fillAlpha      : 1,
 			frequencyScale : SCALE_LOG,

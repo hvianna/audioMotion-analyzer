@@ -21,6 +21,7 @@ export interface Options {
   barSpace?: number;
   bgAlpha?: number;
   channelLayout?: ChannelLayout;
+  colorMode?: ColorMode;
   fftSize?: number;
   fillAlpha?: number;
   frequencyScale?: FrequencyScale;
@@ -85,6 +86,8 @@ export interface ConstructorOptions extends Options {
 
 export type ChannelLayout = "single" | "dual-vertical" | "dual-combined";
 
+export type ColorMode = "gradient" | "bar-index" | "bar-level";
+
 export type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "treble";
 
 export type FrequencyScale = "bark" | "linear" | "log" | "mel";
@@ -125,6 +128,9 @@ declare class AudioMotionAnalyzer {
 
   get channelLayout(): ChannelLayout;
   set channelLayout(value: ChannelLayout);
+
+  get colorMode(): ColorMode;
+  set colorMode(value: ColorMode);
 
   get connectedSources(): AudioNode[];
   get connectedTo(): AudioNode[];
