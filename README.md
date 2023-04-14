@@ -120,6 +120,7 @@ options = {<br>
 &emsp;&emsp;[barSpace](#barspace-number): **0.1**,<br>
 &emsp;&emsp;[bgAlpha](#bgalpha-number): **0.7**,<br>
 &emsp;&emsp;[channelLayout](#channellayout-string): **'single'**,<br>
+&emsp;&emsp;[colorMode](#colormode-string): **'gradient'**,<br>
 &emsp;&emsp;[connectSpeakers](#connectspeakers-boolean): **true**, // constructor only<br>
 &emsp;&emsp;[fftSize](#fftsize-number): **8192**,<br>
 &emsp;&emsp;[fillAlpha](#fillalpha-number): **1**,<br>
@@ -328,7 +329,7 @@ Defaults to **0.7**.
 
 Defines the number and layout of analyzer channels.
 
-channelLayout   | description
+channelLayout   | Description
 ----------------|------------
 'single'        | Single channel analyzer, representing the combined output of both left and right channels.
 'dual-combined' | Dual channel analyzer, with both channel graphs overlaid. Works best with semi-transparent **Graph** [`mode`](#mode-number) or [`outlineBars`](#outlinebars-boolean).
@@ -338,6 +339,22 @@ channelLayout   | description
 unless a stereo source is simultaneously connected to the analyzer, which will force the mono input to be upmixed to stereo.
 
 See also [`gradientLeft`](#gradientleft-string), [`gradientRight`](#gradientright-string) and [`splitGradient`](#splitgradient-boolean).
+
+### `colorMode` *string*
+
+*Available since v4.1.0*
+
+Selects the desired mode for coloring the analyzer bars. This property has no effect in **Graph** [`mode`](#mode-number).
+
+colorMode   | Description | Preview ('prism' gradient)
+------------|-------------|----------------------------
+'gradient'  | Analyzer bars are painted with the currently selected [`gradient`](#gradient-string). This is the default behavior. | ![prism](img/gradient-prism.png)
+'bar-index' | Each analyzer bar is painted with a **single color** from the selected gradient's *colorStops*, starting with the first color applied to the first bar, and so on, cycling through the available colorStops. | ![prism-bar-index](img/gradient-prism-bar-index.png)
+'bar-level' | The selected gradient's *colorStops* are used to paint each bar according to its current amplitude. For example, in a gradient with 3 *colorStops*, the first color is used for bars with an amplitude > 66%, the second color for amplitudes between 33% and 66%, and the third color for amplitudes < 33%. | ![prism-bar-level](img/gradient-prism-bar-level.png)
+
+See also [`registerGradient()`](#registergradient-name-options-).
+
+Defaults to **'gradient'**.
 
 ### `connectedSources` *array* *(Read only)*
 
@@ -1123,9 +1140,12 @@ const options = {
 audioMotion.registerGradient( 'myGradient', options );
 ```
 
-Check the [built-in **_'rainbow'_** gradient](#gradient-string) for an example of horizontal gradient.
+Gradients are generated from the top to the bottom of the canvas (or left to right, when `dir: 'h'` is declared).
+If no offsets are explicitly defined, colorStops are evenly distributed across the gradient.
 
-**Note:** the horizontal flag (`dir: 'h'`) has no effect on [`radial`](#radial-boolean) spectrum, because in that mode all gradients are rendered in radial direction.
+**Notes:**
+- Gradient direction (`dir` property) and colorStop offsets (`pos` property) are only effective when [`colorMode`](#colormode-string) is set to *'gradient'*;
+- Gradient direction has no effect on [`radial`](#radial-boolean) spectrum, because gradients are rendered in radial direction;
 
 ?> Any gradient, including the built-in ones, may be modified by (re-)registering the same gradient name (names are case sensitive).
 
