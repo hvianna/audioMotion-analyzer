@@ -51,6 +51,7 @@ export interface Options {
   reflexBright?: number;
   reflexFit?: boolean;
   reflexRatio?: number;
+  roundBars?: boolean;
   showBgColor?: boolean;
   showFPS?: boolean;
   showPeaks?: boolean;
@@ -170,6 +171,7 @@ declare class AudioMotionAnalyzer {
   get isLumiBars(): boolean;
   get isOctaveBands(): boolean;
   get isOutlineBars(): boolean;
+  get isRoundBars(): boolean;
 
   get isOn(): boolean;
 
@@ -227,6 +229,9 @@ declare class AudioMotionAnalyzer {
 
   get reflexRatio(): number;
   set reflexRatio(value: number);
+
+  get roundBars(): boolean;
+  set roundBars(value: boolean);
 
   public showBgColor: boolean;
   public showFPS: boolean;

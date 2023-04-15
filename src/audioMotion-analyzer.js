@@ -538,6 +538,14 @@ export default class AudioMotionAnalyzer {
 		}
 	}
 
+	get roundBars() {
+		return this._roundBars;
+	}
+	set roundBars( value ) {
+		this._roundBars = !! value;
+		this._calcAux();
+	}
+
 	get smoothing() {
 		return this._analyzer[0].smoothingTimeConstant;
 	}
@@ -647,6 +655,9 @@ export default class AudioMotionAnalyzer {
 	}
 	get pixelRatio() {
 		return this._pixelRatio;
+	}
+	get isRoundBars() {
+		return this._isRoundBars;
 	}
 	static get version() {
 		return VERSION;
@@ -966,6 +977,7 @@ export default class AudioMotionAnalyzer {
 		this._isLumiBars     = this._lumiBars && this._isBandsMode && ! isRadial;
 		this._isAlphaBars    = this._alphaBars && ! this._isLumiBars && this._mode != 10;
 		this._isOutline      = this._outlineBars && this._isBandsMode && ! this._isLumiBars && ! this._isLedDisplay;
+		this._isRoundBars    = this._roundBars && this._isBandsMode && ! this._isLumiBars && ! this._isLedDisplay && ! isRadial;
 		this._maximizeLeds   = this._chLayout != CHANNEL_VERTICAL || this._reflexRatio > 0 && ! this._isLumiBars;
 
 		this._channelHeight  = canvas.height - ( isDual && ! this._isLedDisplay ? .5 : 0 ) >> isDual;
@@ -1381,6 +1393,7 @@ export default class AudioMotionAnalyzer {
 			  isOutline      = this._isOutline,
 			  isOverlay      = this.overlay,
 			  isRadial       = this._radial,
+			  isRoundBars    = this._isRoundBars,
 			  channelLayout  = this._chLayout,
 			  lineWidth      = +this.lineWidth, // make sure the damn thing is a number!
 			  mirrorMode     = this._mirror,
@@ -1574,6 +1587,14 @@ export default class AudioMotionAnalyzer {
 
 				// set selected gradient for fill and stroke
 				ctx.fillStyle = ctx.strokeStyle = canvasGradients[ channel ];
+
+				// set clip region
+				ctx.save();
+				if ( ! isRadial ) {
+					const channelRegion = new Path2D();
+					channelRegion.rect( 0, channelTop, canvas.width, analyzerHeight );
+					ctx.clip( channelRegion );
+				}
 			} // if ( useCanvas )
 
 			// get a new array of data from the FFT
@@ -1730,6 +1751,18 @@ export default class AudioMotionAnalyzer {
 					else if ( posX >= initialX ) {
 						if ( isRadial )
 							radialPoly( posX, 0, adjWidth, barHeight, isOutline );
+						else if ( isRoundBars ) {
+							const halfWidth = adjWidth / 2,
+								  y = analyzerBottom + halfWidth; // round caps have an additional height of half bar width
+
+							ctx.beginPath();
+							ctx.moveTo( posX, y );
+							ctx.lineTo( posX, y - barHeight );
+							ctx.arc( posX + halfWidth, y - barHeight, halfWidth, Math.PI, TAU );
+							ctx.lineTo( posX + adjWidth, y );
+							strokeIf( isOutline );
+							ctx.fill();
+						}
 						else {
 							const x = posX,
 								  y = isLumiBars ? channelTop : analyzerBottom,
@@ -1780,6 +1813,8 @@ export default class AudioMotionAnalyzer {
 			// if not using the canvas, move earlier to the next channel
 			if ( ! useCanvas )
 				continue;
+
+			ctx.restore(); // restore clip region
 
 			// restore global alpha
 			ctx.globalAlpha = 1;
@@ -2177,6 +2212,7 @@ export default class AudioMotionAnalyzer {
 			reflexBright   : 1,
 			reflexFit      : true,
 			reflexRatio    : 0,
+			roundBars      : false,
 			showBgColor    : true,
 			showFPS        : false,
 			showPeaks      : true,
