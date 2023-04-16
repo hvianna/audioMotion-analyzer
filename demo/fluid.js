@@ -12,7 +12,7 @@ const audioEl = document.getElementById('audio'),
 // Visualization presets
 const presets = [
 	{
-		name: 'Defaults',
+		name: 'Reset to defaults',
 		options: undefined
 	},
 	{
@@ -22,10 +22,12 @@ const presets = [
 			ansiBands: true,
 			barSpace: .4,
 			channelLayout: 'single',
+			colorMode: 'gradient',
 			frequencyScale: 'log',
 			gradient: 'classic',
 			ledBars: true,
 			lumiBars: false,
+			maxFreq: 20000,
 			mirror: 0,
 			radial: false,
 			reflexRatio: 0,
@@ -40,13 +42,16 @@ const presets = [
 			channelLayout: 'single',
 			fillAlpha: .6,
 			gradient: 'rainbow',
-			lineWidth: 2,
+			lineWidth: 1.5,
+			minFreq: 30,
+			maxFreq: 20000,
 			mirror: -1,
 			radial: false,
 			reflexAlpha: 1,
 			reflexBright: 1,
 			reflexRatio: .5,
-			showPeaks: false
+			showPeaks: false,
+			showScaleX: false
 		}
 	},
 	{
@@ -57,6 +62,7 @@ const presets = [
 			channelLayout: 'single',
 			gradient: 'prism',
 			ledBars: false,
+			maxFreq: 20000,
 			mirror: 0,
 			radial: true,
 			showBgColor: true,
@@ -74,6 +80,8 @@ const presets = [
 			gradient: 'rainbow',
 			linearAmplitude: true,
 			linearBoost: 1.8,
+			minFreq: 20,
+			maxFreq: 20000,
 			mirror: 0,
 			overlay: false,
 			radial: false,
@@ -82,6 +90,7 @@ const presets = [
 			reflexFit: true,
 			reflexRatio: .3,
 			showPeaks: true,
+			showScaleX: true,
 			weightingFilter: 'D'
 		}
 	},
@@ -97,11 +106,40 @@ const presets = [
 			linearAmplitude: true,
 			linearBoost: 1.8,
 			lineWidth: 1.5,
+			minFreq: 20,
+			maxFreq: 20000,
 			mirror: 0,
 			overlay: false,
 			radial: false,
 			reflexRatio: 0,
 			showPeaks: false,
+			weightingFilter: 'D'
+		}
+	},
+	{
+		name: 'roundBars + "bar-level" colorMode',
+		options: {
+			mode: 2,
+			alphaBars: false,
+			barSpace: .25,
+			channelLayout: 'single',
+			colorMode: 'bar-level',
+			frequencyScale: 'log',
+			gradient: 'prism',
+			ledBars: false,
+			linearAmplitude: true,
+			linearBoost: 1.6,
+			lumiBars: false,
+			minFreq: 40,
+			maxFreq: 20000,
+			mirror: 0,
+			radial: false,
+			reflexRatio: .5,
+			reflexAlpha: 1,
+			roundBars: true,
+			showPeaks: false,
+			showScaleX: false,
+			smoothing: .7,
 			weightingFilter: 'D'
 		}
 	},
