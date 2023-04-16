@@ -1488,7 +1488,7 @@ export default class AudioMotionAnalyzer {
 
 		// LED attributes and helper function for bar height calculation
 		const [ ledCount, ledSpaceH, ledSpaceV, ledHeight ] = this._leds || [];
-		const ledPosY = height => Math.max( 0, ( height * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV );
+		const ledPosY = height => ( height * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV;
 
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing from led definitions
@@ -1764,17 +1764,12 @@ export default class AudioMotionAnalyzer {
 							ctx.fill();
 						}
 						else {
-							const x = posX,
-								  y = isLumiBars ? channelTop : analyzerBottom,
-								  w = adjWidth,
-								  h = isLumiBars ? channelBottom : -barHeight;
+							const d = isOutline ? ctx.lineWidth : 0,
+								  y = isLumiBars ? channelTop : analyzerBottom + d,
+								  h = isLumiBars ? channelBottom : -barHeight - d;
 
 							ctx.beginPath();
-							ctx.moveTo( x, y );
-							ctx.lineTo( x, y + h );
-							ctx.lineTo( x + w, y + h );
-							ctx.lineTo( x + w, y );
-
+							ctx.rect( posX, y, adjWidth, h );
 							strokeIf( isOutline );
 							ctx.fill();
 						}
@@ -1797,11 +1792,8 @@ export default class AudioMotionAnalyzer {
 					}
 
 					// render peak according to current mode / effect
-					if ( isLedDisplay ) {
-						const ledPeak = ledPosY( peak );
-						if ( ledPeak >= ledHeight ) // avoid peak below zero level
-							ctx.fillRect( posX,	analyzerBottom - ledPeak, width, ledHeight );
-					}
+					if ( isLedDisplay )
+						ctx.fillRect( posX,	analyzerBottom - ledPosY( peak ), width, ledHeight );
 					else if ( ! isRadial )
 						ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, adjWidth, 2 );
 					else if ( mode != 10 ) // radial - no peaks for mode 10
