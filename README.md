@@ -152,6 +152,7 @@ options = {<br>
 &emsp;&emsp;[reflexBright](#reflexbright-number): **1**,<br>
 &emsp;&emsp;[reflexFit](#reflexfit-boolean): **true**,<br>
 &emsp;&emsp;[reflexRatio](#reflexratio-number): **0**,<br>
+&emsp;&emsp;[roundBars](#roundbars-boolean): **false**,<br>
 &emsp;&emsp;[showBgColor](#showbgcolor-boolean): **true**,<br>
 &emsp;&emsp;[showFPS](#showfps-boolean): **false**,<br>
 &emsp;&emsp;[showPeaks](#showpeaks-boolean): **true**,<br>
@@ -535,6 +536,13 @@ See [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
 ***true*** when outlined bars are effectively being displayed, i.e., [`isBandsMode`](#isbandsmode-boolean-read-only) is *true*, [`outlineBars`](#outlinebars-boolean) is set to *true*
 and both [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) are set to *false*, or [`radial`](#radial-boolean) is set to *true*.
 
+### `isRoundBars` *boolean* *(Read only)*
+
+*Available since v4.1.0*
+
+***true*** when round bars are effectively being displayed, i.e., [`isBandsMode`](#isbandsmode-boolean-read-only) is *true*, [`roundBars`](#roundbars-boolean) is set to *true*
+and [`ledBars`](#ledbars-boolean), [`lumiBars`](#lumibars-boolean) and [`radial`](#radial-boolean) are all set to *false*.
+
 ### `ledBars` *boolean*
 
 *Available since v3.6.0* (formerly `showLeds`)
@@ -724,8 +732,8 @@ You can refer to this value to adjust any additional drawings done in the canvas
 
 When *true*, the spectrum analyzer is rendered in a circular shape, with radial frequency bars spreading from its center.
 
-On radial spectrum, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) effects are disabled, and
-[`showPeaks`](#showpeaks-boolean) has no effect for [**Graph** mode](#mode-number).
+On radial spectrum, [`ledBars`](#ledbars-boolean), [`lumiBars`](#lumibars-boolean) and [`roundBars`](#roundbars-boolean) effects are disabled, and
+[`showPeaks`](#showpeaks-boolean) has no effect when in **Graph** [`mode`](#mode-number).
 
 When [`channelLayout`](#channellayout-string) is set to *'dual-vertical'*, a larger diameter is used and the right channel bars are rendered towards the center of the analyzer.
 
@@ -777,6 +785,18 @@ For a perfect mirrored effect, set `reflexRatio` to 0.5 and both [`reflexAlpha`]
 This has no effect when [`lumiBars`](#lumibars-boolean) is *true*.
 
 Defaults to **0** (no reflection).
+
+### `roundBars` *boolean*
+
+*Available since v4.1.0*
+
+When *true* and [`mode`](#mode-number) is set to one of the **bands** modes, analyzer bars are rendered with round caps at the top.
+
+This has no effect when [`radial`](#radial-boolean) or [`lumiBars`](#lumibars-boolean) or set to *true*.
+
+For effect priority when combined with other settings, see [`isRoundBars`](#isroundbars-boolean-read-only).
+
+Defaults to **false**.
 
 ### `showBgColor` *boolean*
 
