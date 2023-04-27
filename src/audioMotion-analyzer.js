@@ -978,7 +978,7 @@ export default class AudioMotionAnalyzer {
 			  isLumi    = this._lumiBars && isBands && ! isRadial,
 			  isAlpha   = this._alphaBars && ! isLumi && this._mode != 10,
 			  isOutline = this._outlineBars && isBands && ! isLumi && ! isLeds,
-			  isRound   = this._roundBars && isBands && ! isLumi && ! isLeds && ! isRadial,
+			  isRound   = this._roundBars && isBands && ! isLumi && ! isLeds,
 			  noLedGap  = chLayout != CHANNEL_VERTICAL || this._reflexRatio > 0 && ! isLumi;
 
 		this._flags = { isAlpha, isBands, isLeds, isLumi, isOctaves, isOutline, isRound, noLedGap };
@@ -1459,6 +1459,7 @@ export default class AudioMotionAnalyzer {
 			return 0; // unknown filter
 		}
 
+		// helper function - conditional stroke path, save and restore global alpha
 		const strokeIf = flag => {
 			if ( flag && lineWidth ) {
 				const alpha = ctx.globalAlpha;
@@ -1468,11 +1469,13 @@ export default class AudioMotionAnalyzer {
 			}
 		}
 
+		// helper function - get the angle for a given X-coordinate in radial mode
+		const getAngle = ( x, dir ) => dir * TAU * ( x / canvas.width ) + this._spinAngle;
+
 		// helper function - convert planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y, dir ) => {
 			const height = radius + y,
-				  angle  = dir * TAU * ( x / canvas.width ) + this._spinAngle;
-
+				  angle  = getAngle( x, dir );
 			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
 		}
 
@@ -1480,12 +1483,17 @@ export default class AudioMotionAnalyzer {
 		const radialPoly = ( x, y, w, h, stroke ) => {
 			ctx.beginPath();
 			for ( const dir of ( mirrorMode ? [1,-1] : [1] ) ) {
+				const [ startAngle, endAngle ] = isRound ? [ getAngle( x, dir ), getAngle( x + w, dir ) ] : [];
 				ctx.moveTo( ...radialXY( x, y, dir ) );
 				ctx.lineTo( ...radialXY( x, y + h, dir ) );
-				ctx.lineTo( ...radialXY( x + w, y + h, dir ) );
+				if ( isRound )
+					ctx.arc( centerX, centerY, radius + y + h, startAngle, endAngle );
+				else
+					ctx.lineTo( ...radialXY( x + w, y + h, dir ) );
 				ctx.lineTo( ...radialXY( x + w, y, dir ) );
+				if ( isRound && ! stroke ) // close the bottom line only when not in outline mode
+					ctx.arc( centerX, centerY, radius + y, endAngle, startAngle, true );
 			}
-
 			strokeIf( stroke );
 			ctx.fill();
 		}
