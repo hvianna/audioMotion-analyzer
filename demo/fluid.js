@@ -144,7 +144,7 @@ const presets = [
 		}
 	},
 	{
-		name: 'Testing config 1',
+		name: 'Testing config 1 (reflex + mirror)',
 		options: {
 			mode: 10,
 			channelLayout: 'single',
@@ -159,7 +159,29 @@ const presets = [
 			lineWidth: 2,
 			fillAlpha: .2
 		}
-	}
+	},
+	{
+		name: 'Testing config 2 (dual LED bars)',
+		options: {
+			mode: 2,
+			alphaBars: false,
+			barSpace: .1,
+			channelLayout: 'dual-vertical',
+			gradientLeft: 'steelblue',
+			gradientRight: 'orangered',
+			ledBars: true,
+			lumiBars: false,
+			radial: false,
+			reflexRatio: 0,
+			showPeaks: true,
+			showScaleX: false,
+			mirror: 0,
+			maxFreq: 16000,
+			minFreq: 20,
+			overlay: false,
+		}
+	},
+
 ];
 
 // Demo-specific features
