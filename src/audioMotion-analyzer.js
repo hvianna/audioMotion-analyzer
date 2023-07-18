@@ -1416,12 +1416,57 @@ export default class AudioMotionAnalyzer {
 			  mindB			 = this.minDecibels,
 			  dbRange 		 = maxdB - mindB,
 			  useCanvas      = this.useCanvas,
-			  weightingFilter= this._weightingFilter;
+			  weightingFilter= this._weightingFilter,
+			  [ ledCount, ledSpaceH, ledSpaceV, ledHeight ] = this._leds || [];
 
 		if ( energy.val > 0 )
 			this._spinAngle += this._spinSpeed * RPM;
 
-		// helper function - apply the selected weighting filter and return dB gain for a given frequency
+		/* HELPER FUNCTIONS */
+
+		const drawScaleY = channelTop => {
+			const scaleWidth = canvasX.height,
+				  fontSize   = scaleWidth >> 1,
+				  max        = isLinear ? 100 : maxdB,
+				  min        = isLinear ? 0 : mindB,
+				  incr       = isLinear ? 20 : 5,
+				  interval   = analyzerHeight / ( max - min );
+
+			ctx.save();
+			ctx.fillStyle = SCALEY_LABEL_COLOR;
+			ctx.font = `${fontSize}px ${FONT_FAMILY}`;
+			ctx.textAlign = 'right';
+			ctx.lineWidth = 1;
+
+			for ( let val = max; val > min; val -= incr ) {
+				const posY = channelTop + ( max - val ) * interval,
+					  even = ( val % 2 == 0 ) | 0;
+
+				if ( even ) {
+					const labelY = posY + fontSize * ( posY == channelTop ? .8 : .35 );
+					if ( mirrorMode != -1 )
+						ctx.fillText( val, scaleWidth * .85, labelY );
+					if ( mirrorMode != 1 )
+						ctx.fillText( val, canvas.width - scaleWidth * .1, labelY );
+					ctx.strokeStyle = SCALEY_LABEL_COLOR;
+					ctx.setLineDash([2,4]);
+					ctx.lineDashOffset = 0;
+				}
+				else {
+					ctx.strokeStyle = SCALEY_MIDLINE_COLOR;
+					ctx.setLineDash([2,8]);
+					ctx.lineDashOffset = 1;
+				}
+
+				ctx.beginPath();
+				ctx.moveTo( initialX + scaleWidth * even * ( mirrorMode != -1 ), ~~posY + .5 ); // for sharp 1px line (https://stackoverflow.com/a/13879402/2370385)
+				ctx.lineTo( finalX - scaleWidth * even * ( mirrorMode != 1 ), ~~posY + .5 );
+				ctx.stroke();
+			}
+			ctx.restore();
+		}
+
+		// returns the gain (in dB) for a given frequency, considering the currently selected weighting filter
 		const weightingdB = freq => {
 			const f2 = freq ** 2,
 				  SQ20_6  = 424.36,
@@ -1459,7 +1504,7 @@ export default class AudioMotionAnalyzer {
 			return 0; // unknown filter
 		}
 
-		// helper function - conditional stroke path, save and restore global alpha
+		// conditionally strokes current path on canvas
 		const strokeIf = flag => {
 			if ( flag && lineWidth ) {
 				const alpha = ctx.globalAlpha;
@@ -1469,17 +1514,17 @@ export default class AudioMotionAnalyzer {
 			}
 		}
 
-		// helper function - get the angle for a given X-coordinate in radial mode
+		// converts a given X-coordinate to its corresponding angle in radial mode
 		const getAngle = ( x, dir ) => dir * TAU * ( x / canvas.width ) + this._spinAngle;
 
-		// helper function - convert planar X,Y coordinates to radial coordinates
+		// converts planar X,Y coordinates to radial coordinates
 		const radialXY = ( x, y, dir ) => {
 			const height = radius + y,
 				  angle  = getAngle( x, dir );
 			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
 		}
 
-		// helper function - draw a polygon of width `w` and height `h` at (x,y) in radial mode
+		// draws a polygon of width `w` and height `h` at (x,y) in radial mode
 		const radialPoly = ( x, y, w, h, stroke ) => {
 			ctx.beginPath();
 			for ( const dir of ( mirrorMode ? [1,-1] : [1] ) ) {
@@ -1498,9 +1543,10 @@ export default class AudioMotionAnalyzer {
 			ctx.fill();
 		}
 
-		// LED attributes and helper function for bar height calculation
-		const [ ledCount, ledSpaceH, ledSpaceV, ledHeight ] = this._leds || [];
+		// converts a given bar height to match the current LED attributes
 		const ledPosY = height => Math.max( 0, ( height * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV );
+
+		/* MAIN FUNCTION */
 
 		// compute the effective bar width, considering the selected bar spacing
 		// if led effect is active, ensure at least the spacing from led definitions
@@ -1545,49 +1591,9 @@ export default class AudioMotionAnalyzer {
 					ctx.globalAlpha = 1;
 				}
 
-				// draw dB scale (Y-axis)
-				if ( this.showScaleY && ! isLumi && ! isRadial ) {
-					const scaleWidth = canvasX.height,
-						  fontSize   = scaleWidth >> 1,
-						  max        = isLinear ? 100 : maxdB,
-						  min        = isLinear ? 0 : mindB,
-						  incr       = isLinear ? 20 : 5,
-						  interval   = analyzerHeight / ( max - min );
-
-					ctx.fillStyle = SCALEY_LABEL_COLOR;
-					ctx.font = `${fontSize}px ${FONT_FAMILY}`;
-					ctx.textAlign = 'right';
-					ctx.lineWidth = 1;
-
-					for ( let val = max; val > min; val -= incr ) {
-						const posY = channelTop + ( max - val ) * interval,
-							  even = ( val % 2 == 0 ) | 0;
-
-						if ( even ) {
-							const labelY = posY + fontSize * ( posY == channelTop ? .8 : .35 );
-							if ( mirrorMode != -1 )
-								ctx.fillText( val, scaleWidth * .85, labelY );
-							if ( mirrorMode != 1 )
-								ctx.fillText( val, canvas.width - scaleWidth * .1, labelY );
-							ctx.strokeStyle = SCALEY_LABEL_COLOR;
-							ctx.setLineDash([2,4]);
-							ctx.lineDashOffset = 0;
-						}
-						else {
-							ctx.strokeStyle = SCALEY_MIDLINE_COLOR;
-							ctx.setLineDash([2,8]);
-							ctx.lineDashOffset = 1;
-						}
-
-						ctx.beginPath();
-						ctx.moveTo( initialX + scaleWidth * even * ( mirrorMode != -1 ), ~~posY + .5 ); // for sharp 1px line (https://stackoverflow.com/a/13879402/2370385)
-						ctx.lineTo( finalX - scaleWidth * even * ( mirrorMode != 1 ), ~~posY + .5 );
-						ctx.stroke();
-					}
-					// restore line properties
-					ctx.setLineDash([]);
-					ctx.lineDashOffset = 0;
-				}
+				// draw dB/level scale (Y-axis)
+				if ( this.showScaleY && ! isLumi && ! isRadial )
+					drawScaleY( channelTop );
 
 				// set line width and dash for LEDs effect
 				if ( isLeds ) {
