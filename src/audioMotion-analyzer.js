@@ -1591,8 +1591,8 @@ export default class AudioMotionAnalyzer {
 					ctx.globalAlpha = 1;
 				}
 
-				// draw dB/level scale (Y-axis)
-				if ( this.showScaleY && ! isLumi && ! isRadial )
+				// draw dB scale (Y-axis) - avoid drawing it twice on 'dual-combined' channel layout
+				if ( this.showScaleY && ! isLumi && ! isRadial && ( channel == 0 || channelLayout != CHANNEL_COMBINED ) )
 					drawScaleY( channelTop );
 
 				// set line width and dash for LEDs effect
@@ -1748,8 +1748,8 @@ export default class AudioMotionAnalyzer {
 
 					if ( isLeds ) {
 						const x = posX + width / 2;
-						// draw "unlit" leds
-						if ( showBgColor && ! isOverlay ) {
+						// draw "unlit" leds - avoid drawing it twice on 'dual-combined' channel layout
+						if ( showBgColor && ! isOverlay && ( channel == 0 || channelLayout != CHANNEL_COMBINED ) ) {
 							const alpha = ctx.globalAlpha;
 							ctx.beginPath();
 							ctx.moveTo( x, channelTop );
