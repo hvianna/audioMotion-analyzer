@@ -339,7 +339,6 @@ export default class AudioMotionAnalyzer {
 		// update properties affected by channel layout
 		this._calcAux();
 		this._createScales();
-		this._calcLeds();
 		this._makeGrad();
 	}
 
@@ -435,7 +434,6 @@ export default class AudioMotionAnalyzer {
 	set lumiBars( value ) {
 		this._lumiBars = !! value;
 		this._calcAux();
-		this._calcLeds();
 		this._makeGrad();
 	}
 
@@ -541,7 +539,6 @@ export default class AudioMotionAnalyzer {
 			this._reflexRatio = value;
 			this._calcAux();
 			this._makeGrad();
-			this._calcLeds();
 		}
 	}
 
@@ -883,7 +880,7 @@ export default class AudioMotionAnalyzer {
 		}
 
 		this._ledParams = maxLeds > 0 && spaceV > 0 && spaceH >= 0 ? [ maxLeds, spaceV, spaceH ] : undefined;
-		this._calcLeds();
+		this._calcAux();
 	}
 
 	/**
@@ -978,14 +975,15 @@ export default class AudioMotionAnalyzer {
 			  chLayout  = this._chLayout,
 			  isRadial  = this._radial,
 			  isDual    = chLayout == CHANNEL_VERTICAL && ! isRadial,
+			  mode      = this._mode,
 
 			  // COMPUTE FLAGS
 
-			  isBands   = this._mode % 10 != 0,
+			  isBands   = mode % 10 != 0,
 			  isOctaves = isBands && this._frequencyScale == SCALE_LOG,
 			  isLeds    = this._showLeds && isBands && ! isRadial,
 			  isLumi    = this._lumiBars && isBands && ! isRadial,
-			  isAlpha   = this._alphaBars && ! isLumi && this._mode != 10,
+			  isAlpha   = this._alphaBars && ! isLumi && mode != 10,
 			  isOutline = this._outlineBars && isBands && ! isLumi && ! isLeds,
 			  isRound   = this._roundBars && isBands && ! isLumi && ! isLeds,
 			  noLedGap  = chLayout != CHANNEL_VERTICAL || this._reflexRatio > 0 && ! isLumi,
@@ -996,15 +994,89 @@ export default class AudioMotionAnalyzer {
 			  channelHeight  = canvas.height - ( isDual && ! isLeds ? .5 : 0 ) >> isDual,
 			  // analyzerHeight is the effective height used to render the analyzer, excluding the reflex area
 			  analyzerHeight = channelHeight * ( isLumi || isRadial ? 1 : 1 - this._reflexRatio ) | 0,
+
 			  analyzerWidth  = canvas.width - centerX * ( this._mirror != 0 ),
 			  barSpacePx     = Math.min( barWidth - 1, barSpace * ( barSpace > 0 && barSpace < 1 ? barWidth : 1 ) ),
+
 			  // channelGap is **0** if isLedDisplay == true (LEDs already have spacing); **1** if canvas height is odd (windowed); **2** if it's even
 			  // TODO: improve this, make it configurable?
 			  channelGap     = isDual ? canvas.height - channelHeight * 2 : 0,
+
 			  initialX       = centerX * ( this._mirror == -1 && ! isRadial ),
 			  radius         = Math.min( canvas.width, canvas.height ) * ( chLayout == CHANNEL_VERTICAL ? .375 : .125 ) | 0;
 
-		this.#aux = { analyzerHeight, analyzerWidth, barSpacePx, channelHeight, channelGap, initialX, radius };
+		// COMPUTE ATTRIBUTES FOR THE VINTAGE LEDS EFFECT
+
+		let spaceV;
+
+		if ( isLeds ) { // && this._ready
+
+			// adjustment for high pixel-ratio values on low-resolution screens (Android TV)
+			const dPR = this._pixelRatio / ( window.devicePixelRatio > 1 && window.screen.height <= 540 ? 2 : 1 );
+
+			const params = [ [],
+				[ 128,  3, .45  ], // mode 1
+				[ 128,  4, .225 ], // mode 2
+				[  96,  6, .225 ], // mode 3
+				[  80,  6, .225 ], // mode 4
+				[  80,  6, .125 ], // mode 5
+				[  64,  6, .125 ], // mode 6
+				[  48,  8, .125 ], // mode 7
+				[  24, 16, .125 ], // mode 8
+			];
+
+			// use custom LED parameters if set, or the default parameters for the current mode
+			const customParams = this._ledParams,
+				  [ maxLeds, spaceVRatio, spaceHRatio ] = customParams || params[ mode ];
+
+			let ledCount, maxHeight = analyzerHeight;
+
+			if ( customParams ) {
+				const minHeight = 2 * dPR;
+				let blockHeight;
+				ledCount = maxLeds + 1;
+				do {
+					ledCount--;
+					blockHeight = maxHeight / ledCount / ( 1 + spaceVRatio );
+					spaceV = blockHeight * spaceVRatio;
+				} while ( ( blockHeight < minHeight || spaceV < minHeight ) && ledCount > 1 );
+			}
+			else {
+				// calculate vertical spacing - aim for the reference ratio, but make sure it's at least 2px
+				const refRatio = 540 / spaceVRatio;
+				spaceV = Math.min( spaceVRatio * dPR, Math.max( 2, maxHeight / refRatio + .1 | 0 ) );
+			}
+
+			// remove the extra spacing below the last line of LEDs
+			if ( noLedGap )
+				maxHeight += spaceV;
+
+			// recalculate the number of leds, considering the effective spaceV
+			if ( ! customParams )
+				ledCount = Math.min( maxLeds, maxHeight / ( spaceV * 2 ) | 0 );
+
+			this._leds = [
+				ledCount,
+				spaceHRatio >= 1 ? spaceHRatio : barWidth * spaceHRatio, // spaceH
+				spaceV,
+				maxHeight / ledCount - spaceV // ledHeight
+			];
+		}
+
+		// COMPUTE CHANNEL COORDINATES
+
+		const channelCoords = [];
+		for ( const channel of [0,1] ) {
+			const channelTop     = chLayout == CHANNEL_VERTICAL ? ( channelHeight + channelGap ) * channel : 0,
+				  channelBottom  = channelTop + channelHeight,
+				  analyzerBottom = channelTop + analyzerHeight - ( ! isLeds || noLedGap ? 0 : spaceV );
+
+			channelCoords.push( { channelTop, channelBottom, analyzerBottom } );
+		}
+
+		// SAVE INTERNAL OBJECTS
+
+		this.#aux = { analyzerHeight, analyzerWidth, barSpacePx, channelCoords, channelHeight, channelGap, initialX, radius };
 		this.#flg = { isAlpha, isBands, isLeds, isLumi, isOctaves, isOutline, isRound, noLedGap };
 	}
 
@@ -1206,71 +1278,6 @@ export default class AudioMotionAnalyzer {
 
 		// generate the X-axis and radial scales
 		this._createScales();
-
-		// update LED properties
-		this._calcLeds();
-	}
-
-	/**
-	 * Calculate attributes for the vintage LEDs effect, based on visualization mode and canvas resolution
-	 */
-	_calcLeds() {
-		const { isBands, noLedGap } = this.#flg;
-
-		if ( ! isBands || ! this._ready )
-			return;
-
-		// adjustment for high pixel-ratio values on low-resolution screens (Android TV)
-		const dPR = this._pixelRatio / ( window.devicePixelRatio > 1 && window.screen.height <= 540 ? 2 : 1 );
-
-		const params = [ [],
-			[ 128,  3, .45  ], // mode 1
-			[ 128,  4, .225 ], // mode 2
-			[  96,  6, .225 ], // mode 3
-			[  80,  6, .225 ], // mode 4
-			[  80,  6, .125 ], // mode 5
-			[  64,  6, .125 ], // mode 6
-			[  48,  8, .125 ], // mode 7
-			[  24, 16, .125 ], // mode 8
-		];
-
-		// use custom LED parameters if set, or the default parameters for the current mode
-		const customParams = this._ledParams,
-			  [ maxLeds, spaceVRatio, spaceHRatio ] = customParams || params[ this._mode ];
-
-		let ledCount, spaceV,
-			{ analyzerHeight } = this.#aux;
-
-		if ( customParams ) {
-			const minHeight = 2 * dPR;
-			let blockHeight;
-			ledCount = maxLeds + 1;
-			do {
-				ledCount--;
-				blockHeight = analyzerHeight / ledCount / ( 1 + spaceVRatio );
-				spaceV = blockHeight * spaceVRatio;
-			} while ( ( blockHeight < minHeight || spaceV < minHeight ) && ledCount > 1 );
-		}
-		else {
-			// calculate vertical spacing - aim for the reference ratio, but make sure it's at least 2px
-			const refRatio = 540 / spaceVRatio;
-			spaceV = Math.min( spaceVRatio * dPR, Math.max( 2, analyzerHeight / refRatio + .1 | 0 ) );
-		}
-
-		// remove the extra spacing below the last line of LEDs
-		if ( noLedGap )
-			analyzerHeight += spaceV;
-
-		// recalculate the number of leds, considering the effective spaceV
-		if ( ! customParams )
-			ledCount = Math.min( maxLeds, analyzerHeight / ( spaceV * 2 ) | 0 );
-
-		this._leds = [
-			ledCount,
-			spaceHRatio >= 1 ? spaceHRatio : this._barWidth * spaceHRatio, // spaceH
-			spaceV,
-			analyzerHeight / ledCount - spaceV // ledHeight
-		];
 	}
 
 	/**
@@ -1412,8 +1419,8 @@ export default class AudioMotionAnalyzer {
 			  channelLayout  = this._chLayout,
 			  lineWidth      = +this.lineWidth, // make sure the damn thing is a number!
 			  mirrorMode     = this._mirror,
-			  { analyzerHeight, barSpacePx, channelHeight,
-			    channelGap, initialX, radius } = this.#aux,
+			  { analyzerHeight, barSpacePx, channelCoords,
+			    channelHeight, channelGap, initialX, radius } = this.#aux,
 			  analyzerWidth  = isRadial ? canvas.width : this.#aux.analyzerWidth,
 			  finalX         = initialX + analyzerWidth,
 			  showBgColor    = this.showBgColor,
@@ -1459,8 +1466,10 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// draw peak
-		const drawPeak = ( peak, channel, analyzerBottom, posX, width, adjWidth, colorStops ) => {
+		const drawPeak = ( peak, channel, posX, width, adjWidth, colorStops ) => {
 			if ( peak > 0 && this.showPeaks && ! isLumi && posX >= initialX && posX < finalX ) {
+				const { analyzerBottom } = channelCoords[ channel ];
+
 				// set opacity
 				if ( isOutline && lineWidth > 0 )
 					ctx.globalAlpha = 1;
@@ -1676,13 +1685,11 @@ export default class AudioMotionAnalyzer {
 
 		for ( let channel = 0; channel < nChannels; channel++ ) {
 
-			const channelTop     = channelLayout == CHANNEL_VERTICAL ? channelHeight * channel + channelGap * channel : 0,
-				  channelBottom  = channelTop + channelHeight,
-				  analyzerBottom = channelTop + analyzerHeight - ( ! isLeds || noLedGap ? 0 : ledSpaceV ),
-				  channelGradient= this._gradients[ this._selectedGrads[ channel ] ],
-				  colorStops     = channelGradient.colorStops,
-				  bgColor        = ( ! showBgColor || isLeds && ! isOverlay ) ? '#000' : channelGradient.bgColor,
-				  mustClear      = channel == 0 || ! isRadial && channelLayout != CHANNEL_COMBINED;
+			const { channelTop, channelBottom, analyzerBottom } = channelCoords[ channel ],
+				  channelGradient = this._gradients[ this._selectedGrads[ channel ] ],
+				  colorStops      = channelGradient.colorStops,
+				  bgColor         = ( ! showBgColor || isLeds && ! isOverlay ) ? '#000' : channelGradient.bgColor,
+				  mustClear       = channel == 0 || ! isRadial && channelLayout != CHANNEL_COMBINED;
 
 			if ( useCanvas ) {
 				// clear the channel area, if in overlay mode
@@ -1908,7 +1915,7 @@ export default class AudioMotionAnalyzer {
 				}
 
 				// Draw peak
-				drawPeak( bar.peak[ channel ], channel, analyzerBottom, posX, width, adjWidth, colorStops );
+				drawPeak( bar.peak[ channel ], channel, posX, width, adjWidth, colorStops );
 
 			} // for ( let barIndex = 0; barIndex < nBars; barIndex++ )
 
