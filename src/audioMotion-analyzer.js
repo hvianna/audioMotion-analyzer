@@ -1400,6 +1400,8 @@ export default class AudioMotionAnalyzer {
 			  canvasX        = this._scaleX.canvas,
 			  canvasR        = this._scaleR.canvas,
 			  canvasGradients= this._canvasGradients,
+			  centerX        = canvas.width >> 1,
+			  centerY        = canvas.height >> 1,
 			  colorMode      = this._colorMode,
 			  energy         = this._energy,
 			  fillAlpha      = this.fillAlpha,
@@ -1414,8 +1416,6 @@ export default class AudioMotionAnalyzer {
 			    channelGap, initialX, radius } = this.#aux,
 			  analyzerWidth  = isRadial ? canvas.width : this.#aux.analyzerWidth,
 			  finalX         = initialX + analyzerWidth,
-			  centerX        = canvas.width >> 1,
-			  centerY        = canvas.height >> 1,
 			  showBgColor    = this.showBgColor,
 			  maxBarHeight   = isRadial ? Math.min( centerX, centerY ) - radius : analyzerHeight,
 			  maxdB			 = this.maxDecibels,
@@ -1430,6 +1430,79 @@ export default class AudioMotionAnalyzer {
 
 		/* HELPER FUNCTIONS */
 
+		// create Reflex effect
+		const doReflex = ( channel, channelTop ) => {
+			if ( this._reflexRatio > 0 && ! isLumi ) {
+				let posY, height;
+				if ( this.reflexFit || channelLayout == CHANNEL_VERTICAL ) { // always fit reflex in vertical stereo mode
+					posY   = channelLayout == CHANNEL_VERTICAL && channel == 0 ? channelHeight + channelGap : 0;
+					height = channelHeight - analyzerHeight;
+				}
+				else {
+					posY   = canvas.height - analyzerHeight * 2;
+					height = analyzerHeight;
+				}
+
+				ctx.save();
+
+				// set alpha and brightness for the reflection
+				ctx.globalAlpha = this.reflexAlpha;
+				if ( this.reflexBright != 1 )
+					ctx.filter = `brightness(${this.reflexBright})`;
+
+				// create the reflection
+				ctx.setTransform( 1, 0, 0, -1, 0, canvas.height );
+				ctx.drawImage( canvas, 0, channelTop, canvas.width, analyzerHeight, 0, posY, canvas.width, height );
+
+				ctx.restore();
+			}
+		}
+
+		// draw peak
+		const drawPeak = ( peak, channel, analyzerBottom, posX, width, adjWidth, colorStops ) => {
+			if ( peak > 0 && this.showPeaks && ! isLumi && posX >= initialX && posX < finalX ) {
+				// set opacity
+				if ( isOutline && lineWidth > 0 )
+					ctx.globalAlpha = 1;
+				else if ( isAlpha )
+					ctx.globalAlpha = peak;
+
+				// use the peak level to select the peak color when colorMode is set to 'bar-level'
+				if ( colorMode == COLOR_BAR_LEVEL && mode != 10 ) {
+					const selectedColorStop = colorStops[ Math.round( ( 1 - peak ) * ( colorStops.length - 1 ) ) ];
+					ctx.fillStyle = ctx.strokeStyle = selectedColorStop.color || selectedColorStop;
+				}
+
+				// render peak according to current mode / effect
+				if ( isLeds ) {
+					const ledPeak = ledPosY( peak );
+					if ( ledPeak >= ledSpaceV ) // avoid peak below first led
+						ctx.fillRect( posX,	analyzerBottom - ledPeak, width, ledHeight );
+				}
+				else if ( ! isRadial )
+					ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, adjWidth, 2 );
+				else if ( mode != 10 ) // radial - no peaks for mode 10
+					radialPoly( posX, peak * maxBarHeight * ( channel && channelLayout == CHANNEL_VERTICAL ? -1 : 1 ), adjWidth, -2 );
+			}
+		}
+
+		// draw scale on X-axis
+		const drawScaleX = () => {
+			if ( this.showScaleX ) {
+				if ( isRadial ) {
+					ctx.save();
+					ctx.translate( centerX, centerY );
+					if ( this._spinSpeed )
+						ctx.rotate( this._spinAngle + HALF_PI );
+					ctx.drawImage( canvasR, -canvasR.width >> 1, -canvasR.width >> 1 );
+					ctx.restore();
+				}
+				else
+					ctx.drawImage( canvasX, 0, canvas.height - canvasX.height );
+			}
+		}
+
+		// draw scale on Y-axis
 		const drawScaleY = channelTop => {
 			const scaleWidth = canvasX.height,
 				  fontSize   = scaleWidth >> 1,
@@ -1551,6 +1624,40 @@ export default class AudioMotionAnalyzer {
 
 		// converts a given bar height to match the current LED attributes
 		const ledPosY = height => Math.max( 0, ( height * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV );
+
+		// update energy information
+		const updateEnergy = newVal => {
+			energy.val = newVal;
+			if ( newVal >= energy.peak ) {
+				energy.peak = newVal;
+				energy.hold = 30;
+			}
+			else {
+				if ( energy.hold > 0 )
+					energy.hold--;
+				else if ( energy.peak > 0 )
+					energy.peak *= ( 30 + energy.hold-- ) / 30; // decay (drops to zero in 30 frames)
+			}
+		}
+
+		// calculate and display (if enabled) the current frame rate
+		const updateFPS = () => {
+			this._frame++;
+			const elapsed = timestamp - this._time;
+
+			if ( elapsed >= 1000 ) {
+				this._fps = this._frame / ( elapsed / 1000 );
+				this._frame = 0;
+				this._time = timestamp;
+			}
+			if ( this.showFPS ) {
+				const size = canvasX.height;
+				ctx.font = `bold ${size}px ${FONT_FAMILY}`;
+				ctx.fillStyle = FPS_COLOR;
+				ctx.textAlign = 'right';
+				ctx.fillText( Math.round( this._fps ), canvas.width - size, size * 2 );
+			}
+		}
 
 		/* MAIN FUNCTION */
 
@@ -1801,31 +1908,7 @@ export default class AudioMotionAnalyzer {
 				}
 
 				// Draw peak
-				const peak = bar.peak[ channel ];
-				if ( peak > 0 && this.showPeaks && ! isLumi && posX >= initialX && posX < finalX ) {
-					// set opacity
-					if ( isOutline && lineWidth > 0 )
-						ctx.globalAlpha = 1;
-					else if ( isAlpha )
-						ctx.globalAlpha = peak;
-
-					// use the peak level to select the peak color when colorMode is set to 'bar-level'
-					if ( colorMode == COLOR_BAR_LEVEL && mode != 10 ) {
-						const selectedColorStop = colorStops[ Math.round( ( 1 - peak ) * ( colorStops.length - 1 ) ) ];
-						ctx.fillStyle = ctx.strokeStyle = selectedColorStop.color || selectedColorStop;
-					}
-
-					// render peak according to current mode / effect
-					if ( isLeds ) {
-						const ledPeak = ledPosY( peak );
-						if ( ledPeak >= ledSpaceV ) // avoid peak below first led
-							ctx.fillRect( posX,	analyzerBottom - ledPeak, width, ledHeight );
-					}
-					else if ( ! isRadial )
-						ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, adjWidth, 2 );
-					else if ( mode != 10 ) // radial - no peaks for mode 10
-						radialPoly( posX, peak * maxBarHeight * ( channel && channelLayout == CHANNEL_VERTICAL ? -1 : 1 ), adjWidth, -2 );
-				}
+				drawPeak( bar.peak[ channel ], channel, analyzerBottom, posX, width, adjWidth, colorStops );
 
 			} // for ( let barIndex = 0; barIndex < nBars; barIndex++ )
 
@@ -1869,47 +1952,12 @@ export default class AudioMotionAnalyzer {
 				}
 			}
 
-			// Reflex effect
-			if ( this._reflexRatio > 0 && ! isLumi ) {
-				let posY, height;
-				if ( this.reflexFit || channelLayout == CHANNEL_VERTICAL ) { // always fit reflex in vertical stereo mode
-					posY   = channelLayout == CHANNEL_VERTICAL && channel == 0 ? channelHeight + channelGap : 0;
-					height = channelHeight - analyzerHeight;
-				}
-				else {
-					posY   = canvas.height - analyzerHeight * 2;
-					height = analyzerHeight;
-				}
-
-				// set alpha and brightness for the reflection
-				ctx.globalAlpha = this.reflexAlpha;
-				if ( this.reflexBright != 1 )
-					ctx.filter = `brightness(${this.reflexBright})`;
-
-				// create the reflection
-				ctx.setTransform( 1, 0, 0, -1, 0, canvas.height );
-				ctx.drawImage( canvas, 0, channelTop, canvas.width, analyzerHeight, 0, posY, canvas.width, height );
-
-				// reset changed properties
-				ctx.setTransform( 1, 0, 0, 1, 0, 0 );
-				ctx.filter = 'none';
-				ctx.globalAlpha = 1;
-			}
+			// create Reflex effect
+			doReflex( channel, channelTop );
 
 		} // for ( let channel = 0; channel < nChannels; channel++ ) {
 
-		// Update energy
-		energy.val = currentEnergy / ( nBars << ( nChannels - 1 ) );
-		if ( energy.val >= energy.peak ) {
-			energy.peak = energy.val;
-			energy.hold = 30;
-		}
-		else {
-			if ( energy.hold > 0 )
-				energy.hold--;
-			else if ( energy.peak > 0 )
-				energy.peak *= ( 30 + energy.hold-- ) / 30; // decay (drops to zero in 30 frames)
-		}
+		updateEnergy( currentEnergy / ( nBars << ( nChannels - 1 ) ) );
 
 		if ( useCanvas ) {
 			// Mirror effect
@@ -1923,37 +1971,11 @@ export default class AudioMotionAnalyzer {
 			ctx.setLineDash([]);
 
 			// draw frequency scale (X-axis)
-			if ( this.showScaleX ) {
-				if ( isRadial ) {
-					ctx.save();
-					ctx.translate( centerX, centerY );
-					if ( this._spinSpeed )
-						ctx.rotate( this._spinAngle + HALF_PI );
-					ctx.drawImage( canvasR, -canvasR.width >> 1, -canvasR.width >> 1 );
-					ctx.restore();
-				}
-				else
-					ctx.drawImage( canvasX, 0, canvas.height - canvasX.height );
-			}
+			drawScaleX();
 		}
 
-		// calculate and update current frame rate
-
-		this._frame++;
-		const elapsed = timestamp - this._time;
-
-		if ( elapsed >= 1000 ) {
-			this._fps = this._frame / ( elapsed / 1000 );
-			this._frame = 0;
-			this._time = timestamp;
-		}
-		if ( this.showFPS ) {
-			const size = canvasX.height;
-			ctx.font = `bold ${size}px ${FONT_FAMILY}`;
-			ctx.fillStyle = FPS_COLOR;
-			ctx.textAlign = 'right';
-			ctx.fillText( Math.round( this._fps ), canvas.width - size, size * 2 );
-		}
+		// calculate and display (if enabled) the current frame rate
+		updateFPS();
 
 		// call callback function, if defined
 		if ( this.onCanvasDraw ) {
