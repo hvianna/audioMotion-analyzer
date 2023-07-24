@@ -1279,13 +1279,16 @@ export default class AudioMotionAnalyzer {
 			  freqLabels    = [],
 			  frequencyScale= this._frequencyScale,
 			  initialX      = this._initialX,
-			  isDual        = this._chLayout == CHANNEL_VERTICAL,
-			  isMirror      = this._mirror,
+			  isRadial      = this._radial,
+			  isVertical    = this._chLayout == CHANNEL_VERTICAL,
 			  isNoteLabels  = this._noteLabels,
+			  mirror        = this._mirror,
 			  scale         = [ 'C',, 'D',, 'E', 'F',, 'G',, 'A',, 'B' ], // for note labels (no sharp notes)
-			  scaleHeight   = Math.min( canvas.width, canvas.height ) * .03 | 0, // circular scale height (radial mode)
+			  scaleHeight   = Math.min( canvas.width, canvas.height ) / 34 | 0, // circular scale height (radial mode)
   			  fontSizeX     = canvasX.height >> 1,
 			  fontSizeR     = scaleHeight >> 1,
+			  labelWidthX   = fontSizeX * ( isNoteLabels ? .7 : 1.5 ),
+			  labelWidthR   = fontSizeR * ( isNoteLabels ? 1 : 2 ),
 		  	  root12        = 2 ** ( 1 / 12 );
 
 		if ( ! isNoteLabels && ( this._ansiBands || frequencyScale != SCALE_LOG ) ) {
@@ -1302,7 +1305,7 @@ export default class AudioMotionAnalyzer {
 					if ( freq >= this._minFreq && freq <= this._maxFreq ) {
 						const pitch = scale[ note ],
 							  isC   = pitch == 'C';
-						if ( ( pitch && isNoteLabels && ! isMirror ) || isC )
+						if ( ( pitch && isNoteLabels && ! mirror ) || isC )
 							freqLabels.push( isNoteLabels ? [ freq, pitch + ( isC ? octave : '' ) ] : freq );
 					}
 					freq *= root12;
@@ -1310,17 +1313,14 @@ export default class AudioMotionAnalyzer {
 			}
 		}
 
-		// in radial stereo mode, the scale is positioned exactly between both channels, by making the canvas a bit larger than the inner diameter
-		canvasR.width = canvasR.height = ( this._radius << 1 ) + ( isDual * scaleHeight );
+		// in radial dual-vertical layout, the scale is positioned exactly between both channels, by making the canvas a bit larger than the inner diameter
+		canvasR.width = canvasR.height = ( this._radius << 1 ) + ( isVertical * scaleHeight );
 
 		const radius  = canvasR.width >> 1, // this is also used as the center X and Y coordinates of the circular scale canvas
 			  radialY = radius - scaleHeight * .7;	// vertical position of text labels in the circular scale
 
 		// helper function
 		const radialLabel = ( x, label ) => {
-			if ( isNoteLabels && ! isDual && ! ['C','E','G'].includes( label[0] ) )
-				return;
-
 			const angle  = TAU * ( x / canvas.width ),
 				  adjAng = angle - HALF_PI, // rotate angles so 0 is at the top
 				  posX   = radialY * Math.cos( adjAng ),
@@ -1348,32 +1348,49 @@ export default class AudioMotionAnalyzer {
 		scaleR.font = `${ fontSizeR }px ${FONT_FAMILY}`;
 		scaleX.textAlign = scaleR.textAlign = 'center';
 
-		let prevX = 0, prevR = 0;
+		let prevX = -labelWidthX / 4,
+			prevR = -labelWidthR;
 
 		for ( const item of freqLabels ) {
 			const [ freq, label ] = Array.isArray( item ) ? item : [ item, item < 1e3 ? item | 0 : `${ ( item / 100 | 0 ) / 10 }k` ],
 				  x    = this._unitWidth * ( this._freqScaling( freq ) - this._scaleMin ),
 				  y    = canvasX.height * .75,
 				  isC  = label[0] == 'C',
-	  			  maxW = fontSizeX * ( isNoteLabels && ! isMirror ? ( isC ? 1.2 : .6 ) : 3 );
+	  			  maxW = fontSizeX * ( isNoteLabels && ! mirror ? ( isC ? 1.2 : .6 ) : 3 );
 
-			if ( x >= 0 && x <= analyzerWidth ) {
+	  		// set label color - no highlight when mirror effect is active (only Cs displayed)
+			scaleX.fillStyle = scaleR.fillStyle = isC && ! mirror ? SCALEX_HIGHLIGHT_COLOR : SCALEX_LABEL_COLOR;
 
-				scaleX.fillStyle = scaleR.fillStyle = isC && ! isMirror ? SCALEX_HIGHLIGHT_COLOR : SCALEX_LABEL_COLOR;
+			// prioritizes which note labels are displayed, due to the restricted space on some ranges/scales
+			if ( isNoteLabels ) {
+				let allowedLabels = ['C'];
+				if ( frequencyScale == SCALE_LOG || freq > 2e3 || ( frequencyScale != SCALE_LINEAR && freq > 250 ) ||
+					 ( ( ! isRadial || isVertical ) && ( frequencyScale != SCALE_LINEAR && freq > 125 || freq > 1e3 ) ) )
+					allowedLabels.push('G');
+				if ( frequencyScale == SCALE_LOG || freq > 4e3 || ( frequencyScale != SCALE_LINEAR && freq > 500 ) ||
+					 ( ( ! isRadial || isVertical ) && ( frequencyScale != SCALE_LINEAR && freq > 250 || freq > 2e3 ) ) )
+					allowedLabels.push('E');
+				if ( frequencyScale == SCALE_LINEAR && freq > 4e3 ||
+					 ( ( ! isRadial || isVertical ) && ( frequencyScale == SCALE_LOG || freq > 2e3 || ( frequencyScale != SCALE_LINEAR && freq > 500 ) ) ) )
+					allowedLabels.push('D','F','A','B');
+				if ( ! allowedLabels.includes( label[0] ) )
+					continue; // skip this label
+			}
 
-				if ( x > prevX + fontSizeX / 2 ) {
-					scaleX.fillText( label, initialX + x, y, maxW );
-					if ( isMirror )
-						scaleX.fillText( label, ( initialX || canvas.width ) - x, y, maxW );
-					prevX = x + Math.min( maxW, scaleX.measureText( label ).width ) / 2;
-				}
+			// linear scale
+			if ( x >= prevX + labelWidthX / 2 && x <= analyzerWidth ) {
+				scaleX.fillText( label, initialX + x, y, maxW );
+				if ( mirror && ( x > labelWidthX || mirror == 1 ) )
+					scaleX.fillText( label, ( initialX || canvas.width ) - x, y, maxW );
+				prevX = x + Math.min( maxW, scaleX.measureText( label ).width ) / 2;
+			}
 
-				if ( x < analyzerWidth && ( x > prevR + fontSizeR || isC ) ) { // avoid wrapping-around the last label and overlapping the first one
-					radialLabel( x, label );
-					if ( isMirror && x > fontSizeR ) // avoid overlapping of first labels on mirror mode
-						radialLabel( -x, label );
-					prevR = x;
-				}
+			// radial scale
+			if ( x >= prevR + labelWidthR && x < analyzerWidth - labelWidthR ) { // avoid overlapping the last label over the first one
+				radialLabel( x, label );
+				if ( mirror && ( x > labelWidthR || mirror == 1 ) ) // avoid overlapping of first labels on mirror mode
+					radialLabel( -x, label );
+				prevR = x;
 			}
 		}
 	}
@@ -2145,7 +2162,7 @@ export default class AudioMotionAnalyzer {
 
 		// update dimensions of the scale canvas
 		canvasX.width = newWidth;
-		canvasX.height = Math.max( 20 * pixelRatio, Math.min( newWidth, newHeight ) / 27 | 0 );
+		canvasX.height = Math.max( 20 * pixelRatio, Math.min( newWidth, newHeight ) / 32 | 0 );
 
 		// (re)generate gradient
 		this._makeGrad();
