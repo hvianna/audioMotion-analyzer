@@ -1503,7 +1503,7 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// draw peak
-		const drawPeak = ( bar, channel, colorStops ) => {
+		const drawPeak = ( bar, channel ) => {
 			const peak = bar.peak[ channel ],
 				  { posX, width } = bar;
 
@@ -1517,10 +1517,8 @@ export default class AudioMotionAnalyzer {
 					ctx.globalAlpha = peak;
 
 				// use the peak level to select the peak color when colorMode is set to 'bar-level'
-				if ( colorMode == COLOR_BAR_LEVEL && mode != 10 ) {
-					const selectedColorStop = colorStops[ Math.round( ( 1 - peak ) * ( colorStops.length - 1 ) ) ];
-					ctx.fillStyle = ctx.strokeStyle = selectedColorStop.color || selectedColorStop;
-				}
+				if ( colorMode == COLOR_BAR_LEVEL )
+					setBarColor( channel, peak );
 
 				// render peak according to current mode / effect
 				if ( isLeds ) {
@@ -1671,8 +1669,24 @@ export default class AudioMotionAnalyzer {
 			ctx.fill();
 		}
 
-		// converts a given bar height to match the current LED attributes
-		const ledPosY = height => Math.max( 0, ( height * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV );
+		// sets fillStyle and strokeStyle according to current colorMode
+		const setBarColor = ( channel, barValue = 0, barIndex = 0 ) => {
+			let color;
+			// if `channel` is undefined (or not a number), use the channel 0 gradient
+			// for mode 10, always use the channel gradient (ignore colorMode)
+			if ( colorMode == COLOR_GRADIENT || mode == 10 || channel != +channel )
+				color = canvasGradients[ channel | 0 ];
+			else {
+				const colorStops        = this._gradients[ this._selectedGrads[ channel ] ].colorStops,
+					  count             = colorStops.length,
+					  selectedColorStop = colorStops[ colorMode == COLOR_BAR_INDEX ? barIndex % count : Math.round( ( 1 - barValue ) * ( count - 1 ) ) ];
+				color = selectedColorStop.color || selectedColorStop;
+			}
+			ctx.fillStyle = ctx.strokeStyle = color;
+		}
+
+		// converts a value in [0;1] range to a height in pixels that fits into the current LED elements
+		const ledPosY = value => Math.max( 0, ( value * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV );
 
 		// update energy information
 		const updateEnergy = newVal => {
@@ -1719,9 +1733,7 @@ export default class AudioMotionAnalyzer {
 		for ( let channel = 0; channel < nChannels; channel++ ) {
 
 			const { channelTop, channelBottom, analyzerBottom } = channelCoords[ channel ],
-				  channelGradient = this._gradients[ this._selectedGrads[ channel ] ],
-				  colorStops      = channelGradient.colorStops,
-				  bgColor         = ( ! showBgColor || isLeds && ! isOverlay ) ? '#000' : channelGradient.bgColor,
+				  bgColor         = ( ! showBgColor || isLeds && ! isOverlay ) ? '#000' : this._gradients[ this._selectedGrads[ channel ] ].bgColor,
 				  mustClear       = channel == 0 || ! isRadial && channelLayout != CHANNEL_COMBINED;
 
 			if ( useCanvas ) {
@@ -1755,9 +1767,6 @@ export default class AudioMotionAnalyzer {
 				}
 				else // for outline effect ensure linewidth is not greater than half the bar width
 					ctx.lineWidth = isOutline ? Math.min( lineWidth, bars[0].width / 2 ) : lineWidth;
-
-				// set selected gradient for fill and stroke
-				ctx.fillStyle = ctx.strokeStyle = canvasGradients[ channel ];
 
 				// set clip region
 				ctx.save();
@@ -1795,19 +1804,19 @@ export default class AudioMotionAnalyzer {
 				const bar = bars[ barIndex ],
 					  { posX, barCenter, width, freq, binLo, binHi, ratioLo, ratioHi } = bar;
 
-				let barHeight = Math.max( interpolate( binLo, ratioLo ), interpolate( binHi, ratioHi ) );
+				let barValue = Math.max( interpolate( binLo, ratioLo ), interpolate( binHi, ratioHi ) );
 
 				// check additional bins (if any) for this bar and keep the highest value
 				for ( let j = binLo + 1; j < binHi; j++ ) {
-					if ( fftData[ j ] > barHeight )
-						barHeight = fftData[ j ];
+					if ( fftData[ j ] > barValue )
+						barValue = fftData[ j ];
 				}
 
 				// normalize bar amplitude in [0;1] range
-				barHeight = this._normalizedB( barHeight );
+				barValue = this._normalizedB( barValue );
 
-				bar.value[ channel ] = barHeight;
-				currentEnergy += barHeight;
+				bar.value[ channel ] = barValue;
+				currentEnergy += barValue;
 
 				// update bar peak
 				if ( bar.peak[ channel ] > 0 ) {
@@ -1818,8 +1827,8 @@ export default class AudioMotionAnalyzer {
 				}
 
 				// check if it's a new peak for this bar
-				if ( barHeight >= bar.peak[ channel ] ) {
-					bar.peak[ channel ] = barHeight;
+				if ( barValue >= bar.peak[ channel ] ) {
+					bar.peak[ channel ] = barValue;
 					bar.hold[ channel ] = 30; // set peak hold time to 30 frames (0.5s)
 				}
 
@@ -1829,12 +1838,15 @@ export default class AudioMotionAnalyzer {
 
 				// set opacity for bar effects
 				if ( isLumi || isAlpha )
-					ctx.globalAlpha = barHeight;
+					ctx.globalAlpha = barValue;
 				else if ( isOutline )
 					ctx.globalAlpha = fillAlpha;
 
+				// set fillStyle and strokeStyle for the current bar
+				setBarColor( channel, barValue, barIndex );
+
 				// compute actual bar height on screen
-				barHeight = isLeds ? ledPosY( barHeight ) : barHeight * maxBarHeight | 0;
+				let barHeight = isLeds ? ledPosY( barValue ) : barValue * maxBarHeight | 0;
 
 				// invert bar for radial channel 1
 				if ( isRadial && channel == 1 && channelLayout == CHANNEL_VERTICAL )
@@ -1874,11 +1886,6 @@ export default class AudioMotionAnalyzer {
 					}
 				}
 				else {
-					if ( colorMode != COLOR_GRADIENT ) {
-						const selectedColorStop = colorStops[ colorMode == COLOR_BAR_INDEX ? barIndex % colorStops.length : Math.round( ( 1 - bar.value[ channel ] ) * ( colorStops.length - 1 ) ) ];
-						ctx.fillStyle = ctx.strokeStyle = selectedColorStop.color || selectedColorStop;
-					}
-
 					if ( isLeds ) {
 						// draw "unlit" leds - avoid drawing it twice on 'dual-combined' channel layout
 						if ( showBgColor && ! isOverlay && ( channel == 0 || channelLayout != CHANNEL_COMBINED ) ) {
@@ -1927,7 +1934,7 @@ export default class AudioMotionAnalyzer {
 				}
 
 				// Draw peak
-				drawPeak( bar, channel, colorStops );
+				drawPeak( bar, channel );
 
 			} // for ( let barIndex = 0; barIndex < nBars; barIndex++ )
 
@@ -1942,6 +1949,8 @@ export default class AudioMotionAnalyzer {
 
 			// Fill/stroke drawing path for mode 10
 			if ( mode == 10 ) {
+				setBarColor( channel ); // select channel gradient
+
 				if ( isRadial ) {
 					if ( mirrorMode ) {
 						let p;
@@ -1999,7 +2008,7 @@ export default class AudioMotionAnalyzer {
 		// call callback function, if defined
 		if ( this.onCanvasDraw ) {
 			ctx.save();
-			ctx.fillStyle = ctx.strokeStyle = canvasGradients[0];
+			setBarColor(); // set fillStyle and strokeStyle to channel 0 gradient
 			this.onCanvasDraw( this, { timestamp, canvasGradients } );
 			ctx.restore();
 		}
