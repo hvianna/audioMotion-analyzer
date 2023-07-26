@@ -53,8 +53,8 @@ const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', 
 	  [ 'classic', {
 			colorStops: [
 				'hsl( 0, 100%, 50% )',
-				{ pos: .6, color: 'hsl( 60, 100%, 50% )' },
-				'hsl( 120, 100%, 50% )'
+				{ pos: .6, color: 'hsl( 60, 100%, 50% )', level: .85 },
+				{ color: 'hsl( 120, 100%, 50% )', level: .5 }
 			]
 	  }],
 	  [ 'prism', {
@@ -802,19 +802,41 @@ export default class AudioMotionAnalyzer {
 	 * @param {object} options
 	 */
 	registerGradient( name, options ) {
-		if ( typeof name !== 'string' || name.trim().length == 0 )
+		if ( typeof name != 'string' || name.trim().length == 0 )
 			throw new AudioMotionError( ERR_GRADIENT_INVALID_NAME );
 
-		if ( typeof options !== 'object' )
+		if ( typeof options != 'object' )
 			throw new AudioMotionError( ERR_GRADIENT_NOT_AN_OBJECT );
 
-		if ( ! Array.isArray( options.colorStops ) || ! options.colorStops.length )
+		const { colorStops } = options;
+
+		if ( ! Array.isArray( colorStops ) || ! colorStops.length )
 			throw new AudioMotionError( ERR_GRADIENT_MISSING_COLOR );
+
+		const count     = colorStops.length,
+			  isInvalid = val => val === undefined || val < 0 || val > 1;
+
+		// normalize all colorStops as objects with `pos`, `color` and `level` properties
+		colorStops.forEach( ( colorStop, index ) => {
+			const pos = index / Math.max( 1, count - 1 );
+			if ( typeof colorStop != 'object' ) // only color string was defined
+				colorStops[ index ] = {	pos, color: colorStop };
+			else if ( isInvalid( colorStop.pos ) )
+				colorStop.pos = pos;
+
+			if ( isInvalid( colorStop.level ) )
+				colorStops[ index ].level = index == 0 ? 1 : 1 - index / count;
+		});
+
+		// make sure colorStops is in descending `level` order and that the first one has `level == 1`
+		// this is crucial for proper operation of 'bar-level' colorMode!
+		colorStops.sort( ( a, b ) => a.level < b.level ? 1 : a.level > b.level ? -1 : 0 );
+		colorStops[0].level = 1;
 
 		this._gradients[ name ] = {
 			bgColor:    options.bgColor || GRADIENT_DEFAULT_BGCOLOR,
 			dir:        options.dir,
-			colorStops: options.colorStops
+			colorStops: colorStops
 		};
 
 		// if the registered gradient is one of the currently selected gradients, regenerate them
@@ -1689,10 +1711,11 @@ export default class AudioMotionAnalyzer {
 			if ( colorMode == COLOR_GRADIENT || mode == 10 || channel != +channel )
 				color = canvasGradients[ channel | 0 ];
 			else {
-				const colorStops        = this._gradients[ this._selectedGrads[ channel ] ].colorStops,
-					  count             = colorStops.length,
-					  selectedColorStop = colorStops[ colorMode == COLOR_BAR_INDEX ? barIndex % count : Math.round( ( 1 - barValue ) * ( count - 1 ) ) ];
-				color = selectedColorStop.color || selectedColorStop;
+				const colorStops    = this._gradients[ this._selectedGrads[ channel ] ].colorStops,
+					  count         = colorStops.length,
+					  selectedIndex = colorMode == COLOR_BAR_INDEX ? barIndex % count : colorStops.findLastIndex( element => barValue <= element.level );
+
+				color = colorStops[ selectedIndex ].color;
 			}
 			ctx.fillStyle = ctx.strokeStyle = color;
 		}
@@ -2093,14 +2116,11 @@ export default class AudioMotionAnalyzer {
 			if ( colorStops ) {
 				const dual = channelLayout == CHANNEL_VERTICAL && ! this._splitGradient && ( ! isHorizontal || isRadial );
 
-				// helper function
-				const addColorStop = ( offset, colorInfo ) => grad.addColorStop( offset, colorInfo.color || colorInfo );
-
 				for ( let channelArea = 0; channelArea < 1 + dual; channelArea++ ) {
+					const maxIndex = colorStops.length - 1;
 
-					colorStops.forEach( ( colorInfo, index ) => {
-						const maxIndex = colorStops.length - 1;
-						let offset = colorInfo.pos !== undefined ? colorInfo.pos : index / Math.max( 1, maxIndex );
+					colorStops.forEach( ( colorStop, index ) => {
+						let offset = colorStop.pos;
 
 						// in dual mode (not split), use half the original offset for each channel
 						if ( dual )
@@ -2119,24 +2139,24 @@ export default class AudioMotionAnalyzer {
 							// add colors in reverse order if radial or lumi are active
 							if ( isRadial || isLumi ) {
 								const revIndex = maxIndex - index;
-								colorInfo = colorStops[ revIndex ];
-								offset = 1 - ( colorInfo.pos !== undefined ? colorInfo.pos : revIndex / Math.max( 1, maxIndex ) ) / 2;
+								colorStop = colorStops[ revIndex ];
+								offset = 1 - colorStop.pos / 2;
 							}
 							else {
 								// if the first offset is not 0, create an additional color stop to prevent bleeding from the first channel
 								if ( index == 0 && offset > 0 )
-									addColorStop( .5, colorInfo );
+									grad.addColorStop( .5, colorStop.color );
 								// bump the offset to the second half of the gradient
 								offset += .5;
 							}
 						}
 
 						// add gradient color stop
-						addColorStop( offset, colorInfo );
+						grad.addColorStop( offset, colorStop.color );
 
 						// create additional color stop at the end of first channel to prevent bleeding
 						if ( channelLayout == CHANNEL_VERTICAL && index == maxIndex && offset < .5 )
-							addColorStop( .5, colorInfo );
+							grad.addColorStop( .5, colorStop.color );
 					});
 				} // for ( let channelArea = 0; channelArea < 1 + dual; channelArea++ )
 			}
