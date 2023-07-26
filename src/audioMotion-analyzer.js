@@ -106,10 +106,6 @@ const validateFromList = ( value, list, modifier = 'toLowerCase' ) => list[ Math
 
 export default class AudioMotionAnalyzer {
 
-	#aux; // auxiliary variables
-	#flg; // auxiliary flags
-	#int; // internal components and property values
-
 /**
  * CONSTRUCTOR
  *
@@ -122,9 +118,8 @@ export default class AudioMotionAnalyzer {
 		this._ready = false;
 
 		// Initialize internal objects
-		this.#aux = {};
-		this.#flg = {};
-		this.#int = {};
+		this._aux = {};
+		this._flg = {};
 		this._gradients = {};       // registered gradients
 		this._selectedGrads = [];   // names of the currently selected gradients for channels 0 and 1
 		this._canvasGradients = []; // CanvasGradient objects for channels 0 and 1
@@ -625,34 +620,34 @@ export default class AudioMotionAnalyzer {
 		return this._fsWidth;
 	}
 	get isAlphaBars() {
-		return this.#flg.isAlpha;
+		return this._flg.isAlpha;
 	}
 	get isBandsMode() {
-		return this.#flg.isBands;
+		return this._flg.isBands;
 	}
 	get isFullscreen() {
 		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._fsEl;
 	}
 	get isLedBars() {
-		return this.#flg.isLeds;
+		return this._flg.isLeds;
 	}
 	get isLumiBars() {
-		return this.#flg.isLumi;
+		return this._flg.isLumi;
 	}
 	get isOctaveBands() {
-		return this.#flg.isOctaves;
+		return this._flg.isOctaves;
 	}
 	get isOn() {
 		return this._runId !== undefined;
 	}
 	get isOutlineBars() {
-		return this.#flg.isOutline;
+		return this._flg.isOutline;
 	}
 	get pixelRatio() {
 		return this._pixelRatio;
 	}
 	get isRoundBars() {
-		return this.#flg.isRound;
+		return this._flg.isRound;
 	}
 	static get version() {
 		return VERSION;
@@ -1311,8 +1306,8 @@ export default class AudioMotionAnalyzer {
 
 		// SAVE INTERNAL PROPERTIES
 
-		this.#aux = { analyzerHeight, analyzerWidth, channelCoords, channelHeight, channelGap, initialX, radius, scaleMin, unitWidth };
-		this.#flg = { isAlpha, isBands, isLeds, isLumi, isOctaves, isOutline, isRound, noLedGap };
+		this._aux = { analyzerHeight, analyzerWidth, channelCoords, channelHeight, channelGap, initialX, radius, scaleMin, unitWidth };
+		this._flg = { isAlpha, isBands, isLeds, isLumi, isOctaves, isOutline, isRound, noLedGap };
 
 		// generate the X-axis and radial scales
 		this._createScales();
@@ -1325,7 +1320,7 @@ export default class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const { analyzerWidth, initialX, radius, scaleMin, unitWidth } = this.#aux,
+		const { analyzerWidth, initialX, radius, scaleMin, unitWidth } = this._aux,
 			  canvas        = this._canvasCtx.canvas,
 			  scaleX        = this._scaleX,
 			  scaleR        = this._scaleR,
@@ -1455,7 +1450,7 @@ export default class AudioMotionAnalyzer {
 	 */
 	_draw( timestamp ) {
 		const { isAlpha, isBands, isLeds, isLumi,
-			    isOctaves, isOutline, isRound, noLedGap } = this.#flg,
+			    isOctaves, isOutline, isRound, noLedGap } = this._flg,
 			  ctx            = this._canvasCtx,
 			  canvas         = ctx.canvas,
 			  canvasX        = this._scaleX.canvas,
@@ -1474,8 +1469,8 @@ export default class AudioMotionAnalyzer {
 			  lineWidth      = +this.lineWidth, // make sure the damn thing is a number!
 			  mirrorMode     = this._mirror,
 			  { analyzerHeight, channelCoords,
-			    channelHeight, channelGap, initialX, radius } = this.#aux,
-			  analyzerWidth  = isRadial ? canvas.width : this.#aux.analyzerWidth,
+			    channelHeight, channelGap, initialX, radius } = this._aux,
+			  analyzerWidth  = isRadial ? canvas.width : this._aux.analyzerWidth,
 			  finalX         = initialX + analyzerWidth,
 			  showBgColor    = this.showBgColor,
 			  maxBarHeight   = isRadial ? Math.min( centerX, centerY ) - radius : analyzerHeight,
@@ -2071,12 +2066,12 @@ export default class AudioMotionAnalyzer {
 		const ctx            = this._canvasCtx,
 			  canvas         = ctx.canvas,
 			  channelLayout  = this._chLayout,
-			  { isLumi }     = this.#flg,
+			  { isLumi }     = this._flg,
 			  isRadial       = this._radial,
 			  gradientHeight = isLumi ? canvas.height : canvas.height * ( 1 - this._reflexRatio * ( channelLayout != CHANNEL_VERTICAL ) ) | 0,
 			  				   // for vertical stereo we keep the full canvas height and handle the reflex areas while generating the color stops
 			  analyzerRatio  = 1 - this._reflexRatio,
-			  { analyzerWidth, initialX, radius } = this.#aux;
+			  { analyzerWidth, initialX, radius } = this._aux;
 
 		// for radial mode
 		const centerX   = canvas.width >> 1,
