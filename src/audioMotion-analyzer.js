@@ -54,7 +54,7 @@ const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', 
 			colorStops: [
 				'hsl( 0, 100%, 50% )',
 				{ pos: .6, color: 'hsl( 60, 100%, 50% )', level: .85 },
-				{ color: 'hsl( 120, 100%, 50% )', level: .5 }
+				{ color: 'hsl( 120, 100%, 50% )', level: .45 }
 			]
 	  }],
 	  [ 'prism', {
@@ -571,6 +571,13 @@ export default class AudioMotionAnalyzer {
 		this.channelLayout = value ? CHANNEL_VERTICAL : CHANNEL_SINGLE;
 	}
 
+	get trueLeds() {
+		return this._trueLeds;
+	}
+	set trueLeds( value ) {
+		this._trueLeds = !! value;
+	}
+
 	get volume() {
 		return this._output.gain.value;
 	}
@@ -1022,14 +1029,14 @@ export default class AudioMotionAnalyzer {
 		/**
 		 *	CREATE ANALYZER BANDS
 		 *
-		 *	DEPENDS ON:
+		 *	USES:
 		 *		analyzerWidth
 		 *		initialX
 		 *		isBands
 		 *		isOctaves
 		 *
 		 *	GENERATES:
-		 *		bars / this._bars
+		 *		bars (populates this._bars)
 		 *		bardWidth
 		 *		scaleMin
 		 *		unitWidth
@@ -1212,7 +1219,7 @@ export default class AudioMotionAnalyzer {
 		/**
 		 *  COMPUTE ATTRIBUTES FOR THE LED BARS
 		 *
-		 *	DEPENDS ON:
+		 *	USES:
 		 *		analyzerHeight
 		 *		barWidth
 		 *		noLedGap
@@ -1282,7 +1289,7 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// COMPUTE ADDITIONAL BAR POSITIONING, ACCORDING TO THE CURRENT SETTINGS
-		// depends on: barSpace, barWidth, spaceH
+		// uses: barSpace, barWidth, spaceH
 
 		const barSpacePx = Math.min( barWidth - 1, barSpace * ( barSpace > 0 && barSpace < 1 ? barWidth : 1 ) );
 
@@ -1315,7 +1322,7 @@ export default class AudioMotionAnalyzer {
 			bar.width = width;
 		});
 
-		// COMPUTE CHANNEL COORDINATES (depends on spaceV)
+		// COMPUTE CHANNEL COORDINATES (uses spaceV)
 
 		const channelCoords = [];
 		for ( const channel of [0,1] ) {
@@ -1487,6 +1494,7 @@ export default class AudioMotionAnalyzer {
 			  isLinear       = this._linearAmplitude,
 			  isOverlay      = this.overlay,
 			  isRadial       = this._radial,
+			  isTrueLeds     = isLeds && this._trueLeds && colorMode == COLOR_GRADIENT,
 			  channelLayout  = this._chLayout,
 			  lineWidth      = +this.lineWidth, // make sure the damn thing is a number!
 			  mirrorMode     = this._mirror,
@@ -1533,37 +1541,6 @@ export default class AudioMotionAnalyzer {
 				ctx.drawImage( canvas, 0, channelCoords[ channel ].channelTop, canvas.width, analyzerHeight, 0, posY, canvas.width, height );
 
 				ctx.restore();
-			}
-		}
-
-		// draw peak
-		const drawPeak = ( bar, channel ) => {
-			const peak = bar.peak[ channel ],
-				  { posX, width } = bar;
-
-			if ( peak > 0 && this.showPeaks && ! isLumi && posX >= initialX && posX < finalX ) {
-				const { analyzerBottom } = channelCoords[ channel ];
-
-				// set opacity
-				if ( isOutline && lineWidth > 0 )
-					ctx.globalAlpha = 1;
-				else if ( isAlpha )
-					ctx.globalAlpha = peak;
-
-				// use the peak level to select the peak color when colorMode is set to 'bar-level'
-				if ( colorMode == COLOR_BAR_LEVEL )
-					setBarColor( channel, peak );
-
-				// render peak according to current mode / effect
-				if ( isLeds ) {
-					const ledPeak = ledPosY( peak );
-					if ( ledPeak >= ledSpaceV ) // avoid peak below first led
-						ctx.fillRect( posX,	analyzerBottom - ledPeak, width, ledHeight );
-				}
-				else if ( ! isRadial )
-					ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, width, 2 );
-				else if ( mode != 10 ) // radial - no peaks for mode 10
-					radialPoly( posX, peak * maxBarHeight * ( channel && channelLayout == CHANNEL_VERTICAL ? -1 : 1 ), width, -2 );
 			}
 		}
 
@@ -1664,6 +1641,14 @@ export default class AudioMotionAnalyzer {
 			return 0; // unknown filter
 		}
 
+		// draws (stroke) a bar from x,y1 to x,y2
+		const strokeBar = ( x, y1, y2 ) => {
+			ctx.beginPath();
+			ctx.moveTo( x, y1 );
+			ctx.lineTo( x, y2 );
+			ctx.stroke();
+		}
+
 		// conditionally strokes current path on canvas
 		const strokeIf = flag => {
 			if ( flag && lineWidth ) {
@@ -1701,23 +1686,6 @@ export default class AudioMotionAnalyzer {
 			}
 			strokeIf( stroke );
 			ctx.fill();
-		}
-
-		// sets fillStyle and strokeStyle according to current colorMode
-		const setBarColor = ( channel, barValue = 0, barIndex = 0 ) => {
-			let color;
-			// if `channel` is undefined (or not a number), use the channel 0 gradient
-			// for mode 10, always use the channel gradient (ignore colorMode)
-			if ( colorMode == COLOR_GRADIENT || mode == 10 || channel != +channel )
-				color = canvasGradients[ channel | 0 ];
-			else {
-				const colorStops    = this._gradients[ this._selectedGrads[ channel ] ].colorStops,
-					  count         = colorStops.length,
-					  selectedIndex = colorMode == COLOR_BAR_INDEX ? barIndex % count : colorStops.findLastIndex( element => barValue <= element.level );
-
-				color = colorStops[ selectedIndex ].color;
-			}
-			ctx.fillStyle = ctx.strokeStyle = color;
 		}
 
 		// converts a value in [0;1] range to a height in pixels that fits into the current LED elements
@@ -1768,8 +1736,31 @@ export default class AudioMotionAnalyzer {
 		for ( let channel = 0; channel < nChannels; channel++ ) {
 
 			const { channelTop, channelBottom, analyzerBottom } = channelCoords[ channel ],
-				  bgColor         = ( ! showBgColor || isLeds && ! isOverlay ) ? '#000' : this._gradients[ this._selectedGrads[ channel ] ].bgColor,
+				  channelGradient = this._gradients[ this._selectedGrads[ channel ] ],
+				  colorStops      = channelGradient.colorStops,
+				  colorCount      = colorStops.length,
+				  bgColor         = ( ! showBgColor || isLeds && ! isOverlay ) ? '#000' : channelGradient.bgColor,
 				  mustClear       = channel == 0 || ! isRadial && channelLayout != CHANNEL_COMBINED;
+
+			// helper function for FFT data interpolation (uses fftData)
+			const interpolate = ( bin, ratio ) => {
+				const value = fftData[ bin ] + ( bin < fftData.length - 1 ? ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio : 0 );
+				return isNaN( value ) ? -Infinity : value;
+			}
+
+			// set fillStyle and strokeStyle according to current colorMode (uses: channel, colorStops, colorCount)
+			const setBarColor = ( value = 0, barIndex = 0 ) => {
+				let color;
+				// for mode 10, always use the channel gradient (ignore colorMode)
+				if ( ( colorMode == COLOR_GRADIENT && ! isTrueLeds ) || mode == 10 )
+					color = canvasGradients[ channel ];
+				else {
+					const selectedIndex = colorMode == COLOR_BAR_INDEX ? barIndex % colorCount : colorStops.findLastIndex( item => isLeds ? ledPosY( value ) <= ledPosY( item.level ) : value <= item.level );
+					color = colorStops[ selectedIndex ].color;
+				}
+				ctx.fillStyle = ctx.strokeStyle = color;
+			}
+
 
 			if ( useCanvas ) {
 				// clear the channel area, if in overlay mode
@@ -1819,12 +1810,6 @@ export default class AudioMotionAnalyzer {
 			// apply weighting
 			if ( weightingFilter )
 				fftData = fftData.map( ( val, idx ) => val + weightingdB( this._binToFreq( idx ) ) );
-
-			// helper function for FFT data interpolation
-			const interpolate = ( bin, ratio ) => {
-				const value = fftData[ bin ] + ( bin < fftData.length - 1 ? ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio : 0 );
-				return isNaN( value ) ? -Infinity : value;
-			}
 
 			// start drawing path (for mode 10)
 			ctx.beginPath();
@@ -1878,10 +1863,10 @@ export default class AudioMotionAnalyzer {
 					ctx.globalAlpha = fillAlpha;
 
 				// set fillStyle and strokeStyle for the current bar
-				setBarColor( channel, barValue, barIndex );
+				setBarColor( barValue, barIndex );
 
 				// compute actual bar height on screen
-				let barHeight = isLeds ? ledPosY( barValue ) : barValue * maxBarHeight | 0;
+				let barHeight = isLumi ? maxBarHeight : isLeds ? ledPosY( barValue ) : barValue * maxBarHeight | 0;
 
 				// invert bar for radial channel 1
 				if ( isRadial && channel == 1 && channelLayout == CHANNEL_VERTICAL )
@@ -1925,20 +1910,26 @@ export default class AudioMotionAnalyzer {
 						// draw "unlit" leds - avoid drawing it twice on 'dual-combined' channel layout
 						if ( showBgColor && ! isOverlay && ( channel == 0 || channelLayout != CHANNEL_COMBINED ) ) {
 							const alpha = ctx.globalAlpha;
-							ctx.beginPath();
-							ctx.moveTo( barCenter, channelTop );
-							ctx.lineTo( barCenter, analyzerBottom );
 							ctx.strokeStyle = LEDS_UNLIT_COLOR;
 							ctx.globalAlpha = 1;
-							ctx.stroke();
+							strokeBar( barCenter, channelTop, analyzerBottom );
 							// restore properties
 							ctx.strokeStyle = ctx.fillStyle;
 							ctx.globalAlpha = alpha;
 						}
-						ctx.beginPath();
-						ctx.moveTo( barCenter, isLumi ? channelTop : analyzerBottom );
-						ctx.lineTo( barCenter, isLumi ? channelBottom : analyzerBottom - barHeight );
-						ctx.stroke();
+						if ( isTrueLeds ) {
+							// ledPosY() is used below to fit one entire led height into the selected range
+							const colorIndex = isLumi ? 0 : colorStops.findLastIndex( item => ledPosY( barValue ) <= ledPosY( item.level ) );
+							let last = analyzerBottom;
+							for ( let i = colorCount - 1; i >= colorIndex; i-- ) {
+								ctx.strokeStyle = colorStops[ i ].color;
+								let y = analyzerBottom - ( i == colorIndex ? barHeight : ledPosY( colorStops[ i ].level ) );
+								strokeBar( barCenter, last, y );
+								last = y - ledSpaceV;
+							}
+						}
+						else
+							strokeBar( barCenter, analyzerBottom, analyzerBottom - barHeight );
 					}
 					else if ( posX >= initialX ) {
 						if ( isRadial )
@@ -1956,12 +1947,9 @@ export default class AudioMotionAnalyzer {
 							ctx.fill();
 						}
 						else {
-							const d = isOutline ? ctx.lineWidth : 0,
-								  y = isLumi ? channelTop : analyzerBottom + d,
-								  h = isLumi ? channelBottom : -barHeight - d;
-
+							const offset = isOutline ? ctx.lineWidth : 0;
 							ctx.beginPath();
-							ctx.rect( posX, y, width, h );
+							ctx.rect( posX, analyzerBottom + offset, width, -barHeight - offset );
 							strokeIf( isOutline );
 							ctx.fill();
 						}
@@ -1969,7 +1957,29 @@ export default class AudioMotionAnalyzer {
 				}
 
 				// Draw peak
-				drawPeak( bar, channel );
+				const peak = bar.peak[ channel ];
+				if ( peak > 0 && this.showPeaks && ! isLumi && posX >= initialX && posX < finalX ) {
+					// set opacity
+					if ( isOutline && lineWidth > 0 )
+						ctx.globalAlpha = 1;
+					else if ( isAlpha )
+						ctx.globalAlpha = peak;
+
+					// select the peak color for 'bar-level' colorMode or 'trueLeds'
+					if ( colorMode == COLOR_BAR_LEVEL || isTrueLeds )
+						setBarColor( peak );
+
+					// render peak according to current mode / effect
+					if ( isLeds ) {
+						const ledPeak = ledPosY( peak );
+						if ( ledPeak >= ledSpaceV ) // avoid peak below first led
+							ctx.fillRect( posX,	analyzerBottom - ledPeak, width, ledHeight );
+					}
+					else if ( ! isRadial )
+						ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, width, 2 );
+					else if ( mode != 10 ) // radial - no peaks for mode 10
+						radialPoly( posX, peak * maxBarHeight * ( channel && channelLayout == CHANNEL_VERTICAL ? -1 : 1 ), width, -2 );
+				}
 
 			} // for ( let barIndex = 0; barIndex < nBars; barIndex++ )
 
@@ -1984,7 +1994,7 @@ export default class AudioMotionAnalyzer {
 
 			// Fill/stroke drawing path for mode 10
 			if ( mode == 10 ) {
-				setBarColor( channel ); // select channel gradient
+				setBarColor(); // select channel gradient
 
 				if ( isRadial ) {
 					if ( mirrorMode ) {
@@ -2043,7 +2053,7 @@ export default class AudioMotionAnalyzer {
 		// call callback function, if defined
 		if ( this.onCanvasDraw ) {
 			ctx.save();
-			setBarColor(); // set fillStyle and strokeStyle to channel 0 gradient
+			ctx.fillStyle = ctx.strokeStyle = canvasGradients[0];
 			this.onCanvasDraw( this, { timestamp, canvasGradients } );
 			ctx.restore();
 		}
@@ -2319,6 +2329,7 @@ export default class AudioMotionAnalyzer {
 			spinSpeed      : 0,
 			splitGradient  : false,
 			start          : true,
+			trueLeds       : false,
 			useCanvas      : true,
 			volume         : 1,
 			weightingFilter: FILTER_NONE

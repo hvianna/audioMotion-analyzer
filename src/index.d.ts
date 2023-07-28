@@ -62,6 +62,7 @@ export interface Options {
   splitGradient?: boolean;
   start?: boolean;
   stereo?: boolean;
+  trueLeds?: boolean;
   useCanvas?: boolean;
   volume?: number;
   weightingFilter?: WeightingFilter;
@@ -93,7 +94,7 @@ export type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "tre
 
 export type FrequencyScale = "bark" | "linear" | "log" | "mel";
 
-export type GradientColorStop = string | { pos: number; color: string };
+export type GradientColorStop = string | { pos?: number; color: string; level?: number };
 
 export type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
 
@@ -250,6 +251,9 @@ declare class AudioMotionAnalyzer {
 
   get stereo(): boolean;
   set stereo(value: boolean);
+
+  get trueLeds(): boolean;
+  set trueLeds(value: boolean);
 
   public useCanvas: boolean;
 
