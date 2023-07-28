@@ -18,8 +18,10 @@ const presets = [
 	{
 		name: 'Classic LED bars',
 		options: {
-			mode: 3,
-			barSpace: .4,
+			mode: 6,
+			alphaBars: false,
+			ansiBands: true,
+			barSpace: .75,
 			channelLayout: 'single',
 			colorMode: 'gradient',
 			frequencyScale: 'log',
@@ -27,12 +29,13 @@ const presets = [
 			ledBars: true,
 			lumiBars: false,
 			maxFreq: 20000,
-			minFreq: 20,
+			minFreq: 25,
 			mirror: 0,
 			radial: false,
 			reflexRatio: 0,
 			showBgColor: true,
-			showPeaks: true
+			showPeaks: true,
+			trueLeds: true
 		}
 	},
 	{
@@ -186,7 +189,33 @@ const presets = [
 			overlay: false,
 		}
 	},
-
+	{
+		// gradient sample images for docs are created with a 27.5Hz square wave (volume: 1) in the oscillator
+		name: 'Testing config 3 (gradient samples)',
+		options: {
+			mode: 6,
+			alphaBars: false,
+			ansiBands: false,
+			barSpace: .4,
+			channelLayout: 'single',
+			frequencyScale: 'log',
+			ledBars: false,
+			linearAmplitude: true,
+			linearBoost: 1,
+			lumiBars: false,
+			maxDecibels: -35,
+			minDecibels: -85,
+			maxFreq: 12000,
+			minFreq: 60,
+			mirror: 0,
+			overlay: false,
+			radial: false,
+			reflexRatio: 0,
+			showPeaks: false,
+			showScaleX: false,
+			weightingFilter: 'D'
+		}
+	}
 ];
 
 // Demo-specific features
