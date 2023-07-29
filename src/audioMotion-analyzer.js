@@ -409,6 +409,13 @@ export default class AudioMotionAnalyzer {
 		this._linearBoost = value >= 1 ? +value : 1;
 	}
 
+	get lineWidth() {
+		return this._lineWidth;
+	}
+	set lineWidth( value ) {
+		this._lineWidth = +value || 0;
+	}
+
 	get loRes() {
 		return this._loRes;
 	}
@@ -1496,7 +1503,7 @@ export default class AudioMotionAnalyzer {
 			  isRadial       = this._radial,
 			  isTrueLeds     = isLeds && this._trueLeds && colorMode == COLOR_GRADIENT,
 			  channelLayout  = this._chLayout,
-			  lineWidth      = +this.lineWidth, // make sure the damn thing is a number!
+			  lineWidth      = this._lineWidth,
 			  mirrorMode     = this._mirror,
 			  { analyzerHeight, channelCoords,
 			    channelHeight, channelGap, initialX, radius } = this._aux,
@@ -1760,7 +1767,6 @@ export default class AudioMotionAnalyzer {
 				}
 				ctx.fillStyle = ctx.strokeStyle = color;
 			}
-
 
 			if ( useCanvas ) {
 				// clear the channel area, if in overlay mode

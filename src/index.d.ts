@@ -185,7 +185,8 @@ declare class AudioMotionAnalyzer {
   get linearBoost(): number;
   set linearBoost(value: number);
 
-  public lineWidth: number;
+  get lineWidth(): number;
+  set lineWidth(value: number);
 
   get loRes(): boolean;
   set loRes(value: boolean);
