@@ -1372,7 +1372,7 @@ export default class AudioMotionAnalyzer {
 		if ( ! isNoteLabels && ( this._ansiBands || frequencyScale != SCALE_LOG ) ) {
 			freqLabels.push( 16, 31.5, 63, 125, 250, 500, 1e3, 2e3, 4e3 );
 			if ( frequencyScale == SCALE_LINEAR )
-				freqLabels.push( 6e3, 8e3, 10e3, 12e3, 14e3, 16e3, 18e3, 20e3 );
+				freqLabels.push( 6e3, 8e3, 10e3, 12e3, 14e3, 16e3, 18e3, 20e3, 22e3 );
 			else
 				freqLabels.push( 8e3, 16e3 );
 		}
