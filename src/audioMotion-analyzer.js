@@ -52,9 +52,9 @@ const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', 
 	  GRADIENTS = [
 	  [ 'classic', {
 			colorStops: [
-				'hsl( 0, 100%, 50% )',
-				{ pos: .6, color: 'hsl( 60, 100%, 50% )', level: .85 },
-				{ color: 'hsl( 120, 100%, 50% )', level: .45 }
+				'red',
+				{ color: 'yellow', level: .85, pos: .6 },
+				{ color: 'lime', level: .475 }
 			]
 	  }],
 	  [ 'prism', {
