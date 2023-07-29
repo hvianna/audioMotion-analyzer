@@ -821,7 +821,7 @@ export default class AudioMotionAnalyzer {
 			throw new AudioMotionError( ERR_GRADIENT_MISSING_COLOR );
 
 		const count     = colorStops.length,
-			  isInvalid = val => val === undefined || val < 0 || val > 1;
+			  isInvalid = val => +val != val || val < 0 || val > 1;
 
 		// normalize all colorStops as objects with `pos`, `color` and `level` properties
 		colorStops.forEach( ( colorStop, index ) => {
@@ -832,7 +832,7 @@ export default class AudioMotionAnalyzer {
 				colorStop.pos = pos;
 
 			if ( isInvalid( colorStop.level ) )
-				colorStops[ index ].level = index == 0 ? 1 : 1 - index / count;
+				colorStops[ index ].level = 1 - index / count;
 		});
 
 		// make sure colorStops is in descending `level` order and that the first one has `level == 1`
