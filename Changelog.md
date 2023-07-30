@@ -1,6 +1,26 @@
 Changelog
 =========
 
+## version 4.1.0 (2023-07-30)
+
+### Added: <!-- {docsify-ignore} -->
+
++ [`colorMode`](README.md#colormode-string) - additional options for coloring analyzer bars: by bar amplitude (level) or bar position (index);
++ [`roundBars`](README.md#roundbars-boolean) - rounded corner analyzer bars;
++ [`isRoundBars`](README.md#isroundbars-boolean-read-only) read-only property;
++ [`trueLeds`](README.md#trueleds-boolean) - your LED bars now more vintage than ever!
++ New `level` property for [registered gradients](README.md#registergradient-name-options-)
+
+### Fixed: <!-- {docsify-ignore} -->
+
++ Avoid drawing the Y-axis scale and unlit LEDs twice, in 'dual-combined' channel layout.
+
+### Improved: <!-- {docsify-ignore} -->
+
++ Improved frequency scales labeling (especially for `noteLabels`) - label sizes were slightly reduced in fullscreen;
++ Code cleanup and optimizations.
+
+
 ## version 4.0.0 (2023-03-26)
 
 ### 🚨 BREAKING CHANGES: <!-- {docsify-ignore} -->

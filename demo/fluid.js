@@ -12,25 +12,30 @@ const audioEl = document.getElementById('audio'),
 // Visualization presets
 const presets = [
 	{
-		name: 'Defaults',
+		name: 'Reset to defaults',
 		options: undefined
 	},
 	{
 		name: 'Classic LED bars',
 		options: {
-			mode: 3,
+			mode: 6,
+			alphaBars: false,
 			ansiBands: true,
-			barSpace: .4,
+			barSpace: .5,
 			channelLayout: 'single',
+			colorMode: 'gradient',
 			frequencyScale: 'log',
 			gradient: 'classic',
 			ledBars: true,
 			lumiBars: false,
+			maxFreq: 20000,
+			minFreq: 25,
 			mirror: 0,
 			radial: false,
 			reflexRatio: 0,
 			showBgColor: true,
-			showPeaks: true
+			showPeaks: true,
+			trueLeds: true
 		}
 	},
 	{
@@ -40,13 +45,16 @@ const presets = [
 			channelLayout: 'single',
 			fillAlpha: .6,
 			gradient: 'rainbow',
-			lineWidth: 2,
+			lineWidth: 1.5,
+			maxFreq: 20000,
+			minFreq: 30,
 			mirror: -1,
 			radial: false,
 			reflexAlpha: 1,
 			reflexBright: 1,
 			reflexRatio: .5,
-			showPeaks: false
+			showPeaks: false,
+			showScaleX: false
 		}
 	},
 	{
@@ -57,6 +65,8 @@ const presets = [
 			channelLayout: 'single',
 			gradient: 'prism',
 			ledBars: false,
+			maxFreq: 20000,
+			minFreq: 20,
 			mirror: 0,
 			radial: true,
 			showBgColor: true,
@@ -74,6 +84,8 @@ const presets = [
 			gradient: 'rainbow',
 			linearAmplitude: true,
 			linearBoost: 1.8,
+			maxFreq: 20000,
+			minFreq: 20,
 			mirror: 0,
 			overlay: false,
 			radial: false,
@@ -82,6 +94,7 @@ const presets = [
 			reflexFit: true,
 			reflexRatio: .3,
 			showPeaks: true,
+			showScaleX: true,
 			weightingFilter: 'D'
 		}
 	},
@@ -97,6 +110,8 @@ const presets = [
 			linearAmplitude: true,
 			linearBoost: 1.8,
 			lineWidth: 1.5,
+			maxFreq: 20000,
+			minFreq: 20,
 			mirror: 0,
 			overlay: false,
 			radial: false,
@@ -106,20 +121,99 @@ const presets = [
 		}
 	},
 	{
-		name: 'Testing config 1',
+		name: 'roundBars + "bar-level" colorMode',
+		options: {
+			mode: 2,
+			alphaBars: false,
+			ansiBands: false,
+			barSpace: .25,
+			channelLayout: 'single',
+			colorMode: 'bar-level',
+			frequencyScale: 'log',
+			gradient: 'prism',
+			ledBars: false,
+			linearAmplitude: true,
+			linearBoost: 1.6,
+			lumiBars: false,
+			maxFreq: 16000,
+			minFreq: 30,
+			mirror: 0,
+			radial: false,
+			reflexRatio: .5,
+			reflexAlpha: 1,
+			roundBars: true,
+			showPeaks: false,
+			showScaleX: false,
+			smoothing: .7,
+			weightingFilter: 'D'
+		}
+	},
+	{
+		name: 'Testing config 1 (reflex + mirror)',
 		options: {
 			mode: 10,
 			channelLayout: 'single',
 			gradient: 'rainbow',
+			linearAmplitude: false,
 			reflexRatio: .4,
 			showBgColor: true,
 			showPeaks: true,
 			showScaleX: false,
 			mirror: -1,
 			maxFreq: 8000,
+			minFreq: 20,
 			overlay: true,
 			lineWidth: 2,
 			fillAlpha: .2
+		}
+	},
+	{
+		name: 'Testing config 2 (dual LED bars)',
+		options: {
+			mode: 2,
+			alphaBars: false,
+			ansiBands: false,
+			barSpace: .1,
+			channelLayout: 'dual-vertical',
+			gradientLeft: 'steelblue',
+			gradientRight: 'orangered',
+			ledBars: true,
+			lumiBars: false,
+			radial: false,
+			reflexRatio: 0,
+			showPeaks: true,
+			showScaleX: false,
+			mirror: 0,
+			maxFreq: 16000,
+			minFreq: 20,
+			overlay: false,
+		}
+	},
+	{
+		// gradient sample images for docs are created with a 27.5Hz square wave (volume: 1) in the oscillator
+		name: 'Testing config 3 (gradient samples)',
+		options: {
+			mode: 6,
+			alphaBars: false,
+			ansiBands: false,
+			barSpace: .4,
+			channelLayout: 'single',
+			frequencyScale: 'log',
+			ledBars: false,
+			linearAmplitude: true,
+			linearBoost: 1,
+			lumiBars: false,
+			maxDecibels: -35,
+			minDecibels: -85,
+			maxFreq: 12000,
+			minFreq: 60,
+			mirror: 0,
+			overlay: false,
+			radial: false,
+			reflexRatio: 0,
+			showPeaks: false,
+			showScaleX: false,
+			weightingFilter: 'D'
 		}
 	}
 ];
@@ -140,7 +234,7 @@ try {
 			source: audioEl, // main audio source is the HTML <audio> element
 			onCanvasDraw: drawCallback, // callback function used to add custom features for this demo
 			onCanvasResize: ( reason, instance ) => {
-				console.log( `[${reason}] canvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
+				console.log( `onCanvasResize called. Reason: ${reason}\nCanvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
 				if ( reason != 'create' )
 					updateUI();
 			}

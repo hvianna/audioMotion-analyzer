@@ -120,6 +120,7 @@ options = {<br>
 &emsp;&emsp;[barSpace](#barspace-number): **0.1**,<br>
 &emsp;&emsp;[bgAlpha](#bgalpha-number): **0.7**,<br>
 &emsp;&emsp;[channelLayout](#channellayout-string): **'single'**,<br>
+&emsp;&emsp;[colorMode](#colormode-string): **'gradient'**,<br>
 &emsp;&emsp;[connectSpeakers](#connectspeakers-boolean): **true**, // constructor only<br>
 &emsp;&emsp;[fftSize](#fftsize-number): **8192**,<br>
 &emsp;&emsp;[fillAlpha](#fillalpha-number): **1**,<br>
@@ -151,6 +152,7 @@ options = {<br>
 &emsp;&emsp;[reflexBright](#reflexbright-number): **1**,<br>
 &emsp;&emsp;[reflexFit](#reflexfit-boolean): **true**,<br>
 &emsp;&emsp;[reflexRatio](#reflexratio-number): **0**,<br>
+&emsp;&emsp;[roundBars](#roundbars-boolean): **false**,<br>
 &emsp;&emsp;[showBgColor](#showbgcolor-boolean): **true**,<br>
 &emsp;&emsp;[showFPS](#showfps-boolean): **false**,<br>
 &emsp;&emsp;[showPeaks](#showpeaks-boolean): **true**,<br>
@@ -161,6 +163,7 @@ options = {<br>
 &emsp;&emsp;[spinSpeed](#spinspeed-number): **0**,<br>
 &emsp;&emsp;[splitGradient](#splitgradient-boolean): **false**,<br>
 &emsp;&emsp;[start](#start-boolean): **true**,<br>
+&emsp;&emsp;[trueLeds](#trueleds-boolean): **false**,<br>
 &emsp;&emsp;[useCanvas](#usecanvas-boolean): **true**,<br>
 &emsp;&emsp;[volume](#volume-number): **1**,<br>
 &emsp;&emsp;[weightingFilter](#weightingFilter-string): **''**<br>
@@ -291,7 +294,7 @@ See also the [fluid demo](/demo/fluid.html) and the [multi-instance demo](/demo/
 
 *Available since v2.0.0*
 
-Customize the spacing between bars in [bands modes](#mode-number).
+Customize the spacing between bars in frequency bands modes (see [`mode`](#mode-number)).
 
 Use a value between 0 and 1 for spacing proportional to the band width. Values >= 1 will be considered as a literal number of pixels.
 
@@ -328,7 +331,7 @@ Defaults to **0.7**.
 
 Defines the number and layout of analyzer channels.
 
-channelLayout   | description
+channelLayout   | Description
 ----------------|------------
 'single'        | Single channel analyzer, representing the combined output of both left and right channels.
 'dual-combined' | Dual channel analyzer, with both channel graphs overlaid. Works best with semi-transparent **Graph** [`mode`](#mode-number) or [`outlineBars`](#outlinebars-boolean).
@@ -338,6 +341,22 @@ channelLayout   | description
 unless a stereo source is simultaneously connected to the analyzer, which will force the mono input to be upmixed to stereo.
 
 See also [`gradientLeft`](#gradientleft-string), [`gradientRight`](#gradientright-string) and [`splitGradient`](#splitgradient-boolean).
+
+### `colorMode` *string*
+
+*Available since v4.1.0*
+
+Selects the desired mode for coloring the analyzer bars. This property has no effect in **Graph** [`mode`](#mode-number).
+
+colorMode   | Description | Preview ('prism' gradient)
+------------|-------------|----------------------------
+'gradient'  | Analyzer bars are painted with the currently selected [`gradient`](#gradient-string). This is the default behavior. | ![prism](img/gradient-prism.png)
+'bar-index' | Each analyzer bar is painted with a **single color** from the selected gradient's *colorStops*, starting with the first color applied to the first bar, and so on, cycling through the available colorStops. | ![prism-bar-index](img/gradient-prism-bar-index.png)
+'bar-level' | Colors from the selected gradient are used to paint each bar, according to its current level (amplitude). | ![prism-bar-level](img/gradient-prism-bar-level.png)
+
+See also [`registerGradient()`](#registergradient-name-options-).
+
+Defaults to **'gradient'**.
 
 ### `connectedSources` *array* *(Read only)*
 
@@ -368,13 +387,13 @@ Defaults to **8192**.
 
 *Available since v2.0.0*
 
-Opacity of the area fill in [Graph mode](#mode-number), or inner fill of bars in [bands modes](#mode-number) when [`outlineBars`](#outlinebars-boolean) is *true*.
+Opacity of the area fill in [Graph mode](#mode-number), or inner fill of bars in [frequency bands modes](#mode-number) when [`outlineBars`](#outlinebars-boolean) is *true*.
 
 It must be a number between 0 (completely transparent) and 1 (completely opaque).
 
 Please note that the line stroke (when [`lineWidth`](#linewidth-number) > 0) is always drawn at full opacity, regardless of the `fillAlpha` value.
 
-Also, for [bands modes](#mode-number), [`alphaBars`](#alphabars-boolean) set to *true* takes precedence over `fillAlpha`.
+Also, for [frequency bands modes](#mode-number), [`alphaBars`](#alphabars-boolean) set to *true* takes precedence over `fillAlpha`.
 
 Defaults to **1**.
 
@@ -390,16 +409,16 @@ Current frame rate.
 
 Scale used to represent frequencies in the horizontal axis.
 
-frequencyScale | description | scale preview (20Hz - 22kHz range)
+frequencyScale | description | scale preview (10Hz - 24kHz range)
 ---------------|-------------|-----------------------------------
-'bark' | [Bark scale](https://en.wikipedia.org/wiki/Bark_scale) | ![scale-bark](img/scale-bark.png)
+'bark' | Bark scale | ![scale-bark](img/scale-bark.png)
 'linear' | Linear scale | ![scale-linear](img/scale-linear.png)
 'log' | Logarithmic scale | ![scale-log-ansi](img/scale-log-ansi.png)
-'mel' | [Mel scale](https://en.wikipedia.org/wiki/Mel_scale) | ![scale-mel](img/scale-mel.png)
+'mel' | Mel scale | ![scale-mel](img/scale-mel.png)
 
 Logarithmic scale allows visualization of proper **octave bands** (see [`mode`](#mode-number)) and it's also recommended when using [`noteLabels`](#notelabels-boolean).
 
-*Bark* and *Mel* are perceptual pitch scales, which provide better visualization of mid-range to high frequencies.
+[*Bark*](https://en.wikipedia.org/wiki/Bark_scale) and [*Mel*](https://en.wikipedia.org/wiki/Mel_scale) are perceptual pitch scales, which may provide better visualization of mid-range frequencies, when compared to log or linear scales.
 
 Defaults to **'log'**.
 
@@ -471,7 +490,7 @@ You can set both values at once using the [`setCanvasSize()`](#setcanvassize-wid
 *Available since v3.6.0*
 
 ***true*** when alpha bars are effectively being displayed, i.e., [`alphaBars`](#alphabars-boolean) is set to *true* and [`mode`](#mode-number) is set to discrete frequencies
-or one of the bands modes, in which case [`lumiBars`](#lumibars-boolean) must be set to *false* or [`radial`](#radial-boolean) must be set to *true*.
+or one of the frequency bands modes, in which case [`lumiBars`](#lumibars-boolean) must be set to *false* or [`radial`](#radial-boolean) must be set to *true*.
 
 ### `isBandsMode` *boolean* *(Read only)*
 
@@ -518,11 +537,18 @@ See [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
 ***true*** when outlined bars are effectively being displayed, i.e., [`isBandsMode`](#isbandsmode-boolean-read-only) is *true*, [`outlineBars`](#outlinebars-boolean) is set to *true*
 and both [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) are set to *false*, or [`radial`](#radial-boolean) is set to *true*.
 
+### `isRoundBars` *boolean* *(Read only)*
+
+*Available since v4.1.0*
+
+***true*** when round bars are effectively being displayed, i.e., [`isBandsMode`](#isbandsmode-boolean-read-only) is *true*, [`roundBars`](#roundbars-boolean) is set to *true*
+and [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) are both set to *false*.
+
 ### `ledBars` *boolean*
 
 *Available since v3.6.0* (formerly `showLeds`)
 
-*true* to activate the vintage LED bars effect for [bands modes](#mode-number).
+*true* to activate the vintage LED bars effect for frequency bands modes (see [`mode`](#mode-number)).
 
 This effect can be customized via [`setLedParams()`](#setledparams-params-) method.
 
@@ -556,7 +582,7 @@ Defaults to **1**.
 
 *Available since v2.0.0*
 
-Line width for [Graph mode](#mode-number), or outline stroke in [bands modes](#mode-number) when [`outlineBars`](#outlinebars-boolean) is *true*.
+Line width for [Graph mode](#mode-number), or outline stroke in [frequency bands modes](#mode-number) when [`outlineBars`](#outlinebars-boolean) is *true*.
 
 For the line to be distinguishable, set also [`fillAlpha`](#fillalpha-number) < 1.
 
@@ -583,7 +609,7 @@ This will prevent the canvas size from changing, when switching the low resoluti
 
 *Available since v1.1.0*
 
-This is only effective for [bands modes](#mode-number).
+This is only effective for frequency bands modes (see [`mode`](#mode-number)).
 
 When set to *true* all analyzer bars will be displayed at full height with varying luminance (opacity, actually) instead.
 
@@ -666,7 +692,8 @@ Defaults to **0**.
 
 When set to *true* displays musical note labels instead of frequency values, in the X axis (when [`showScaleX`](#showscalex-boolean) is also set to *true*).
 
-For best visualization in [octave bands modes](#mode-number), make sure [`frequencyScale`](#frequencyscale-string) is set to *'log'* and [`ansiBands`](#ansibands-boolean) is set to *false*, so all bands will be perfectly aligned with notes frequencies.
+For best visualization in [octave bands modes](#mode-number), make sure [`frequencyScale`](#frequencyscale-string) is set to *'log'*
+and [`ansiBands`](#ansibands-boolean) is set to *false*, so bands are tuned to the equal temperament musical scale.
 
 Defaults to **false**.
 
@@ -707,8 +734,7 @@ You can refer to this value to adjust any additional drawings done in the canvas
 
 When *true*, the spectrum analyzer is rendered in a circular shape, with radial frequency bars spreading from its center.
 
-On radial spectrum, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) effects are disabled, and
-[`showPeaks`](#showpeaks-boolean) has no effect for [**Graph** mode](#mode-number).
+In radial view, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) effects are disabled, and [`showPeaks`](#showpeaks-boolean) has no effect when in **Graph** [`mode`](#mode-number).
 
 When [`channelLayout`](#channellayout-string) is set to *'dual-vertical'*, a larger diameter is used and the right channel bars are rendered towards the center of the analyzer.
 
@@ -760,6 +786,21 @@ For a perfect mirrored effect, set `reflexRatio` to 0.5 and both [`reflexAlpha`]
 This has no effect when [`lumiBars`](#lumibars-boolean) is *true*.
 
 Defaults to **0** (no reflection).
+
+### `roundBars` *boolean*
+
+*Available since v4.1.0*
+
+When *true* and [`mode`](#mode-number) is set to one of the **bands** modes, analyzer bars are rendered with rounded corners at the top.
+
+In [`radial`](#radial-boolean) view this makes the top and bottom of bars to follow the curvatures of the outer and inner circles, respectivelly, although the effect
+can be barely noticeable with a band count greater than 20 (half-octave bands).
+
+This has no effect when [`ledBars`](#ledbars-boolean) or [`lumiBars`](#lumibars-boolean) are set to *true*.
+
+See also [`isRoundBars`](#isroundbars-boolean-read-only).
+
+Defaults to **false**.
 
 ### `showBgColor` *boolean*
 
@@ -835,9 +876,9 @@ Defaults to **0**.
 
 When set to *true* and [`channelLayout`](#channellayout-string) is **_dual-vertical_**, the gradient will be split between channels.
 
-When *false*, both channels will use the full gradient.
+When *false*, both channels will use the full gradient. The effect is illustrated below, using the *'classic'* gradient.
 
-| gradient: *'classic'* - splitGradient: *false* | gradient: *'classic'* - splitGradient: *true* |
+| splitGradient: *false* | splitGradient: *true* |
 |:--:|:--:|
 | ![split-off](img/splitGradient_off.png) | ![split-on](img/splitGradient_on.png) |
 
@@ -848,6 +889,24 @@ Defaults to **false**.
 ### `stereo` **(DEPRECATED)** *boolean*
 
 **This property will be removed in version 5** - Use [`channelLayout`](#channellayout-string) instead.
+
+### `trueLeds` *boolean*
+
+*Available since v4.1.0*
+
+When set to *true*, LEDs are painted with individual colors from the current gradient, instead of using the gradient itself.
+
+The effect is illustrated below, using the *'classic'* gradient.
+
+| trueLeds: *false* | trueLeds: *true* |
+|:--:|:--:|
+| ![split-off](img/trueleds_off.png) | ![split-on](img/trueleds_on.png) |
+
+The threshold for each color can be adjusted via the `level` property when registering a gradient. See [`registerGradient()`](#registergradient-name-options-).
+
+This option is only effective for frequency bands [modes](#mode-number), when [`ledBars`](#ledbars-boolean) is *true* and [`colorMode`](#colormode-string) is set to *'gradient'*.
+
+Defaults to **false**.
 
 ### `useCanvas` *boolean*
 
@@ -1105,29 +1164,34 @@ Use this method inside your callback function to create additional visual effect
 
 Registers a custom color gradient.
 
-`name` must be a non-empty string that will be used to select this gradient, via the [`gradient`](#gradient-string) property.
+`name` must be a non-empty string that will be used to select this gradient, via the [`gradient`](#gradient-string) property. Names are case sensitive.
 
 `options` must be an object as shown below:
 
 ```js
-const options = {
+audioMotion.registerGradient( 'myGradient', {
     bgColor: '#011a35', // background color (optional) - defaults to '#111'
     dir: 'h',           // add this property to create a horizontal gradient (optional)
     colorStops: [       // list your gradient colors in this array (at least one color is required)
-        'red',                      // colors may be defined in any valid CSS format
-        { pos: .6, color: '#ff0' }, // use an object to adjust the offset (0 to 1) of a colorStop
-        'hsl( 120, 100%, 50% )'
+        'hsl( 0, 100%, 50% )',        // colors can be defined in any valid CSS format
+        { color: 'yellow', pos: .6 }, // in an object, use `pos` to adjust the offset (0 to 1) of a colorStop
+        { color: '#0f0', level: .5 }  // use `level` to set the max bar amplitude (0 to 1) to use this color
     ]
-}
-
-audioMotion.registerGradient( 'myGradient', options );
+});
 ```
 
-Check the [built-in **_'rainbow'_** gradient](#gradient-string) for an example of horizontal gradient.
+The `dir` property has no effect on [`radial`](#radial-boolean) spectrum or when [`trueLeds`](#trueleds-boolean) is in effect.
 
-**Note:** the horizontal flag (`dir: 'h'`) has no effect on [`radial`](#radial-boolean) spectrum, because in that mode all gradients are rendered in radial direction.
+Each element of `colorStops` may be either a string (color only), or an object with at least a `color` property and optional `pos` and `level` properties.
+- `pos` defines the relative position of a color in the gradient, when [`colorMode`](#colormode-string) is set to **'gradient'**. It must be a number between `0` and `1`, where `0` represents the top of the screen and `1` the bottom
+(or left and right sides, for horizontal gradients);
+- `level` defines the level threshold of a color, when [`colorMode`](#colormode-string) is set to **'bar-level'** or [`trueLeds`](#trueleds-boolean) is active.
+The color will be applied to bars (or LED elements) with amplitude **less than or equal to** `level`. It must be a number between `0` and `1`, where `1` is the maximum
+amplitude (top of screen);
+- If `pos` or `level` are not explicitly defined, colors will be evenly distributed across the gradient or amplitude range;
+- Defining `level: 0` for a colorStop will effectively prevent that color from being used for *'bar-level'* colorMode and *trueLeds* effect.
 
-?> Any gradient, including the built-in ones, may be modified by (re-)registering the same gradient name (names are case sensitive).
+?> Any gradient, including the built-in ones, may be modified at any time by (re-)registering the same gradient name.
 
 ### `setCanvasSize( width, height )`
 

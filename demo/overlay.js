@@ -22,6 +22,7 @@ const presets = [
 			mode: 3,
 			barSpace: .5,
 			bgAlpha: .7,
+			colorMode: 'gradient',
 			gradient: 'classic',
 			ledBars: true,
 			lumiBars: false,
@@ -81,6 +82,8 @@ const presets = [
 			mode: 5,
 			barSpace: .25,
 			bgAlpha: .5,
+			colorMode: 'bar-level',
+			gradient: 'prism',
 			ledBars: false,
 			lumiBars: false,
 			maxFreq: 16000,
@@ -90,7 +93,8 @@ const presets = [
 			reflexRatio: .3,
 			showBgColor: false,
 			showPeaks: true,
-			overlay: true
+			overlay: true,
+			outlineBars: false
 		}
 	}
 ];
