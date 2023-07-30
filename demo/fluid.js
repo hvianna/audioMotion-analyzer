@@ -21,7 +21,7 @@ const presets = [
 			mode: 6,
 			alphaBars: false,
 			ansiBands: true,
-			barSpace: .75,
+			barSpace: .5,
 			channelLayout: 'single',
 			colorMode: 'gradient',
 			frequencyScale: 'log',
@@ -234,7 +234,7 @@ try {
 			source: audioEl, // main audio source is the HTML <audio> element
 			onCanvasDraw: drawCallback, // callback function used to add custom features for this demo
 			onCanvasResize: ( reason, instance ) => {
-				console.log( `[${reason}] canvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
+				console.log( `onCanvasResize called. Reason: ${reason}\nCanvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
 				if ( reason != 'create' )
 					updateUI();
 			}
