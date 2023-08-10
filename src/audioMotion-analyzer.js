@@ -1684,12 +1684,12 @@ export default class AudioMotionAnalyzer {
 				ctx.moveTo( ...radialXY( x, y, dir ) );
 				ctx.lineTo( ...radialXY( x, y + h, dir ) );
 				if ( isRound )
-					ctx.arc( centerX, centerY, radius + y + h, startAngle, endAngle );
+					ctx.arc( centerX, centerY, radius + y + h, startAngle, endAngle, dir != 1 );
 				else
 					ctx.lineTo( ...radialXY( x + w, y + h, dir ) );
 				ctx.lineTo( ...radialXY( x + w, y, dir ) );
 				if ( isRound && ! stroke ) // close the bottom line only when not in outline mode
-					ctx.arc( centerX, centerY, radius + y, endAngle, startAngle, true );
+					ctx.arc( centerX, centerY, radius + y, endAngle, startAngle, dir == 1 );
 			}
 			strokeIf( stroke );
 			ctx.fill();
