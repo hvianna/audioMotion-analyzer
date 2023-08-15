@@ -2,12 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 4.1.0
+ * @version 4.1.1
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const VERSION = '4.1.0';
+const VERSION = '4.1.1';
 
 // internal constants
 const TAU     = 2 * Math.PI,
@@ -101,6 +101,18 @@ const deprecate = ( name, alternative ) => console.warn( `${name} is deprecated.
 // helper function - validate a given value with an array of strings (by default, all lowercase)
 // returns the validated value, or the first element of `list` if `value` is not found in the array
 const validateFromList = ( value, list, modifier = 'toLowerCase' ) => list[ Math.max( 0, list.indexOf( ( '' + value )[ modifier ]() ) ) ];
+
+// Polyfill for Array.findLastIndex()
+if ( ! Array.prototype.findLastIndex ) {
+	Array.prototype.findLastIndex = function( callback ) {
+		let index = this.length;
+		while ( index-- > 0 ) {
+			if ( callback( this[ index ] ) )
+				return index;
+		}
+		return -1;
+	}
+}
 
 // AudioMotionAnalyzer class
 
@@ -1684,12 +1696,12 @@ export default class AudioMotionAnalyzer {
 				ctx.moveTo( ...radialXY( x, y, dir ) );
 				ctx.lineTo( ...radialXY( x, y + h, dir ) );
 				if ( isRound )
-					ctx.arc( centerX, centerY, radius + y + h, startAngle, endAngle );
+					ctx.arc( centerX, centerY, radius + y + h, startAngle, endAngle, dir != 1 );
 				else
 					ctx.lineTo( ...radialXY( x + w, y + h, dir ) );
 				ctx.lineTo( ...radialXY( x + w, y, dir ) );
 				if ( isRound && ! stroke ) // close the bottom line only when not in outline mode
-					ctx.arc( centerX, centerY, radius + y, endAngle, startAngle, true );
+					ctx.arc( centerX, centerY, radius + y, endAngle, startAngle, dir == 1 );
 			}
 			strokeIf( stroke );
 			ctx.fill();

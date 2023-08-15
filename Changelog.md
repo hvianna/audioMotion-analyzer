@@ -1,6 +1,12 @@
 Changelog
 =========
 
+## version 4.1.1 (2023-08-14)
+
++ Fix a rendering bug when `roundBars` is combined with `mirror` and `radial`;
++ Add a polyfill for `Array.findLastIndex()` to restore compatibility with not-so-recent browsers.
+
+
 ## version 4.1.0 (2023-07-30)
 
 ### Added: <!-- {docsify-ignore} -->
