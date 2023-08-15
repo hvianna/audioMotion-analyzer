@@ -102,6 +102,18 @@ const deprecate = ( name, alternative ) => console.warn( `${name} is deprecated.
 // returns the validated value, or the first element of `list` if `value` is not found in the array
 const validateFromList = ( value, list, modifier = 'toLowerCase' ) => list[ Math.max( 0, list.indexOf( ( '' + value )[ modifier ]() ) ) ];
 
+// Polyfill for Array.findLastIndex()
+if ( ! Array.prototype.findLastIndex ) {
+	Array.prototype.findLastIndex = function( callback ) {
+		let index = this.length;
+		while ( index-- > 0 ) {
+			if ( callback( this[ index ] ) )
+				return index;
+		}
+		return -1;
+	}
+}
+
 // AudioMotionAnalyzer class
 
 export default class AudioMotionAnalyzer {
