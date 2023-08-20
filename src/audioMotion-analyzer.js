@@ -524,6 +524,13 @@ export default class AudioMotionAnalyzer {
 		this._calcBars();
 	}
 
+	get peakLine() {
+		return this._peakLine;
+	}
+	set peakLine( value ) {
+		this._peakLine = !! value;
+	}
+
 	get radial() {
 		return this._radial;
 	}
@@ -1522,6 +1529,8 @@ export default class AudioMotionAnalyzer {
 			  analyzerWidth  = isRadial ? canvas.width : this._aux.analyzerWidth,
 			  finalX         = initialX + analyzerWidth,
 			  showBgColor    = this.showBgColor,
+			  showPeaks      = this.showPeaks,
+			  showPeakLine   = showPeaks && this._peakLine && mode == 10,
 			  maxBarHeight   = isRadial ? Math.min( centerX, centerY ) - radius : analyzerHeight,
 			  maxdB			 = this.maxDecibels,
 			  mindB			 = this.minDecibels,
@@ -1682,7 +1691,7 @@ export default class AudioMotionAnalyzer {
 		const getAngle = ( x, dir ) => dir * TAU * ( x / canvas.width ) + this._spinAngle;
 
 		// converts planar X,Y coordinates to radial coordinates
-		const radialXY = ( x, y, dir ) => {
+		const radialXY = ( x, y, dir = 1 ) => {
 			const height = radius + y,
 				  angle  = getAngle( x, dir );
 			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
@@ -1899,11 +1908,11 @@ export default class AudioMotionAnalyzer {
 
 					if ( isRadial ) {
 						if ( barIndex == 0 )
-							ctx.lineTo( ...radialXY( 0, ( posX < 0 ? nextBarAvg : barHeight ), 1 ) );
+							ctx.lineTo( ...radialXY( 0, ( posX < 0 ? nextBarAvg : barHeight ) ) );
 						// draw line to the current point, avoiding overlapping wrap-around frequencies
 						if ( posX >= 0 ) {
 							const point = [ posX, barHeight ];
-							ctx.lineTo( ...radialXY( ...point, 1 ) );
+							ctx.lineTo( ...radialXY( ...point ) );
 							points.push( point );
 						}
 					}
@@ -1976,7 +1985,7 @@ export default class AudioMotionAnalyzer {
 
 				// Draw peak
 				const peak = bar.peak[ channel ];
-				if ( peak > 0 && this.showPeaks && ! isLumi && posX >= initialX && posX < finalX ) {
+				if ( peak > 0 && showPeaks && ! showPeakLine && ! isLumi && posX >= initialX && posX < finalX ) {
 					// set opacity
 					if ( isOutline && lineWidth > 0 )
 						ctx.globalAlpha = 1;
@@ -2040,6 +2049,27 @@ export default class AudioMotionAnalyzer {
 					ctx.globalAlpha = fillAlpha;
 					ctx.fill();
 					ctx.globalAlpha = 1;
+				}
+
+				// peak line
+				if ( showPeakLine ) {
+					const avgY = ( x1, y1, x2, y2, x ) => y1 + ( y2 - y1 ) * ( x - x1 ) / ( x2 - x1 );
+					ctx.beginPath();
+					bars.forEach( ( b, i ) => {
+						let x = b.posX,
+							h = b.peak[ channel ],
+							m = i ? 'lineTo' : 'moveTo';
+						if ( isRadial && x < 0 ) {
+							const nextBar = bars[ i + 1 ];
+							h = avgY( x, h, nextBar.posX, nextBar.peak[ channel ], 0 );
+							x = 0;
+						}
+						h *= maxBarHeight * ( channel && isRadial && channelLayout == CHANNEL_VERTICAL ? -1 : 1 );
+						ctx[ m ]( ...( isRadial ? radialXY( x, h ) : [ x, analyzerBottom - h ] ) );
+					});
+					ctx.lineWidth = lineWidth ? .5 : 1;
+					ctx.stroke();
+					// TODO for radial: mirror peakline and add standard peaks
 				}
 			}
 
@@ -2332,6 +2362,7 @@ export default class AudioMotionAnalyzer {
 			noteLabels     : false,
 			outlineBars    : false,
 			overlay        : false,
+			peakLine       : false,
 			radial		   : false,
 			reflexAlpha    : 0.15,
 			reflexBright   : 1,

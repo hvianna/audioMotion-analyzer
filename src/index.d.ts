@@ -46,6 +46,7 @@ export interface Options {
   onCanvasResize?: OnCanvasResizeFunction;
   outlineBars?: boolean;
   overlay?: boolean;
+  peakLine?: boolean;
   radial?: boolean;
   reflexAlpha?: number;
   reflexBright?: number;
@@ -219,6 +220,9 @@ declare class AudioMotionAnalyzer {
   set outlineBars(value: boolean);
 
   public overlay: boolean;
+
+  get peakLine(): boolean;
+  set peakLine(value: boolean);
 
   get pixelRatio(): number;
 
