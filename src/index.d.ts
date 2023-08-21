@@ -273,7 +273,7 @@ declare class AudioMotionAnalyzer {
   public connectInput(source: AudioNode): AudioNode;
   public connectOutput(node?: AudioNode): void;
 
-  public disconnectInput(node?: AudioNode | AudioNode[]): void;
+  public disconnectInput(node?: AudioNode | AudioNode[] | null, stopTracks?: boolean): void;
   public disconnectOutput(node?: AudioNode): void;
 
   public getBars(): AnalyzerBarData[];
