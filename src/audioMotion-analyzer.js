@@ -22,6 +22,10 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  COLOR_BAR_INDEX          = 'bar-index',
 	  COLOR_BAR_LEVEL          = 'bar-level',
 	  COLOR_GRADIENT           = 'gradient',
+	  DEBOUNCE_TIMEOUT         = 60,
+	  EVENT_CLICK              = 'click',
+	  EVENT_FULLSCREENCHANGE   = 'fullscreenchange',
+	  EVENT_RESIZE             = 'resize',
  	  GRADIENT_DEFAULT_BGCOLOR = '#111',
  	  FILTER_NONE              = '',
  	  FILTER_A                 = 'A',
@@ -35,7 +39,7 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  REASON_CREATE            = 'create',
 	  REASON_FSCHANGE          = 'fschange',
 	  REASON_LORES             = 'lores',
-	  REASON_RESIZE            = 'resize',
+	  REASON_RESIZE            = EVENT_RESIZE,
 	  REASON_USER              = 'user',
 	  SCALEX_BACKGROUND_COLOR  = '#000c',
 	  SCALEX_LABEL_COLOR       = '#fff',
@@ -128,6 +132,7 @@ export default class AudioMotionAnalyzer {
 	constructor( container, options = {} ) {
 
 		this._ready = false;
+		this._destroyed = false;
 
 		// Initialize internal objects
 		this._aux = {};
@@ -150,6 +155,7 @@ export default class AudioMotionAnalyzer {
 		// Use audio context provided by user, or create a new one
 
 		let audioCtx;
+		this._ownContext = false;
 
 		if ( options.source && ( audioCtx = options.source.context ) ) {
 			// get audioContext from provided source audioNode
@@ -160,6 +166,7 @@ export default class AudioMotionAnalyzer {
 		else {
 			try {
 				audioCtx = new ( window.AudioContext || window.webkitAudioContext )();
+				this._ownContext = true;
 			}
 			catch( err ) {
 				throw new AudioMotionError( ERR_AUDIO_CONTEXT_FAIL );
@@ -174,13 +181,13 @@ export default class AudioMotionAnalyzer {
 			Connection routing:
 			===================
 
-			for dual channel modes:                  +--->  analyzer[0]  ---+
+			for dual channel layouts:                +--->  analyzer[0]  ---+
 		    	                                     |                      |
 			(source) --->  input  --->  splitter  ---+                      +--->  merger  --->  output  ---> (destination)
 		    	                                     |                      |
 		        	                                 +--->  analyzer[1]  ---+
 
-			for single channel mode:
+			for single channel layout:
 
 			(source) --->  input  ----------------------->  analyzer[0]  --------------------->  output  ---> (destination)
 
@@ -243,21 +250,25 @@ export default class AudioMotionAnalyzer {
 						this._setCanvas( REASON_RESIZE );
 						this._fsTimeout = 0;
 					}
-				}, 60 );
+				}, DEBOUNCE_TIMEOUT );
 			}
 		}
 
 		// if browser supports ResizeObserver, listen for resize on the container
 		if ( window.ResizeObserver ) {
-			const resizeObserver = new ResizeObserver( onResize );
-			resizeObserver.observe( this._container );
+			this._observer = new ResizeObserver( onResize );
+			this._observer.observe( this._container );
 		}
 
+		// create an AbortController to remove event listeners on destroy()
+		this._controller = new AbortController();
+		const signal = this._controller.signal;
+
 		// listen for resize events on the window - required for fullscreen on iPadOS
-		window.addEventListener( 'resize', onResize );
+		window.addEventListener( EVENT_RESIZE, onResize, { signal } );
 
 		// listen for fullscreenchange events on the canvas - not available on Safari
-		canvas.addEventListener( 'fullscreenchange', () => {
+		canvas.addEventListener( EVENT_FULLSCREENCHANGE, () => {
 			// set flag to indicate a fullscreen change in progress
 			this._fsChanging = true;
 
@@ -272,16 +283,16 @@ export default class AudioMotionAnalyzer {
 			this._fsTimeout = window.setTimeout( () => {
 				this._fsChanging = false;
 				this._fsTimeout = 0;
-			}, 60 );
-		});
+			}, DEBOUNCE_TIMEOUT );
+		}, { signal } );
 
 		// Resume audio context if in suspended state (browsers' autoplay policy)
 		const unlockContext = () => {
 			if ( audioCtx.state == 'suspended' )
 				audioCtx.resume();
-			window.removeEventListener( 'click', unlockContext );
+			window.removeEventListener( EVENT_CLICK, unlockContext );
 		}
-		window.addEventListener( 'click', unlockContext );
+		window.addEventListener( EVENT_CLICK, unlockContext );
 
 		// Set configuration options and use defaults for any missing properties
 		this._setProps( options, true );
@@ -651,6 +662,9 @@ export default class AudioMotionAnalyzer {
 	get isBandsMode() {
 		return this._flg.isBands;
 	}
+	get isDestroyed() {
+		return this._destroyed;
+	}
 	get isFullscreen() {
 		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._fsEl;
 	}
@@ -664,7 +678,7 @@ export default class AudioMotionAnalyzer {
 		return this._flg.isOctaves;
 	}
 	get isOn() {
-		return this._runId !== undefined;
+		return !! this._runId;
 	}
 	get isOutlineBars() {
 		return this._flg.isOutline;
@@ -727,6 +741,35 @@ export default class AudioMotionAnalyzer {
 			for ( const i of [0,1] )
 				this._analyzer[ i ].connect( ( this._chLayout == CHANNEL_SINGLE && ! i ? this._output : this._merger ), 0, i );
 		}
+	}
+
+	/**
+	 * Destroys instance
+	 */
+	destroy() {
+		const { audioCtx, canvas, _controller, _input, _merger, _observer, _ownContext, _splitter } = this;
+
+		this._destroyed = true;
+		this.toggleAnalyzer( false ); // stop analyzer
+
+		// remove event listeners
+		_controller.abort();
+		if ( _observer )
+			_observer.disconnect();
+
+		// disconnect audio nodes
+		this.disconnectInput();
+		this.disconnectOutput(); // also disconnects analyzer nodes
+		_input.disconnect();
+		_splitter.disconnect();
+		_merger.disconnect();
+
+		// if audio context is our own (not provided by the user), close it
+		if ( _ownContext )
+			audioCtx.close();
+
+		// remove canvas from the DOM
+		canvas.remove();
 	}
 
 	/**
@@ -959,12 +1002,12 @@ export default class AudioMotionAnalyzer {
 
 		if ( started && ! value ) {
 			cancelAnimationFrame( this._runId );
-			this._runId = undefined;
+			this._runId = 0;
 		}
-		else if ( ! started && value ) {
+		else if ( value && ! started && ! this._destroyed ) {
 			this._frame = this._fps = 0;
 			this._time = performance.now();
-			this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) );
+			this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) ); // arrow function preserves the scope of *this*
 		}
 
 		return this.isOn;
