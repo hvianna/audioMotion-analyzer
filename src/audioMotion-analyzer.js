@@ -464,6 +464,13 @@ export default class AudioMotionAnalyzer {
 			this._analyzer[ i ].maxDecibels = value;
 	}
 
+	get maxFPS() {
+		return this._maxFPS;
+	}
+	set maxFPS( value ) {
+		this._maxFPS = value < 0 ? 0 : +value || 0;
+	}
+
 	get maxFreq() {
 		return this._maxFreq;
 	}
@@ -1006,7 +1013,7 @@ export default class AudioMotionAnalyzer {
 		}
 		else if ( value && ! started && ! this._destroyed ) {
 			this._frame = this._fps = 0;
-			this._time = performance.now();
+			this._time = this._last = performance.now();
 			this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) ); // arrow function preserves the scope of *this*
 		}
 
@@ -1546,6 +1553,12 @@ export default class AudioMotionAnalyzer {
 	 * this is called 60 times per second by requestAnimationFrame()
 	 */
 	_draw( timestamp ) {
+		// schedule next canvas update
+		this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) );
+
+		if ( this._maxFPS && ( timestamp - this._last < 1000 / this._maxFPS ) )
+			return;
+
 		const { isAlpha, isBands, isLeds, isLumi,
 			    isOctaves, isOutline, isRound, noLedGap } = this._flg,
 			  ctx            = this._canvasCtx,
@@ -1776,8 +1789,10 @@ export default class AudioMotionAnalyzer {
 
 		// calculate and display (if enabled) the current frame rate
 		const updateFPS = () => {
-			this._frame++;
 			const elapsed = timestamp - this._time;
+
+			this._last = timestamp - ( this._maxFPS ? elapsed % ( 1000 / this._maxFPS ) : 0 ); // thanks https://stackoverflow.com/a/19772220/2370385
+			this._frame++;
 
 			if ( elapsed >= 1000 ) {
 				this._fps = this._frame / ( elapsed / 1000 );
@@ -2124,9 +2139,6 @@ export default class AudioMotionAnalyzer {
 			this.onCanvasDraw( this, { timestamp, canvasGradients } );
 			ctx.restore();
 		}
-
-		// schedule next canvas update
-		this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) );
 	}
 
 	/**
@@ -2373,6 +2385,7 @@ export default class AudioMotionAnalyzer {
 			loRes          : false,
 			lumiBars       : false,
 			maxDecibels    : -25,
+			maxFPS         : 0,
 			maxFreq        : 22000,
 			minDecibels    : -85,
 			minFreq        : 20,
