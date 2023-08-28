@@ -666,7 +666,7 @@ export default class AudioMotionAnalyzer {
 		return this._destroyed;
 	}
 	get isFullscreen() {
-		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._fsEl;
+		return this._fsEl && ( document.fullscreenElement || document.webkitFullscreenElement ) === this._fsEl;
 	}
 	get isLedBars() {
 		return this._flg.isLeds;
@@ -747,15 +747,24 @@ export default class AudioMotionAnalyzer {
 	 * Destroys instance
 	 */
 	destroy() {
+		if ( ! this._ready )
+			return;
+
 		const { audioCtx, canvas, _controller, _input, _merger, _observer, _ownContext, _splitter } = this;
 
 		this._destroyed = true;
+		this._ready = false;
 		this.toggleAnalyzer( false ); // stop analyzer
 
 		// remove event listeners
 		_controller.abort();
 		if ( _observer )
 			_observer.disconnect();
+
+		// clear callbacks and fullscreen element
+		this.onCanvasResize = null;
+		this.onCanvasDraw = null;
+		this._fsEl = null;
 
 		// disconnect audio nodes
 		this.disconnectInput();
@@ -770,6 +779,9 @@ export default class AudioMotionAnalyzer {
 
 		// remove canvas from the DOM
 		canvas.remove();
+
+		// reset flags
+		this._calcBars();
 	}
 
 	/**
@@ -1025,6 +1037,8 @@ export default class AudioMotionAnalyzer {
 		}
 		else {
 			const fsEl = this._fsEl;
+			if ( ! fsEl )
+				return;
 			if ( fsEl.requestFullscreen )
 				fsEl.requestFullscreen();
 			else if ( fsEl.webkitRequestFullscreen )
@@ -1053,8 +1067,10 @@ export default class AudioMotionAnalyzer {
 	_calcBars() {
 		const bars = this._bars = []; // initialize object property
 
-		if ( ! this._ready )
+		if ( ! this._ready ) {
+			this._flg = { isAlpha: false, isBands: false, isLeds: false, isLumi: false, isOctaves: false, isOutline: false, isRound: false, noLedGap: false };
 			return;
+		}
 
 		const barSpace    = this._barSpace,
 		 	  canvas      = this.canvas,
@@ -2159,7 +2175,6 @@ export default class AudioMotionAnalyzer {
 	 * Generate currently selected gradient
 	 */
 	_makeGrad() {
-
 		if ( ! this._ready )
 			return;
 
@@ -2267,7 +2282,6 @@ export default class AudioMotionAnalyzer {
 	 * Internal function to change canvas dimensions on demand
 	 */
 	_setCanvas( reason ) {
-		// if initialization is not finished, quit
 		if ( ! this._ready )
 			return;
 
