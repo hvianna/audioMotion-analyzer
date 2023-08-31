@@ -175,6 +175,7 @@ declare class AudioMotionAnalyzer {
   get isOutlineBars(): boolean;
   get isRoundBars(): boolean;
 
+  get isDestroyed(): boolean;
   get isOn(): boolean;
 
   get ledBars(): boolean;
@@ -277,7 +278,9 @@ declare class AudioMotionAnalyzer {
   public connectInput(source: AudioNode): AudioNode;
   public connectOutput(node?: AudioNode): void;
 
-  public disconnectInput(node?: AudioNode | AudioNode[]): void;
+  public destroy(): void;
+
+  public disconnectInput(node?: AudioNode | AudioNode[] | null, stopTracks?: boolean): void;
   public disconnectOutput(node?: AudioNode): void;
 
   public getBars(): AnalyzerBarData[];

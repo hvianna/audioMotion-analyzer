@@ -5,8 +5,12 @@
   "main": "./src/audioMotion-analyzer.js",
   "module": "./src/audioMotion-analyzer.js",
   "types": "./src/index.d.ts",
+  "type": "module",
   "exports": {
-    ".": "./src/audioMotion-analyzer.js"
+    ".": {
+      "import": "./src/audioMotion-analyzer.js",
+      "types": "./src/index.d.ts"
+    }
   },
   "files": [
     "src/**/*.js",

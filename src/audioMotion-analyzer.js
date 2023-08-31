@@ -22,6 +22,10 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  COLOR_BAR_INDEX          = 'bar-index',
 	  COLOR_BAR_LEVEL          = 'bar-level',
 	  COLOR_GRADIENT           = 'gradient',
+	  DEBOUNCE_TIMEOUT         = 60,
+	  EVENT_CLICK              = 'click',
+	  EVENT_FULLSCREENCHANGE   = 'fullscreenchange',
+	  EVENT_RESIZE             = 'resize',
  	  GRADIENT_DEFAULT_BGCOLOR = '#111',
  	  FILTER_NONE              = '',
  	  FILTER_A                 = 'A',
@@ -35,7 +39,7 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  REASON_CREATE            = 'create',
 	  REASON_FSCHANGE          = 'fschange',
 	  REASON_LORES             = 'lores',
-	  REASON_RESIZE            = 'resize',
+	  REASON_RESIZE            = EVENT_RESIZE,
 	  REASON_USER              = 'user',
 	  SCALEX_BACKGROUND_COLOR  = '#000c',
 	  SCALEX_LABEL_COLOR       = '#fff',
@@ -128,6 +132,7 @@ export default class AudioMotionAnalyzer {
 	constructor( container, options = {} ) {
 
 		this._ready = false;
+		this._destroyed = false;
 
 		// Initialize internal objects
 		this._aux = {};
@@ -150,6 +155,7 @@ export default class AudioMotionAnalyzer {
 		// Use audio context provided by user, or create a new one
 
 		let audioCtx;
+		this._ownContext = false;
 
 		if ( options.source && ( audioCtx = options.source.context ) ) {
 			// get audioContext from provided source audioNode
@@ -160,6 +166,7 @@ export default class AudioMotionAnalyzer {
 		else {
 			try {
 				audioCtx = new ( window.AudioContext || window.webkitAudioContext )();
+				this._ownContext = true;
 			}
 			catch( err ) {
 				throw new AudioMotionError( ERR_AUDIO_CONTEXT_FAIL );
@@ -174,13 +181,13 @@ export default class AudioMotionAnalyzer {
 			Connection routing:
 			===================
 
-			for dual channel modes:                  +--->  analyzer[0]  ---+
+			for dual channel layouts:                +--->  analyzer[0]  ---+
 		    	                                     |                      |
 			(source) --->  input  --->  splitter  ---+                      +--->  merger  --->  output  ---> (destination)
 		    	                                     |                      |
 		        	                                 +--->  analyzer[1]  ---+
 
-			for single channel mode:
+			for single channel layout:
 
 			(source) --->  input  ----------------------->  analyzer[0]  --------------------->  output  ---> (destination)
 
@@ -243,21 +250,25 @@ export default class AudioMotionAnalyzer {
 						this._setCanvas( REASON_RESIZE );
 						this._fsTimeout = 0;
 					}
-				}, 60 );
+				}, DEBOUNCE_TIMEOUT );
 			}
 		}
 
 		// if browser supports ResizeObserver, listen for resize on the container
 		if ( window.ResizeObserver ) {
-			const resizeObserver = new ResizeObserver( onResize );
-			resizeObserver.observe( this._container );
+			this._observer = new ResizeObserver( onResize );
+			this._observer.observe( this._container );
 		}
 
+		// create an AbortController to remove event listeners on destroy()
+		this._controller = new AbortController();
+		const signal = this._controller.signal;
+
 		// listen for resize events on the window - required for fullscreen on iPadOS
-		window.addEventListener( 'resize', onResize );
+		window.addEventListener( EVENT_RESIZE, onResize, { signal } );
 
 		// listen for fullscreenchange events on the canvas - not available on Safari
-		canvas.addEventListener( 'fullscreenchange', () => {
+		canvas.addEventListener( EVENT_FULLSCREENCHANGE, () => {
 			// set flag to indicate a fullscreen change in progress
 			this._fsChanging = true;
 
@@ -272,16 +283,16 @@ export default class AudioMotionAnalyzer {
 			this._fsTimeout = window.setTimeout( () => {
 				this._fsChanging = false;
 				this._fsTimeout = 0;
-			}, 60 );
-		});
+			}, DEBOUNCE_TIMEOUT );
+		}, { signal } );
 
 		// Resume audio context if in suspended state (browsers' autoplay policy)
 		const unlockContext = () => {
 			if ( audioCtx.state == 'suspended' )
 				audioCtx.resume();
-			window.removeEventListener( 'click', unlockContext );
+			window.removeEventListener( EVENT_CLICK, unlockContext );
 		}
-		window.addEventListener( 'click', unlockContext );
+		window.addEventListener( EVENT_CLICK, unlockContext );
 
 		// Set configuration options and use defaults for any missing properties
 		this._setProps( options, true );
@@ -658,8 +669,11 @@ export default class AudioMotionAnalyzer {
 	get isBandsMode() {
 		return this._flg.isBands;
 	}
+	get isDestroyed() {
+		return this._destroyed;
+	}
 	get isFullscreen() {
-		return ( document.fullscreenElement || document.webkitFullscreenElement ) === this._fsEl;
+		return this._fsEl && ( document.fullscreenElement || document.webkitFullscreenElement ) === this._fsEl;
 	}
 	get isLedBars() {
 		return this._flg.isLeds;
@@ -671,7 +685,7 @@ export default class AudioMotionAnalyzer {
 		return this._flg.isOctaves;
 	}
 	get isOn() {
-		return this._runId !== undefined;
+		return !! this._runId;
 	}
 	get isOutlineBars() {
 		return this._flg.isOutline;
@@ -737,11 +751,53 @@ export default class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Destroys instance
+	 */
+	destroy() {
+		if ( ! this._ready )
+			return;
+
+		const { audioCtx, canvas, _controller, _input, _merger, _observer, _ownContext, _splitter } = this;
+
+		this._destroyed = true;
+		this._ready = false;
+		this.toggleAnalyzer( false ); // stop analyzer
+
+		// remove event listeners
+		_controller.abort();
+		if ( _observer )
+			_observer.disconnect();
+
+		// clear callbacks and fullscreen element
+		this.onCanvasResize = null;
+		this.onCanvasDraw = null;
+		this._fsEl = null;
+
+		// disconnect audio nodes
+		this.disconnectInput();
+		this.disconnectOutput(); // also disconnects analyzer nodes
+		_input.disconnect();
+		_splitter.disconnect();
+		_merger.disconnect();
+
+		// if audio context is our own (not provided by the user), close it
+		if ( _ownContext )
+			audioCtx.close();
+
+		// remove canvas from the DOM
+		canvas.remove();
+
+		// reset flags
+		this._calcBars();
+	}
+
+	/**
 	 * Disconnects audio sources from the analyzer
 	 *
-	 * @param [{object|array}] a connected AudioNode object or an array of such objects; if undefined, all connected nodes are disconnected
+	 * @param [{object|array}] a connected AudioNode object or an array of such objects; if falsy, all connected nodes are disconnected
+	 * @param [{boolean}] if true, stops/releases audio tracks from disconnected media streams (e.g. microphone)
 	 */
-	disconnectInput( sources ) {
+	disconnectInput( sources, stopTracks ) {
 		if ( ! sources )
 			sources = Array.from( this._sources );
 		else if ( ! Array.isArray( sources ) )
@@ -749,6 +805,11 @@ export default class AudioMotionAnalyzer {
 
 		for ( const node of sources ) {
 			const idx = this._sources.indexOf( node );
+			if ( stopTracks && node.mediaStream ) {
+				for ( const track of node.mediaStream.getAudioTracks() ) {
+					track.stop();
+				}
+			}
 			if ( idx >= 0 ) {
 				node.disconnect( this._input );
 				this._sources.splice( idx, 1 );
@@ -960,12 +1021,12 @@ export default class AudioMotionAnalyzer {
 
 		if ( started && ! value ) {
 			cancelAnimationFrame( this._runId );
-			this._runId = undefined;
+			this._runId = 0;
 		}
-		else if ( ! started && value ) {
+		else if ( value && ! started && ! this._destroyed ) {
 			this._frame = this._fps = 0;
 			this._time = performance.now();
-			this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) );
+			this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) ); // arrow function preserves the scope of *this*
 		}
 
 		return this.isOn;
@@ -983,6 +1044,8 @@ export default class AudioMotionAnalyzer {
 		}
 		else {
 			const fsEl = this._fsEl;
+			if ( ! fsEl )
+				return;
 			if ( fsEl.requestFullscreen )
 				fsEl.requestFullscreen();
 			else if ( fsEl.webkitRequestFullscreen )
@@ -1011,8 +1074,10 @@ export default class AudioMotionAnalyzer {
 	_calcBars() {
 		const bars = this._bars = []; // initialize object property
 
-		if ( ! this._ready )
+		if ( ! this._ready ) {
+			this._flg = { isAlpha: false, isBands: false, isLeds: false, isLumi: false, isOctaves: false, isOutline: false, isRound: false, noLedGap: false };
 			return;
+		}
 
 		const barSpace    = this._barSpace,
 		 	  canvas      = this.canvas,
@@ -2140,7 +2205,6 @@ export default class AudioMotionAnalyzer {
 	 * Generate currently selected gradient
 	 */
 	_makeGrad() {
-
 		if ( ! this._ready )
 			return;
 
@@ -2248,7 +2312,6 @@ export default class AudioMotionAnalyzer {
 	 * Internal function to change canvas dimensions on demand
 	 */
 	_setCanvas( reason ) {
-		// if initialization is not finished, quit
 		if ( ! this._ready )
 			return;
 

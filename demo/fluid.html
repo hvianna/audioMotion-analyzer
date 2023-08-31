@@ -23,12 +23,16 @@
 	</div>
 	<audio id="audio" controls crossorigin="anonymous"></audio>
 
-	<div class="flex">
+	<div class="topbar flex">
 		<div>
 			Load audio file:
 			<input type="file" id="uploadFile" accept="audio/*">
 		</div>
-		<div>
+		<div class="flex stretch">
+			<button id="btn_mic" title="Microphone ON/OFF">🎙️</button>
+			<button id="btn_mute" title="Disconnect analyzer output from the speakers&#13;&#10;(prevent feedback loop when microphone is on)">disconnectOutput()</button>
+			<button data-prop="isDestroyed" data-func="destroy">destroy()</button>
+			<button id="btn_getBars" title="check browser console for data">getBars()</button>
 			<button data-prop="isOn" data-func="toggleAnalyzer">toggleAnalyzer()</button>
 			<button data-prop="isFullscreen" data-func="toggleFullscreen">toggleFullscreen()</button>
 		</div>
@@ -302,6 +306,7 @@
 				<hr>
 				<span class="flag" data-flag="isAlphaBars">isAlphaBars</span>
 				<span class="flag" data-flag="isBandsMode">isBandsMode</span>
+				<span class="flag" data-flag="isDestroyed">isDestroyed</span>
 				<span class="flag" data-flag="isLedBars">isLedBars</span>
 				<span class="flag" data-flag="isLumiBars">isLumiBars</span>
 				<span class="flag" data-flag="isOctaveBands">isOctaveBands</span>
@@ -311,7 +316,7 @@
 			</fieldset>
 		</div>
 
-		<div class="flex center evenly stretch">
+		<div class="box flex center evenly stretch">
 			<fieldset>
 				<legend>Custom LED parameters</legend>
 				<label class="label">set
