@@ -106,6 +106,9 @@ const deprecate = ( name, alternative ) => console.warn( `${name} is deprecated.
 // returns the validated value, or the first element of `list` if `value` is not found in the array
 const validateFromList = ( value, list, modifier = 'toLowerCase' ) => list[ Math.max( 0, list.indexOf( ( '' + value )[ modifier ]() ) ) ];
 
+// helper function - find the Y-coordinate of a point located between two other points, given its X-coordinate
+const findY = ( x1, y1, x2, y2, x ) => y1 + ( y2 - y1 ) * ( x - x1 ) / ( x2 - x1 );
+
 // Polyfill for Array.findLastIndex()
 if ( ! Array.prototype.findLastIndex ) {
 	Array.prototype.findLastIndex = function( callback ) {
@@ -1833,7 +1836,8 @@ export default class AudioMotionAnalyzer {
 				  colorStops      = channelGradient.colorStops,
 				  colorCount      = colorStops.length,
 				  bgColor         = ( ! showBgColor || isLeds && ! isOverlay ) ? '#000' : channelGradient.bgColor,
-				  mustClear       = channel == 0 || ! isRadial && channelLayout != CHANNEL_COMBINED;
+				  mustClear       = channel == 0 || ! isRadial && channelLayout != CHANNEL_COMBINED,
+				  direction       = channel && isRadial && channelLayout == CHANNEL_VERTICAL ? -1 : 1; // for radial dual vertical layout
 
 			// helper function for FFT data interpolation (uses fftData)
 			const interpolate = ( bin, ratio ) => {
@@ -1958,18 +1962,14 @@ export default class AudioMotionAnalyzer {
 				setBarColor( barValue, barIndex );
 
 				// compute actual bar height on screen
-				let barHeight = isLumi ? maxBarHeight : isLeds ? ledPosY( barValue ) : barValue * maxBarHeight | 0;
-
-				// invert bar for radial channel 1
-				if ( isRadial && channel == 1 && channelLayout == CHANNEL_VERTICAL )
-					barHeight *= -1;
+				const barHeight = ( isLumi ? maxBarHeight : isLeds ? ledPosY( barValue ) : barValue * maxBarHeight | 0 ) * direction;
 
 				// Draw current bar or line segment
 
 				if ( mode == 10 ) {
 					// compute the average between the initial bar (barIndex==0) and the next one
 					// used to smooth the curve when the initial posX is off the screen, in mirror and radial modes
-					const nextBarAvg = barIndex ? 0 : ( this._normalizedB( fftData[ bars[1].binLo ] ) * maxBarHeight * ( channel && isRadial && channelLayout == CHANNEL_VERTICAL ? -1 : 1 ) + barHeight ) / 2;
+					const nextBarAvg = barIndex ? 0 : ( this._normalizedB( fftData[ bars[1].binLo ] ) * maxBarHeight * direction + barHeight ) / 2;
 
 					if ( isRadial ) {
 						if ( barIndex == 0 )
@@ -2070,7 +2070,7 @@ export default class AudioMotionAnalyzer {
 					else if ( ! isRadial )
 						ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, width, 2 );
 					else if ( mode != 10 ) // radial - no peaks for mode 10
-						radialPoly( posX, peak * maxBarHeight * ( channel && channelLayout == CHANNEL_VERTICAL ? -1 : 1 ), width, -2 );
+						radialPoly( posX, peak * maxBarHeight * direction, width, -2 );
 				}
 
 			} // for ( let barIndex = 0; barIndex < nBars; barIndex++ )
@@ -2116,10 +2116,9 @@ export default class AudioMotionAnalyzer {
 					ctx.globalAlpha = 1;
 				}
 
-				// peak line
-				if ( showPeakLine ) {
-					const avgY = ( x1, y1, x2, y2, x ) => y1 + ( y2 - y1 ) * ( x - x1 ) / ( x2 - x1 );
-					points = []; // for mirror effect on radial
+				// draw peak line (and standard peaks on radial)
+				if ( showPeakLine || ( isRadial && showPeaks ) ) {
+					points = []; // for mirror line on radial
 					ctx.beginPath();
 					bars.forEach( ( b, i ) => {
 						let x = b.posX,
@@ -2127,20 +2126,25 @@ export default class AudioMotionAnalyzer {
 							m = i ? 'lineTo' : 'moveTo';
 						if ( isRadial && x < 0 ) {
 							const nextBar = bars[ i + 1 ];
-							h = avgY( x, h, nextBar.posX, nextBar.peak[ channel ], 0 );
+							h = findY( x, h, nextBar.posX, nextBar.peak[ channel ], 0 );
 							x = 0;
 						}
-						h *= maxBarHeight * ( channel && isRadial && channelLayout == CHANNEL_VERTICAL ? -1 : 1 );
-						ctx[ m ]( ...( isRadial ? radialXY( x, h ) : [ x, analyzerBottom - h ] ) );
-						if ( isRadial && mirrorMode )
-							points.push( [ x, h ] );
+						h *= maxBarHeight * direction;
+						if ( showPeakLine ) {
+							ctx[ m ]( ...( isRadial ? radialXY( x, h ) : [ x, analyzerBottom - h ] ) );
+							if ( isRadial && mirrorMode )
+								points.push( [ x, h ] );
+						}
+						else if ( h )
+							radialPoly( x, h, 1, 1 ); // standard peaks (also does mirror)
 					});
-					let p;
-					while ( p = points.pop() )
-						ctx.lineTo( ...radialXY( ...p, -1 ) );
-					ctx.lineWidth = 1;
-					ctx.stroke();
-					// TODO for radial: add standard peaks
+					if ( showPeakLine ) {
+						let p;
+						while ( p = points.pop() )
+							ctx.lineTo( ...radialXY( ...p, -1 ) ); // mirror line points
+						ctx.lineWidth = 1;
+						ctx.stroke(); // stroke peak line
+					}
 				}
 			}
 
