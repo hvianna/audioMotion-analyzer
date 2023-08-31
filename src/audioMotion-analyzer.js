@@ -2119,6 +2119,7 @@ export default class AudioMotionAnalyzer {
 				// peak line
 				if ( showPeakLine ) {
 					const avgY = ( x1, y1, x2, y2, x ) => y1 + ( y2 - y1 ) * ( x - x1 ) / ( x2 - x1 );
+					points = []; // for mirror effect on radial
 					ctx.beginPath();
 					bars.forEach( ( b, i ) => {
 						let x = b.posX,
@@ -2131,10 +2132,15 @@ export default class AudioMotionAnalyzer {
 						}
 						h *= maxBarHeight * ( channel && isRadial && channelLayout == CHANNEL_VERTICAL ? -1 : 1 );
 						ctx[ m ]( ...( isRadial ? radialXY( x, h ) : [ x, analyzerBottom - h ] ) );
+						if ( isRadial && mirrorMode )
+							points.push( [ x, h ] );
 					});
-					ctx.lineWidth = lineWidth ? .5 : 1;
+					let p;
+					while ( p = points.pop() )
+						ctx.lineTo( ...radialXY( ...p, -1 ) );
+					ctx.lineWidth = 1;
 					ctx.stroke();
-					// TODO for radial: mirror peakline and add standard peaks
+					// TODO for radial: add standard peaks
 				}
 			}
 
