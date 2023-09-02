@@ -20,23 +20,22 @@
 
 	<div id="container">
 		<div id="notice">
-			<p><strong>Notes:</strong></p>
 			<p>
-				<strong>audioMotion-analyzer</strong> can only start its AudioContext after it detects a user gesture.
-				However, clicks on the native controls of an <code>&lt;audio&gt;</code> element, such as the one below,
-				cannot be detected by JavaScript.
-				Therefore, we need to ensure that the user clicks somewhere else before attempting to use the native <em>play</em> button.
+				In this demo, the <strong>audioMotion-analyzer</strong> object is instantiated within a function triggered by a user click.
+				This method prevents the <em>"The AudioContext was not allowed to start"</em> warning message in the browser console and also
+				ensures that the AudioContext is started before any attempt to play audio.
 			</p>
+
 			<p>
-				Additionally, the <strong>audioMotion-analyzer</strong> object can be instantiated within a function triggered by a user click,
-				in order to prevent the <em>"The AudioContext was not allowed to start"</em> warning message in the browser console.
-				See the source code of this page for an example.
+				<strong>audioMotion-analyzer</strong> automatically starts its AudioContext on the first user gesture it detects, but be aware
+				that clicks on native controls of <code>&lt;audio&gt;</code> or <code>&lt;video&gt;</code> elements cannot be intercepted by JavaScript.
 			</p>
-			<button id="start-button">Start audioMotion</button>
+			<button id="btn_start">Start audioMotion</button>
 		</div>
 	</div>
-	<audio id="audio" src="https://icecast2.ufpel.edu.br/live" controls crossorigin="anonymous"></audio>
-
+	<div id="audio-container"></div>
+	<div id="message" class="box center"></div>
+	<div><button id="btn_destroy">Destroy audioMotion</button></div>
 	<div class="credits">
 		<strong>audioMotion-analyzer</strong> Copyright &copy; 2018-2023 Henrique Avila Vianna. Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
 		Live stream: <a href="https://federalfm.ufpel.edu.br">Rádio Federal FM</a>.
@@ -45,23 +44,58 @@
 	<script type="module">
 		import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
 
-		const startButton = document.getElementById('start-button');
+		const container      = document.getElementById('container'),
+			  audioContainer = document.getElementById('audio-container'),
+			  destroyButton  = document.getElementById('btn_destroy'),
+			  startButton    = document.getElementById('btn_start'),
+			  messageDiv     = document.getElementById('message'),
+		      noticeDiv      = document.getElementById('notice');
+
+		destroyButton.addEventListener( 'click', destroy );
 		startButton.addEventListener( 'click', initialize );
 
-		let audioMotion; // global variable for the analyzer object
+		let audioEl, audioMotion; // global variables for the audio element and analyzer object
 
 		function initialize() {
-			const container = document.getElementById('container'),
-				  source = document.getElementById('audio');
+			// create new <audio> element
+			audioEl = new Audio('https://icecast2.ufpel.edu.br/live');
+			audioEl.controls = true;
+			audioEl.crossOrigin = 'anonymous';
+			audioEl.onloadstart  = () => messageDiv.innerText = 'Buffering audio... please wait...';
+			audioEl.onloadeddata = () => {
+				messageDiv.innerText = '';
+				audioEl.play();
+			}
+			audioContainer.append( audioEl ); // add it to the DOM
 
+			// create audioMotion instance and use the audio element as source
 			audioMotion = new AudioMotionAnalyzer( container, {
-				source,
+				source: audioEl,
 				// set your preferred options here
 			});
 
-			document.getElementById('notice').remove();
-			startButton.removeEventListener( 'click', initialize );
-			source.play();
+			noticeDiv.style.display = 'none';
+			destroyButton.style.display = 'block';
+		}
+
+		function destroy() {
+			// stop audio element and remove it from the DOM
+			audioEl.pause();
+			audioEl.remove();
+
+			// destroy audioMotion instance
+			audioMotion.destroy();
+
+			console.log( 'isOn: ', audioMotion.isOn );
+			console.log( 'isDestroyed: ', audioMotion.isDestroyed );
+			console.log( 'AudioContext state: ', audioMotion.audioCtx.state );
+
+			// clear references to objects so they can be released from memory
+			audioMotion = null;
+			audioEl = null;
+
+			noticeDiv.style.display = '';
+			destroyButton.style.display = '';
 		}
 	</script>
 
