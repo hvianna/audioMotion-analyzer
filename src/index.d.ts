@@ -36,6 +36,7 @@ export interface Options {
   loRes?: boolean;
   lumiBars?: boolean;
   maxDecibels?: number;
+  maxFPS?: number;
   maxFreq?: number;
   minDecibels?: number;
   minFreq?: number;
@@ -201,6 +202,9 @@ declare class AudioMotionAnalyzer {
 
   get minDecibels(): number;
   set minDecibels(value: number);
+
+  get maxFPS(): number;
+  set maxFPS(value: number);
 
   get maxFreq(): number;
   set maxFreq(value: number);

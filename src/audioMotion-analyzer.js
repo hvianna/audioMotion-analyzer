@@ -467,6 +467,13 @@ export default class AudioMotionAnalyzer {
 			this._analyzer[ i ].maxDecibels = value;
 	}
 
+	get maxFPS() {
+		return this._maxFPS;
+	}
+	set maxFPS( value ) {
+		this._maxFPS = value < 0 ? 0 : +value || 0;
+	}
+
 	get maxFreq() {
 		return this._maxFreq;
 	}
@@ -1028,7 +1035,7 @@ export default class AudioMotionAnalyzer {
 		}
 		else if ( value && ! started && ! this._destroyed ) {
 			this._frame = this._fps = 0;
-			this._time = performance.now();
+			this._time = this._last = performance.now();
 			this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) ); // arrow function preserves the scope of *this*
 		}
 
@@ -1572,6 +1579,12 @@ export default class AudioMotionAnalyzer {
 	 * this is called 60 times per second by requestAnimationFrame()
 	 */
 	_draw( timestamp ) {
+		// schedule next canvas update
+		this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) );
+
+		if ( this._maxFPS && ( timestamp - this._last < 1000 / this._maxFPS ) )
+			return;
+
 		const { isAlpha, isBands, isLeds, isLumi,
 			    isOctaves, isOutline, isRound, noLedGap } = this._flg,
 			  ctx            = this._canvasCtx,
@@ -1584,6 +1597,7 @@ export default class AudioMotionAnalyzer {
 			  colorMode      = this._colorMode,
 			  energy         = this._energy,
 			  fillAlpha      = this.fillAlpha,
+			  holdFrames     = this._fps >> 1, // number of frames in half a second
 			  mode           = this._mode,
 			  isLinear       = this._linearAmplitude,
 			  isOverlay      = this.overlay,
@@ -1790,22 +1804,23 @@ export default class AudioMotionAnalyzer {
 		// update energy information
 		const updateEnergy = newVal => {
 			energy.val = newVal;
+			if ( energy.peak > 0 ) {
+				energy.hold--;
+				if ( energy.hold < 0 )
+					energy.peak += energy.hold / ( holdFrames * holdFrames / 2 );
+			}
 			if ( newVal >= energy.peak ) {
 				energy.peak = newVal;
-				energy.hold = 30;
-			}
-			else {
-				if ( energy.hold > 0 )
-					energy.hold--;
-				else if ( energy.peak > 0 )
-					energy.peak *= ( 30 + energy.hold-- ) / 30; // decay (drops to zero in 30 frames)
+				energy.hold = holdFrames;
 			}
 		}
 
 		// calculate and display (if enabled) the current frame rate
 		const updateFPS = () => {
-			this._frame++;
 			const elapsed = timestamp - this._time;
+
+			this._last = timestamp - ( this._maxFPS ? elapsed % ( 1000 / this._maxFPS ) : 0 ); // thanks https://stackoverflow.com/a/19772220/2370385
+			this._frame++;
 
 			if ( elapsed >= 1000 ) {
 				this._fps = this._frame / ( elapsed / 1000 );
@@ -1939,13 +1954,13 @@ export default class AudioMotionAnalyzer {
 					bar.hold[ channel ]--;
 					// if hold is negative, it becomes the "acceleration" for peak drop
 					if ( bar.hold[ channel ] < 0 )
-						bar.peak[ channel ] += bar.hold[ channel ] / maxBarHeight;
+						bar.peak[ channel ] += bar.hold[ channel ] / ( holdFrames * holdFrames / 2 );
 				}
 
 				// check if it's a new peak for this bar
 				if ( barValue >= bar.peak[ channel ] ) {
 					bar.peak[ channel ] = barValue;
-					bar.hold[ channel ] = 30; // set peak hold time to 30 frames (0.5s)
+					bar.hold[ channel ] = holdFrames;
 				}
 
 				// if not using the canvas, move earlier to the next bar
@@ -2180,9 +2195,6 @@ export default class AudioMotionAnalyzer {
 			this.onCanvasDraw( this, { timestamp, canvasGradients } );
 			ctx.restore();
 		}
-
-		// schedule next canvas update
-		this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) );
 	}
 
 	/**
@@ -2427,6 +2439,7 @@ export default class AudioMotionAnalyzer {
 			loRes          : false,
 			lumiBars       : false,
 			maxDecibels    : -25,
+			maxFPS         : 0,
 			maxFreq        : 22000,
 			minDecibels    : -85,
 			minFreq        : 20,
