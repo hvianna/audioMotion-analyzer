@@ -1804,15 +1804,14 @@ export default class AudioMotionAnalyzer {
 		// update energy information
 		const updateEnergy = newVal => {
 			energy.val = newVal;
+			if ( energy.peak > 0 ) {
+				energy.hold--;
+				if ( energy.hold < 0 )
+					energy.peak += energy.hold / ( holdFrames * holdFrames / 2 );
+			}
 			if ( newVal >= energy.peak ) {
 				energy.peak = newVal;
 				energy.hold = holdFrames;
-			}
-			else {
-				if ( energy.hold > 0 )
-					energy.hold--;
-				else if ( energy.peak > 0 )
-					energy.peak *= ( holdFrames + energy.hold-- ) / holdFrames; // decay (drops to zero in .5s)
 			}
 		}
 
