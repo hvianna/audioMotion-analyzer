@@ -2084,7 +2084,7 @@ export default class AudioMotionAnalyzer {
 					}
 					else if ( ! isRadial )
 						ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, width, 2 );
-					else if ( mode != 10 ) // radial - no peaks for mode 10
+					else if ( mode != 10 ) // radial - peaks for mode 10 are done by the peak line code
 						radialPoly( posX, peak * maxBarHeight * direction, width, -2 );
 				}
 
@@ -2151,7 +2151,7 @@ export default class AudioMotionAnalyzer {
 								points.push( [ x, h ] );
 						}
 						else if ( h )
-							radialPoly( x, h, 1, 1 ); // standard peaks (also does mirror)
+							radialPoly( x, h, 1, -2 * direction ); // standard peaks (also does mirror)
 					});
 					if ( showPeakLine ) {
 						let p;
