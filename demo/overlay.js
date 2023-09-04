@@ -22,9 +22,11 @@ const presets = [
 			mode: 3,
 			barSpace: .5,
 			bgAlpha: .7,
+			colorMode: 'gradient',
 			gradient: 'classic',
 			ledBars: true,
 			lumiBars: false,
+			maxFreq: 16000,
 			radial: false,
 			reflexRatio: 0,
 			showBgColor: true,
@@ -41,6 +43,7 @@ const presets = [
 			gradient: 'rainbow',
 			lineWidth: 2,
 			lumiBars: false,
+			maxFreq: 16000,
 			radial: false,
 			reflexAlpha: 1,
 			reflexBright: 1,
@@ -54,16 +57,23 @@ const presets = [
 		name: 'Radial',
 		options: {
 			mode: 3,
-			barSpace: .1,
+			barSpace: .25,
 			bgAlpha: .5,
+			fillAlpha: .5,
 			gradient: 'prism',
 			ledBars: false,
+			linearAmplitude: true,
+			linearBoost: 1.8,
+			lineWidth: 1.5,
+			maxDecibels: -30,
 			maxFreq: 16000,
 			radial: true,
 			showBgColor: true,
 			showPeaks: true,
 			spinSpeed: 2,
-			overlay: true
+			outlineBars: true,
+			overlay: true,
+			weightingFilter: 'D'
 		}
 	},
 	{
@@ -72,15 +82,19 @@ const presets = [
 			mode: 5,
 			barSpace: .25,
 			bgAlpha: .5,
+			colorMode: 'bar-level',
+			gradient: 'prism',
 			ledBars: false,
 			lumiBars: false,
+			maxFreq: 16000,
 			radial: false,
 			reflexAlpha: .5,
 			reflexFit: true,
 			reflexRatio: .3,
 			showBgColor: false,
 			showPeaks: true,
-			overlay: true
+			overlay: true,
+			outlineBars: false
 		}
 	}
 ];

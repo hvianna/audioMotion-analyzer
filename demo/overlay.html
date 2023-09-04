@@ -8,24 +8,19 @@
 	<link href="styles.css" rel="stylesheet">
 </head>
 
-<body class="wide">
+<body>
 	<header>
 		<h1><a href="https://audiomotion.dev" class="logo">audioMotion-analyzer</a> | overlay demo</h1>
 		<ul class="header-nav">
 			<li><a href="index.html">Demos</a></li>
             <li><a href="https://audiomotion.dev">Home</a></li>
-			<li><a href="https://github.com/hvianna/audioMotion-analyzer/tree/master/demo/src/overlay.js">View on GitHub</a></li>
+			<li><a href="https://github.com/hvianna/audioMotion-analyzer/blob/master/demo/overlay.js">View on GitHub</a></li>
 		</ul>
 	</header>
 
 	<div id="container" class="overlay">
 		<video id="video" src="media/night-mist.mp4" controls></video>
 	</div>
-
-	<p class="center">
-		<button data-prop="isOn" data-func="toggleAnalyzer">toggleAnalyzer()</button>
-		<button data-prop="isFullscreen" data-func="toggleFullscreen">Fullscreen</button>
-	</p>
 
 	<div class="analyzer-configuration">
 		<div class="box center">
@@ -35,79 +30,157 @@
 
 			<label class="label">mode
 				<select data-setting="mode">
-					<option value="0">0 - Discrete frequencies</option>
-					<option value="1">1 - 1/24th octave bands</option>
-					<option value="2">2 - 1/12th octave bands</option>
-					<option value="3">3 - 1/8th octave bands</option>
-					<option value="4">4 - 1/6th octave bands</option>
-					<option value="5">5 - 1/4th octave bands</option>
-					<option value="6">6 - 1/3rd octave bands</option>
-					<option value="7">7 - Half octave bands</option>
-					<option value="8">8 - Full octave bands</option>
-					<option value="10">10 - Line / Area graph</option>
+					<option value="0">[ 0 ] Discrete frequencies</option>
+					<option value="1">[ 1 ] 1/24th octave / 240 bands</option>
+					<option value="2">[ 2 ] 1/12th octave / 120 bands</option>
+					<option value="3">[ 3 ] 1/8th octave / 80 bands</option>
+					<option value="4">[ 4 ] 1/6th octave / 60 bands</option>
+					<option value="5">[ 5 ] 1/4th octave / 40 bands</option>
+					<option value="6">[ 6 ] 1/3rd octave / 30 bands</option>
+					<option value="7">[ 7 ] Half octave / 20 bands</option>
+					<option value="8">[ 8 ] Full octave / 10 bands</option>
+					<option value="10">[10] Line / Area graph</option>
 				</select>
 			</label>
 
-			<label class="label">gradient
-				<select data-setting="gradient">
+			<label class="label">colorMode
+				<select data-setting="colorMode">
+					<option value="gradient">gradient</option>
+					<option value="bar-index">bar-index</option>
+					<option value="bar-level">bar-level</option>
+				</select>
+			</label>
+
+			<label class="label">gradientLeft
+				<select data-setting="gradientLeft">
 					<option value="classic">classic</option>
 					<option value="prism">prism</option>
 					<option value="rainbow">rainbow</option>
+					<option value="steelblue">steelblue</option>
+					<option value="orangered">orangered</option>
 				</select>
 			</label>
 
-			<label class="label">fftSize
-				<select data-setting="fftSize">
-					<option value="1024">1024</option>
-					<option value="2048">2048</option>
-					<option value="4096">4096</option>
-					<option value="8192">8192</option>
-					<option value="16384">16384</option>
-					<option value="32768">32768</option>
+			<label class="label">gradientRight
+				<select data-setting="gradientRight">
+					<option value="classic">classic</option>
+					<option value="prism">prism</option>
+					<option value="rainbow">rainbow</option>
+					<option value="steelblue">steelblue</option>
+					<option value="orangered">orangered</option>
 				</select>
 			</label>
 
-			<label class="label">minFreq
-				<select data-setting="minFreq">
-					<option value="10">10</option>
-					<option value="20">20</option>
-					<option value="30">30</option>
-					<option value="40">40</option>
-					<option value="60">60</option>
-					<option value="100">100</option>
+			<label class="label">channelLayout
+				<select data-setting="channelLayout">
+					<option value="single">single</option>
+					<option value="dual-combined">dual-combined</option>
+					<option value="dual-vertical">dual-vertical</option>
 				</select>
-			</label>
-
-			<label class="label">maxFreq
-				<select data-setting="maxFreq">
-					<option value="8000">8000</option>
-					<option value="10000">10000</option>
-					<option value="12000">12000</option>
-					<option value="16000">16000</option>
-					<option value="20000">20000</option>
-					<option value="22000">22000</option>
-				</select>
-			</label>
-
-			<label class="label">minDecibels
-				<input type="range" min="-100" max="-60" step="5" data-setting="minDecibels">
-				<div class="value"></div>
-			</label>
-
-			<label class="label">maxDecibels
-				<input type="range" min="-40" max="0" step="5" data-setting="maxDecibels">
-				<div class="value"></div>
-			</label>
-
-			<label class="label">smoothing
-				<input type="range" min="0" max=".9" step=".1" data-setting="smoothing">
-				<div class="value"></div>
 			</label>
 
 			<label class="label">volume
 				<input type="range" min="0" max="1" step=".1" data-setting="volume">
 				<div class="value"></div>
 			</label>
+
+			<button data-prop="isOn" data-func="toggleAnalyzer">toggleAnalyzer()</button>
+			<button data-prop="isFullscreen" data-func="toggleFullscreen">Fullscreen</button>
+		</div>
+
+		<div class="box center">
+			<fieldset>
+				<legend>FFT</legend>
+
+				<label class="label">fftSize
+					<select data-setting="fftSize">
+						<option value="1024">1024</option>
+						<option value="2048">2048</option>
+						<option value="4096">4096</option>
+						<option value="8192">8192</option>
+						<option value="16384">16384</option>
+						<option value="32768">32768</option>
+					</select>
+				</label>
+				<label class="label">smoothing
+					<input type="range" min="0" max=".9" step=".1" data-setting="smoothing">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Frequency range & scaling</legend>
+
+				<label class="label">minFreq
+					<select data-setting="minFreq">
+						<option value="10">10</option>
+						<option value="16">16</option>
+						<option value="20">20</option>
+						<option value="30">30</option>
+						<option value="40">40</option>
+						<option value="60">60</option>
+						<option value="100">100</option>
+						<option value="500">500</option>
+						<option value="1000">1000</option>
+					</select>
+				</label>
+
+				<label class="label">maxFreq
+					<select data-setting="maxFreq">
+						<option value="8000">8000</option>
+						<option value="10000">10000</option>
+						<option value="12000">12000</option>
+						<option value="16000">16000</option>
+						<option value="20000">20000</option>
+						<option value="22000">22000</option>
+						<option value="24000">24000</option>
+					</select>
+				</label>
+
+				<label class="label">frequencyScale
+					<select data-setting="frequencyScale">
+						<option value="bark">Bark</option>
+						<option value="linear">Linear</option>
+						<option value="log">Log</option>
+						<option value="mel">Mel</option>
+					</select>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Sensitivity</legend>
+
+				<label class="label">weightingFilter
+					<select data-setting="weightingFilter">
+						<option value="">none</option>
+						<option value="A">A</option>
+						<option value="B">B</option>
+						<option value="C">C</option>
+						<option value="D">D</option>
+						<option value="468">468</option>
+					</select>
+				</label>
+
+				<label class="label">minDecibels
+					<input type="range" min="-120" max="-60" step="5" data-setting="minDecibels">
+					<div class="value"></div>
+				</label>
+
+				<label class="label">maxDecibels
+					<input type="range" min="-40" max="0" step="5" data-setting="maxDecibels">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Linear amplitude</legend>
+
+				<button data-prop="linearAmplitude">linearAmplitude</button>
+				<label class="label">linearBoost
+					<input type="range" min="1" max="4" step=".2" data-setting="linearBoost">
+					<div class="value"></div>
+				</label>
+			</fieldset>
 		</div>
 
 		<div class="box center">
@@ -128,7 +201,7 @@
 			<fieldset>
 				<legend>mode 10 / outlineBars</legend>
 				<label class="label">lineWidth
-					<input type="range" id="line_width" min="0" max="5" step="1" data-setting="lineWidth">
+					<input type="range" id="line_width" min="0" max="4" step=".5" data-setting="lineWidth">
 					<div class="value"></div>
 				</label>
 
@@ -191,9 +264,11 @@
 			<button data-prop="lumiBars">lumiBars</button>
 			<button data-prop="noteLabels">noteLabels</button>
 			<button data-prop="outlineBars">outlineBars</button>
+			<button data-prop="roundBars">roundBars</button>
 			<button data-prop="loRes">loRes</button>
 			<button data-prop="splitGradient">splitGradient</button>
-			<button data-prop="stereo">stereo</button><br>
+			<button data-prop="trueLeds">trueLeds</button><br>
+			<br>
 			<button data-prop="showBgColor">showBgColor</button>
 			<button data-prop="showFPS">showFPS</button>
 			<button data-prop="showPeaks">showPeaks</button>
@@ -203,7 +278,7 @@
 	</div>
 
 	<div class="credits">
-		<strong>audioMotion-analyzer v<span id="version"></span></strong> Copyright &copy; 2018-2022 Henrique Avila Vianna. Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
+		<strong>audioMotion-analyzer v<span id="version"></span></strong> Copyright &copy; 2018-2023 Henrique Avila Vianna. Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
 		Video: <a href="https://www.youtube.com/watch?v=Trh6syrA8qU">"Night Mist" by NuSan & Valden</a>
 	</div>
 

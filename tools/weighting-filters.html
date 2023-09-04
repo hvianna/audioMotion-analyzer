@@ -20,7 +20,7 @@
 			</ul>
 
 			<p class="credits">
-				<strong>audioMotion-analyzer</strong> Copyright &copy; 2018-2022 Henrique Avila Vianna.<br>
+				<strong>audioMotion-analyzer</strong> Copyright &copy; 2018-2023 Henrique Avila Vianna.<br>
 				Licensed under AGPL-3.0 or later. Source code is available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
 			</p>
 		</div>
@@ -114,8 +114,9 @@ function buildGraph() {
 			ctx.strokeStyle = colors[ i ] + 'cc';
 			for ( let p = 1; p < 5; p += .05 ) {
 				const freq   = 10 ** p,
-					  method = p == 1 ? 'moveTo' : 'lineTo';
-				ctx[ method ]( graphX( freq ), graphY( weightingdB( freq, filter ) ) );
+					  gain   = weightingdB( freq, filter ),
+					  method = p == 1 || gain < -50 ? 'moveTo' : 'lineTo';
+				ctx[ method ]( graphX( freq ), graphY( gain ) );
 			}
 			ctx.stroke();
 		}

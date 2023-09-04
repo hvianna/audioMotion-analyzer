@@ -1,16 +1,35 @@
 Changelog
 =========
 
-## version 4.0.0-beta.1 (2022-12-11)
+## version 4.1.1 (2023-08-14)
+
++ Fix a rendering bug when `roundBars` is combined with `mirror` and `radial`;
++ Add a polyfill for `Array.findLastIndex()` to restore compatibility with not-so-recent browsers.
+
+
+## version 4.1.0 (2023-07-30)
 
 ### Added: <!-- {docsify-ignore} -->
 
-+ [`linearBoost`](README.md#linearboost-number) property - amplify low energy values when using [linear amplitude](README.md#linearamplitude-boolean);
-+ [`weightingFilter`](README.md#weightingfilter-string) property - select from five different weighting filters for improved spectrum visualization.
++ [`colorMode`](README.md#colormode-string) - additional options for coloring analyzer bars: by bar amplitude (level) or bar position (index);
++ [`roundBars`](README.md#roundbars-boolean) - rounded corner analyzer bars;
++ [`isRoundBars`](README.md#isroundbars-boolean-read-only) read-only property;
++ [`trueLeds`](README.md#trueleds-boolean) - your LED bars now more vintage than ever!
++ New `level` property for [registered gradients](README.md#registergradient-name-options-)
 
-## version 4.0.0-beta.0 (2022-05-08)
+### Fixed: <!-- {docsify-ignore} -->
 
-### 🚨BREAKING CHANGES: <!-- {docsify-ignore} -->
++ Avoid drawing the Y-axis scale and unlit LEDs twice, in 'dual-combined' channel layout.
+
+### Improved: <!-- {docsify-ignore} -->
+
++ Improved frequency scales labeling (especially for `noteLabels`) - label sizes were slightly reduced in fullscreen;
++ Code cleanup and optimizations.
+
+
+## version 4.0.0 (2023-03-26)
+
+### 🚨 BREAKING CHANGES: <!-- {docsify-ignore} -->
 
 + Removed deprecated properties:
   + ~`energy`~ - use [`getEnergy()`](README.md#getenergy-preset-startfreq-endfreq-) instead
@@ -18,23 +37,43 @@ Changelog
   + ~`peakEnergy`~ - use [`getEnergy('peak')`](README.md#getenergy-preset-startfreq-endfreq-) instead
   + ~`showLeds`~ - use [`ledBars`](README.md#ledbars-boolean) instead
 
-+ [`getBars()`](README.md#getbars) elements now contain an extra `freq` property (potentially breaking in TypeScript projects), which represents the bar's center frequency.
-The range of each bar has also changed from version 3.6.0, with frequencies that were previously at the lower edge (`freqLo`) now placed at the center.
++ [`getBars()`](README.md#getbars) now includes an additional `freq` property for each element, representing the center frequency of the band.
+In addition, the range of each band has been adjusted so that frequencies that were previously at the lower edge (`freqLo`) are now located at the center of the band.
+
++ **`stereo` has been DEPRECATED** and will be removed in version 5 - use [`channelLayout`](README.md#channellayout-string) instead.
 
 ### Added: <!-- {docsify-ignore} -->
 
-+ [`ansiBands`](README.md#ansibands-boolean) property, to use ANSI/IEC preferred frequencies for the octave bands - thanks [**@jonathan-annett** for suggesting this](https://github.com/hvianna/audioMotion.js/issues/28);
-+ [`linearAmplitude`](README.md#linearamplitude-boolean) property, to use linear values instead of dB for bar amplitudes - thanks [**@TF3RDL** for the idea](https://github.com/hvianna/audioMotion-analyzer/issues/30);
-+ [`noteLabels`](README.md#notelabels-boolean) property, to show musical note labels instead of frequency values on the X axis.
++ [`ansiBands`](README.md#ansibands-boolean) - use ANSI/IEC preferred frequencies for the octave bands;
++ [`channelLayout`](README.md#channellayout-string) - adds option for dual channel combined spectrum, with both channel graphs overlaid;
++ [`frequencyScale`](README.md#frequencyscale-string) - adds linear and perceptual (Bark/Mel) frequency scales;
++ [`gradientLeft`](README.md#gradientleft-string) and [`gradientRight`](README.md#gradientright-string) - allow to select different gradients for each channel;
++ [`isBandsMode`](README.md#isbandsmode-boolean-read-only) read-only property;
++ [`linearAmplitude`](README.md#linearamplitude-boolean) - use linear values instead of dB for spectrum amplitudes;
++ [`linearBoost`](README.md#linearboost-number) - amplify low energy values when using linear amplitude;
++ [`noteLabels`](README.md#notelabels-boolean) - display musical note labels instead of frequency values on the X-axis;
++ [`weightingFilter`](README.md#weightingfilter-string) - select from five different weighting filters for improved spectrum visualization;
++ Two new built-in [gradients](README.md#gradient-string): _orangered_ and _steelblue_.
+
+Thank you **@jonathan-annett** [(#28)](https://github.com/hvianna/audioMotion.js/issues/28) and **@TF3RDL** ([#30](https://github.com/hvianna/audioMotion-analyzer/issues/30) and [#38](https://github.com/hvianna/audioMotion-analyzer/issues/38))
+for the suggestions that led to the implementation of several of these new features.
+
+### Fixed: <!-- {docsify-ignore} -->
+
++ LED peaks showing below zero level when `reflexRatio` > 0.
 
 ### Changed and improved: <!-- {docsify-ignore} -->
 
-+ Optimized generation of octave bands, with more accurate bands range and center frequencies;
-+ Frequency labels on the X axis now show slightly different values depending on whether the analyzer is set to use the equal-tempered scale
-(default) or the ANSI standard bands (`ansiBands == true`), to properly match the octave bands center frequencies;
++ Optimized generation of octave bands, with more accurate ranges and center frequencies;
++ Frequency labels on the X-axis now show different values depending on the value of [`ansiBands`](README.md#ansibands-boolean), to properly match the bands' center frequencies;
++ The [`onCanvasDraw`](README.md#oncanvasdraw-function) callback is now passed an additional object with timestamp and gradients information;
++ The _prism_ and _rainbow_ gradients were recreated using the beautiful [12-bit rainbow palette](https://iamkate.com/data/12-bit-rainbow/) by Kate Morley - If you need the old colors [check this post](https://github.com/hvianna/audioMotion-analyzer/discussions/44);
++ Custom gradients can now register a single color;
++ [`splitGradient`](README.md#splitgradient-boolean) now works for horizontal gradients in [`radial`](README.md#radial-boolean) visualization;
 + [`maxFreq`](README.md#maxfreq-number) is now capped to half the AudioContext's sample rate (Nyquist frequency);
++ Export additional types and interfaces in the TypeScript definition file;
 + Code optimizations, minor fixes and clean-up;
-+ Updated demos.
++ Revised and improved demos and documentation.
 
 
 ## version 3.6.1 (2022-12-09)

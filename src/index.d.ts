@@ -1,19 +1,33 @@
-type OnCanvasDrawFunction = (instance: AudioMotionAnalyzer) => unknown;
-type OnCanvasResizeFunction = (
+export type OnCanvasDrawFunction = (
+  instance: AudioMotionAnalyzer,
+  info: CanvasDrawInfo
+) => unknown;
+
+export type CanvasDrawInfo = {
+  timestamp: DOMHighResTimeStamp,
+  canvasGradients: CanvasGradient[]
+}
+
+export type OnCanvasResizeFunction = (
   reason: CanvasResizeReason,
   instance: AudioMotionAnalyzer
 ) => unknown;
 
-type CanvasResizeReason = "create" | "fschange" | "lores" | "resize" | "user";
+export type CanvasResizeReason = "create" | "fschange" | "lores" | "resize" | "user";
 
 export interface Options {
   alphaBars?: boolean;
   ansiBands?: boolean;
   barSpace?: number;
   bgAlpha?: number;
+  channelLayout?: ChannelLayout;
+  colorMode?: ColorMode;
   fftSize?: number;
   fillAlpha?: number;
+  frequencyScale?: FrequencyScale;
   gradient?: string;
+  gradientLeft?: string;
+  gradientRight?: string;
   height?: number;
   ledBars?: boolean;
   linearAmplitude?: boolean;
@@ -37,6 +51,7 @@ export interface Options {
   reflexBright?: number;
   reflexFit?: boolean;
   reflexRatio?: number;
+  roundBars?: boolean;
   showBgColor?: boolean;
   showFPS?: boolean;
   showPeaks?: boolean;
@@ -47,13 +62,14 @@ export interface Options {
   splitGradient?: boolean;
   start?: boolean;
   stereo?: boolean;
+  trueLeds?: boolean;
   useCanvas?: boolean;
   volume?: number;
   weightingFilter?: WeightingFilter;
   width?: number;
 }
 
-interface AnalyzerBarData {
+export interface AnalyzerBarData {
   posX: number;
   freq: number;
   freqLo: number;
@@ -63,28 +79,29 @@ interface AnalyzerBarData {
   value: [ number, number? ];
 }
 
-interface ConstructorOptions extends Options {
+export interface ConstructorOptions extends Options {
   audioCtx?: AudioContext;
   connectSpeakers?: boolean;
   fsElement?: HTMLElement;
   source?: HTMLMediaElement | AudioNode;
 }
 
-type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "treble";
+export type ChannelLayout = "single" | "dual-vertical" | "dual-combined";
 
-type GradientColorStop = string | { pos: number; color: string };
+export type ColorMode = "gradient" | "bar-index" | "bar-level";
 
-type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
+export type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "treble";
 
-type ArrayTwoOrMore<T> = {
-  0: T
-  1: T
-} & Array<T>;
+export type FrequencyScale = "bark" | "linear" | "log" | "mel";
+
+export type GradientColorStop = string | { pos?: number; color: string; level?: number };
+
+export type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
 
 export interface GradientOptions {
   bgColor: string;
   dir?: "h";
-  colorStops: ArrayTwoOrMore<GradientColorStop>
+  colorStops: GradientColorStop[];
 }
 
 export interface LedParameters {
@@ -111,6 +128,12 @@ declare class AudioMotionAnalyzer {
 
   public bgAlpha: number;
 
+  get channelLayout(): ChannelLayout;
+  set channelLayout(value: ChannelLayout);
+
+  get colorMode(): ColorMode;
+  set colorMode(value: ColorMode);
+
   get connectedSources(): AudioNode[];
   get connectedTo(): AudioNode[];
 
@@ -124,8 +147,17 @@ declare class AudioMotionAnalyzer {
   get fsHeight(): number;
   get fsWidth(): number;
 
+  get frequencyScale(): FrequencyScale;
+  set frequencyScale(value: FrequencyScale);
+
   get gradient(): string;
   set gradient(value: string);
+
+  get gradientLeft(): string;
+  set gradientLeft(value: string);
+
+  get gradientRight(): string;
+  set gradientRight(value: string);
 
   get height(): number;
   set height(h: number);
@@ -134,11 +166,13 @@ declare class AudioMotionAnalyzer {
   set width(w: number);
 
   get isAlphaBars(): boolean;
+  get isBandsMode(): boolean;
   get isFullscreen(): boolean;
   get isLedBars(): boolean;
   get isLumiBars(): boolean;
   get isOctaveBands(): boolean;
   get isOutlineBars(): boolean;
+  get isRoundBars(): boolean;
 
   get isOn(): boolean;
 
@@ -151,7 +185,8 @@ declare class AudioMotionAnalyzer {
   get linearBoost(): number;
   set linearBoost(value: number);
 
-  public lineWidth: number;
+  get lineWidth(): number;
+  set lineWidth(value: number);
 
   get loRes(): boolean;
   set loRes(value: boolean);
@@ -197,6 +232,9 @@ declare class AudioMotionAnalyzer {
   get reflexRatio(): number;
   set reflexRatio(value: number);
 
+  get roundBars(): boolean;
+  set roundBars(value: boolean);
+
   public showBgColor: boolean;
   public showFPS: boolean;
   public showPeaks: boolean;
@@ -214,6 +252,9 @@ declare class AudioMotionAnalyzer {
 
   get stereo(): boolean;
   set stereo(value: boolean);
+
+  get trueLeds(): boolean;
+  set trueLeds(value: boolean);
 
   public useCanvas: boolean;
 
