@@ -12,7 +12,6 @@ const VERSION = '4.1.1';
 // internal constants
 const TAU     = 2 * Math.PI,
 	  HALF_PI = Math.PI / 2,
-	  RPM     = TAU / 3600,  // angle increment per frame for one revolution per minute @60fps
 	  C_1     = 8.17579892;  // frequency for C -1
 
 const CANVAS_BACKGROUND_COLOR  = '#000',
@@ -1622,7 +1621,7 @@ export default class AudioMotionAnalyzer {
 			  [ ledCount, ledSpaceH, ledSpaceV, ledHeight ] = this._leds || [];
 
 		if ( energy.val > 0 )
-			this._spinAngle += this._spinSpeed * RPM;
+			this._spinAngle += this._spinSpeed * TAU / ( 60 * this._fps ); // spinSpeed * angle increment per frame for 1 RPM
 
 		/* HELPER FUNCTIONS */
 
