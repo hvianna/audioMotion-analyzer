@@ -942,22 +942,22 @@ export default class AudioMotionAnalyzer {
 	/**
 	 * Start / stop canvas animation
 	 *
-	 * @param {boolean} [mustEnable] if undefined, inverts the current status
+	 * @param {boolean} [force] if undefined, inverts the current status
 	 * @returns {boolean} resulting status after the change
 	 */
-	toggleAnalyzer( mustEnable ) {
+	toggleAnalyzer( force ) {
 		const hasStarted = this.isOn;
 
-		if ( mustEnable === undefined )
-			mustEnable = ! hasStarted;
+		if ( force === undefined )
+			force = ! hasStarted;
 
 		// Stop the analyzer if it was already running and must be disabled
-		if ( hasStarted && ! mustEnable ) {
+		if ( hasStarted && ! force ) {
 			cancelAnimationFrame( this._runId );
 			this._runId = undefined;
 		}
 		// Start the analyzer if it was stopped and must be enabled
-		else if ( ! hasStarted && mustEnable ) {
+		else if ( ! hasStarted && force ) {
 			this._frame = this._fps = 0;
 			this._time = performance.now();
 			this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) );
