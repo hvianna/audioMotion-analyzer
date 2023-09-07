@@ -143,6 +143,7 @@ export default class AudioMotionAnalyzer {
 		this._flg = {};				// flags
 		this._fps = 0;
 		this._gradients = {};       // registered gradients
+		this._last = 0;				// timestamp of last rendered frame
 		this._outNodes = [];		// output nodes
 		this._ownContext = false;
 		this._selectedGrads = [];   // names of the currently selected gradients for channels 0 and 1
@@ -294,6 +295,14 @@ export default class AudioMotionAnalyzer {
 			window.removeEventListener( EVENT_CLICK, unlockContext );
 		}
 		window.addEventListener( EVENT_CLICK, unlockContext );
+
+		// reset FPS-related variables when window becomes visible (avoid FPS drop due to frames not rendered while hidden)
+		document.addEventListener( 'visibilitychange', () => {
+			if ( document.visibilityState != 'hidden' ) {
+				this._frames = 0;
+				this._time = performance.now();
+			}
+		}, { signal } );
 
 		// Set configuration options and use defaults for any missing properties
 		this._setProps( options, true );
@@ -1049,7 +1058,7 @@ export default class AudioMotionAnalyzer {
 		// Start the analyzer if it was stopped and must be enabled
 		else if ( ! hasStarted && force && ! this._destroyed ) {
 			this._frames = 0;
-			this._time = this._last = performance.now();
+			this._time = performance.now();
 			this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) ); // arrow function preserves the scope of *this*
 		}
 
@@ -1847,7 +1856,7 @@ export default class AudioMotionAnalyzer {
 
 		// calculate and display (if enabled) the current frame rate
 		const updateFPS = () => {
-			const elapsed = timestamp - this._time;
+			const elapsed = timestamp - this._time; // elapsed time since the last FPS computation
 
 			this._last = timestamp - ( this._maxFPS ? elapsed % ( 1000 / this._maxFPS ) : 0 ); // thanks https://stackoverflow.com/a/19772220/2370385
 			this._frames++;
