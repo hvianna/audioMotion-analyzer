@@ -139,6 +139,7 @@ export default class AudioMotionAnalyzer {
 		// Initialize internal objects
 		this._aux = {};
 		this._flg = {};
+		this._fps = 0;
 		this._gradients = {};       // registered gradients
 		this._selectedGrads = [];   // names of the currently selected gradients for channels 0 and 1
 		this._canvasGradients = []; // CanvasGradient objects for channels 0 and 1
@@ -1049,7 +1050,7 @@ export default class AudioMotionAnalyzer {
 		}
 		// Start the analyzer if it was stopped and must be enabled
 		else if ( ! hasStarted && force && ! this._destroyed ) {
-			this._frames = this._fps = 0;
+			this._frames = 0;
 			this._time = this._last = performance.now();
 			this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) ); // arrow function preserves the scope of *this*
 		}
