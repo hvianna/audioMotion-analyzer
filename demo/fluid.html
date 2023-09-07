@@ -111,7 +111,7 @@
 			</label>
 		</div>
 
-		<div class="box center">
+		<div class="box center flex">
 			<fieldset>
 				<legend>FFT</legend>
 
@@ -205,9 +205,25 @@
 					<div class="value"></div>
 				</label>
 			</fieldset>
+
+			<fieldset>
+				<legend>Frame rate</legend>
+
+				<label class="label">maxFPS
+					<select data-setting="maxFPS">
+						<option value="0">0</option>
+						<option value="10">10</option>
+						<option value="20">20</option>
+						<option value="30">30</option>
+						<option value="60">60</option>
+						<option value="120">120</option>
+					</select>
+				</label>
+				<button data-prop="showFPS">showFPS</button>
+			</fieldset>
 		</div>
 
-		<div class="box center">
+		<div class="box center flex">
 			<fieldset>
 				<legend>modes 1-8 only</legend>
 				<label class="label">barSpace
@@ -299,7 +315,6 @@
 				<button data-prop="trueLeds">trueLeds</button>
 				<br>
 				<button data-prop="showBgColor">showBgColor</button>
-				<button data-prop="showFPS">showFPS</button>
 				<button data-prop="showPeaks">showPeaks</button>
 				<button data-prop="showScaleX">showScaleX</button>
 				<button data-prop="showScaleY">showScaleY</button>

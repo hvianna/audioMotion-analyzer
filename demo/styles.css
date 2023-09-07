@@ -71,7 +71,7 @@ h1 {
 	filter: drop-shadow(2px 2px 0 #000);
 }
 h2 {
-	margin: 1.5em 0 1em;
+	margin: 1.5em 0 .5em;
 }
 
 hr {
@@ -121,12 +121,17 @@ ul {
 	color: #fff;
 	display: inline-block;
 	font-size: 12px;
-	margin: 0 6px;
+	margin: 0 5px;
 	vertical-align: top;
 }
 .label input,
 .label select {
 	display: block;
+}
+fieldset .label,
+fieldset button {
+	margin-left: 4px;
+	margin-right: 4px;
 }
 
 .slim {
@@ -166,7 +171,7 @@ ul {
 	background: #fff1;
 	border: 1px solid #ccc8;
 	margin: 10px 0 20px;
-	padding-bottom: 10px;
+	padding: 0 5px 10px;
 }
 
 .credits {
