@@ -1,12 +1,16 @@
 {
   "name": "audiomotion-analyzer",
   "description": "High-resolution real-time graphic audio spectrum analyzer JavaScript module with no dependencies.",
-  "version": "4.1.1",
+  "version": "4.2.0",
   "main": "./src/audioMotion-analyzer.js",
   "module": "./src/audioMotion-analyzer.js",
   "types": "./src/index.d.ts",
+  "type": "module",
   "exports": {
-    ".": "./src/audioMotion-analyzer.js"
+    ".": {
+      "import": "./src/audioMotion-analyzer.js",
+      "types": "./src/index.d.ts"
+    }
   },
   "files": [
     "src/**/*.js",

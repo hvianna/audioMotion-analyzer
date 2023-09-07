@@ -398,6 +398,37 @@ document.getElementById('btn_soundoff').addEventListener( 'click', () => playTon
 // File upload
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
 
+// Microphone and disconnectOutput (mute) buttons
+const micButton  = document.getElementById('btn_mic'),
+	  muteButton = document.getElementById('btn_mute');
+
+let micStream,
+	isMute = false;
+
+micButton.addEventListener( 'click', () => {
+	if ( micStream ) {
+		audioMotion.disconnectInput( micStream, true ); // disconnect mic stream and release audio track
+		toggleMute( false );
+		micButton.className = '';
+		micStream = null;
+	}
+	else {
+		navigator.mediaDevices.getUserMedia( { audio: true } )
+		.then( stream => {
+			micStream = audioMotion.audioCtx.createMediaStreamSource( stream );
+			toggleMute( true ); // mute the speakers to avoid feedback loop from the microphone
+			audioMotion.connectInput( micStream );
+			micButton.className = 'active';
+		})
+		.catch( err => console.log('Error accessing user microphone.') );
+	}
+});
+
+muteButton.addEventListener( 'click', () => toggleMute() );
+
+// getBars() button
+document.getElementById('btn_getBars').addEventListener( 'click', () => console.log( 'getBars(): ', audioMotion.getBars() ) );
+
 // Initialize UI elements
 updateUI();
 
@@ -423,6 +454,16 @@ function loadSong( el ) {
 		audioEl.src = URL.createObjectURL( fileBlob );
 		audioEl.play();
 	}
+}
+
+// Connect or disconnect output to speakers
+function toggleMute( status ) {
+	isMute = ( status === undefined ) ? ! isMute : !! status;
+	if ( isMute )
+		audioMotion.disconnectOutput();
+	else
+		audioMotion.connectOutput();
+	muteButton.classList.toggle( 'active', isMute );
 }
 
 // Update value div of range input elements
