@@ -134,15 +134,19 @@ export default class AudioMotionAnalyzer {
 	constructor( container, options = {} ) {
 
 		this._ready = false;
-		this._destroyed = false;
 
 		// Initialize internal objects
-		this._aux = {};
-		this._flg = {};
+		this._aux = {};				// auxiliary variables
+		this._canvasGradients = []; // CanvasGradient objects for channels 0 and 1
+		this._destroyed = false;
+		this._energy = { val: 0, peak: 0, hold: 0 };
+		this._flg = {};				// flags
 		this._fps = 0;
 		this._gradients = {};       // registered gradients
+		this._outNodes = [];		// output nodes
+		this._ownContext = false;
 		this._selectedGrads = [];   // names of the currently selected gradients for channels 0 and 1
-		this._canvasGradients = []; // CanvasGradient objects for channels 0 and 1
+		this._sources = [];			// input nodes
 
 		// Register built-in gradients
 		for ( const [ name, options ] of GRADIENTS )
@@ -158,7 +162,6 @@ export default class AudioMotionAnalyzer {
 		// Use audio context provided by user, or create a new one
 
 		let audioCtx;
-		this._ownContext = false;
 
 		if ( options.source && ( audioCtx = options.source.context ) ) {
 			// get audioContext from provided source audioNode
@@ -203,8 +206,7 @@ export default class AudioMotionAnalyzer {
  		this._input    = audioCtx.createGain();
  		this._output   = audioCtx.createGain();
 
- 		// initialize sources array and connect audio source if provided in the options
-		this._sources = [];
+ 		// connect audio source if provided in the options
 		if ( options.source )
 			this.connectInput( options.source );
 
@@ -216,12 +218,8 @@ export default class AudioMotionAnalyzer {
 		merger.connect( this._output );
 
 		// connect output -> destination (speakers)
-		this._outNodes = [];
 		if ( options.connectSpeakers !== false )
 			this.connectOutput();
-
-		// initialize object to save energy
-		this._energy = { val: 0, peak: 0, hold: 0 };
 
 		// create analyzer canvas
 		const canvas = document.createElement('canvas');
