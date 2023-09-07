@@ -303,7 +303,7 @@ declare class AudioMotionAnalyzer {
   public start(): void;
   public stop(): void;
 
-  public toggleAnalyzer(value?: boolean): boolean;
+  public toggleAnalyzer(force?: boolean): boolean;
   public toggleFullscreen(): void;
 }
 
