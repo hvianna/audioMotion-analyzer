@@ -770,7 +770,7 @@ export default class AudioMotionAnalyzer {
 
 		this._destroyed = true;
 		this._ready = false;
-		this.toggleAnalyzer( false ); // stop analyzer
+		this.stop();
 
 		// remove event listeners
 		_controller.abort();
@@ -1014,6 +1014,20 @@ export default class AudioMotionAnalyzer {
 			this._analyzer[ i ].minDecibels = Math.min( min, max );
 			this._analyzer[ i ].maxDecibels = Math.max( min, max );
 		}
+	}
+
+	/**
+	 * Start the analyzer
+	 */
+	start() {
+		this.toggleAnalyzer( true );
+	}
+
+	/**
+	 * Stop the analyzer
+	 */
+	stop() {
+		this.toggleAnalyzer( false );
 	}
 
 	/**
