@@ -1501,7 +1501,7 @@ export default class AudioMotionAnalyzer {
 					if ( freq >= this._minFreq && freq <= this._maxFreq ) {
 						const pitch = scale[ note ],
 							  isC   = pitch == 'C';
-						if ( ( pitch && _noteLabels && ! _mirror ) || isC )
+						if ( ( pitch && _noteLabels && ! _mirror && ! isDualHorizontal ) || isC )
 							freqLabels.push( _noteLabels ? [ freq, pitch + ( isC ? octave : '' ) ] : freq );
 					}
 					freq *= root12;
@@ -1552,10 +1552,10 @@ export default class AudioMotionAnalyzer {
 				  x    = unitWidth * ( this._freqScaling( freq ) - scaleMin ),
 				  y    = canvasX.height * .75,
 				  isC  = label[0] == 'C',
-	  			  maxW = fontSizeX * ( _noteLabels && ! _mirror ? ( isC ? 1.2 : .6 ) : 3 );
+	  			  maxW = fontSizeX * ( _noteLabels && ! _mirror && ! isDualHorizontal ? ( isC ? 1.2 : .6 ) : 3 );
 
 	  		// set label color - no highlight when mirror effect is active (only Cs displayed)
-			_scaleX.fillStyle = _scaleR.fillStyle = isC && ! _mirror ? SCALEX_HIGHLIGHT_COLOR : SCALEX_LABEL_COLOR;
+			_scaleX.fillStyle = _scaleR.fillStyle = isC && ! _mirror && ! isDualHorizontal ? SCALEX_HIGHLIGHT_COLOR : SCALEX_LABEL_COLOR;
 
 			// prioritizes which note labels are displayed, due to the restricted space on some ranges/scales
 			if ( _noteLabels ) {
@@ -1587,9 +1587,9 @@ export default class AudioMotionAnalyzer {
 
 			// radial scale
 			if ( x >= prevR + labelWidthR && x < analyzerWidth - labelWidthR ) { // avoid overlapping the last label over the first one
-				radialLabel( x, label );
-				if ( _mirror && ( x > labelWidthR || _mirror == 1 ) ) // avoid overlapping of first labels on mirror mode
-					radialLabel( -x, label );
+				radialLabel( isDualHorizontal && _mirror == 1 ? analyzerWidth - x : x, label );
+				if ( isDualHorizontal || ( _mirror && ( x > labelWidthR || _mirror == 1 ) ) ) // avoid overlapping of first labels on mirror mode
+					radialLabel( isDualHorizontal && _mirror != -1 ? analyzerWidth + x : -x, label );
 				prevR = x;
 			}
 		}
@@ -1822,9 +1822,9 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// draws a polygon of width `w` and height `h` at (x,y) in radial mode
-		const radialPoly = ( x, y, w, h, stroke ) => {
+		const radialPoly = ( x, y, w, h, angularDirection, stroke ) => {
 			_ctx.beginPath();
-			for ( const dir of ( _mirror && ! isDualHorizontal ? [1,-1] : [1] ) ) {
+			for ( const dir of ( _mirror && ! isDualHorizontal ? [1,-1] : [ angularDirection ] ) ) {
 				const [ startAngle, endAngle ] = isRound ? [ getAngle( x, dir ), getAngle( x + w, dir ) ] : [];
 				_ctx.moveTo( ...radialXY( x, y, dir ) );
 				_ctx.lineTo( ...radialXY( x, y + h, dir ) );
@@ -1888,13 +1888,38 @@ export default class AudioMotionAnalyzer {
 		for ( let channel = 0; channel < nChannels; channel++ ) {
 
 			const { channelTop, channelBottom, analyzerBottom } = channelCoords[ channel ],
-				  channelGradient = this._gradients[ this._selectedGrads[ channel ] ],
-				  colorStops      = channelGradient.colorStops,
-				  colorCount      = colorStops.length,
-				  bgColor         = ( ! showBgColor || isLeds && ! overlay ) ? '#000' : channelGradient.bgColor,
-				  mustClear       = channel == 0 || ! _radial && ! isDualCombined,
-				  radialDirection = channel && _radial && isDualVertical ? -1 : 1, // for dual-vertical layout: -1 = inwards, 1 = outwards
-				  radialOffsetX   = isDualHorizontal && ! channel ? analyzerWidth >> 1 : 0;
+				  channelGradient  = this._gradients[ this._selectedGrads[ channel ] ],
+				  colorStops       = channelGradient.colorStops,
+				  colorCount       = colorStops.length,
+				  bgColor          = ( ! showBgColor || isLeds && ! overlay ) ? '#000' : channelGradient.bgColor,
+				  mustClear        = channel == 0 || ! _radial && ! isDualCombined,
+				  radialDirection  = isDualVertical && _radial && channel ? -1 : 1, // -1 = inwards, 1 = outwards
+				  invertedChannel  = ( ! channel && _mirror == -1 ) || ( channel && _mirror == 1 ),
+				  radialOffsetX    = ! isDualHorizontal || ( channel && _mirror != 1 ) ? 0 : analyzerWidth >> ( channel || ! invertedChannel ),
+				  angularDirection = isDualHorizontal && invertedChannel ? -1 : 1; // 1 = clockwise, -1 = counterclockwise
+/*
+			Unoptimized code for radialOffsetX and angularDirection:
+
+			let radialOffsetX = 0,
+				angularDirection = 1;
+
+			if ( isDualHorizontal ) {
+				if ( channel == 0 ) { // LEFT channel
+					if ( _mirror == -1 ) {
+						radialOffsetX = analyzerWidth;
+						angularDirection = -1;
+					}
+					else
+						radialOffsetX = analyzerWidth >> 1;
+				}
+				else {                // RIGHT channel
+					if ( _mirror == 1 ) {
+						radialOffsetX = analyzerWidth >> 1;
+						angularDirection = -1;
+					}
+				}
+			}
+*/
 
 			// helper function for FFT data interpolation (uses fftData)
 			const interpolate = ( bin, ratio ) => {
@@ -1918,9 +1943,8 @@ export default class AudioMotionAnalyzer {
 			if ( useCanvas ) {
 				// set transform (horizontal flip and translation) for dual-horizontal layout
 				if ( isDualHorizontal && ! _radial ) {
-				  	const invertChannel = _mirror == 1 && channel == 1 || _mirror == -1 && channel == 0,
-				  	 	  translateX    = analyzerWidth * ( channel + invertChannel ),
-				  		  flipX         = invertChannel ? -1 : 1;
+				  	const translateX = analyzerWidth * ( channel + invertedChannel ),
+				  		  flipX      = invertedChannel ? -1 : 1;
 
 					_ctx.setTransform( flipX, 0, 0, 1, translateX, 0 );
 				}
@@ -1958,7 +1982,7 @@ export default class AudioMotionAnalyzer {
 
 				// set clipping region
 				_ctx.save();
-				if ( ! _radial || isDualHorizontal ) {
+				if ( ! _radial || isDualHorizontal && _mode == MODE_GRAPH ) {
 					const region = new Path2D();
 
 					if ( _radial ) {
@@ -2049,11 +2073,11 @@ export default class AudioMotionAnalyzer {
 
 					if ( _radial ) {
 						if ( barIndex == 0 )
-							_ctx.lineTo( ...radialXY( radialOffsetX, ( posX < 0 ? nextBarAvg : barHeight ) ) );
+							_ctx.lineTo( ...radialXY( radialOffsetX, ( posX < 0 ? nextBarAvg : barHeight ), angularDirection ) );
 						// draw line to the current point, avoiding overlapping wrap-around frequencies
 						if ( posX >= 0 ) {
 							const point = [ posX + radialOffsetX, barHeight ];
-							_ctx.lineTo( ...radialXY( ...point ) );
+							_ctx.lineTo( ...radialXY( ...point, angularDirection ) );
 							points.push( point );
 						}
 					}
@@ -2101,7 +2125,7 @@ export default class AudioMotionAnalyzer {
 					}
 					else if ( posX >= initialX ) {
 						if ( _radial )
-							radialPoly( posX + radialOffsetX, 0, width, barHeight, isOutline );
+							radialPoly( posX + radialOffsetX, 0, width, barHeight, angularDirection, isOutline );
 						else if ( isRound ) {
 							const halfWidth = width / 2,
 								  y = analyzerBottom + halfWidth; // round caps have an additional height of half bar width
@@ -2146,7 +2170,7 @@ export default class AudioMotionAnalyzer {
 					else if ( ! _radial )
 						_ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, width, 2 );
 					else if ( _mode != MODE_GRAPH ) // radial - peaks for graph mode are done by the peak line code
-						radialPoly( posX + radialOffsetX, peak * maxBarHeight * radialDirection, width, -2 * radialDirection );
+						radialPoly( posX + radialOffsetX, peak * maxBarHeight * radialDirection, width, -2 * radialDirection, angularDirection );
 				}
 
 			} // for ( let barIndex = 0; barIndex < nBars; barIndex++ )
@@ -2205,12 +2229,12 @@ export default class AudioMotionAnalyzer {
 						}
 						h *= maxBarHeight * radialDirection;
 						if ( showPeakLine ) {
-							_ctx[ m ]( ...( _radial ? radialXY( x + radialOffsetX, h ) : [ x, analyzerBottom - h ] ) );
+							_ctx[ m ]( ...( _radial ? radialXY( x + radialOffsetX, h, angularDirection ) : [ x, analyzerBottom - h ] ) );
 							if ( _radial && _mirror && ! isDualHorizontal )
 								points.push( [ x, h ] );
 						}
 						else if ( h )
-							radialPoly( x + radialOffsetX, h, 1, -2 * radialDirection ); // standard peaks (also does mirror)
+							radialPoly( x + radialOffsetX, h, 1, -2 * radialDirection, angularDirection ); // standard peaks (also does mirror)
 					});
 					if ( showPeakLine ) {
 						let p;
