@@ -1669,7 +1669,7 @@ export default class AudioMotionAnalyzer {
 
 		// create Reflex effect
 		const doReflex = channel => {
-			if ( this._reflexRatio > 0 && ! isLumi ) {
+			if ( this._reflexRatio > 0 && ! isLumi && ! _radial ) {
 				let posY, height;
 				if ( this.reflexFit || isDualVertical ) { // always fit reflex in vertical stereo mode
 					posY   = isDualVertical && channel == 0 ? channelHeight + channelGap : 0;
@@ -1880,6 +1880,9 @@ export default class AudioMotionAnalyzer {
 
 		/* MAIN FUNCTION */
 
+		if ( overlay )
+			_ctx.clearRect( 0, 0, canvas.width, canvas.height );
+
 		let currentEnergy = 0;
 
 		const nBars     = _bars.length,
@@ -1892,7 +1895,6 @@ export default class AudioMotionAnalyzer {
 				  colorStops       = channelGradient.colorStops,
 				  colorCount       = colorStops.length,
 				  bgColor          = ( ! showBgColor || isLeds && ! overlay ) ? '#000' : channelGradient.bgColor,
-				  mustClear        = channel == 0 || ! _radial && ! isDualCombined,
 				  radialDirection  = isDualVertical && _radial && channel ? -1 : 1, // -1 = inwards, 1 = outwards
 				  invertedChannel  = ( ! channel && _mirror == -1 ) || ( channel && _mirror == 1 ),
 				  radialOffsetX    = ! isDualHorizontal || ( channel && _mirror != 1 ) ? 0 : analyzerWidth >> ( channel || ! invertedChannel ),
@@ -1949,11 +1951,6 @@ export default class AudioMotionAnalyzer {
 					_ctx.setTransform( flipX, 0, 0, 1, translateX, 0 );
 				}
 
-				// clear the channel area, if in overlay mode
-				// this is done per channel to clear any residue below 0 off the top channel (especially in line graph mode with lineWidth > 1)
-				if ( overlay && mustClear )
-					_ctx.clearRect( 0, channelTop - channelGap, canvas.width, channelHeight + channelGap );
-
 				// fill the analyzer background if needed (not overlay or overlay + showBgColor)
 				if ( ! overlay || showBgColor ) {
 					if ( overlay )
@@ -1962,7 +1959,7 @@ export default class AudioMotionAnalyzer {
 					_ctx.fillStyle = bgColor;
 
 					// exclude the reflection area when overlay is true and reflexAlpha == 1 (avoids alpha over alpha difference, in case bgAlpha < 1)
-					if ( mustClear )
+					if ( channel == 0 || ( ! _radial && ! isDualCombined ) )
 						_ctx.fillRect( initialX, channelTop - channelGap, analyzerWidth, ( overlay && this.reflexAlpha == 1 ? analyzerHeight : channelHeight ) + channelGap );
 
 					_ctx.globalAlpha = 1;
@@ -2251,8 +2248,9 @@ export default class AudioMotionAnalyzer {
 			if ( isDualHorizontal && ! _radial )
 				_ctx.setTransform( 1, 0, 0, 1, 0, 0 );
 
-			// create Reflex effect
-			doReflex( channel );
+			// create Reflex effect - for dual-combined and dual-horizontal do it only once, after channel 1
+			if ( ( ! isDualHorizontal && ! isDualCombined ) || channel )
+				doReflex( channel );
 
 		} // for ( let channel = 0; channel < nChannels; channel++ ) {
 
