@@ -1979,18 +1979,9 @@ export default class AudioMotionAnalyzer {
 
 				// set clipping region
 				_ctx.save();
-				if ( ! _radial || isDualHorizontal && _mode == MODE_GRAPH ) {
+				if ( ! _radial ) {
 					const region = new Path2D();
-
-					if ( _radial ) {
-						// clips the inner circle off the drawing area
-						// note: circular clip is slow, but this is hard to handle otherwise on dual-horizontal layout..
-						region.rect( 0, 0, canvas.width, canvas.height );
-						region.arc( centerX, centerY, innerRadius, 0, TAU, true );
-					}
-					else
-						region.rect( 0, channelTop, canvas.width, analyzerHeight );
-
+					region.rect( 0, channelTop, canvas.width, analyzerHeight );
 					_ctx.clip( region );
 				}
 
@@ -2196,14 +2187,17 @@ export default class AudioMotionAnalyzer {
 					_ctx.stroke();
 
 				if ( fillAlpha > 0 ) {
-					if ( ! _radial ) {
+					if ( _radial ) {
+						// exclude the center circle from the fill area
+						const start = isDualHorizontal ? getAngle( radialOffsetX + ( ( analyzerWidth >> 1 ) * angularDirection ), angularDirection ) : 0,
+							  end   = isDualHorizontal ? getAngle( radialOffsetX + analyzerWidth * angularDirection, angularDirection ) : TAU;
+						_ctx.moveTo( ...radialXY( isDualHorizontal ? radialOffsetX + ( ( analyzerWidth >> 1 ) * angularDirection ) : 0, 0 ) );
+						_ctx.arc( centerX, centerY, innerRadius, start, end, isDualHorizontal ? ! invertedChannel : true );
+					}
+					else {
 						// close the fill area
 						_ctx.lineTo( finalX, analyzerBottom );
 						_ctx.lineTo( initialX, analyzerBottom );
-					}
-					else if ( ! isDualHorizontal ) {
-						// exclude the center circle from the fill area; on dual-horizontal we use a clipping region
-						_ctx.arc( centerX, centerY, innerRadius, 0, TAU, true );
 					}
 
 					_ctx.globalAlpha = fillAlpha;
