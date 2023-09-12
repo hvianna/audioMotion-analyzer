@@ -2059,8 +2059,11 @@ export default class AudioMotionAnalyzer {
 					const nextBarAvg = barIndex ? 0 : ( this._normalizedB( fftData[ _bars[1].binLo ] ) * maxBarHeight + barHeight ) / 2;
 
 					if ( _radial ) {
-						if ( barIndex == 0 )
+						if ( barIndex == 0 ) {
+							if ( isDualHorizontal )
+								_ctx.moveTo( ...radialXY( 0, 0 ) );
 							_ctx.lineTo( ...radialXY( 0, ( posX < 0 ? nextBarAvg : barHeight ) ) );
+						}
 						// draw line to the current point, avoiding overlapping wrap-around frequencies
 						if ( posX >= 0 ) {
 							const point = [ posX, barHeight ];
@@ -2173,8 +2176,8 @@ export default class AudioMotionAnalyzer {
 			if ( _mode == MODE_GRAPH ) {
 				setBarColor(); // select channel gradient
 
-				if ( _radial ) {
-					if ( _mirror && ! isDualHorizontal ) {
+				if ( _radial && ! isDualHorizontal ) {
+					if ( _mirror ) {
 						let p;
 						while ( p = points.pop() )
 							_ctx.lineTo( ...radialXY( ...p, -1 ) );
