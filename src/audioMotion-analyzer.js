@@ -1810,36 +1810,6 @@ export default class AudioMotionAnalyzer {
 			}
 		}
 
-		// converts a given X-coordinate to its corresponding angle in radial mode
-		// `dir` is 1 for clockwise, -1 for counterclockwise
-		const getAngle = ( x, dir = 1 ) => dir * TAU * ( x / canvas.width ) + this._spinAngle;
-
-		// converts planar X,Y coordinates to radial coordinates
-		const radialXY = ( x, y, dir ) => {
-			const height = innerRadius + y,
-				  angle  = getAngle( x, dir );
-			return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
-		}
-
-		// draws a polygon of width `w` and height `h` at (x,y) in radial mode
-		const radialPoly = ( x, y, w, h, angularDirection, stroke ) => {
-			_ctx.beginPath();
-			for ( const dir of ( _mirror && ! isDualHorizontal ? [1,-1] : [ angularDirection ] ) ) {
-				const [ startAngle, endAngle ] = isRound ? [ getAngle( x, dir ), getAngle( x + w, dir ) ] : [];
-				_ctx.moveTo( ...radialXY( x, y, dir ) );
-				_ctx.lineTo( ...radialXY( x, y + h, dir ) );
-				if ( isRound )
-					_ctx.arc( centerX, centerY, innerRadius + y + h, startAngle, endAngle, dir != 1 );
-				else
-					_ctx.lineTo( ...radialXY( x + w, y + h, dir ) );
-				_ctx.lineTo( ...radialXY( x + w, y, dir ) );
-				if ( isRound && ! stroke ) // close the bottom line only when not in outline mode
-					_ctx.arc( centerX, centerY, innerRadius + y, endAngle, startAngle, dir == 1 );
-			}
-			strokeIf( stroke );
-			_ctx.fill();
-		}
-
 		// converts a value in [0;1] range to a height in pixels that fits into the current LED elements
 		const ledPosY = value => Math.max( 0, ( value * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV );
 
@@ -1895,10 +1865,10 @@ export default class AudioMotionAnalyzer {
 				  colorStops       = channelGradient.colorStops,
 				  colorCount       = colorStops.length,
 				  bgColor          = ( ! showBgColor || isLeds && ! overlay ) ? '#000' : channelGradient.bgColor,
-				  radialDirection  = isDualVertical && _radial && channel ? -1 : 1, // -1 = inwards, 1 = outwards
+				  radialDirection  = isDualVertical && _radial && channel ? -1 : 1, // 1 = outwards, -1 = inwards
 				  invertedChannel  = ( ! channel && _mirror == -1 ) || ( channel && _mirror == 1 ),
 				  radialOffsetX    = ! isDualHorizontal || ( channel && _mirror != 1 ) ? 0 : analyzerWidth >> ( channel || ! invertedChannel ),
-				  angularDirection = isDualHorizontal && invertedChannel ? -1 : 1; // 1 = clockwise, -1 = counterclockwise
+				  angularDirection = isDualHorizontal && invertedChannel ? -1 : 1;  // 1 = clockwise, -1 = counterclockwise
 /*
 			Unoptimized code for radialOffsetX and angularDirection:
 
@@ -1927,6 +1897,35 @@ export default class AudioMotionAnalyzer {
 			const interpolate = ( bin, ratio ) => {
 				const value = fftData[ bin ] + ( bin < fftData.length - 1 ? ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio : 0 );
 				return isNaN( value ) ? -Infinity : value;
+			}
+
+			// converts a given X-coordinate to its corresponding angle in radial mode (uses angularDirection)
+			const getAngle = ( x, dir = angularDirection ) => dir * TAU * ( ( x + radialOffsetX ) / canvas.width ) + this._spinAngle;
+
+			// converts planar X,Y coordinates to radial coordinates (uses: getAngle(), radialDirection)
+			const radialXY = ( x, y, dir ) => {
+				const height = innerRadius + y * radialDirection,
+					  angle  = getAngle( x, dir );
+				return [ centerX + height * Math.cos( angle ), centerY + height * Math.sin( angle ) ];
+			}
+
+			// draws a polygon of width `w` and height `h` at (x,y) in radial mode (uses: angularDirection, radialDirection)
+			const radialPoly = ( x, y, w, h, stroke ) => {
+				_ctx.beginPath();
+				for ( const dir of ( _mirror && ! isDualHorizontal ? [1,-1] : [ angularDirection ] ) ) {
+					const [ startAngle, endAngle ] = isRound ? [ getAngle( x, dir ), getAngle( x + w, dir ) ] : [];
+					_ctx.moveTo( ...radialXY( x, y, dir ) );
+					_ctx.lineTo( ...radialXY( x, y + h, dir ) );
+					if ( isRound )
+						_ctx.arc( centerX, centerY, innerRadius + ( y + h ) * radialDirection, startAngle, endAngle, dir != 1 );
+					else
+						_ctx.lineTo( ...radialXY( x + w, y + h, dir ) );
+					_ctx.lineTo( ...radialXY( x + w, y, dir ) );
+					if ( isRound && ! stroke ) // close the bottom line only when not in outline mode
+						_ctx.arc( centerX, centerY, innerRadius + y * radialDirection, endAngle, startAngle, dir == 1 );
+				}
+				strokeIf( stroke );
+				_ctx.fill();
 			}
 
 			// set fillStyle and strokeStyle according to current colorMode (uses: channel, colorStops, colorCount)
@@ -2050,22 +2049,22 @@ export default class AudioMotionAnalyzer {
 				setBarColor( barValue, barIndex );
 
 				// compute actual bar height on screen
-				const barHeight = ( isLumi ? maxBarHeight : isLeds ? ledPosY( barValue ) : barValue * maxBarHeight | 0 ) * radialDirection;
+				const barHeight = isLumi ? maxBarHeight : isLeds ? ledPosY( barValue ) : barValue * maxBarHeight | 0;
 
 				// Draw current bar or line segment
 
 				if ( _mode == MODE_GRAPH ) {
 					// compute the average between the initial bar (barIndex==0) and the next one
 					// used to smooth the curve when the initial posX is off the screen, in mirror and radial modes
-					const nextBarAvg = barIndex ? 0 : ( this._normalizedB( fftData[ _bars[1].binLo ] ) * maxBarHeight * radialDirection + barHeight ) / 2;
+					const nextBarAvg = barIndex ? 0 : ( this._normalizedB( fftData[ _bars[1].binLo ] ) * maxBarHeight + barHeight ) / 2;
 
 					if ( _radial ) {
 						if ( barIndex == 0 )
-							_ctx.lineTo( ...radialXY( radialOffsetX, ( posX < 0 ? nextBarAvg : barHeight ), angularDirection ) );
+							_ctx.lineTo( ...radialXY( 0, ( posX < 0 ? nextBarAvg : barHeight ) ) );
 						// draw line to the current point, avoiding overlapping wrap-around frequencies
 						if ( posX >= 0 ) {
-							const point = [ posX + radialOffsetX, barHeight ];
-							_ctx.lineTo( ...radialXY( ...point, angularDirection ) );
+							const point = [ posX, barHeight ];
+							_ctx.lineTo( ...radialXY( ...point ) );
 							points.push( point );
 						}
 					}
@@ -2113,7 +2112,7 @@ export default class AudioMotionAnalyzer {
 					}
 					else if ( posX >= initialX ) {
 						if ( _radial )
-							radialPoly( posX + radialOffsetX, 0, width, barHeight, angularDirection, isOutline );
+							radialPoly( posX, 0, width, barHeight, isOutline );
 						else if ( isRound ) {
 							const halfWidth = width / 2,
 								  y = analyzerBottom + halfWidth; // round caps have an additional height of half bar width
@@ -2158,7 +2157,7 @@ export default class AudioMotionAnalyzer {
 					else if ( ! _radial )
 						_ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, width, 2 );
 					else if ( _mode != MODE_GRAPH ) // radial - peaks for graph mode are done by the peak line code
-						radialPoly( posX + radialOffsetX, peak * maxBarHeight * radialDirection, width, -2 * radialDirection, angularDirection );
+						radialPoly( posX, peak * maxBarHeight, width, -2 );
 				}
 
 			} // for ( let barIndex = 0; barIndex < nBars; barIndex++ )
@@ -2189,9 +2188,9 @@ export default class AudioMotionAnalyzer {
 				if ( fillAlpha > 0 ) {
 					if ( _radial ) {
 						// exclude the center circle from the fill area
-						const start = isDualHorizontal ? getAngle( radialOffsetX + ( ( analyzerWidth >> 1 ) * angularDirection ), angularDirection ) : 0,
-							  end   = isDualHorizontal ? getAngle( radialOffsetX + analyzerWidth * angularDirection, angularDirection ) : TAU;
-						_ctx.moveTo( ...radialXY( isDualHorizontal ? radialOffsetX + ( ( analyzerWidth >> 1 ) * angularDirection ) : 0, 0 ) );
+						const start = isDualHorizontal ? getAngle( analyzerWidth >> 1 ) : 0,
+							  end   = isDualHorizontal ? getAngle( analyzerWidth ) : TAU;
+						_ctx.moveTo( ...radialXY( isDualHorizontal ? analyzerWidth >> 1 : 0, 0 ) );
 						_ctx.arc( centerX, centerY, innerRadius, start, end, isDualHorizontal ? ! invertedChannel : true );
 					}
 					else {
@@ -2218,14 +2217,14 @@ export default class AudioMotionAnalyzer {
 							h = findY( x, h, nextBar.posX, nextBar.peak[ channel ], 0 );
 							x = 0;
 						}
-						h *= maxBarHeight * radialDirection;
+						h *= maxBarHeight;
 						if ( showPeakLine ) {
-							_ctx[ m ]( ...( _radial ? radialXY( x + radialOffsetX, h, angularDirection ) : [ x, analyzerBottom - h ] ) );
+							_ctx[ m ]( ...( _radial ? radialXY( x, h ) : [ x, analyzerBottom - h ] ) );
 							if ( _radial && _mirror && ! isDualHorizontal )
 								points.push( [ x, h ] );
 						}
-						else if ( h )
-							radialPoly( x + radialOffsetX, h, 1, -2 * radialDirection, angularDirection ); // standard peaks (also does mirror)
+						else if ( h > 0 )
+							radialPoly( x, h, 1, -2 ); // standard peaks (also does mirror)
 					});
 					if ( showPeakLine ) {
 						let p;
