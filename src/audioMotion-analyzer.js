@@ -1603,8 +1603,24 @@ export default class AudioMotionAnalyzer {
 		// schedule next canvas update
 		this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) );
 
-		if ( this._maxFPS && ( timestamp - this._last < 1000 / this._maxFPS ) )
+		// frame rate control
+		const elapsed        = timestamp - this._time, // time since last FPS computation
+			  frameTime      = timestamp - this._last, // time since last rendered frame
+			  targetInterval = this._maxFPS ? 975 / this._maxFPS : 0; // small tolerance for best results
+
+		if ( frameTime < targetInterval )
 			return;
+
+		this._last = timestamp - ( targetInterval ? frameTime % targetInterval : 0 ); // thanks https://stackoverflow.com/a/19772220/2370385
+		this._frames++;
+
+		if ( elapsed >= 1000 ) { // update FPS every second
+			this._fps = this._frames / elapsed * 1000;
+			this._frames = 0;
+			this._time = timestamp;
+		}
+
+		// initialize internal constants
 
 		const { isAlpha,
 			    isBands,
@@ -1824,27 +1840,6 @@ export default class AudioMotionAnalyzer {
 			if ( newVal >= _energy.peak ) {
 				_energy.peak = newVal;
 				_energy.hold = holdFrames;
-			}
-		}
-
-		// calculate and display (if enabled) the current frame rate
-		const updateFPS = () => {
-			const elapsed = timestamp - this._time; // elapsed time since the last FPS computation
-
-			this._last = timestamp - ( this._maxFPS ? elapsed % ( 1000 / this._maxFPS ) : 0 ); // thanks https://stackoverflow.com/a/19772220/2370385
-			this._frames++;
-
-			if ( elapsed >= 1000 ) {
-				this._fps = this._frames / ( elapsed / 1000 );
-				this._frames = 0;
-				this._time = timestamp;
-			}
-			if ( this.showFPS ) {
-				const size = canvasX.height;
-				_ctx.font = `bold ${size}px ${FONT_FAMILY}`;
-				_ctx.fillStyle = FPS_COLOR;
-				_ctx.textAlign = 'right';
-				_ctx.fillText( Math.round( this._fps ), canvas.width - size, size * 2 );
 			}
 		}
 
@@ -2267,8 +2262,14 @@ export default class AudioMotionAnalyzer {
 			drawScaleX();
 		}
 
-		// calculate and display (if enabled) the current frame rate
-		updateFPS();
+		// display current frame rate
+		if ( this.showFPS ) {
+			const size = canvasX.height;
+			_ctx.font = `bold ${size}px ${FONT_FAMILY}`;
+			_ctx.fillStyle = FPS_COLOR;
+			_ctx.textAlign = 'right';
+			_ctx.fillText( Math.round( _fps ), canvas.width - size, size * 2 );
+		}
 
 		// call callback function, if defined
 		if ( this.onCanvasDraw ) {
