@@ -1620,7 +1620,7 @@ export default class AudioMotionAnalyzer {
 			this._time = timestamp;
 		}
 
-		// initialize internal constants
+		// initialize local constants
 
 		const { isAlpha,
 			    isBands,
@@ -1727,49 +1727,6 @@ export default class AudioMotionAnalyzer {
 			}
 		}
 
-		// draw scale on Y-axis
-		const drawScaleY = channelTop => {
-			const scaleWidth = canvasX.height,
-				  fontSize   = scaleWidth >> 1,
-				  max        = _linearAmplitude ? 100 : maxDecibels,
-				  min        = _linearAmplitude ? 0 : minDecibels,
-				  incr       = _linearAmplitude ? 20 : 5,
-				  interval   = analyzerHeight / ( max - min );
-
-			_ctx.save();
-			_ctx.fillStyle = SCALEY_LABEL_COLOR;
-			_ctx.font = `${fontSize}px ${FONT_FAMILY}`;
-			_ctx.textAlign = 'right';
-			_ctx.lineWidth = 1;
-
-			for ( let val = max; val > min; val -= incr ) {
-				const posY = channelTop + ( max - val ) * interval,
-					  even = ( val % 2 == 0 ) | 0;
-
-				if ( even ) {
-					const labelY = posY + fontSize * ( posY == channelTop ? .8 : .35 );
-					if ( _mirror != -1 )
-						_ctx.fillText( val, scaleWidth * .85, labelY );
-					if ( _mirror != 1 )
-						_ctx.fillText( val, canvas.width - scaleWidth * .1, labelY );
-					_ctx.strokeStyle = SCALEY_LABEL_COLOR;
-					_ctx.setLineDash([2,4]);
-					_ctx.lineDashOffset = 0;
-				}
-				else {
-					_ctx.strokeStyle = SCALEY_MIDLINE_COLOR;
-					_ctx.setLineDash([2,8]);
-					_ctx.lineDashOffset = 1;
-				}
-
-				_ctx.beginPath();
-				_ctx.moveTo( initialX + scaleWidth * even * ( _mirror != -1 ), ~~posY + .5 ); // for sharp 1px line (https://stackoverflow.com/a/13879402/2370385)
-				_ctx.lineTo( finalX - scaleWidth * even * ( _mirror != 1 ), ~~posY + .5 );
-				_ctx.stroke();
-			}
-			_ctx.restore();
-		}
-
 		// returns the gain (in dB) for a given frequency, considering the currently selected weighting filter
 		const weightingdB = freq => {
 			const f2 = freq ** 2,
@@ -1865,7 +1822,7 @@ export default class AudioMotionAnalyzer {
 				  radialOffsetX    = ! isDualHorizontal || ( channel && _mirror != 1 ) ? 0 : analyzerWidth >> ( channel || ! invertedChannel ),
 				  angularDirection = isDualHorizontal && invertedChannel ? -1 : 1;  // 1 = clockwise, -1 = counterclockwise
 /*
-			Unoptimized code for radialOffsetX and angularDirection:
+			Expanded logic for radialOffsetX and angularDirection:
 
 			let radialOffsetX = 0,
 				angularDirection = 1;
@@ -1887,8 +1844,52 @@ export default class AudioMotionAnalyzer {
 				}
 			}
 */
+			// draw scale on Y-axis (uses: channel, channelTop)
+			const drawScaleY = () => {
+				const scaleWidth = canvasX.height,
+					  fontSize   = scaleWidth >> 1,
+					  max        = _linearAmplitude ? 100 : maxDecibels,
+					  min        = _linearAmplitude ? 0 : minDecibels,
+					  incr       = _linearAmplitude ? 20 : 5,
+					  interval   = analyzerHeight / ( max - min ),
+					  atStart    = _mirror != -1 && ( ! isDualHorizontal || channel == 0 || _mirror == 1 ),
+					  atEnd      = _mirror != 1 && ( ! isDualHorizontal || channel != _mirror );
 
-			// helper function for FFT data interpolation (uses fftData)
+				_ctx.save();
+				_ctx.fillStyle = SCALEY_LABEL_COLOR;
+				_ctx.font = `${fontSize}px ${FONT_FAMILY}`;
+				_ctx.textAlign = 'right';
+				_ctx.lineWidth = 1;
+
+				for ( let val = max; val > min; val -= incr ) {
+					const posY = channelTop + ( max - val ) * interval,
+						  even = ( val % 2 == 0 ) | 0;
+
+					if ( even ) {
+						const labelY = posY + fontSize * ( posY == channelTop ? .8 : .35 );
+						if ( atStart )
+							_ctx.fillText( val, scaleWidth * .85, labelY );
+						if ( atEnd )
+							_ctx.fillText( val, ( isDualHorizontal ? analyzerWidth : canvas.width ) - scaleWidth * .1, labelY );
+						_ctx.strokeStyle = SCALEY_LABEL_COLOR;
+						_ctx.setLineDash([2,4]);
+						_ctx.lineDashOffset = 0;
+					}
+					else {
+						_ctx.strokeStyle = SCALEY_MIDLINE_COLOR;
+						_ctx.setLineDash([2,8]);
+						_ctx.lineDashOffset = 1;
+					}
+
+					_ctx.beginPath();
+					_ctx.moveTo( initialX + scaleWidth * even * atStart, ~~posY + .5 ); // for sharp 1px line (https://stackoverflow.com/a/13879402/2370385)
+					_ctx.lineTo( finalX - scaleWidth * even * atEnd, ~~posY + .5 );
+					_ctx.stroke();
+				}
+				_ctx.restore();
+			}
+
+			// FFT bin data interpolation (uses fftData)
 			const interpolate = ( bin, ratio ) => {
 				const value = fftData[ bin ] + ( bin < fftData.length - 1 ? ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio : 0 );
 				return isNaN( value ) ? -Infinity : value;
@@ -1936,6 +1937,8 @@ export default class AudioMotionAnalyzer {
 				_ctx.fillStyle = _ctx.strokeStyle = color;
 			}
 
+			// CHANNEL START
+
 			if ( useCanvas ) {
 				// set transform (horizontal flip and translation) for dual-horizontal layout
 				if ( isDualHorizontal && ! _radial ) {
@@ -1961,7 +1964,7 @@ export default class AudioMotionAnalyzer {
 
 				// draw dB scale (Y-axis) - avoid drawing it twice on 'dual-combined' channel layout
 				if ( this.showScaleY && ! isLumi && ! _radial && ( channel == 0 || ! isDualCombined ) )
-					drawScaleY( channelTop );
+					drawScaleY();
 
 				// set line width and dash for LEDs effect
 				if ( isLeds ) {
