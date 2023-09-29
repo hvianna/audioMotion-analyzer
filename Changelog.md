@@ -1,6 +1,21 @@
 Changelog
 =========
 
+## version 4.3.0 (2023-09-29)
+
+### Added: <!-- {docsify-ignore} -->
+
++ **'dual-horizontal'** option for [`channelLayout`](README.md#channellayout-string);
+
+### Fixed: <!-- {docsify-ignore} -->
+
++ Fixed opacity for [reflex effect](README.md#reflexratio-number) on *dual-combined* channel layout.
+
+### Improved: <!-- {docsify-ignore} -->
+
++ Improved [`maxFPS`](README.md#maxfps-number) frame rate throttling.
+
+
 ## version 4.2.0 (2023-09-07)
 
 ### Added: <!-- {docsify-ignore} -->
