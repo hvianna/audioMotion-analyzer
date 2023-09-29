@@ -333,11 +333,12 @@ Defaults to **0.7**.
 
 Defines the number and layout of analyzer channels.
 
-channelLayout   | Description
-----------------|------------
-'single'        | Single channel analyzer, representing the combined output of both left and right channels.
-'dual-combined' | Dual channel analyzer, with both channel graphs overlaid. Works best with semi-transparent **Graph** [`mode`](#mode-number) or [`outlineBars`](#outlinebars-boolean).
-'dual-vertical' | Left channel shown at the top half of the canvas and right channel at the bottom.
+channelLayout     | Description | Note
+------------------|-------------|------
+'single'          | Single channel analyzer, representing the combined output of both left and right channels.
+'dual-combined'   | Dual channel analyzer, both channels overlaid. Works best with semi-transparent **Graph** [`mode`](#mode-number) or [`outlineBars`](#outlinebars-boolean).
+'dual-horizontal' | Dual channel, side by side - see [`mirror`](#mirror-number) for additional layout options. | *since v4.3.0*
+'dual-vertical'   | Dual channel, left channel at the top half of the canvas and right channel at the bottom.
 
 !> When a *dual* layout is selected, any mono (single channel) audio source connected to the analyzer will output sound only from the left speaker,
 unless a stereo source is simultaneously connected to the analyzer, which will force the mono input to be upmixed to stereo.
@@ -668,15 +669,19 @@ It is preferable to use the [`setFreqRange()`](#setfreqrange-minfreq-maxfreq-) m
 
 *Available since v3.3.0*
 
-Horizontal mirroring effect. Valid values are:
+When [`channelLayout`](#channellayout-string) is **dual-horizontal**, this property controls the orientation of the X-axis (frequencies) on both channels.
 
-mirror | Effect
-:-----:|--------
--1     | Mirrors the analyzer to the left (low frequencies at the center of the screen)
-0      | Disables mirror effect (default)
-1      | Mirrors the analyzer to the right (high frequencies at the center of the screen)
+For other layouts, it horizontally mirrors the spectrum image to the left or right side.
 
-**Note:** when [`radial`](#radial-boolean) is **_true_**, both `1` and `-1` will produce the same effect.
+Valid values are:
+
+mirror | Description
+:-----:|-------------
+-1     | Low frequencies meet at the center of the screen (mirror left)
+0      | No mirror effect or change to axis orientation (default)
+1      | High frequencies meet at the center of the screen (mirror right)
+
+**Note:** On [`radial`](#radial-boolean) spectrum with channel layouts other than *dual-horizontal*, both `1` and `-1` have the same effect.
 
 Defaults to **0**.
 
