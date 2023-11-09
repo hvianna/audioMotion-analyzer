@@ -19,6 +19,11 @@ a:not([class]):hover {
 audio {
 	height: 40px;
 }
+audio,
+video {
+	display: block;
+	width: 100%;
+}
 
 button {
 	margin: 5px;
@@ -66,7 +71,7 @@ h1 {
 	filter: drop-shadow(2px 2px 0 #000);
 }
 h2 {
-	margin: 1.5em 0 1em;
+	margin: 1.5em 0 .5em;
 }
 
 hr {
@@ -108,16 +113,25 @@ ul {
 	margin-right: 1em;
 }
 
+.topbar {
+	margin: 10px 0;
+}
+
 .label {
 	color: #fff;
 	display: inline-block;
 	font-size: 12px;
-	margin: 0 6px;
+	margin: 0 5px;
 	vertical-align: top;
 }
 .label input,
 .label select {
 	display: block;
+}
+fieldset .label,
+fieldset button {
+	margin-left: 4px;
+	margin-right: 4px;
 }
 
 .slim {
@@ -153,17 +167,11 @@ ul {
 	100% { -webkit-mask-position: -10%; }
 }
 
-#audio,
-#video {
-	display: block;
-	width: 100%;
-}
-
 .analyzer-configuration {
 	background: #fff1;
 	border: 1px solid #ccc8;
 	margin: 10px 0 20px;
-	padding-bottom: 10px;
+	padding: 0 5px 10px;
 }
 
 .credits {
@@ -186,6 +194,14 @@ ul {
 	margin-left: .5em;
 }
 
+#btn_mic {
+	font-size: 150%;
+	padding: 1px 12px;
+}
+#btn_mic.active {
+	padding: 3px 14px;
+}
+
 /* minimal demo */
 #container {
 	display: flex;
@@ -203,11 +219,16 @@ ul {
 	margin: 1.6em 0;
 }
 
-#start-button {
+#btn_start,
+#btn_destroy {
+	cursor: pointer;
 	display: block;
 	margin: 40px auto;
 	padding: 10px;
 	width: 200px;
+}
+#btn_destroy {
+	display: none;
 }
 
 /* fluid full-width analyzer (single instance demo) */
@@ -255,7 +276,6 @@ ul {
 	align-items: center;
 	display: flex;
 	justify-content: space-between;
-	margin: 10px 0;
 }
 
 .evenly {

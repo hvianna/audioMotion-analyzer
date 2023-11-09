@@ -1,6 +1,42 @@
 Changelog
 =========
 
+## version 4.3.0 (2023-09-29)
+
+### Added: <!-- {docsify-ignore} -->
+
++ **'dual-horizontal'** option for [`channelLayout`](README.md#channellayout-string);
+
+### Fixed: <!-- {docsify-ignore} -->
+
++ Fixed opacity for [reflex effect](README.md#reflexratio-number) on *dual-combined* channel layout.
+
+### Improved: <!-- {docsify-ignore} -->
+
++ Improved [`maxFPS`](README.md#maxfps-number) frame rate throttling.
+
+
+## version 4.2.0 (2023-09-07)
+
+### Added: <!-- {docsify-ignore} -->
+
++ new `stopTracks` argument to [`disconnectInput()`](README.md#disconnectinput-node-stoptracks-) - thanks **@hookedupjoe** ([#52](https://github.com/hvianna/audioMotion-analyzer/issues/52));
++ [`destroy()`](README.md#destroy) - thanks **@lucienimmink** for the [suggestion](https://github.com/hvianna/audioMotion-analyzer/issues/53);
++ [`maxFPS`](README.md#maxfps-number) - set the maximum desired animation frame rate;
++ [`peakLine`](README.md#peakline-boolean) - show peaks as a continuous line for **Graph** [`mode`](README.md#mode-number);
++ [`start()`](README.md#start) and [`stop()`](README.md#stop) methods.
+
+### Fixed: <!-- {docsify-ignore} -->
+
++ Corrected ESM exports in `package.json` - thanks **@cprussin** ([#54](https://github.com/hvianna/audioMotion-analyzer/pull/54)).
+
+### Improved: <!-- {docsify-ignore} -->
+
++ Peak hold and decay times and radial spin speed should now remain consistent on any frame rate;
++ [`showPeaks`](README.md#showpeaks-boolean) now works for **Graph** mode in **radial** view;
++ Code quality and documentation improvements - also thanks **@Staijn1** for [#55](https://github.com/hvianna/audioMotion-analyzer/pull/55).
+
+
 ## version 4.1.1 (2023-08-14)
 
 + Fix a rendering bug when `roundBars` is combined with `mirror` and `radial`;
@@ -210,7 +246,7 @@ for the suggestions that led to the implementation of several of these new featu
 + Built-in volume control;
 + New methods for easy connection/disconnection of input and output nodes:
   + [`connectInput()`](README.md#connectinput-source-)
-  + [`disconnectInput()`](README.md#disconnectinput-node-)
+  + [`disconnectInput()`](README.md#disconnectinput-node-stoptracks-)
   + [`connectOutput()`](README.md#connectoutput-node-)
   + [`disconnectOutput()`](README.md#disconnectoutput-node-)
 + New properties:

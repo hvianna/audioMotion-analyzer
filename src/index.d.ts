@@ -36,6 +36,7 @@ export interface Options {
   loRes?: boolean;
   lumiBars?: boolean;
   maxDecibels?: number;
+  maxFPS?: number;
   maxFreq?: number;
   minDecibels?: number;
   minFreq?: number;
@@ -46,6 +47,7 @@ export interface Options {
   onCanvasResize?: OnCanvasResizeFunction;
   outlineBars?: boolean;
   overlay?: boolean;
+  peakLine?: boolean;
   radial?: boolean;
   reflexAlpha?: number;
   reflexBright?: number;
@@ -86,7 +88,7 @@ export interface ConstructorOptions extends Options {
   source?: HTMLMediaElement | AudioNode;
 }
 
-export type ChannelLayout = "single" | "dual-vertical" | "dual-combined";
+export type ChannelLayout = "single" | "dual-horizontal" | "dual-vertical" | "dual-combined";
 
 export type ColorMode = "gradient" | "bar-index" | "bar-level";
 
@@ -174,6 +176,7 @@ declare class AudioMotionAnalyzer {
   get isOutlineBars(): boolean;
   get isRoundBars(): boolean;
 
+  get isDestroyed(): boolean;
   get isOn(): boolean;
 
   get ledBars(): boolean;
@@ -200,6 +203,9 @@ declare class AudioMotionAnalyzer {
   get minDecibels(): number;
   set minDecibels(value: number);
 
+  get maxFPS(): number;
+  set maxFPS(value: number);
+
   get maxFreq(): number;
   set maxFreq(value: number);
 
@@ -219,6 +225,9 @@ declare class AudioMotionAnalyzer {
   set outlineBars(value: boolean);
 
   public overlay: boolean;
+
+  get peakLine(): boolean;
+  set peakLine(value: boolean);
 
   get pixelRatio(): number;
 
@@ -273,7 +282,9 @@ declare class AudioMotionAnalyzer {
   public connectInput(source: AudioNode): AudioNode;
   public connectOutput(node?: AudioNode): void;
 
-  public disconnectInput(node?: AudioNode | AudioNode[]): void;
+  public destroy(): void;
+
+  public disconnectInput(node?: AudioNode | AudioNode[] | null, stopTracks?: boolean): void;
   public disconnectOutput(node?: AudioNode): void;
 
   public getBars(): AnalyzerBarData[];
@@ -288,6 +299,9 @@ declare class AudioMotionAnalyzer {
   public setLedParams(params?: LedParameters): void;
   public setOptions(options?: Options): void;
   public setSensitivity(minDecibels: number, maxDecibels: number): void;
+
+  public start(): void;
+  public stop(): void;
 
   public toggleAnalyzer(force?: boolean): boolean;
   public toggleFullscreen(): void;

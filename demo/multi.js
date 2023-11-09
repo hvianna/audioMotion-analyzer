@@ -71,11 +71,13 @@ audioMotion[1].setOptions({
 	gradientRight: 'orangered',
 	linearAmplitude: true,
 	linearBoost: 1.2,
-	lineWidth: 1.5,
+	lineWidth: 0,
 	maxFreq: 16000,
 	minFreq: 30,
+	peakLine: true,
 	showScaleX: false,
-	showPeaks: false,
+	showPeaks: true,
+	weightingFilter: 'D'
 });
 
 // bottom right

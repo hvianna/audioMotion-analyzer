@@ -23,12 +23,16 @@
 	</div>
 	<audio id="audio" controls crossorigin="anonymous"></audio>
 
-	<div class="flex">
+	<div class="topbar flex">
 		<div>
 			Load audio file:
 			<input type="file" id="uploadFile" accept="audio/*">
 		</div>
-		<div>
+		<div class="flex stretch">
+			<button id="btn_mic" title="Microphone ON/OFF">🎙️</button>
+			<button id="btn_mute" title="Disconnect analyzer output from the speakers&#13;&#10;(prevent feedback loop when microphone is on)">disconnectOutput()</button>
+			<button data-prop="isDestroyed" data-func="destroy">destroy()</button>
+			<button id="btn_getBars" title="check browser console for data">getBars()</button>
 			<button data-prop="isOn" data-func="toggleAnalyzer">toggleAnalyzer()</button>
 			<button data-prop="isFullscreen" data-func="toggleFullscreen">toggleFullscreen()</button>
 		</div>
@@ -97,6 +101,7 @@
 				<select data-setting="channelLayout">
 					<option value="single">single</option>
 					<option value="dual-combined">dual-combined</option>
+					<option value="dual-horizontal">dual-horizontal</option>
 					<option value="dual-vertical">dual-vertical</option>
 				</select>
 			</label>
@@ -107,7 +112,7 @@
 			</label>
 		</div>
 
-		<div class="box center">
+		<div class="box center flex">
 			<fieldset>
 				<legend>FFT</legend>
 
@@ -201,9 +206,25 @@
 					<div class="value"></div>
 				</label>
 			</fieldset>
+
+			<fieldset>
+				<legend>Frame rate</legend>
+
+				<label class="label">maxFPS
+					<select data-setting="maxFPS">
+						<option value="0">0</option>
+						<option value="10">10</option>
+						<option value="20">20</option>
+						<option value="30">30</option>
+						<option value="60">60</option>
+						<option value="120">120</option>
+					</select>
+				</label>
+				<button data-prop="showFPS">showFPS</button>
+			</fieldset>
 		</div>
 
-		<div class="box center">
+		<div class="box center flex">
 			<fieldset>
 				<legend>modes 1-8 only</legend>
 				<label class="label">barSpace
@@ -289,18 +310,19 @@
 				<button data-prop="lumiBars">lumiBars</button>
 				<button data-prop="noteLabels">noteLabels</button>
 				<button data-prop="outlineBars">outlineBars</button>
+				<button data-prop="peakLine">peakLine</button>
 				<button data-prop="roundBars">roundBars</button>
 				<button data-prop="splitGradient">splitGradient</button>
 				<button data-prop="trueLeds">trueLeds</button>
 				<br>
 				<button data-prop="showBgColor">showBgColor</button>
-				<button data-prop="showFPS">showFPS</button>
 				<button data-prop="showPeaks">showPeaks</button>
 				<button data-prop="showScaleX">showScaleX</button>
 				<button data-prop="showScaleY">showScaleY</button>
 				<hr>
 				<span class="flag" data-flag="isAlphaBars">isAlphaBars</span>
 				<span class="flag" data-flag="isBandsMode">isBandsMode</span>
+				<span class="flag" data-flag="isDestroyed">isDestroyed</span>
 				<span class="flag" data-flag="isLedBars">isLedBars</span>
 				<span class="flag" data-flag="isLumiBars">isLumiBars</span>
 				<span class="flag" data-flag="isOctaveBands">isOctaveBands</span>
@@ -310,7 +332,7 @@
 			</fieldset>
 		</div>
 
-		<div class="flex center evenly stretch">
+		<div class="box flex center evenly stretch">
 			<fieldset>
 				<legend>Custom LED parameters</legend>
 				<label class="label">set

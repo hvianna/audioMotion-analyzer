@@ -137,6 +137,7 @@ options = {<br>
 &emsp;&emsp;[loRes](#lores-boolean): **false**,<br>
 &emsp;&emsp;[lumiBars](#lumibars-boolean): **false**,<br>
 &emsp;&emsp;[maxDecibels](#maxdecibels-number): **-25**,<br>
+&emsp;&emsp;[maxFPS](#maxfps-number): **0**,<br>
 &emsp;&emsp;[maxFreq](#maxfreq-number): **22000**,<br>
 &emsp;&emsp;[minDecibels](#mindecibels-number): **-85**,<br>
 &emsp;&emsp;[minFreq](#minfreq-number): **20**,<br>
@@ -147,6 +148,7 @@ options = {<br>
 &emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *undefined*,<br>
 &emsp;&emsp;[outlineBars](#outlinebars-boolean): **false**,<br>
 &emsp;&emsp;[overlay](#overlay-boolean): **false**,<br>
+&emsp;&emsp;[peakLine](#peakline-boolean): **false**,<br>
 &emsp;&emsp;[radial](#radial-boolean): **false**,<br>
 &emsp;&emsp;[reflexAlpha](#reflexalpha-number): **0.15**,<br>
 &emsp;&emsp;[reflexBright](#reflexbright-number): **1**,<br>
@@ -219,14 +221,14 @@ After instantiation, [`fsElement`](#fselement-htmlelement-object-read-only) is a
 
 #### `source` *HTMLMediaElement or AudioNode object*
 
-If `source` is specified, connects an [*HTMLMediaElement*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) object (an `<audio>` or `<video>` HTML tag)
-or any instance of [*AudioNode*](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) to the analyzer.
+If `source` is specified, connects an [*HTMLMediaElement*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) (`<audio>` or `<video>` HTML element)
+or [*AudioNode*](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) object to the analyzer.
 
 At least one audio source is required for the analyzer to work. You can also connect audio sources after instantiation, using the [`connectInput()`](#connectinput-source-) method.
 
 #### `start` *boolean*
 
-If `start: false` is specified, the analyzer will be created stopped. You can then start it with the [`toggleAnalyzer()`](#toggleanalyzer-boolean-) method.
+If `start: false` is specified, the analyzer will be created stopped. You can then start it with the [`start()`](#start) or [`toggleAnalyzer()`](#toggleanalyzer-boolean-) methods.
 
 Defaults to **true**, so the analyzer will start running right after initialization.
 
@@ -331,11 +333,12 @@ Defaults to **0.7**.
 
 Defines the number and layout of analyzer channels.
 
-channelLayout   | Description
-----------------|------------
-'single'        | Single channel analyzer, representing the combined output of both left and right channels.
-'dual-combined' | Dual channel analyzer, with both channel graphs overlaid. Works best with semi-transparent **Graph** [`mode`](#mode-number) or [`outlineBars`](#outlinebars-boolean).
-'dual-vertical' | Left channel shown at the top half of the canvas and right channel at the bottom.
+channelLayout     | Description | Note
+------------------|-------------|------
+'single'          | Single channel analyzer, representing the combined output of both left and right channels.
+'dual-combined'   | Dual channel analyzer, both channels overlaid. Works best with semi-transparent **Graph** [`mode`](#mode-number) or [`outlineBars`](#outlinebars-boolean).
+'dual-horizontal' | Dual channel, side by side - see [`mirror`](#mirror-number) for additional layout options. | *since v4.3.0*
+'dual-vertical'   | Dual channel, left channel at the top half of the canvas and right channel at the bottom.
 
 !> When a *dual* layout is selected, any mono (single channel) audio source connected to the analyzer will output sound only from the left speaker,
 unless a stereo source is simultaneously connected to the analyzer, which will force the mono input to be upmixed to stereo.
@@ -500,6 +503,12 @@ or one of the frequency bands modes, in which case [`lumiBars`](#lumibars-boolea
 
 See also [`isOctaveBands`](#isoctavebands-boolean-read-only).
 
+### `isDestroyed` *boolean* *(Read only)*
+
+*Available since v4.2.0*
+
+***true*** when the object has been destroyed with [`destroy()`](#destroy).
+
 ### `isFullscreen` *boolean* *(Read only)*
 
 ***true*** when the analyzer is being displayed in fullscreen, or ***false*** otherwise.
@@ -508,7 +517,7 @@ See [`toggleFullscreen()`](#togglefullscreen).
 
 ### `isLedBars` *boolean* *(Read only)*
 
-*Available since v3.6.0* (formerly `isLedDisplay`)
+*Available since v3.6.0; formerly `isLedDisplay` (since v3.0.0)*
 
 ***true*** when LED bars are effectively being displayed, i.e., [`isBandsMode`](#isbandsmode-boolean-read-only) is *true*, [`ledBars`](#ledBars-boolean) is set to *true* and [`radial`](#radial-boolean) is set to *false*.
 
@@ -528,7 +537,7 @@ See [`toggleFullscreen()`](#togglefullscreen).
 
 ***true*** if the analyzer process is running, or *false* if it's stopped.
 
-See [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
+See [`start()`](#start), [`stop()`](#stop) and [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
 
 ### `isOutlineBars` *boolean* *(Read only)*
 
@@ -546,13 +555,15 @@ and [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) are both s
 
 ### `ledBars` *boolean*
 
-*Available since v3.6.0* (formerly `showLeds`)
+*Available since v3.6.0; formerly `showLeds` (since v1.0.0)*
 
-*true* to activate the vintage LED bars effect for frequency bands modes (see [`mode`](#mode-number)).
+*true* to activate the LED bars effect for frequency bands modes (see [`mode`](#mode-number)).
 
 This effect can be customized via [`setLedParams()`](#setledparams-params-) method.
 
 For effect priority when combined with other settings, see [`isLedBars`](#isledbars-boolean-read-only).
+
+See also [`trueLeds`](#trueleds-boolean).
 
 Defaults to **false**.
 
@@ -630,6 +641,16 @@ For more info, see [AnalyserNode.minDecibels](https://developer.mozilla.org/en-U
 
 *minDecibels* defaults to **-85** and *maxDecibels* defaults to **-25**.
 
+### `maxFPS` *number*
+
+*Available since v4.2.0*
+
+Sets the maximum desired animation frame rate. This can help reducing CPU usage, especially on high refresh rate monitors.
+
+It must be a number, indicating frames per second. A value of **0** means the animation will run at the highest frame rate possible.
+
+Defaults to **0**.
+
 ### `maxFreq` *number*
 ### `minFreq` *number*
 
@@ -648,15 +669,19 @@ It is preferable to use the [`setFreqRange()`](#setfreqrange-minfreq-maxfreq-) m
 
 *Available since v3.3.0*
 
-Horizontal mirroring effect. Valid values are:
+When [`channelLayout`](#channellayout-string) is **dual-horizontal**, this property controls the orientation of the X-axis (frequencies) on both channels.
 
-mirror | Effect
-:-----:|--------
--1     | Mirrors the analyzer to the left (low frequencies at the center of the screen)
-0      | Disables mirror effect (default)
-1      | Mirrors the analyzer to the right (high frequencies at the center of the screen)
+For other layouts, it horizontally mirrors the spectrum image to the left or right side.
 
-**Note:** when [`radial`](#radial-boolean) is **_true_**, both `1` and `-1` will produce the same effect.
+Valid values are:
+
+mirror | Description
+:-----:|-------------
+-1     | Low frequencies meet at the center of the screen (mirror left)
+0      | No mirror effect or change to axis orientation (default)
+1      | High frequencies meet at the center of the screen (mirror right)
+
+**Note:** On [`radial`](#radial-boolean) spectrum with channel layouts other than *dual-horizontal*, both `1` and `-1` have the same effect.
 
 Defaults to **0**.
 
@@ -676,7 +701,7 @@ mode | description | notes
 7 | Half octave bands or 20 bands | *use 'log' `frequencyScale` for octave bands*
 8 | Full octave bands or 10 bands | *use 'log' `frequencyScale` for octave bands*
 9 | *(not valid)* | *reserved*
-10 | Graph | *added in v1.1.0*
+10 | Graph | *since v1.1.0*
 
 + **Mode 0** provides the highest resolution, allowing you to visualize individual frequencies as provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform) computation;
 + **Modes 1 - 8** divide the frequency spectrum in bands; when using the default **logarithmic** [`frequencyScale`](#frequencyscale-string), each band represents the *n*th part of an octave; otherwise, a fixed number of bands is used for each mode;
@@ -719,6 +744,14 @@ Defaults to **false**.
 
 ?> In order to keep elements other than the canvas visible in fullscreen, you'll need to set the [`fsElement`](#fselement-htmlelement-object) property in the [constructor](#constructor) options.
 
+### `peakLine` *boolean*
+
+*Available since v4.2.0*
+
+When *true* and [`mode`](#mode-number) is *10* (**Graph**) and [`showPeaks`](#showpeaks-boolean) is *true*, peaks are connected into a continuous line. It has no effect in other modes.
+
+Defaults to **false**.
+
 ### `pixelRatio` *number* *(Read only)*
 
 Current [devicePixelRatio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio).
@@ -734,9 +767,9 @@ You can refer to this value to adjust any additional drawings done in the canvas
 
 When *true*, the spectrum analyzer is rendered in a circular shape, with radial frequency bars spreading from its center.
 
-In radial view, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) effects are disabled, and [`showPeaks`](#showpeaks-boolean) has no effect when in **Graph** [`mode`](#mode-number).
+In radial view, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean) effects are disabled.
 
-When [`channelLayout`](#channellayout-string) is set to *'dual-vertical'*, a larger diameter is used and the right channel bars are rendered towards the center of the analyzer.
+When [`channelLayout`](#channellayout-string) is set to *'dual-vertical'*, graphs for the right channel are rendered towards the center of the screen.
 
 See also [`spinSpeed`](#spinspeed-number).
 
@@ -825,11 +858,13 @@ and setting `showBgColor` to ***true*** will make the "unlit" LEDs visible inste
 
 ### `showPeaks` *boolean*
 
-*true* to show amplitude peaks for each frequency. Defaults to **true**.
+*true* to show amplitude peaks. Defaults to **true**.
+
+See also [`peakLine`](#peakline-boolean).
 
 ### `showScaleX` *boolean*
 
-*Available since v3.0.0 - this property was named `showScale` in earlier versions*
+*Available since v3.0.0; formerly `showScale` (since v1.0.0)*
 
 *true* to display scale labels on the X axis.
 
@@ -918,7 +953,7 @@ Setting it to *false* in the [**constructor**](#constructor) options also preven
 Please note that the analyzer processing runs regardless of the value of `useCanvas` and any callback defined for [`onCanvasDraw`](#oncanvasdraw-function)
 will still be triggered on every animation frame, so you can use the [`getBars()`](#getbars) method to create your own visualizations.
 
-If you want to completely stop the audio data processing, see [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
+If you want to completely stop the analyzer's data processing, see [`stop()`](#stop).
 
 Defaults to **true**.
 
@@ -1066,7 +1101,7 @@ Connects an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/
 If `source` is an *HTMLMediaElement*, the method returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) created
 for that element; if `source` is an *AudioNode* instance, it returns the `source` object itself; if it's neither an [ERR_INVALID_AUDIO_SOURCE](#custom-errors) error is thrown.
 
-See also [`disconnectInput()`](#disconnectinput-node-) and [`connectedSources`](#connectedsources-array-read-only).
+See also [`disconnectInput()`](#disconnectinput-node-stoptracks-) and [`connectedSources`](#connectedsources-array-read-only).
 
 ### `connectOutput( [node] )`
 
@@ -1082,20 +1117,39 @@ See also [`disconnectOutput()`](#disconnectoutput-node-) and [`connectedTo`](#co
 
 ?> If called with no argument, analyzer output is connected to the speakers (the *AudioContext* `destination` node).
 
-### `disconnectInput( [node] )`
+### `destroy()`
 
-*Available since v3.0.0*
+*Available since v4.2.0*
+
+Destroys the **audioMotion-analyzer** instance and release resources. A destroyed analyzer cannot be started again.
+
+This method:
+
++ Stops the analyzer data processing and animation;
++ Disconnects all input and output nodes;
++ Clears event listeners and callback functions;
++ Stops the *AudioContext* created by this instance (won't affect context provided to the [constructor](#constructor) via [`audioCtx`](#audioctx-audiocontext-object) property or an *AudioNode* [`source`](#source-htmlmediaelement-or-audionode-object));
++ Removes the [`canvas`](#canvas-htmlcanvaselement-object-read-only) from the DOM.
+
+See usage example in the [minimal demo](/demo/minimal.html).
+
+See also [`isDestroyed`](#isdestroyed-boolean-read-only).
+
+### `disconnectInput( [node], [stopTracks] )`
+
+*Available since v3.0.0; `stopTracks` parameter since v4.2.0*
 
 Disconnects audio source nodes previously connected to the analyzer.
 
-`node` may be an *AudioNode* instance or an **array** of such objects.
+`node` may be an *AudioNode* instance or an **array** of such objects. If it's **undefined** (or any [*falsy*](https://developer.mozilla.org/en-US/docs/Glossary/Falsy) value),
+**all connected sources are disconnected.**
 
-Please note that if you have connected an `<audio>` or `<video>` element, you should disconnect the respective [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode)
-created for it.
+`stopTracks` is a boolean value; if **true**, permanently stops all audio tracks from any [*MediaStream*](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream)s being
+disconnected, e.g. a microphone. Use it to effectively release the stream if it's no longer needed.
 
-See also [`connectInput()`](#connectinput-source-).
-
-?> If called with no argument, all connected sources are disconnected.
+Please note that when you have connected an `<audio>` or `<video>` element, you need to disconnect the respective [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode)
+created for it. The node reference is returned by [`connectInput()`](#connectinput-source-), or can be obtained from [`connectedSources`](#connectedsources-array-read-only)
+if the element was connected via [`source`](#source-htmlmediaelement-or-audionode-object) constructor option.
 
 ### `disconnectOutput( [node] )`
 
@@ -1244,16 +1298,35 @@ See **[Options object](#options-object)** for object structure and default value
 
 Adjust the analyzer's sensitivity. See [`minDecibels`](#mindecibels-number) and [`maxDecibels`](#maxdecibels-number) properties.
 
-### `toggleAnalyzer( [boolean] )`
+### `start()`
 
-Starts (*true*) or stops (*false*) the analyzer process. If no argument provided, inverts the current status.
+*Available since v4.2.0*
 
-Returns the resulting status.
+Starts the analyzer data processing and animation.
 
 The analyzer is started by default after initialization, unless you specify [`start: false`](#start-boolean) in the [constructor](#constructor) options.
+
+See also [`stop()`](#stop), [`toggleAnalyzer()`](#toggleanalyzer-boolean-) and [`isOn`](#ison-boolean-read-only).
+
+### `stop()`
+
+*Available since v4.2.0*
+
+Stops the analyzer process.
+
 When the analyzer is off, no audio data is processed and no callbacks to [`onCanvasDraw`](#oncanvasdraw-function) will be triggered.
 
-See also [`isOn`](#ison-boolean-read-only) property.
+The analyzer can be resumed with [`start()`](#start) or [`toggleAnalyzer()`](#toggleanalyzer-boolean-).
+
+See also [`destroy()`](#destroy) and [`isOn`](#ison-boolean-read-only).
+
+### `toggleAnalyzer( [boolean] )`
+
+Toggles the analyzer data processing and animation. The boolean argument can be used to force the desired state: *true* to start or *false* to stop the analyzer.
+
+Returns the resulting state.
+
+See also [`start()`](#start), [`stop()`](#stop) and [`isOn`](#ison-boolean-read-only).
 
 ### `toggleFullscreen()`
 
@@ -1341,33 +1414,23 @@ myAudio.crossOrigin = 'anonymous';
 
 ### Sound only plays after the user clicks somewhere on the page. <!-- {docsify-ignore} -->
 
-Browser autoplay policy dictates that audio output can only be initiated by a user gesture, and this is enforced by WebAudio API
-by creating [*AudioContext*](#audioctx-audiocontext-object-read-only) objects in *suspended* mode.
+Browser autoplay policy dictates that audio output can only be initiated by a user gesture, and this policy is enforced by Web Audio API
+by putting [*AudioContext*](#audioctx-audiocontext-object-read-only) objects into *suspended* mode if they're not created on user action.
 
-**audioMotion-analyzer** tries to automatically start its AudioContext on the first click on the page.
-However, if you're using an `audio` or `video` element with the `controls` property, clicks on those native media controls cannot be detected
-by JavaScript, so the audio will only be enabled if/when the user clicks somewhere else.
+**audioMotion-analyzer** tries to automatically start its *AudioContext* on the first click on the page. However, if you're using an `audio`
+or `video` element with the `controls` property, clicks on those native media controls cannot be detected by JavaScript, so the audio will
+only be enabled if/when the user clicks somewhere else.
 
-Two possible solutions are: **1)** ensure your users have to click somewhere else before using the media controls,
-like a "power on" button, or simply clicking to select a song from a list will do; or **2)** don't use the native
-controls at all, and create your own custom play and stop buttons. A very simple example:
+Possible solutions are:
 
-```html
-<audio id="myAudio" src="track.mp3" crossorigin="anonymous"></audio> <!-- do not add the 'controls' property! -->
+1. Ensure your users have to click somewhere else before using the native media controls, like a "power on" button;
 
-<button id="play"> Play </button>
-<button id="stop"> Stop </button>
-```
+1. Don't use the native controls at all, and create your own custom play and stop buttons;
 
-```js
-const myAudio = document.getElementById('audio');
+1. Even better, instantiate your **audioMotion-analyzer** object within a function triggered by a user click. This will allow the *AudioContext* to
+be started right away and will also prevent the *"The AudioContext was not allowed to start"* warning message from appearing in the browser console.
 
-document.getElementById('play').addEventListener( 'click', () => myAudio.play() );
-document.getElementById('stop').addEventListener( 'click', () => myAudio.pause() );
-```
-
-You can also prevent the _"The AudioContext was not allowed to start"_ warning message from appearing in the browser console, by instantiating
-your **audioMotion-analyzer** object within a function triggered by a user click. See the [minimal demo](/demo/minimal.html) code for an example.
+See the [minimal demo](/demo/minimal.html) code for an example.
 
 
 ## References and acknowledgments
