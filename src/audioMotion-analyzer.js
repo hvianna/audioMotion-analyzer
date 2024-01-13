@@ -737,17 +737,21 @@ export default class AudioMotionAnalyzer {
 	connectInput( source ) {
 		const isHTML = source instanceof HTMLMediaElement;
 
-		if ( ! ( isHTML || source.connect ) )
+		if ( ! ( isHTML || (source && source.connect ) )) {
 			throw new AudioMotionError( ERR_INVALID_AUDIO_SOURCE );
+		}
 
 		// if source is an HTML element, create an audio node for it; otherwise, use the provided audio node
 		const node = isHTML ? this.audioCtx.createMediaElementSource( source ) : source;
 
-		if ( ! this._sources.includes( node ) ) {
-			node.connect( this._input );
-			this._sources.push( node );
+		// Check if the node is already connected
+		if ( this._sources.includes( node ) ) {
+			// If connected, disconnect before connecting again
+			node.disconnect();
 		}
 
+		node.connect( this._input );
+		this._sources.push( node );
 		return node;
 	}
 
