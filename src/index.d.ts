@@ -48,6 +48,7 @@ export interface Options {
   outlineBars?: boolean;
   overlay?: boolean;
   peakLine?: boolean;
+  particles?: boolean;
   radial?: boolean;
   reflexAlpha?: number;
   reflexBright?: number;

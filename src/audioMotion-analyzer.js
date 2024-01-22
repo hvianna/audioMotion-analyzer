@@ -101,6 +101,62 @@ class AudioMotionError extends Error {
 	}
 }
 
+class Particle {
+	constructor(spawnAtX, spawnAtY, initialVelocity, angle, size, boundaries) {
+		this._x = spawnAtX;
+		this._y = spawnAtY;
+		this._initialVelocity = initialVelocity;
+		this._angle = angle;
+		this._size = size;
+		this._initialSize = size;
+		this._boundaries = boundaries;
+		this._currentWindDirection = Math.random() * 2 - 1; // Initial wind direction
+		this._nextWindDirection = Math.random() * 2 - 1; // Next wind direction
+		this._windChangeFrames = 0; // Frame counter for wind direction change
+	}
+
+	update(bassEnergy) {
+		let velocity = this._initialVelocity + bassEnergy * 1.5;
+		let velocityX = Math.cos(this._angle) * velocity;
+		let velocityY = Math.sin(this._angle) * velocity;
+
+		// Check if it's time to change the wind direction
+		if (this._windChangeFrames <= 0) {
+			// Update the wind direction and reset the frame counter
+			this._currentWindDirection = this._nextWindDirection;
+			this._nextWindDirection = Math.random() * 2 - 1;
+			this._windChangeFrames = Math.floor(Math.random() * 60) + 60; // Change wind direction every 60 to 120 frames
+		}
+
+		// Interpolate between the current and next wind direction
+		let windOffset = this._currentWindDirection + (this._nextWindDirection - this._currentWindDirection) * (1 - this._windChangeFrames / 60);
+
+		// Update the particle's position
+		this._x += velocityX //+ windOffset;
+		this._y += velocityY //+ windOffset;
+
+		// Update the particle's size based on the bass energy
+		this._size = this._initialSize * (1 + bassEnergy);
+
+		// Decrease the frame counter
+		this._windChangeFrames--;
+	}
+
+	draw(ctx) {
+		ctx.beginPath();
+		ctx.arc(this._x, this._y, this._size, 0, Math.PI * 2, false);
+		ctx.fillStyle = 'white'; // Change this to the color you want
+		ctx.fill();
+	}
+
+	get isDead() {
+		return this._x + this._size < this._boundaries.left ||
+			this._x - this._size > this._boundaries.right ||
+			this._y + this._size < this._boundaries.top ||
+			this._y - this._size > this._boundaries.bottom;
+	}
+}
+
 // helper function - output deprecation warning message on console
 const deprecate = ( name, alternative ) => console.warn( `${name} is deprecated. Use ${alternative} instead.` );
 
@@ -151,6 +207,9 @@ export default class AudioMotionAnalyzer {
 		this._ownContext = false;
 		this._selectedGrads = [];   // names of the currently selected gradients for channels 0 and 1
 		this._sources = [];			// input nodes
+
+		this._particles = options.particles || false;
+		this._particleArray = [];
 
 		// Register built-in gradients
 		for ( const [ name, options ] of GRADIENTS )
@@ -569,6 +628,14 @@ export default class AudioMotionAnalyzer {
 		this._radial = !! value;
 		this._calcBars();
 		this._makeGrad();
+	}
+
+	get particles() {
+		return this._particles;
+	}
+
+	set particles( value ) {
+		this._particles = !! value;
 	}
 
 	get reflexRatio() {
@@ -1621,7 +1688,6 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// initialize local constants
-
 		const { isAlpha,
 			    isBands,
 			    isLeds,
@@ -1657,6 +1723,7 @@ export default class AudioMotionAnalyzer {
 			    _mirror,
 			    _mode,
 			    overlay,
+			    _particles,
 			    _radial,
 			    showBgColor,
 			    showPeaks,
@@ -1800,6 +1867,42 @@ export default class AudioMotionAnalyzer {
 			}
 		}
 
+		const drawParticles = () => {
+			const bassEnergy = this.getEnergy('bass');
+			// todo make configurable?
+			if (this._frames % 5 === 0) {
+				// Generate a random direction for the particle
+				const angle = Math.random() * Math.PI * 2; 	// Random angle in [0, 2π]
+				const speed = Math.random() * 2;  		// Random speed
+
+				// A particle should spawn inside an invisible circle around the exact center of the canvas
+				const radius = 50;
+				const posX = this.canvas.width / 2 + Math.cos(angle) * radius;
+				const posY = this.canvas.height / 2 + Math.sin(angle) * radius;
+
+				// Create a new Particle instance and add it to the array
+				const particle = new Particle(
+					posX,
+					posY,
+					speed,
+					angle,
+					Math.random(),
+					{top: 0, right: this.canvas.width, bottom: this.canvas.height, left: 0}, // Boundaries for this particle to live in
+				);
+				this._particleArray.push(particle);
+			}
+
+			// Update each particle
+			for (let particle of this._particleArray) {
+				particle.update(bassEnergy);
+				particle.draw(this._ctx);
+
+				// Remove the particle from the array if it's dead
+				if (particle.isDead) {
+					this._particleArray.splice(this._particleArray.indexOf(particle), 1);
+				}
+			}
+		}
 		/* MAIN FUNCTION */
 
 		if ( overlay )
@@ -2250,6 +2353,10 @@ export default class AudioMotionAnalyzer {
 
 		updateEnergy( currentEnergy / ( nBars << ( nChannels - 1 ) ) );
 
+		if (this.particles && this.radial) {
+			drawParticles();
+		}
+
 		if ( useCanvas ) {
 			// Mirror effect
 			if ( _mirror && ! _radial && ! isDualHorizontal ) {
@@ -2527,6 +2634,7 @@ export default class AudioMotionAnalyzer {
 			outlineBars    : false,
 			overlay        : false,
 			peakLine       : false,
+			particles	   : false,
 			radial		   : false,
 			reflexAlpha    : 0.15,
 			reflexBright   : 1,
