@@ -94,6 +94,8 @@ The analyzer canvas will be appended to the HTML element referenced by `containe
 
 If `container` is undefined, the document's body will be used instead.
 
+`options` must be an [Options object](#options-object).
+
 Usage example:
 
 ```js
@@ -111,7 +113,8 @@ This will insert the analyzer canvas inside the *#container* element and start t
 
 Valid properties and default values are shown below.
 
-Properties marked as *constructor only* can only be set by the constructor call, the others can also be set anytime via [`setOptions()`](#setoptions-options-) method.
+Properties marked as *constructor only* can only be set in the constructor call, the others can also be set anytime via [`setOptions()`](#setoptions-options-) method or
+directly as [properties](#properties) of the audioMotion instance.
 
 options = {<br>
 &emsp;&emsp;[alphaBars](#alphabars-boolean): **false**,<br>
@@ -164,7 +167,7 @@ options = {<br>
 &emsp;&emsp;[source](#source-htmlmediaelement-or-audionode-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[spinSpeed](#spinspeed-number): **0**,<br>
 &emsp;&emsp;[splitGradient](#splitgradient-boolean): **false**,<br>
-&emsp;&emsp;[start](#start-boolean): **true**,<br>
+&emsp;&emsp;[start](#start-boolean): **true**, // constructor only<br>
 &emsp;&emsp;[trueLeds](#trueleds-boolean): **false**,<br>
 &emsp;&emsp;[useCanvas](#usecanvas-boolean): **true**,<br>
 &emsp;&emsp;[volume](#volume-number): **1**,<br>
@@ -1213,6 +1216,19 @@ Please note that preset names are case-sensitive. If the specified preset is not
 
 Use this method inside your callback function to create additional visual effects. See the [fluid demo](/demo/fluid.html) or [this pen](https://codepen.io/hvianna/pen/poNmVYo) for examples.
 
+### `getOptions( [ignore] )`
+
+*Available since v4.4.0*
+
+Returns an [**Options object**](#options-object) with all the current analyzer settings.
+
+`ignore` can be a single property name or an array of property names that should not be included in the returned object.
+
+Callbacks and properties for [constructor-specific options](#constructor-specific-options) are NOT included in the object.
+
+?> If the same [gradient](#gradient-string) is selected for both channels, only the `gradient` property is included in the object; otherwise, only `gradientLeft` and `gradientRight` are included (not `gradient`). If 'gradient' is added to `ignore`, none of the gradient properties will be included.
+
+See also [`setOptions()`](#setoptions-options-).
 
 ### `registerGradient( name, options )`
 
@@ -1290,9 +1306,11 @@ You can try different values in the [fluid demo](https://audiomotion.dev/demo/fl
 
 Shorthand method for setting several analyzer [properties](#properties) at once.
 
-See **[Options object](#options-object)** for object structure and default values.
+`options` must be an [**Options object**](#options-object).
 
 ?> If called with no argument (or `options` is *undefined*), resets all configuration options to their default values.
+
+See also [`getOptions()`](#getoptions-ignore-).
 
 ### `setSensitivity( minDecibels, maxDecibels )`
 

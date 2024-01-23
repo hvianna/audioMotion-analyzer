@@ -292,6 +292,8 @@ declare class AudioMotionAnalyzer {
   public getEnergy(preset?: EnergyPreset): number;
   public getEnergy(startFreq: number, endFreq?: number): number;
 
+  public getOptions(ignore?: string | string[]): Options;
+
   public registerGradient(name: string, options: GradientOptions): void;
 
   public setCanvasSize(width: number, height: number): void;

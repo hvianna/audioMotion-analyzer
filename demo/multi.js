@@ -136,6 +136,14 @@ document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListe
 // File upload
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
 
+// getOptions() button
+document.getElementById('btn_getOptions').addEventListener( 'click', () => {
+	const options = audioMotion[ selectedAnalyzer ].getOptions(['width','height','useCanvas']); // ignore some options
+	console.log( 'getOptions(): ', options );
+	navigator.clipboard.writeText( JSON.stringify( options, null, 2 ) )
+		.then( () => console.log( 'Options object copied to clipboard.' ) );
+});
+
 // Initialize UI elements
 updateUI();
 

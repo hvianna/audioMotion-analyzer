@@ -80,6 +80,58 @@ const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', 
 	  }]
 ];
 
+// settings defaults
+const DEFAULT_SETTINGS = {
+	alphaBars      : false,
+	ansiBands      : false,
+	barSpace       : 0.1,
+	bgAlpha        : 0.7,
+	channelLayout  : CHANNEL_SINGLE,
+	colorMode      : COLOR_GRADIENT,
+	fftSize        : 8192,
+	fillAlpha      : 1,
+	frequencyScale : SCALE_LOG,
+	gradient       : GRADIENTS[0][0],
+	height         : undefined,
+	ledBars        : false,
+	linearAmplitude: false,
+	linearBoost    : 1,
+	lineWidth      : 0,
+	loRes          : false,
+	lumiBars       : false,
+	maxDecibels    : -25,
+	maxFPS         : 0,
+	maxFreq        : 22000,
+	minDecibels    : -85,
+	minFreq        : 20,
+	mirror         : 0,
+	mode           : 0,
+	noteLabels     : false,
+	outlineBars    : false,
+	overlay        : false,
+	peakLine       : false,
+	radial		   : false,
+	reflexAlpha    : 0.15,
+	reflexBright   : 1,
+	reflexFit      : true,
+	reflexRatio    : 0,
+	roundBars      : false,
+	showBgColor    : true,
+	showFPS        : false,
+	showPeaks      : true,
+	showScaleX     : true,
+	showScaleY     : false,
+	smoothing      : 0.5,
+	spinSpeed      : 0,
+	splitGradient  : false,
+	start          : true,
+	trueLeds       : false,
+	useCanvas      : true,
+	volume         : 1,
+	weightingFilter: FILTER_NONE,
+	width          : undefined
+};
+
 // custom error messages
 const ERR_AUDIO_CONTEXT_FAIL     = [ 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create audio context. Web Audio API not supported?' ],
 	  ERR_INVALID_AUDIO_CONTEXT  = [ 'ERR_INVALID_AUDIO_CONTEXT', 'Provided audio context is not valid' ],
@@ -907,6 +959,29 @@ export default class AudioMotionAnalyzer {
 		}
 
 		return energy / ( endBin - startBin + 1 ) / chnCount;
+	}
+
+	/**
+	 * Returns current analyzer settings in object format
+	 *
+	 * @param [{string|array}] a property name or an array of property names to not include in the returned object
+	 * @returns {object} Options object
+	 */
+	getOptions( ignore ) {
+		if ( ! Array.isArray( ignore ) )
+			ignore = [ ignore ];
+		let options = {};
+		for ( const prop of Object.keys( DEFAULT_SETTINGS ) ) {
+			if ( ! ignore.includes( prop ) ) {
+				if ( prop == 'gradient' && this.gradientLeft != this.gradientRight ) {
+					options.gradientLeft = this.gradientLeft;
+					options.gradientRight = this.gradientRight;
+				}
+				else if ( prop != 'start' )
+					options[ prop ] = this[ prop ];
+			}
+		}
+		return options;
 	}
 
 	/**
@@ -2497,68 +2572,17 @@ export default class AudioMotionAnalyzer {
 	 * Set object properties
 	 */
 	_setProps( options, useDefaults ) {
-
-		// settings defaults
-		const defaults = {
-			alphaBars      : false,
-			ansiBands      : false,
-			barSpace       : 0.1,
-			bgAlpha        : 0.7,
-			channelLayout  : CHANNEL_SINGLE,
-			colorMode      : COLOR_GRADIENT,
-			fftSize        : 8192,
-			fillAlpha      : 1,
-			frequencyScale : SCALE_LOG,
-			gradient       : GRADIENTS[0][0],
-			ledBars        : false,
-			linearAmplitude: false,
-			linearBoost    : 1,
-			lineWidth      : 0,
-			loRes          : false,
-			lumiBars       : false,
-			maxDecibels    : -25,
-			maxFPS         : 0,
-			maxFreq        : 22000,
-			minDecibels    : -85,
-			minFreq        : 20,
-			mirror         : 0,
-			mode           : 0,
-			noteLabels     : false,
-			outlineBars    : false,
-			overlay        : false,
-			peakLine       : false,
-			radial		   : false,
-			reflexAlpha    : 0.15,
-			reflexBright   : 1,
-			reflexFit      : true,
-			reflexRatio    : 0,
-			roundBars      : false,
-			showBgColor    : true,
-			showFPS        : false,
-			showPeaks      : true,
-			showScaleX     : true,
-			showScaleY     : false,
-			smoothing      : 0.5,
-			spinSpeed      : 0,
-			splitGradient  : false,
-			start          : true,
-			trueLeds       : false,
-			useCanvas      : true,
-			volume         : 1,
-			weightingFilter: FILTER_NONE
-		};
-
 		// callback functions properties
 		const callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
 
-		// properties undefined by default
-		const defaultUndefined = [ 'gradientLeft', 'gradientRight', 'height', 'width', 'stereo' ];
+		// properties not in the defaults (`stereo` is deprecated)
+		const extraProps = [ 'gradientLeft', 'gradientRight', 'stereo' ];
 
 		// build an array of valid properties; `start` is not an actual property and is handled after setting everything else
-		const validProps = Object.keys( defaults ).filter( e => e != 'start' ).concat( callbacks, defaultUndefined );
+		const validProps = Object.keys( DEFAULT_SETTINGS ).filter( e => e != 'start' ).concat( callbacks, extraProps );
 
 		if ( useDefaults || options === undefined )
-			options = { ...defaults, ...options }; // merge options with defaults
+			options = { ...DEFAULT_SETTINGS, ...options }; // merge options with defaults
 
 		for ( const prop of Object.keys( options ) ) {
 			if ( callbacks.includes( prop ) && typeof options[ prop ] !== 'function' ) // check invalid callback
@@ -2567,6 +2591,7 @@ export default class AudioMotionAnalyzer {
 				this[ prop ] = options[ prop ];
 		}
 
+		// deprecated - move this to the constructor in the next major release (`start` should be constructor-specific)
 		if ( options.start !== undefined )
 			this.toggleAnalyzer( options.start );
 	}
