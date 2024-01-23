@@ -208,7 +208,7 @@ export default class AudioMotionAnalyzer {
 		this._selectedGrads = [];   // names of the currently selected gradients for channels 0 and 1
 		this._sources = [];			// input nodes
 
-		this._particles = options.particles || false;
+		this._showParticles = options.showParticles || false;
 		this._particleArray = [];
 
 		// Register built-in gradients
@@ -630,12 +630,12 @@ export default class AudioMotionAnalyzer {
 		this._makeGrad();
 	}
 
-	get particles() {
-		return this._particles;
+	get showParticles() {
+		return this._showParticles;
 	}
 
-	set particles( value ) {
-		this._particles = !! value;
+	set showParticles( value ) {
+		this._showParticles = !! value;
 	}
 
 	get reflexRatio() {
@@ -1723,7 +1723,7 @@ export default class AudioMotionAnalyzer {
 			    _mirror,
 			    _mode,
 			    overlay,
-			    _particles,
+			    _showParticles,
 			    _radial,
 			    showBgColor,
 			    showPeaks,
@@ -2349,7 +2349,7 @@ export default class AudioMotionAnalyzer {
 
 		updateEnergy( currentEnergy / ( nBars << ( nChannels - 1 ) ) );
 
-		if (this.particles && this.radial) {
+		if (this.showParticles && this.radial) {
 			drawParticles();
 		}
 

@@ -48,7 +48,6 @@ export interface Options {
   outlineBars?: boolean;
   overlay?: boolean;
   peakLine?: boolean;
-  particles?: boolean;
   radial?: boolean;
   reflexAlpha?: number;
   reflexBright?: number;
@@ -58,6 +57,7 @@ export interface Options {
   showBgColor?: boolean;
   showFPS?: boolean;
   showPeaks?: boolean;
+  showParticles?: boolean;
   showScaleX?: boolean;
   showScaleY?: boolean;
   smoothing?: number;
