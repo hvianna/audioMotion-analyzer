@@ -1861,7 +1861,8 @@ export default class AudioMotionAnalyzer {
 			const angle = Math.random() * Math.PI * 2; 	// Random angle in [0, 2π]
 			const speed = Math.random() * 2;			// Random speed between 0 and 2
 
-			// A particle should spawn inside an invisible circle around the exact center of the canvas
+			// A particle should spawn inside an invisible circle around the exact center of the canvas.
+			// It looks very unnatural when all particles spawn from the exact center of the canvas.
 			const radius = 50;
 			const posX = this.canvas.width / 2 + Math.cos(angle) * radius;
 			const posY = this.canvas.height / 2 + Math.sin(angle) * radius;
@@ -2618,7 +2619,6 @@ export default class AudioMotionAnalyzer {
 			outlineBars    : false,
 			overlay        : false,
 			peakLine       : false,
-			particles	   : false,
 			radial		   : false,
 			reflexAlpha    : 0.15,
 			reflexBright   : 1,
@@ -2627,6 +2627,7 @@ export default class AudioMotionAnalyzer {
 			roundBars      : false,
 			showBgColor    : true,
 			showFPS        : false,
+			showParticles  : false,
 			showPeaks      : true,
 			showScaleX     : true,
 			showScaleY     : false,

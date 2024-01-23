@@ -56,8 +56,8 @@ export interface Options {
   roundBars?: boolean;
   showBgColor?: boolean;
   showFPS?: boolean;
-  showPeaks?: boolean;
   showParticles?: boolean;
+  showPeaks?: boolean;
   showScaleX?: boolean;
   showScaleY?: boolean;
   smoothing?: number;
