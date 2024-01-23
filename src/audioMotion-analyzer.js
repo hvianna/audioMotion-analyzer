@@ -101,6 +101,50 @@ class AudioMotionError extends Error {
 	}
 }
 
+class Particle {
+	constructor(spawnAtX, spawnAtY, initialVelocity, angle, size, boundaries) {
+		this._x = spawnAtX;
+		this._y = spawnAtY;
+		this._initialVelocity = initialVelocity;
+		this._angle = angle;
+		this._size = size;
+		this._initialSize = size;
+		this._boundaries = boundaries;
+	}
+
+	update(energy) {
+		let velocity = this._initialVelocity + energy * 1.5;
+		let velocityX = Math.cos(this._angle) * velocity;
+		let velocityY = Math.sin(this._angle) * velocity;
+
+
+		// Update the particle's position
+		this._x += velocityX;
+		this._y += velocityY;
+
+		// Update the particle's size based on the energy
+		this._size = this._initialSize * (1 + energy);
+	}
+
+	draw(ctx) {
+		ctx.beginPath();
+		ctx.arc(this._x, this._y, this._size, 0, Math.PI * 2, false);
+		ctx.fillStyle = 'white';
+		ctx.fill();
+	}
+
+	/**
+	 * A particle is considered dead if it, including its size, is fully outside the set boundaries
+	 * @return {boolean}
+	 */
+	get isDead() {
+		return this._x + this._size < this._boundaries.left ||
+			this._x - this._size > this._boundaries.right ||
+			this._y + this._size < this._boundaries.top ||
+			this._y - this._size > this._boundaries.bottom;
+	}
+}
+
 // helper function - output deprecation warning message on console
 const deprecate = ( name, alternative ) => console.warn( `${name} is deprecated. Use ${alternative} instead.` );
 
@@ -151,6 +195,9 @@ export default class AudioMotionAnalyzer {
 		this._ownContext = false;
 		this._selectedGrads = [];   // names of the currently selected gradients for channels 0 and 1
 		this._sources = [];			// input nodes
+
+		this._showParticles = options.showParticles || false;
+		this._particleArray = [];
 
 		// Register built-in gradients
 		for ( const [ name, options ] of GRADIENTS )
@@ -569,6 +616,14 @@ export default class AudioMotionAnalyzer {
 		this._radial = !! value;
 		this._calcBars();
 		this._makeGrad();
+	}
+
+	get showParticles() {
+		return this._showParticles;
+	}
+
+	set showParticles( value ) {
+		this._showParticles = !! value;
 	}
 
 	get reflexRatio() {
@@ -1621,7 +1676,6 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// initialize local constants
-
 		const { isAlpha,
 			    isBands,
 			    isLeds,
@@ -1657,6 +1711,7 @@ export default class AudioMotionAnalyzer {
 			    _mirror,
 			    _mode,
 			    overlay,
+			    _showParticles,
 			    _radial,
 			    showBgColor,
 			    showPeaks,
@@ -1800,6 +1855,39 @@ export default class AudioMotionAnalyzer {
 			}
 		}
 
+		const drawParticles = () => {
+			const bassEnergy = this.getEnergy('bass');
+
+			const angle = Math.random() * Math.PI * 2; 	// Random angle in [0, 2π]
+			const speed = Math.random() * 2;			// Random speed between 0 and 2
+
+			// A particle should spawn inside an invisible circle around the exact center of the canvas.
+			// It looks very unnatural when all particles spawn from the exact center of the canvas.
+			const radius = 50;
+			const posX = this.canvas.width / 2 + Math.cos(angle) * radius;
+			const posY = this.canvas.height / 2 + Math.sin(angle) * radius;
+
+			const particle = new Particle(
+				posX,
+				posY,
+				speed,
+				angle,
+				Math.random(),
+				{top: 0, right: this.canvas.width, bottom: this.canvas.height, left: 0}, // Boundaries for this particle to live in
+			);
+			this._particleArray.push(particle);
+
+			// Update each particle
+			for (let particle of this._particleArray) {
+				particle.update(bassEnergy);
+				particle.draw(this._ctx);
+
+				// Remove the particle from the array if it's dead
+				if (particle.isDead) {
+					this._particleArray.splice(this._particleArray.indexOf(particle), 1);
+				}
+			}
+		}
 		/* MAIN FUNCTION */
 
 		if ( overlay )
@@ -2250,6 +2338,10 @@ export default class AudioMotionAnalyzer {
 
 		updateEnergy( currentEnergy / ( nBars << ( nChannels - 1 ) ) );
 
+		if (this.showParticles && this.radial) {
+			drawParticles();
+		}
+
 		if ( useCanvas ) {
 			// Mirror effect
 			if ( _mirror && ! _radial && ! isDualHorizontal ) {
@@ -2535,6 +2627,7 @@ export default class AudioMotionAnalyzer {
 			roundBars      : false,
 			showBgColor    : true,
 			showFPS        : false,
+			showParticles  : false,
 			showPeaks      : true,
 			showScaleX     : true,
 			showScaleY     : false,
