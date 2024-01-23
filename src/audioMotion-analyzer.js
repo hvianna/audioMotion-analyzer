@@ -2353,7 +2353,7 @@ export default class AudioMotionAnalyzer {
 		if ( this.onCanvasDraw ) {
 			_ctx.save();
 			_ctx.fillStyle = _ctx.strokeStyle = _canvasGradients[0];
-			this.onCanvasDraw( this, { timestamp, _canvasGradients } );
+			this.onCanvasDraw( this, { timestamp, canvasGradients: _canvasGradients } );
 			_ctx.restore();
 		}
 	}
