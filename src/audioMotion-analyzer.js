@@ -1753,8 +1753,8 @@ export default class AudioMotionAnalyzer {
 			  dbRange 		   = maxDecibels - minDecibels,
 			  [ ledCount, ledSpaceH, ledSpaceV, ledHeight ] = this._leds || [];
 
-		if ( _energy.val > 0 )
-			this._spinAngle += this._spinSpeed * TAU / ( 60 * _fps ); // spinSpeed * angle increment per frame for 1 RPM
+		if ( _energy.val > 0 && _fps > 0 )
+			this._spinAngle += this._spinSpeed * TAU / 60 / _fps; // spinSpeed * angle increment per frame for 1 RPM
 
 		/* HELPER FUNCTIONS */
 
