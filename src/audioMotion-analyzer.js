@@ -110,45 +110,33 @@ class Particle {
 		this._size = size;
 		this._initialSize = size;
 		this._boundaries = boundaries;
-		this._currentWindDirection = Math.random() * 2 - 1; // Initial wind direction
-		this._nextWindDirection = Math.random() * 2 - 1; // Next wind direction
-		this._windChangeFrames = 0; // Frame counter for wind direction change
 	}
 
-	update(bassEnergy) {
-		let velocity = this._initialVelocity + bassEnergy * 1.5;
+	update(energy) {
+		let velocity = this._initialVelocity + energy * 1.5;
 		let velocityX = Math.cos(this._angle) * velocity;
 		let velocityY = Math.sin(this._angle) * velocity;
 
-		// Check if it's time to change the wind direction
-		if (this._windChangeFrames <= 0) {
-			// Update the wind direction and reset the frame counter
-			this._currentWindDirection = this._nextWindDirection;
-			this._nextWindDirection = Math.random() * 2 - 1;
-			this._windChangeFrames = Math.floor(Math.random() * 60) + 60; // Change wind direction every 60 to 120 frames
-		}
-
-		// Interpolate between the current and next wind direction
-		let windOffset = this._currentWindDirection + (this._nextWindDirection - this._currentWindDirection) * (1 - this._windChangeFrames / 60);
 
 		// Update the particle's position
-		this._x += velocityX //+ windOffset;
-		this._y += velocityY //+ windOffset;
+		this._x += velocityX;
+		this._y += velocityY;
 
-		// Update the particle's size based on the bass energy
-		this._size = this._initialSize * (1 + bassEnergy);
-
-		// Decrease the frame counter
-		this._windChangeFrames--;
+		// Update the particle's size based on the energy
+		this._size = this._initialSize * (1 + energy);
 	}
 
 	draw(ctx) {
 		ctx.beginPath();
 		ctx.arc(this._x, this._y, this._size, 0, Math.PI * 2, false);
-		ctx.fillStyle = 'white'; // Change this to the color you want
+		ctx.fillStyle = 'white';
 		ctx.fill();
 	}
 
+	/**
+	 * A particle is considered dead if it, including its size, is fully outside the set boundaries
+	 * @return {boolean}
+	 */
 	get isDead() {
 		return this._x + this._size < this._boundaries.left ||
 			this._x - this._size > this._boundaries.right ||
