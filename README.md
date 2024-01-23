@@ -90,9 +90,9 @@ import AudioMotionAnalyzer from 'audiomotion-analyzer';
 
 Creates a new instance of **audioMotion-analyzer**.
 
-The analyzer canvas will be appended to the HTML element referenced by `container`, unless you set [`useCanvas: false`](#usecanvas-boolean) in the options.
+`container` is the DOM element to which the analyzer canvas should be appended to. If not defined, the document's **body** is used instead.
 
-If `container` is undefined, the document's body will be used instead.
+This argument is not necessary if you provide an existing [`canvas`](#canvas-htmlcanvaselement-object) or define [`useCanvas: false`](#usecanvas-boolean) in the options object.
 
 `options` must be an [Options object](#options-object).
 
@@ -109,6 +109,8 @@ const audioMotion = new AudioMotionAnalyzer(
 
 This will insert the analyzer canvas inside the *#container* element and start the visualization of audio coming from the *#audio* element.
 
+?> By default, audioMotion will try to use all available container space for the canvas. To prevent it from growing indefinitely, you must either constrain the dimensions of the `container` via CSS or explicitly define [`height`](#height-number) and/or [`width`](#width-number) properties in the constructor [options](#options-object).
+
 ### Options object
 
 Valid properties and default values are shown below.
@@ -122,6 +124,7 @@ options = {<br>
 &emsp;&emsp;[audioCtx](#audioctx-audiocontext-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[barSpace](#barspace-number): **0.1**,<br>
 &emsp;&emsp;[bgAlpha](#bgalpha-number): **0.7**,<br>
+&emsp;&emsp;[canvas](#canvas-htmlcanvaselement-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[channelLayout](#channellayout-string): **'single'**,<br>
 &emsp;&emsp;[colorMode](#colormode-string): **'gradient'**,<br>
 &emsp;&emsp;[connectSpeakers](#connectspeakers-boolean): **true**, // constructor only<br>
@@ -189,6 +192,14 @@ Since version 3.2.0, `audioCtx` will be automatically inferred from the [`source
 If neither is defined, a new audio context will be created. After instantiation, [`audioCtx`](#audioctx-audiocontext-object-read-only) will be available as a read-only property.
 
 See [this live code](https://codesandbox.io/s/9y6qb) and the [multi-instance demo](/demo/multi.html) for more usage examples.
+
+#### `canvas` *HTMLCanvasElement object*
+
+*Available since v4.4.0*
+
+Allows you to provide an existing [*Canvas*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement) where audioMotion should render its visualizations.
+
+If not provided, a new canvas will be created. After instantiation, you can obtain its reference from the [`canvas`](#canvas-htmlcanvaselement-object-read-only) read-only property.
 
 #### `connectSpeakers` *boolean*
 
@@ -324,11 +335,13 @@ Defaults to **0.7**.
 
 ### `canvas` *HTMLCanvasElement object* *(Read only)*
 
-[*Canvas*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement) element created by audioMotion.
+[*Canvas*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement) element where audioMotion renders its visualizations.
+
+See also the [`canvas`](#canvas-htmlcanvaselement-object) constructor option.
 
 ### `canvasCtx` *CanvasRenderingContext2D object* *(Read only)*
 
-[2D rendering context](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D) used for drawing in audioMotion's *Canvas*.
+[2D rendering context](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D) used for drawing in audioMotion's [`canvas`](#canvas-htmlcanvaselement-object-read-only).
 
 ### `channelLayout` *string*
 
@@ -483,13 +496,14 @@ See also [`gradient`](#gradient-string) and [`splitGradient`](#splitgradient-boo
 
 Nominal dimensions of the analyzer.
 
-If one or both of these are `undefined`, the analyzer will try to adjust to the container's width and/or height.
-If the container's width and/or height are 0 (inline elements), a reference size of **640 x 270 pixels** will be used to replace the missing dimension(s).
-This should be considered the minimum dimensions for proper visualization of all available modes and effects.
+Setting one or both properties to **_undefined_** (default) will trigger the fluid/responsive behavior and the analyzer will try to adjust to the container's height and/or width.
+In that case, it's important that you constrain the dimensions of the container via CSS to prevent the canvas from growing indefinitely.
 
 You can set both values at once using the [`setCanvasSize()`](#setcanvassize-width-height-) method.
 
-?> You can read the actual canvas dimensions at any time directly from the [`canvas`](#canvas-htmlcanvaselement-object-read-only) object.
+See also [`onCanvasResize`](#oncanvasresize-function) callback.
+
+?> The actual pixel dimensions of the canvas can vary depending on the device's [pixelRatio](#pixelratio-number-read-only), [`loRes`](#lores-boolean) setting and fullscreen status. You can read the actual `height` and `width` values directly from the [`canvas`](#canvas-htmlcanvaselement-object-read-only) object.
 
 ### `isAlphaBars` *boolean* *(Read only)*
 

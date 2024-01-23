@@ -156,6 +156,13 @@ class AudioMotionError extends Error {
 // helper function - output deprecation warning message on console
 const deprecate = ( name, alternative ) => console.warn( `${name} is deprecated. Use ${alternative} instead.` );
 
+// helper function - check if a given object is empty (also returns `true` on null, undefined or any non-object value)
+const isEmpty = obj => {
+	for ( const p in obj )
+		return false;
+	return true;
+}
+
 // helper function - validate a given value with an array of strings (by default, all lowercase)
 // returns the validated value, or the first element of `list` if `value` is not found in the array
 const validateFromList = ( value, list, modifier = 'toLowerCase' ) => list[ Math.max( 0, list.indexOf( ( '' + value )[ modifier ]() ) ) ];
@@ -204,12 +211,26 @@ export default class AudioMotionAnalyzer {
 		this._selectedGrads = [];   // names of the currently selected gradients for channels 0 and 1
 		this._sources = [];			// input nodes
 
+		// Check if options object passed as first argument
+		if ( ! ( container instanceof Element ) ) {
+			if ( isEmpty( options ) && ! isEmpty( container ) )
+				options = container;
+			container = null;
+		}
+
+		this._ownCanvas = ! ( options.canvas instanceof HTMLCanvasElement );
+
+		// Create a new canvas or use the one provided by the user
+		const canvas = this._ownCanvas ? document.createElement('canvas') : options.canvas;
+		canvas.style = 'max-width: 100%;';
+		this._ctx = canvas.getContext('2d');
+
 		// Register built-in gradients
 		for ( const [ name, options ] of GRADIENTS )
 			this.registerGradient( name, options );
 
 		// Set container
-		this._container = container || document.body;
+		this._container = container || ( ! this._ownCanvas && canvas.parentElement ) || document.body;
 
 		// Make sure we have minimal width and height dimensions in case of an inline container
 		this._defaultWidth  = this._container.clientWidth  || 640;
@@ -276,11 +297,6 @@ export default class AudioMotionAnalyzer {
 		// connect output -> destination (speakers)
 		if ( options.connectSpeakers !== false )
 			this.connectOutput();
-
-		// create analyzer canvas
-		const canvas = document.createElement('canvas');
-		canvas.style = 'max-width: 100%;';
-		this._ctx = canvas.getContext('2d');
 
 		// create auxiliary canvases for the X-axis and radial scale labels
 		for ( const ctx of [ '_scaleX', '_scaleR' ] )
@@ -362,8 +378,8 @@ export default class AudioMotionAnalyzer {
 		// Set configuration options and use defaults for any missing properties
 		this._setProps( options, true );
 
-		// add canvas to the container
-		if ( this.useCanvas )
+		// Add canvas to the container (only when canvas not provided by user)
+		if ( this.useCanvas && this._ownCanvas )
 			this._container.appendChild( canvas );
 
 		// Finish canvas setup
@@ -829,7 +845,7 @@ export default class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const { audioCtx, canvas, _controller, _input, _merger, _observer, _ownContext, _splitter } = this;
+		const { audioCtx, canvas, _controller, _input, _merger, _observer, _ownCanvas, _ownContext, _splitter } = this;
 
 		this._destroyed = true;
 		this._ready = false;
@@ -856,8 +872,9 @@ export default class AudioMotionAnalyzer {
 		if ( _ownContext )
 			audioCtx.close();
 
-		// remove canvas from the DOM
-		canvas.remove();
+		// remove canvas from the DOM (if not provided by the user)
+		if ( _ownCanvas )
+			canvas.remove();
 
 		// reset flags
 		this._calcBars();
@@ -2512,8 +2529,8 @@ export default class AudioMotionAnalyzer {
 		this._fsWidth    = screenWidth;
 		this._fsHeight   = screenHeight;
 
-		// if canvas dimensions haven't changed, quit
-		if ( canvas.width == newWidth && canvas.height == newHeight )
+		// if this is not the constructor call and canvas dimensions haven't changed, quit
+		if ( reason != REASON_CREATE && canvas.width == newWidth && canvas.height == newHeight )
 			return;
 
 		// apply new dimensions

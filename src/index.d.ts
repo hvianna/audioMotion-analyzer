@@ -83,6 +83,7 @@ export interface AnalyzerBarData {
 
 export interface ConstructorOptions extends Options {
   audioCtx?: AudioContext;
+  canvas?: HTMLCanvasElement;
   connectSpeakers?: boolean;
   fsElement?: HTMLElement;
   source?: HTMLMediaElement | AudioNode;
@@ -114,6 +115,7 @@ export interface LedParameters {
 
 declare class AudioMotionAnalyzer {
   constructor(container?: HTMLElement, options?: ConstructorOptions);
+  constructor(options?: ConstructorOptions);
 
   get alphaBars(): boolean;
   set alphaBars(value: boolean);
