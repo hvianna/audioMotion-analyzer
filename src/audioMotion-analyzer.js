@@ -1869,28 +1869,24 @@ export default class AudioMotionAnalyzer {
 
 		const drawParticles = () => {
 			const bassEnergy = this.getEnergy('bass');
-			// todo make configurable?
-			if (this._frames % 5 === 0) {
-				// Generate a random direction for the particle
-				const angle = Math.random() * Math.PI * 2; 	// Random angle in [0, 2π]
-				const speed = Math.random() * 2;  		// Random speed
 
-				// A particle should spawn inside an invisible circle around the exact center of the canvas
-				const radius = 50;
-				const posX = this.canvas.width / 2 + Math.cos(angle) * radius;
-				const posY = this.canvas.height / 2 + Math.sin(angle) * radius;
+			const angle = Math.random() * Math.PI * 2; 	// Random angle in [0, 2π]
+			const speed = Math.random() * 2;			// Random speed between 0 and 2
 
-				// Create a new Particle instance and add it to the array
-				const particle = new Particle(
-					posX,
-					posY,
-					speed,
-					angle,
-					Math.random(),
-					{top: 0, right: this.canvas.width, bottom: this.canvas.height, left: 0}, // Boundaries for this particle to live in
-				);
-				this._particleArray.push(particle);
-			}
+			// A particle should spawn inside an invisible circle around the exact center of the canvas
+			const radius = 50;
+			const posX = this.canvas.width / 2 + Math.cos(angle) * radius;
+			const posY = this.canvas.height / 2 + Math.sin(angle) * radius;
+
+			const particle = new Particle(
+				posX,
+				posY,
+				speed,
+				angle,
+				Math.random(),
+				{top: 0, right: this.canvas.width, bottom: this.canvas.height, left: 0}, // Boundaries for this particle to live in
+			);
+			this._particleArray.push(particle);
 
 			// Update each particle
 			for (let particle of this._particleArray) {
