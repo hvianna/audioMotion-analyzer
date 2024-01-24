@@ -111,6 +111,7 @@ const DEFAULT_SETTINGS = {
 	overlay        : false,
 	peakLine       : false,
 	radial		   : false,
+	radius         : .3,
 	reflexAlpha    : 0.15,
 	reflexBright   : 1,
 	reflexFit      : true,
@@ -635,6 +636,15 @@ export default class AudioMotionAnalyzer {
 	}
 	set radial( value ) {
 		this._radial = !! value;
+		this._calcBars();
+		this._makeGrad();
+	}
+
+	get radius() {
+		return this._radius;
+	}
+	set radius( value ) {
+		this._radius = +value || 0;
 		this._calcBars();
 		this._makeGrad();
 	}
@@ -1238,7 +1248,7 @@ export default class AudioMotionAnalyzer {
 			  channelGap     = isDualVertical ? canvas.height - channelHeight * 2 : 0,
 
 			  initialX       = centerX * ( _mirror == -1 && ! isDualHorizontal && ! _radial ),
-			  innerRadius    = Math.min( canvas.width, canvas.height ) * ( _chLayout == CHANNEL_VERTICAL ? .375 : .125 ) | 0,
+			  innerRadius    = Math.min( canvas.width, canvas.height ) * .375 * ( _chLayout == CHANNEL_VERTICAL ? 1 : this._radius ) | 0,
 			  outerRadius    = Math.min( centerX, centerY );
 
 		/**
@@ -1571,8 +1581,9 @@ export default class AudioMotionAnalyzer {
 			  freqLabels       = [],
 			  isDualHorizontal = this._chLayout == CHANNEL_HORIZONTAL,
 			  isDualVertical   = this._chLayout == CHANNEL_VERTICAL,
+			  minDimension     = Math.min( canvas.width, canvas.height ),
 			  scale            = [ 'C',, 'D',, 'E', 'F',, 'G',, 'A',, 'B' ], // for note labels (no sharp notes)
-			  scaleHeight      = Math.min( canvas.width, canvas.height ) / 34 | 0, // circular scale height (radial mode)
+			  scaleHeight      = minDimension / 34 | 0, // circular scale height (radial mode)
   			  fontSizeX        = canvasX.height >> 1,
 			  fontSizeR        = scaleHeight >> 1,
 			  labelWidthX      = fontSizeX * ( _noteLabels ? .7 : 1.5 ),
@@ -1602,7 +1613,7 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// in radial dual-vertical layout, the scale is positioned exactly between both channels, by making the canvas a bit larger than the inner diameter
-		canvasR.width = canvasR.height = ( innerRadius << 1 ) + ( isDualVertical * scaleHeight );
+		canvasR.width = canvasR.height = Math.max( minDimension * .15, ( innerRadius << 1 ) + ( isDualVertical * scaleHeight ) );
 
 		const centerR = canvasR.width >> 1,
 			  radialY = centerR - scaleHeight * .7;	// vertical position of text labels in the circular scale

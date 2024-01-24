@@ -49,6 +49,7 @@ export interface Options {
   overlay?: boolean;
   peakLine?: boolean;
   radial?: boolean;
+  radius?: number;
   reflexAlpha?: number;
   reflexBright?: number;
   reflexFit?: boolean;
@@ -235,6 +236,9 @@ declare class AudioMotionAnalyzer {
 
   get radial(): boolean;
   set radial(value: boolean);
+
+  get radius(): number;
+  set radius(value: number);
 
   public reflexAlpha: number;
   public reflexBright: number;
