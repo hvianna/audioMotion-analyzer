@@ -2274,8 +2274,10 @@ export default class AudioMotionAnalyzer {
 					}
 					else if ( ! _radial )
 						_ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, width, 2 );
-					else if ( _mode != MODE_GRAPH ) // radial - peaks for graph mode are done by the peak line code
-						radialPoly( posX, peak * maxBarHeight, width, -2 );
+					else if ( _mode != MODE_GRAPH ) { // radial (peaks for graph mode are done by the peakLine code)
+						const y = peak * maxBarHeight;
+						radialPoly( posX, y, width, ! this._radialInvert || isDualVertical || y + innerRadius >= 2 ? -2 : 2 );
+					}
 				}
 
 			} // for ( let barIndex = 0; barIndex < nBars; barIndex++ )
