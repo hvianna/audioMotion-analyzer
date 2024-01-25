@@ -54,7 +54,7 @@ const presets = [
 		}
 	},
 	{
-		name: 'Radial',
+		name: 'Radial inverse',
 		options: {
 			mode: 3,
 			barSpace: .25,
@@ -68,6 +68,7 @@ const presets = [
 			maxDecibels: -30,
 			maxFreq: 16000,
 			radial: true,
+			radialInvert: true,
 			showBgColor: true,
 			showPeaks: true,
 			spinSpeed: 2,

@@ -49,6 +49,7 @@ export interface Options {
   overlay?: boolean;
   peakLine?: boolean;
   radial?: boolean;
+  radialInvert?: boolean;
   radius?: number;
   reflexAlpha?: number;
   reflexBright?: number;
@@ -236,6 +237,9 @@ declare class AudioMotionAnalyzer {
 
   get radial(): boolean;
   set radial(value: boolean);
+
+  get radialInvert(): boolean;
+  set radialInvert(value: boolean);
 
   get radius(): number;
   set radius(value: number);

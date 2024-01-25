@@ -242,8 +242,14 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>Radial effect</legend>
+				<legend>Radial spectrum</legend>
 				<button data-prop="radial">radial</button>
+				<button data-prop="radialInvert">radialInvert</button>
+
+				<label class="label">radius
+					<input type="range" min="0" max="1" step=".05" data-setting="radius">
+					<div class="value"></div>
+				</label>
 
 				<label class="label">spinSpeed
 					<input type="range" min="-5" max="5" step="1" data-setting="spinSpeed">

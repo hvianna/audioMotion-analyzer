@@ -111,6 +111,7 @@ const DEFAULT_SETTINGS = {
 	overlay        : false,
 	peakLine       : false,
 	radial		   : false,
+	radialInvert   : false,
 	radius         : .3,
 	reflexAlpha    : 0.15,
 	reflexBright   : 1,
@@ -636,6 +637,15 @@ export default class AudioMotionAnalyzer {
 	}
 	set radial( value ) {
 		this._radial = !! value;
+		this._calcBars();
+		this._makeGrad();
+	}
+
+	get radialInvert() {
+		return this._radialInvert;
+	}
+	set radialInvert( value ) {
+		this._radialInvert = !! value;
 		this._calcBars();
 		this._makeGrad();
 	}
@@ -1217,7 +1227,7 @@ export default class AudioMotionAnalyzer {
 			return;
 		}
 
-		const { _ansiBands, _barSpace, canvas, _chLayout, _maxFreq, _minFreq, _mirror, _mode, _radial, _reflexRatio } = this,
+		const { _ansiBands, _barSpace, canvas, _chLayout, _maxFreq, _minFreq, _mirror, _mode, _radial, _radialInvert, _reflexRatio } = this,
 			  centerX          = canvas.width >> 1,
 			  centerY          = canvas.height >> 1,
 			  isDualVertical   = _chLayout == CHANNEL_VERTICAL && ! _radial,
@@ -1247,9 +1257,13 @@ export default class AudioMotionAnalyzer {
 			  // TODO: improve this, make it configurable?
 			  channelGap     = isDualVertical ? canvas.height - channelHeight * 2 : 0,
 
-			  initialX       = centerX * ( _mirror == -1 && ! isDualHorizontal && ! _radial ),
-			  innerRadius    = Math.min( canvas.width, canvas.height ) * .375 * ( _chLayout == CHANNEL_VERTICAL ? 1 : this._radius ) | 0,
-			  outerRadius    = Math.min( centerX, centerY );
+			  initialX       = centerX * ( _mirror == -1 && ! isDualHorizontal && ! _radial );
+
+		let innerRadius = Math.min( canvas.width, canvas.height ) * .375 * ( _chLayout == CHANNEL_VERTICAL ? 1 : this._radius ) | 0,
+			outerRadius = Math.min( centerX, centerY );
+
+		if ( _radialInvert && _chLayout != CHANNEL_VERTICAL )
+			[ innerRadius, outerRadius ] = [ outerRadius, innerRadius ];
 
 		/**
 		 *	CREATE ANALYZER BANDS

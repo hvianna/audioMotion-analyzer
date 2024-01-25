@@ -209,19 +209,12 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>Frame rate</legend>
-
-				<label class="label">maxFPS
-					<select data-setting="maxFPS">
-						<option value="0">0</option>
-						<option value="10">10</option>
-						<option value="20">20</option>
-						<option value="30">30</option>
-						<option value="60">60</option>
-						<option value="120">120</option>
-					</select>
+				<legend>Overlay mode</legend>
+				<button data-prop="overlay">overlay</button>
+				<label class="label">bgAlpha
+					<input type="range" id="bg_alpha" min="0" max="1" step=".1" data-setting="bgAlpha">
+					<div class="value"></div>
 				</label>
-				<button data-prop="showFPS">showFPS</button>
 			</fieldset>
 		</div>
 
@@ -257,8 +250,14 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>Radial effect</legend>
+				<legend>Radial spectrum</legend>
 				<button data-prop="radial">radial</button>
+				<button data-prop="radialInvert">radialInvert</button>
+
+				<label class="label">radius
+					<input type="range" min="0" max="1" step=".05" data-setting="radius">
+					<div class="value"></div>
+				</label>
 
 				<label class="label">spinSpeed
 					<input type="range" min="-5" max="5" step="1" data-setting="spinSpeed">
@@ -287,15 +286,6 @@
 
 				<label class="label">mirror
 					<input type="range" min="-1" max="1" step="1" data-setting="mirror">
-					<div class="value"></div>
-				</label>
-			</fieldset>
-
-			<fieldset>
-				<legend>Overlay mode</legend>
-				<button data-prop="overlay">overlay</button>
-				<label class="label">bgAlpha
-					<input type="range" id="bg_alpha" min="0" max="1" step=".1" data-setting="bgAlpha">
 					<div class="value"></div>
 				</label>
 			</fieldset>
@@ -355,6 +345,22 @@
 				<button data-feature="showLogo">Logo</button>
 				<button data-feature="energyMeter">Energy meters</button>
 				<button data-feature="songProgress">Progress bar</button>
+			</fieldset>
+
+			<fieldset>
+				<legend>Frame rate</legend>
+
+				<label class="label">maxFPS
+					<select data-setting="maxFPS">
+						<option value="0">0</option>
+						<option value="10">10</option>
+						<option value="20">20</option>
+						<option value="30">30</option>
+						<option value="60">60</option>
+						<option value="120">120</option>
+					</select>
+				</label>
+				<button data-prop="showFPS">showFPS</button>
 			</fieldset>
 		</div>
 
