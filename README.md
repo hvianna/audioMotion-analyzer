@@ -86,13 +86,18 @@ import AudioMotionAnalyzer from 'audiomotion-analyzer';
 
 ## Constructor
 
-`new AudioMotionAnalyzer( [container], [{options}] )`
+```js
+new AudioMotionAnalyzer()
+new AudioMotionAnalyzer( container )
+new AudioMotionAnalyzer( container, {options} )
+new AudioMotionAnalyzer( {options} )
+```
 
 Creates a new instance of **audioMotion-analyzer**.
 
-`container` is the DOM element to which the analyzer canvas should be appended to. If not defined, the document's **body** is used instead.
+`container` is the DOM element into which the canvas created for the analyzer should be inserted.
 
-This argument is not necessary if you provide an existing [`canvas`](#canvas-htmlcanvaselement-object) or define [`useCanvas: false`](#usecanvas-boolean) in the options object.
+If not defined, defaults to `document.body`, unless [`canvas`](#canvas-htmlcanvaselement-object) is defined in the options, in which case its parent element will be considered the container.
 
 `options` must be an [Options object](#options-object).
 
@@ -109,7 +114,7 @@ const audioMotion = new AudioMotionAnalyzer(
 
 This will insert the analyzer canvas inside the *#container* element and start the visualization of audio coming from the *#audio* element.
 
-?> By default, audioMotion will try to use all available container space for the canvas. To prevent it from growing indefinitely, you must either constrain the dimensions of the `container` via CSS or explicitly define [`height`](#height-number) and/or [`width`](#width-number) properties in the constructor [options](#options-object).
+?> By default, audioMotion will try to use all available container space for the canvas. To prevent it from growing indefinitely, you must either constrain the dimensions of the container via CSS or explicitly define [`height`](#height-number) and/or [`width`](#width-number) properties in the constructor [options](#options-object).
 
 ### Options object
 
@@ -156,6 +161,8 @@ options = {<br>
 &emsp;&emsp;[overlay](#overlay-boolean): **false**,<br>
 &emsp;&emsp;[peakLine](#peakline-boolean): **false**,<br>
 &emsp;&emsp;[radial](#radial-boolean): **false**,<br>
+&emsp;&emsp;[radialInvert](#radialinvert-boolean): **false**,<br>
+&emsp;&emsp;[radius](#radius-number): **0.3**,<br>
 &emsp;&emsp;[reflexAlpha](#reflexalpha-number): **0.15**,<br>
 &emsp;&emsp;[reflexBright](#reflexbright-number): **1**,<br>
 &emsp;&emsp;[reflexFit](#reflexfit-boolean): **true**,<br>
@@ -199,7 +206,7 @@ See [this live code](https://codesandbox.io/s/9y6qb) and the [multi-instance dem
 
 Allows you to provide an existing [*Canvas*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement) where audioMotion should render its visualizations.
 
-If not provided, a new canvas will be created. After instantiation, you can obtain its reference from the [`canvas`](#canvas-htmlcanvaselement-object-read-only) read-only property.
+If not defined, a new canvas will be created. After instantiation, you can obtain its reference from the [`canvas`](#canvas-htmlcanvaselement-object-read-only) read-only property.
 
 #### `connectSpeakers` *boolean*
 
@@ -501,9 +508,9 @@ In that case, it's important that you constrain the dimensions of the container 
 
 You can set both values at once using the [`setCanvasSize()`](#setcanvassize-width-height-) method.
 
-See also [`onCanvasResize`](#oncanvasresize-function) callback.
+See also [`onCanvasResize`](#oncanvasresize-function).
 
-?> The actual pixel dimensions of the canvas can vary depending on the device's [pixelRatio](#pixelratio-number-read-only), [`loRes`](#lores-boolean) setting and fullscreen status. You can read the actual `height` and `width` values directly from the [`canvas`](#canvas-htmlcanvaselement-object-read-only) object.
+?> The actual dimensions of the canvas may differ from these values, depending on the device's [pixelRatio](#pixelratio-number-read-only), the [`loRes`](#lores-boolean) setting and while in fullscreen. For the actual pixel values, read `height` and `width` directly from the [`canvas`](#canvas-htmlcanvaselement-object-read-only) object.
 
 ### `isAlphaBars` *boolean* *(Read only)*
 
@@ -788,11 +795,35 @@ In radial view, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean
 
 When [`channelLayout`](#channellayout-string) is set to *'dual-vertical'*, graphs for the right channel are rendered towards the center of the screen.
 
-See also [`spinSpeed`](#spinspeed-number).
+See also [`radialInvert`](#radialinvert-boolean), [`radius`](#radius-number) and [`spinSpeed`](#spinspeed-number).
 
 Defaults to **false**.
 
 !> [See related known issue](#alphabars-and-fillalpha-wont-work-with-radial-on-firefox)
+
+### `radialInvert` *boolean*
+
+*Available since v4.4.0*
+
+When set to *true* (and [`radial`](#radial-boolean) is also *true*) creates a radial spectrum with maximum size and bars growing towards the center of the screen.
+
+This property has no effect when [`channelLayout`](#channellayout-string) is set to *'dual-vertical'*.
+
+See also [`radius`](#radius-number).
+
+Defaults to **false**.
+
+### `radius` *number*
+
+*Available since v4.4.0*
+
+Defines the internal radius of [`radial`](#radial-boolean) spectrum. It should be a number between **0** and **1**.
+
+This property has no effect when [`channelLayout`](#channellayout-string) is set to *'dual-vertical'*.
+
+When [`radialInvert`](#radialinvert-boolean) is *true*, this property controls how close to the center of the screen the bars can get.
+
+Defaults to **0.3**.
 
 ### `reflexAlpha` *number*
 
@@ -1238,7 +1269,7 @@ Returns an [**Options object**](#options-object) with all the current analyzer s
 
 `ignore` can be a single property name or an array of property names that should not be included in the returned object.
 
-Callbacks and properties for [constructor-specific options](#constructor-specific-options) are NOT included in the object.
+Callbacks and [constructor-specific properties](#constructor-specific-options) are NOT included in the object.
 
 ?> If the same [gradient](#gradient-string) is selected for both channels, only the `gradient` property is included in the object; otherwise, only `gradientLeft` and `gradientRight` are included (not `gradient`). If 'gradient' is added to `ignore`, none of the gradient properties will be included.
 
@@ -1488,7 +1519,7 @@ See [Changelog.md](Changelog.md)
 
 ## Contributing
 
-I kindly request that you only [open an issue](https://github.com/hvianna/audioMotion-analyzer/issues) for submitting a **bug report**.
+I kindly request that you only [open an issue](https://github.com/hvianna/audioMotion-analyzer/issues) for submitting **bug reports**.
 
 If you need help integrating *audioMotion-analyzer* with your project, have ideas for **new features** or any other questions or feedback,
 please use the [**Discussions**](https://github.com/hvianna/audioMotion-analyzer/discussions) section on GitHub.
@@ -1507,5 +1538,5 @@ And if you're feeling generous, maybe:
 
 ## License
 
-audioMotion-analyzer copyright (c) 2018-2023 [Henrique Avila Vianna](https://henriquevianna.com)<br>
+audioMotion-analyzer copyright (c) 2018-2024 [Henrique Avila Vianna](https://henriquevianna.com)<br>
 Licensed under the [GNU Affero General Public License, version 3 or later](https://www.gnu.org/licenses/agpl.html).
