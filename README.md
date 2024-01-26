@@ -86,13 +86,20 @@ import AudioMotionAnalyzer from 'audiomotion-analyzer';
 
 ## Constructor
 
-`new AudioMotionAnalyzer( [container], [{options}] )`
+```js
+new AudioMotionAnalyzer()
+new AudioMotionAnalyzer( container )
+new AudioMotionAnalyzer( container, {options} )
+new AudioMotionAnalyzer( {options} )
+```
 
 Creates a new instance of **audioMotion-analyzer**.
 
-The analyzer canvas will be appended to the HTML element referenced by `container`, unless you set [`useCanvas: false`](#usecanvas-boolean) in the options.
+`container` is the DOM element into which the canvas created for the analyzer should be inserted.
 
-If `container` is undefined, the document's body will be used instead.
+If not defined, defaults to `document.body`, unless [`canvas`](#canvas-htmlcanvaselement-object) is defined in the options, in which case its parent element will be considered the container.
+
+`options` must be an [Options object](#options-object).
 
 Usage example:
 
@@ -107,11 +114,14 @@ const audioMotion = new AudioMotionAnalyzer(
 
 This will insert the analyzer canvas inside the *#container* element and start the visualization of audio coming from the *#audio* element.
 
+?> By default, audioMotion will try to use all available container space for the canvas. To prevent it from growing indefinitely, you must either constrain the dimensions of the container via CSS or explicitly define [`height`](#height-number) and/or [`width`](#width-number) properties in the constructor [options](#options-object).
+
 ### Options object
 
 Valid properties and default values are shown below.
 
-Properties marked as *constructor only* can only be set by the constructor call, the others can also be set anytime via [`setOptions()`](#setoptions-options-) method.
+Properties marked as *constructor only* can only be set in the constructor call, the others can also be set anytime via [`setOptions()`](#setoptions-options-) method or
+directly as [properties](#properties) of the audioMotion instance.
 
 options = {<br>
 &emsp;&emsp;[alphaBars](#alphabars-boolean): **false**,<br>
@@ -119,6 +129,7 @@ options = {<br>
 &emsp;&emsp;[audioCtx](#audioctx-audiocontext-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[barSpace](#barspace-number): **0.1**,<br>
 &emsp;&emsp;[bgAlpha](#bgalpha-number): **0.7**,<br>
+&emsp;&emsp;[canvas](#canvas-htmlcanvaselement-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[channelLayout](#channellayout-string): **'single'**,<br>
 &emsp;&emsp;[colorMode](#colormode-string): **'gradient'**,<br>
 &emsp;&emsp;[connectSpeakers](#connectspeakers-boolean): **true**, // constructor only<br>
@@ -150,6 +161,8 @@ options = {<br>
 &emsp;&emsp;[overlay](#overlay-boolean): **false**,<br>
 &emsp;&emsp;[peakLine](#peakline-boolean): **false**,<br>
 &emsp;&emsp;[radial](#radial-boolean): **false**,<br>
+&emsp;&emsp;[radialInvert](#radialinvert-boolean): **false**,<br>
+&emsp;&emsp;[radius](#radius-number): **0.3**,<br>
 &emsp;&emsp;[reflexAlpha](#reflexalpha-number): **0.15**,<br>
 &emsp;&emsp;[reflexBright](#reflexbright-number): **1**,<br>
 &emsp;&emsp;[reflexFit](#reflexfit-boolean): **true**,<br>
@@ -164,7 +177,7 @@ options = {<br>
 &emsp;&emsp;[source](#source-htmlmediaelement-or-audionode-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[spinSpeed](#spinspeed-number): **0**,<br>
 &emsp;&emsp;[splitGradient](#splitgradient-boolean): **false**,<br>
-&emsp;&emsp;[start](#start-boolean): **true**,<br>
+&emsp;&emsp;[start](#start-boolean): **true**, // constructor only<br>
 &emsp;&emsp;[trueLeds](#trueleds-boolean): **false**,<br>
 &emsp;&emsp;[useCanvas](#usecanvas-boolean): **true**,<br>
 &emsp;&emsp;[volume](#volume-number): **1**,<br>
@@ -186,6 +199,14 @@ Since version 3.2.0, `audioCtx` will be automatically inferred from the [`source
 If neither is defined, a new audio context will be created. After instantiation, [`audioCtx`](#audioctx-audiocontext-object-read-only) will be available as a read-only property.
 
 See [this live code](https://codesandbox.io/s/9y6qb) and the [multi-instance demo](/demo/multi.html) for more usage examples.
+
+#### `canvas` *HTMLCanvasElement object*
+
+*Available since v4.4.0*
+
+Allows you to provide an existing [*Canvas*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement) where audioMotion should render its visualizations.
+
+If not defined, a new canvas will be created. After instantiation, you can obtain its reference from the [`canvas`](#canvas-htmlcanvaselement-object-read-only) read-only property.
 
 #### `connectSpeakers` *boolean*
 
@@ -321,11 +342,13 @@ Defaults to **0.7**.
 
 ### `canvas` *HTMLCanvasElement object* *(Read only)*
 
-[*Canvas*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement) element created by audioMotion.
+[*Canvas*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement) element where audioMotion renders its visualizations.
+
+See also the [`canvas`](#canvas-htmlcanvaselement-object) constructor option.
 
 ### `canvasCtx` *CanvasRenderingContext2D object* *(Read only)*
 
-[2D rendering context](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D) used for drawing in audioMotion's *Canvas*.
+[2D rendering context](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D) used for drawing in audioMotion's [`canvas`](#canvas-htmlcanvaselement-object-read-only).
 
 ### `channelLayout` *string*
 
@@ -480,13 +503,14 @@ See also [`gradient`](#gradient-string) and [`splitGradient`](#splitgradient-boo
 
 Nominal dimensions of the analyzer.
 
-If one or both of these are `undefined`, the analyzer will try to adjust to the container's width and/or height.
-If the container's width and/or height are 0 (inline elements), a reference size of **640 x 270 pixels** will be used to replace the missing dimension(s).
-This should be considered the minimum dimensions for proper visualization of all available modes and effects.
+Setting one or both properties to **_undefined_** (default) will trigger the fluid/responsive behavior and the analyzer will try to adjust to the container's height and/or width.
+In that case, it's important that you constrain the dimensions of the container via CSS to prevent the canvas from growing indefinitely.
 
 You can set both values at once using the [`setCanvasSize()`](#setcanvassize-width-height-) method.
 
-?> You can read the actual canvas dimensions at any time directly from the [`canvas`](#canvas-htmlcanvaselement-object-read-only) object.
+See also [`onCanvasResize`](#oncanvasresize-function).
+
+?> The actual dimensions of the canvas may differ from these values, depending on the device's [pixelRatio](#pixelratio-number-read-only), the [`loRes`](#lores-boolean) setting and while in fullscreen. For the actual pixel values, read `height` and `width` directly from the [`canvas`](#canvas-htmlcanvaselement-object-read-only) object.
 
 ### `isAlphaBars` *boolean* *(Read only)*
 
@@ -771,11 +795,35 @@ In radial view, [`ledBars`](#ledbars-boolean) and [`lumiBars`](#lumibars-boolean
 
 When [`channelLayout`](#channellayout-string) is set to *'dual-vertical'*, graphs for the right channel are rendered towards the center of the screen.
 
-See also [`spinSpeed`](#spinspeed-number).
+See also [`radialInvert`](#radialinvert-boolean), [`radius`](#radius-number) and [`spinSpeed`](#spinspeed-number).
 
 Defaults to **false**.
 
 !> [See related known issue](#alphabars-and-fillalpha-wont-work-with-radial-on-firefox)
+
+### `radialInvert` *boolean*
+
+*Available since v4.4.0*
+
+When set to *true* (and [`radial`](#radial-boolean) is also *true*) creates a radial spectrum with maximum size and bars growing towards the center of the screen.
+
+This property has no effect when [`channelLayout`](#channellayout-string) is set to *'dual-vertical'*.
+
+See also [`radius`](#radius-number).
+
+Defaults to **false**.
+
+### `radius` *number*
+
+*Available since v4.4.0*
+
+Defines the internal radius of [`radial`](#radial-boolean) spectrum. It should be a number between **0** and **1**.
+
+This property has no effect when [`channelLayout`](#channellayout-string) is set to *'dual-vertical'*.
+
+When [`radialInvert`](#radialinvert-boolean) is *true*, this property controls how close to the center of the screen the bars can get.
+
+Defaults to **0.3**.
 
 ### `reflexAlpha` *number*
 
@@ -1213,6 +1261,19 @@ Please note that preset names are case-sensitive. If the specified preset is not
 
 Use this method inside your callback function to create additional visual effects. See the [fluid demo](/demo/fluid.html) or [this pen](https://codepen.io/hvianna/pen/poNmVYo) for examples.
 
+### `getOptions( [ignore] )`
+
+*Available since v4.4.0*
+
+Returns an [**Options object**](#options-object) with all the current analyzer settings.
+
+`ignore` can be a single property name or an array of property names that should not be included in the returned object.
+
+Callbacks and [constructor-specific properties](#constructor-specific-options) are NOT included in the object.
+
+?> If the same [gradient](#gradient-string) is selected for both channels, only the `gradient` property is included in the object; otherwise, only `gradientLeft` and `gradientRight` are included (not `gradient`). If 'gradient' is added to `ignore`, none of the gradient properties will be included.
+
+See also [`setOptions()`](#setoptions-options-).
 
 ### `registerGradient( name, options )`
 
@@ -1290,9 +1351,11 @@ You can try different values in the [fluid demo](https://audiomotion.dev/demo/fl
 
 Shorthand method for setting several analyzer [properties](#properties) at once.
 
-See **[Options object](#options-object)** for object structure and default values.
+`options` must be an [**Options object**](#options-object).
 
 ?> If called with no argument (or `options` is *undefined*), resets all configuration options to their default values.
+
+See also [`getOptions()`](#getoptions-ignore-).
 
 ### `setSensitivity( minDecibels, maxDecibels )`
 
@@ -1456,7 +1519,7 @@ See [Changelog.md](Changelog.md)
 
 ## Contributing
 
-I kindly request that you only [open an issue](https://github.com/hvianna/audioMotion-analyzer/issues) for submitting a **bug report**.
+I kindly request that you only [open an issue](https://github.com/hvianna/audioMotion-analyzer/issues) for submitting **bug reports**.
 
 If you need help integrating *audioMotion-analyzer* with your project, have ideas for **new features** or any other questions or feedback,
 please use the [**Discussions**](https://github.com/hvianna/audioMotion-analyzer/discussions) section on GitHub.
@@ -1475,5 +1538,5 @@ And if you're feeling generous, maybe:
 
 ## License
 
-audioMotion-analyzer copyright (c) 2018-2023 [Henrique Avila Vianna](https://henriquevianna.com)<br>
+audioMotion-analyzer copyright (c) 2018-2024 [Henrique Avila Vianna](https://henriquevianna.com)<br>
 Licensed under the [GNU Affero General Public License, version 3 or later](https://www.gnu.org/licenses/agpl.html).

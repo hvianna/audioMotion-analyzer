@@ -33,6 +33,7 @@
 			<button id="btn_mute" title="Disconnect analyzer output from the speakers&#13;&#10;(prevent feedback loop when microphone is on)">disconnectOutput()</button>
 			<button data-prop="isDestroyed" data-func="destroy">destroy()</button>
 			<button id="btn_getBars" title="check browser console for data">getBars()</button>
+			<button id="btn_getOptions" title="copies current settings to clipboard">getOptions()</button>
 			<button data-prop="isOn" data-func="toggleAnalyzer">toggleAnalyzer()</button>
 			<button data-prop="isFullscreen" data-func="toggleFullscreen">toggleFullscreen()</button>
 		</div>
@@ -208,19 +209,12 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>Frame rate</legend>
-
-				<label class="label">maxFPS
-					<select data-setting="maxFPS">
-						<option value="0">0</option>
-						<option value="10">10</option>
-						<option value="20">20</option>
-						<option value="30">30</option>
-						<option value="60">60</option>
-						<option value="120">120</option>
-					</select>
+				<legend>Overlay mode</legend>
+				<button data-prop="overlay">overlay</button>
+				<label class="label">bgAlpha
+					<input type="range" id="bg_alpha" min="0" max="1" step=".1" data-setting="bgAlpha">
+					<div class="value"></div>
 				</label>
-				<button data-prop="showFPS">showFPS</button>
 			</fieldset>
 		</div>
 
@@ -256,8 +250,14 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>Radial effect</legend>
+				<legend>Radial spectrum</legend>
 				<button data-prop="radial">radial</button>
+				<button data-prop="radialInvert">radialInvert</button>
+
+				<label class="label">radius
+					<input type="range" min="0" max="1" step=".05" data-setting="radius">
+					<div class="value"></div>
+				</label>
 
 				<label class="label">spinSpeed
 					<input type="range" min="-5" max="5" step="1" data-setting="spinSpeed">
@@ -286,15 +286,6 @@
 
 				<label class="label">mirror
 					<input type="range" min="-1" max="1" step="1" data-setting="mirror">
-					<div class="value"></div>
-				</label>
-			</fieldset>
-
-			<fieldset>
-				<legend>Overlay mode</legend>
-				<button data-prop="overlay">overlay</button>
-				<label class="label">bgAlpha
-					<input type="range" id="bg_alpha" min="0" max="1" step=".1" data-setting="bgAlpha">
 					<div class="value"></div>
 				</label>
 			</fieldset>
@@ -355,6 +346,22 @@
 				<button data-feature="energyMeter">Energy meters</button>
 				<button data-feature="songProgress">Progress bar</button>
 			</fieldset>
+
+			<fieldset>
+				<legend>Frame rate</legend>
+
+				<label class="label">maxFPS
+					<select data-setting="maxFPS">
+						<option value="0">0</option>
+						<option value="10">10</option>
+						<option value="20">20</option>
+						<option value="30">30</option>
+						<option value="60">60</option>
+						<option value="120">120</option>
+					</select>
+				</label>
+				<button data-prop="showFPS">showFPS</button>
+			</fieldset>
 		</div>
 
 		<div class="box center">
@@ -412,7 +419,7 @@
 	</div>
 
 	<div class="credits">
-		<strong>audioMotion-analyzer v<span id="version"></span></strong> Copyright &copy; 2018-2023 Henrique Avila Vianna. Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
+		<strong>audioMotion-analyzer v<span id="version"></span></strong> Copyright &copy; 2018-2024 Henrique Avila Vianna. Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
 	</div>
 
 	<script src="fluid.js" type="module"></script>

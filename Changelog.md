@@ -1,6 +1,26 @@
 Changelog
 =========
 
+## version 4.4.0 (2024-01-26)
+
+### Added: <!-- {docsify-ignore} -->
+
++ [`canvas`](README.md#canvas-htmlcanvaselement-object) property in the constructor options to use your own canvas - thanks **@orangecoding** for the [suggestion](https://github.com/hvianna/audioMotion-analyzer/issues/63);
++ [`getOptions()`](README.md#getoptions-ignore-) - retrieve all analyzer settings as an options object. Also added a **getOptions()** button to [*fluid*](/demo/fluid.html) and [*multi*](/demo/multi.html) demos to copy the current settings to the clipboard - thanks **@biigpongsatorn** for the [suggestion](https://github.com/hvianna/audioMotion-analyzer/issues/62);
++ [`radialInvert`](README.md#radialInvert-boolean) - render radial spectrum bars towards the center of the screen;
++ [`radius`](README.md#radius-number) - customize the size of the radial spectrum - thanks **@orangecoding** for the [suggestion](https://github.com/hvianna/audioMotion-analyzer/issues/63).
+
+### Changed & improved: <!-- {docsify-ignore} -->
+
++ The [constructor](README.md#constructor) can now take the options object as the first argument if you don't need to define the container;
++ [`start`](README.md#start-boolean) has been explicitly marked as a constructor-specific property in the [Options object description](README.md#options-object) and will no longer work with `setOptions()` as of the next major release.
+
+### Fixed: <!-- {docsify-ignore} -->
+
++ Bug preventing radial mode from working when set in the constructor options - thanks **@lexterror** and **@ianrothmann** for [reporting it](https://github.com/hvianna/audioMotion-analyzer/issues/14);
++ Reverted an unintended property name change in the object passed to the onCanvasDraw callback, introduced in v4.2.0.
+
+
 ## version 4.3.0 (2023-09-29)
 
 ### Added: <!-- {docsify-ignore} -->

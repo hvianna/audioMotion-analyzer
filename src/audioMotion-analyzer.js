@@ -2,12 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 4.3.0
+ * @version 4.4.0
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const VERSION = '4.3.0';
+const VERSION = '4.4.0';
 
 // internal constants
 const PI      = Math.PI,
@@ -80,6 +80,60 @@ const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', 
 	  }]
 ];
 
+// settings defaults
+const DEFAULT_SETTINGS = {
+	alphaBars      : false,
+	ansiBands      : false,
+	barSpace       : 0.1,
+	bgAlpha        : 0.7,
+	channelLayout  : CHANNEL_SINGLE,
+	colorMode      : COLOR_GRADIENT,
+	fftSize        : 8192,
+	fillAlpha      : 1,
+	frequencyScale : SCALE_LOG,
+	gradient       : GRADIENTS[0][0],
+	height         : undefined,
+	ledBars        : false,
+	linearAmplitude: false,
+	linearBoost    : 1,
+	lineWidth      : 0,
+	loRes          : false,
+	lumiBars       : false,
+	maxDecibels    : -25,
+	maxFPS         : 0,
+	maxFreq        : 22000,
+	minDecibels    : -85,
+	minFreq        : 20,
+	mirror         : 0,
+	mode           : 0,
+	noteLabels     : false,
+	outlineBars    : false,
+	overlay        : false,
+	peakLine       : false,
+	radial		   : false,
+	radialInvert   : false,
+	radius         : 0.3,
+	reflexAlpha    : 0.15,
+	reflexBright   : 1,
+	reflexFit      : true,
+	reflexRatio    : 0,
+	roundBars      : false,
+	showBgColor    : true,
+	showFPS        : false,
+	showPeaks      : true,
+	showScaleX     : true,
+	showScaleY     : false,
+	smoothing      : 0.5,
+	spinSpeed      : 0,
+	splitGradient  : false,
+	start          : true,
+	trueLeds       : false,
+	useCanvas      : true,
+	volume         : 1,
+	weightingFilter: FILTER_NONE,
+	width          : undefined
+};
+
 // custom error messages
 const ERR_AUDIO_CONTEXT_FAIL     = [ 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create audio context. Web Audio API not supported?' ],
 	  ERR_INVALID_AUDIO_CONTEXT  = [ 'ERR_INVALID_AUDIO_CONTEXT', 'Provided audio context is not valid' ],
@@ -103,6 +157,13 @@ class AudioMotionError extends Error {
 
 // helper function - output deprecation warning message on console
 const deprecate = ( name, alternative ) => console.warn( `${name} is deprecated. Use ${alternative} instead.` );
+
+// helper function - check if a given object is empty (also returns `true` on null, undefined or any non-object value)
+const isEmpty = obj => {
+	for ( const p in obj )
+		return false;
+	return true;
+}
 
 // helper function - validate a given value with an array of strings (by default, all lowercase)
 // returns the validated value, or the first element of `list` if `value` is not found in the array
@@ -152,12 +213,26 @@ export default class AudioMotionAnalyzer {
 		this._selectedGrads = [];   // names of the currently selected gradients for channels 0 and 1
 		this._sources = [];			// input nodes
 
+		// Check if options object passed as first argument
+		if ( ! ( container instanceof Element ) ) {
+			if ( isEmpty( options ) && ! isEmpty( container ) )
+				options = container;
+			container = null;
+		}
+
+		this._ownCanvas = ! ( options.canvas instanceof HTMLCanvasElement );
+
+		// Create a new canvas or use the one provided by the user
+		const canvas = this._ownCanvas ? document.createElement('canvas') : options.canvas;
+		canvas.style = 'max-width: 100%;';
+		this._ctx = canvas.getContext('2d');
+
 		// Register built-in gradients
 		for ( const [ name, options ] of GRADIENTS )
 			this.registerGradient( name, options );
 
 		// Set container
-		this._container = container || document.body;
+		this._container = container || ( ! this._ownCanvas && canvas.parentElement ) || document.body;
 
 		// Make sure we have minimal width and height dimensions in case of an inline container
 		this._defaultWidth  = this._container.clientWidth  || 640;
@@ -224,11 +299,6 @@ export default class AudioMotionAnalyzer {
 		// connect output -> destination (speakers)
 		if ( options.connectSpeakers !== false )
 			this.connectOutput();
-
-		// create analyzer canvas
-		const canvas = document.createElement('canvas');
-		canvas.style = 'max-width: 100%;';
-		this._ctx = canvas.getContext('2d');
 
 		// create auxiliary canvases for the X-axis and radial scale labels
 		for ( const ctx of [ '_scaleX', '_scaleR' ] )
@@ -310,8 +380,8 @@ export default class AudioMotionAnalyzer {
 		// Set configuration options and use defaults for any missing properties
 		this._setProps( options, true );
 
-		// add canvas to the container
-		if ( this.useCanvas )
+		// Add canvas to the container (only when canvas not provided by user)
+		if ( this.useCanvas && this._ownCanvas )
 			this._container.appendChild( canvas );
 
 		// Finish canvas setup
@@ -571,6 +641,24 @@ export default class AudioMotionAnalyzer {
 		this._makeGrad();
 	}
 
+	get radialInvert() {
+		return this._radialInvert;
+	}
+	set radialInvert( value ) {
+		this._radialInvert = !! value;
+		this._calcBars();
+		this._makeGrad();
+	}
+
+	get radius() {
+		return this._radius;
+	}
+	set radius( value ) {
+		this._radius = +value || 0;
+		this._calcBars();
+		this._makeGrad();
+	}
+
 	get reflexRatio() {
 		return this._reflexRatio;
 	}
@@ -777,7 +865,7 @@ export default class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const { audioCtx, canvas, _controller, _input, _merger, _observer, _ownContext, _splitter } = this;
+		const { audioCtx, canvas, _controller, _input, _merger, _observer, _ownCanvas, _ownContext, _splitter } = this;
 
 		this._destroyed = true;
 		this._ready = false;
@@ -804,8 +892,9 @@ export default class AudioMotionAnalyzer {
 		if ( _ownContext )
 			audioCtx.close();
 
-		// remove canvas from the DOM
-		canvas.remove();
+		// remove canvas from the DOM (if not provided by the user)
+		if ( _ownCanvas )
+			canvas.remove();
 
 		// reset flags
 		this._calcBars();
@@ -907,6 +996,29 @@ export default class AudioMotionAnalyzer {
 		}
 
 		return energy / ( endBin - startBin + 1 ) / chnCount;
+	}
+
+	/**
+	 * Returns current analyzer settings in object format
+	 *
+	 * @param [{string|array}] a property name or an array of property names to not include in the returned object
+	 * @returns {object} Options object
+	 */
+	getOptions( ignore ) {
+		if ( ! Array.isArray( ignore ) )
+			ignore = [ ignore ];
+		let options = {};
+		for ( const prop of Object.keys( DEFAULT_SETTINGS ) ) {
+			if ( ! ignore.includes( prop ) ) {
+				if ( prop == 'gradient' && this.gradientLeft != this.gradientRight ) {
+					options.gradientLeft = this.gradientLeft;
+					options.gradientRight = this.gradientRight;
+				}
+				else if ( prop != 'start' )
+					options[ prop ] = this[ prop ];
+			}
+		}
+		return options;
 	}
 
 	/**
@@ -1115,7 +1227,7 @@ export default class AudioMotionAnalyzer {
 			return;
 		}
 
-		const { _ansiBands, _barSpace, canvas, _chLayout, _maxFreq, _minFreq, _mirror, _mode, _radial, _reflexRatio } = this,
+		const { _ansiBands, _barSpace, canvas, _chLayout, _maxFreq, _minFreq, _mirror, _mode, _radial, _radialInvert, _reflexRatio } = this,
 			  centerX          = canvas.width >> 1,
 			  centerY          = canvas.height >> 1,
 			  isDualVertical   = _chLayout == CHANNEL_VERTICAL && ! _radial,
@@ -1145,9 +1257,13 @@ export default class AudioMotionAnalyzer {
 			  // TODO: improve this, make it configurable?
 			  channelGap     = isDualVertical ? canvas.height - channelHeight * 2 : 0,
 
-			  initialX       = centerX * ( _mirror == -1 && ! isDualHorizontal && ! _radial ),
-			  innerRadius    = Math.min( canvas.width, canvas.height ) * ( _chLayout == CHANNEL_VERTICAL ? .375 : .125 ) | 0,
-			  outerRadius    = Math.min( centerX, centerY );
+			  initialX       = centerX * ( _mirror == -1 && ! isDualHorizontal && ! _radial );
+
+		let innerRadius = Math.min( canvas.width, canvas.height ) * .375 * ( _chLayout == CHANNEL_VERTICAL ? 1 : this._radius ) | 0,
+			outerRadius = Math.min( centerX, centerY );
+
+		if ( _radialInvert && _chLayout != CHANNEL_VERTICAL )
+			[ innerRadius, outerRadius ] = [ outerRadius, innerRadius ];
 
 		/**
 		 *	CREATE ANALYZER BANDS
@@ -1479,8 +1595,9 @@ export default class AudioMotionAnalyzer {
 			  freqLabels       = [],
 			  isDualHorizontal = this._chLayout == CHANNEL_HORIZONTAL,
 			  isDualVertical   = this._chLayout == CHANNEL_VERTICAL,
+			  minDimension     = Math.min( canvas.width, canvas.height ),
 			  scale            = [ 'C',, 'D',, 'E', 'F',, 'G',, 'A',, 'B' ], // for note labels (no sharp notes)
-			  scaleHeight      = Math.min( canvas.width, canvas.height ) / 34 | 0, // circular scale height (radial mode)
+			  scaleHeight      = minDimension / 34 | 0, // circular scale height (radial mode)
   			  fontSizeX        = canvasX.height >> 1,
 			  fontSizeR        = scaleHeight >> 1,
 			  labelWidthX      = fontSizeX * ( _noteLabels ? .7 : 1.5 ),
@@ -1510,7 +1627,7 @@ export default class AudioMotionAnalyzer {
 		}
 
 		// in radial dual-vertical layout, the scale is positioned exactly between both channels, by making the canvas a bit larger than the inner diameter
-		canvasR.width = canvasR.height = ( innerRadius << 1 ) + ( isDualVertical * scaleHeight );
+		canvasR.width = canvasR.height = Math.max( minDimension * .15, ( innerRadius << 1 ) + ( isDualVertical * scaleHeight ) );
 
 		const centerR = canvasR.width >> 1,
 			  radialY = centerR - scaleHeight * .7;	// vertical position of text labels in the circular scale
@@ -1678,8 +1795,8 @@ export default class AudioMotionAnalyzer {
 			  dbRange 		   = maxDecibels - minDecibels,
 			  [ ledCount, ledSpaceH, ledSpaceV, ledHeight ] = this._leds || [];
 
-		if ( _energy.val > 0 )
-			this._spinAngle += this._spinSpeed * TAU / ( 60 * _fps ); // spinSpeed * angle increment per frame for 1 RPM
+		if ( _energy.val > 0 && _fps > 0 )
+			this._spinAngle += this._spinSpeed * TAU / 60 / _fps; // spinSpeed * angle increment per frame for 1 RPM
 
 		/* HELPER FUNCTIONS */
 
@@ -2157,8 +2274,10 @@ export default class AudioMotionAnalyzer {
 					}
 					else if ( ! _radial )
 						_ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, width, 2 );
-					else if ( _mode != MODE_GRAPH ) // radial - peaks for graph mode are done by the peak line code
-						radialPoly( posX, peak * maxBarHeight, width, -2 );
+					else if ( _mode != MODE_GRAPH ) { // radial (peaks for graph mode are done by the peakLine code)
+						const y = peak * maxBarHeight;
+						radialPoly( posX, y, width, ! this._radialInvert || isDualVertical || y + innerRadius >= 2 ? -2 : 2 );
+					}
 				}
 
 			} // for ( let barIndex = 0; barIndex < nBars; barIndex++ )
@@ -2278,7 +2397,7 @@ export default class AudioMotionAnalyzer {
 		if ( this.onCanvasDraw ) {
 			_ctx.save();
 			_ctx.fillStyle = _ctx.strokeStyle = _canvasGradients[0];
-			this.onCanvasDraw( this, { timestamp, _canvasGradients } );
+			this.onCanvasDraw( this, { timestamp, canvasGradients: _canvasGradients } );
 			_ctx.restore();
 		}
 	}
@@ -2437,8 +2556,8 @@ export default class AudioMotionAnalyzer {
 		this._fsWidth    = screenWidth;
 		this._fsHeight   = screenHeight;
 
-		// if canvas dimensions haven't changed, quit
-		if ( canvas.width == newWidth && canvas.height == newHeight )
+		// if this is not the constructor call and canvas dimensions haven't changed, quit
+		if ( reason != REASON_CREATE && canvas.width == newWidth && canvas.height == newHeight )
 			return;
 
 		// apply new dimensions
@@ -2497,68 +2616,17 @@ export default class AudioMotionAnalyzer {
 	 * Set object properties
 	 */
 	_setProps( options, useDefaults ) {
-
-		// settings defaults
-		const defaults = {
-			alphaBars      : false,
-			ansiBands      : false,
-			barSpace       : 0.1,
-			bgAlpha        : 0.7,
-			channelLayout  : CHANNEL_SINGLE,
-			colorMode      : COLOR_GRADIENT,
-			fftSize        : 8192,
-			fillAlpha      : 1,
-			frequencyScale : SCALE_LOG,
-			gradient       : GRADIENTS[0][0],
-			ledBars        : false,
-			linearAmplitude: false,
-			linearBoost    : 1,
-			lineWidth      : 0,
-			loRes          : false,
-			lumiBars       : false,
-			maxDecibels    : -25,
-			maxFPS         : 0,
-			maxFreq        : 22000,
-			minDecibels    : -85,
-			minFreq        : 20,
-			mirror         : 0,
-			mode           : 0,
-			noteLabels     : false,
-			outlineBars    : false,
-			overlay        : false,
-			peakLine       : false,
-			radial		   : false,
-			reflexAlpha    : 0.15,
-			reflexBright   : 1,
-			reflexFit      : true,
-			reflexRatio    : 0,
-			roundBars      : false,
-			showBgColor    : true,
-			showFPS        : false,
-			showPeaks      : true,
-			showScaleX     : true,
-			showScaleY     : false,
-			smoothing      : 0.5,
-			spinSpeed      : 0,
-			splitGradient  : false,
-			start          : true,
-			trueLeds       : false,
-			useCanvas      : true,
-			volume         : 1,
-			weightingFilter: FILTER_NONE
-		};
-
 		// callback functions properties
 		const callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
 
-		// properties undefined by default
-		const defaultUndefined = [ 'gradientLeft', 'gradientRight', 'height', 'width', 'stereo' ];
+		// properties not in the defaults (`stereo` is deprecated)
+		const extraProps = [ 'gradientLeft', 'gradientRight', 'stereo' ];
 
 		// build an array of valid properties; `start` is not an actual property and is handled after setting everything else
-		const validProps = Object.keys( defaults ).filter( e => e != 'start' ).concat( callbacks, defaultUndefined );
+		const validProps = Object.keys( DEFAULT_SETTINGS ).filter( e => e != 'start' ).concat( callbacks, extraProps );
 
 		if ( useDefaults || options === undefined )
-			options = { ...defaults, ...options }; // merge options with defaults
+			options = { ...DEFAULT_SETTINGS, ...options }; // merge options with defaults
 
 		for ( const prop of Object.keys( options ) ) {
 			if ( callbacks.includes( prop ) && typeof options[ prop ] !== 'function' ) // check invalid callback
@@ -2567,6 +2635,7 @@ export default class AudioMotionAnalyzer {
 				this[ prop ] = options[ prop ];
 		}
 
+		// deprecated - move this to the constructor in the next major release (`start` should be constructor-specific)
 		if ( options.start !== undefined )
 			this.toggleAnalyzer( options.start );
 	}

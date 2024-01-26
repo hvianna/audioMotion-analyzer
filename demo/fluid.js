@@ -429,6 +429,14 @@ muteButton.addEventListener( 'click', () => toggleMute() );
 // getBars() button
 document.getElementById('btn_getBars').addEventListener( 'click', () => console.log( 'getBars(): ', audioMotion.getBars() ) );
 
+// getOptions() button
+document.getElementById('btn_getOptions').addEventListener( 'click', () => {
+	const options = audioMotion.getOptions();
+	console.log( 'getOptions(): ', options );
+	navigator.clipboard.writeText( JSON.stringify( options, null, 2 ) )
+		.then( () => console.log( 'Options object copied to clipboard.' ) );
+});
+
 // Initialize UI elements
 updateUI();
 

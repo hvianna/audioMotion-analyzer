@@ -49,6 +49,8 @@ export interface Options {
   overlay?: boolean;
   peakLine?: boolean;
   radial?: boolean;
+  radialInvert?: boolean;
+  radius?: number;
   reflexAlpha?: number;
   reflexBright?: number;
   reflexFit?: boolean;
@@ -83,6 +85,7 @@ export interface AnalyzerBarData {
 
 export interface ConstructorOptions extends Options {
   audioCtx?: AudioContext;
+  canvas?: HTMLCanvasElement;
   connectSpeakers?: boolean;
   fsElement?: HTMLElement;
   source?: HTMLMediaElement | AudioNode;
@@ -114,6 +117,7 @@ export interface LedParameters {
 
 declare class AudioMotionAnalyzer {
   constructor(container?: HTMLElement, options?: ConstructorOptions);
+  constructor(options?: ConstructorOptions);
 
   get alphaBars(): boolean;
   set alphaBars(value: boolean);
@@ -234,6 +238,12 @@ declare class AudioMotionAnalyzer {
   get radial(): boolean;
   set radial(value: boolean);
 
+  get radialInvert(): boolean;
+  set radialInvert(value: boolean);
+
+  get radius(): number;
+  set radius(value: number);
+
   public reflexAlpha: number;
   public reflexBright: number;
   public reflexFit: boolean;
@@ -291,6 +301,8 @@ declare class AudioMotionAnalyzer {
 
   public getEnergy(preset?: EnergyPreset): number;
   public getEnergy(startFreq: number, endFreq?: number): number;
+
+  public getOptions(ignore?: string | string[]): Options;
 
   public registerGradient(name: string, options: GradientOptions): void;
 

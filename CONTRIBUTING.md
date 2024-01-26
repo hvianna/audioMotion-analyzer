@@ -1,6 +1,6 @@
 # Contributing
 
-I kindly request that you only [open an issue](https://github.com/hvianna/audioMotion-analyzer/issues) for submitting a **bug report**.
+I kindly request that you only [open an issue](https://github.com/hvianna/audioMotion-analyzer/issues) for submitting **bug reports**.
 
 If you need help integrating *audioMotion-analyzer* with your project, have ideas for **new features** or any other questions or feedback,
 please use the [**Discussions**](https://github.com/hvianna/audioMotion-analyzer/discussions) section on GitHub.
