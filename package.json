@@ -9,6 +9,7 @@
   "exports": {
     ".": {
       "import": "./src/audioMotion-analyzer.js",
+      "require": "./src/audioMotion-analyzer.js",
       "types": "./src/index.d.ts"
     }
   },
