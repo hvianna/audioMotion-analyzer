@@ -2,16 +2,19 @@
   "name": "audiomotion-analyzer",
   "description": "High-resolution real-time graphic audio spectrum analyzer JavaScript module with no dependencies.",
   "version": "4.4.0",
-  "main": "./src/audioMotion-analyzer.js",
-  "module": "./src/audioMotion-analyzer.js",
+  "source": "./src/audioMotion-analyzer.js",
   "types": "./src/index.d.ts",
+  "main": "./dist/audioMotion-analyzer-cjs.js",
   "type": "module",
   "exports": {
     ".": {
       "import": "./src/audioMotion-analyzer.js",
-      "require": "./src/audioMotion-analyzer.js",
+      "require": "./dist/audioMotion-analyzer-cjs.js",
       "types": "./src/index.d.ts"
     }
+  },
+  "targets": {
+    "types": false
   },
   "files": [
     "src/**/*.js",
@@ -22,7 +25,9 @@
     "url": "https://ko-fi.com/hvianna"
   },
   "scripts": {
-    "start": "npx http-server"
+    "build": "rm -rf dist && ./node_modules/.bin/parcel build --no-source-maps",
+    "start": "npx http-server",
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -40,5 +45,8 @@
   "bugs": {
     "url": "https://github.com/hvianna/audioMotion-analyzer/issues"
   },
-  "homepage": "https://audiomotion.dev"
+  "homepage": "https://audiomotion.dev",
+  "dependencies": {
+    "parcel": "^2.12.0"
+  }
 }
