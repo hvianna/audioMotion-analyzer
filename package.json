@@ -46,7 +46,7 @@
     "url": "https://github.com/hvianna/audioMotion-analyzer/issues"
   },
   "homepage": "https://audiomotion.dev",
-  "dependencies": {
+  "devDependencies": {
     "parcel": "^2.12.0"
   }
 }
