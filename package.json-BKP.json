@@ -2,27 +2,21 @@
   "name": "audiomotion-analyzer",
   "description": "High-resolution real-time graphic audio spectrum analyzer JavaScript module with no dependencies.",
   "version": "4.5.0-beta.0",
-  "main": "./dist/index.js",
+  "main": "./dist/umd/index.js",
   "module": "./src/audioMotion-analyzer.js",
   "types": "./src/index.d.ts",
   "babel": {
-    "plugins": [
-      [
-        "@babel/plugin-transform-modules-umd",
-        {
-          "globals": {
-            "audiomotionanalyzer": "Lala"
-          },
-          "exactGlobals": true
-        }
-      ]
+    "presets": [
+      "@babel/preset-env"
     ],
-    "moduleId": "audiomotionanalyzer"
+    "plugins": [
+      "@babel/plugin-transform-modules-umd"
+    ]
   },
   "exports": {
     ".": {
       "import": "./src/audioMotion-analyzer.js",
-      "require": "./dist/index.js",
+      "require": "./dist/umd/index.js",
       "types": "./src/index.d.ts"
     }
   },
@@ -35,7 +29,8 @@
     "url": "https://ko-fi.com/hvianna"
   },
   "scripts": {
-    "build": "babel src/audioMotion-analyzer.js --out-file dist/index.js",
+    "build:cjs": "babel src/audioMotion-analyzer.js --out-file dist/cjs/index.js --presets=@babel/preset-env",
+    "build:umd": "babel --plugins @babel/plugin-transform-modules-umd src/audioMotion-analyzer.js --out-file dist/umd/index.js",
     "start": "npx http-server"
   },
   "repository": {
@@ -59,7 +54,6 @@
     "@babel/cli": "^7.24.1",
     "@babel/core": "^7.24.3",
     "@babel/plugin-transform-modules-umd": "^7.24.1",
-    "@babel/preset-env": "^7.24.3",
-    "babel-plugin-add-module-exports": "^1.0.4"
+    "@babel/preset-env": "^7.24.3"
   }
 }
