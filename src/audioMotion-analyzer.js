@@ -490,10 +490,7 @@ export default class AudioMotionAnalyzer {
 		return this._gravity;
 	}
 	set gravity( value ) {
-		let newVal = +value;
-		if ( ! ( newVal > 0 ) ) // '<= 0' won't work if newVal is NaN
-			newVal = this._gravity || DEFAULT_SETTINGS.gravity;
-		this._gravity = newVal;
+		this._gravity = value > 0 ? +value : this._gravity || DEFAULT_SETTINGS.gravity;
 	}
 
 	get height() {
