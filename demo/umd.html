@@ -55,7 +55,7 @@
 
 		let audioEl, audioMotion; // global variables for the audio element and analyzer object
 
-		console.log( audioMotionAnalyzer );
+		console.log( 'amAnalyzer global:', amAnalyzer );
 
 		function initialize() {
 			// create new <audio> element
@@ -70,7 +70,7 @@
 			audioContainer.append( audioEl ); // add it to the DOM
 
 			// create audioMotion instance and use the audio element as source
-			audioMotion = new audioMotionAnalyzer.default( container, {
+			audioMotion = new amAnalyzer.AudioMotionAnalyzer( container, {
 //			audioMotion = audioMotionAnalyzer.default.AudioMotionAnalyzer( container, {
 				source: audioEl,
 				// set your preferred options here

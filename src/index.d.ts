@@ -319,4 +319,5 @@ declare class AudioMotionAnalyzer {
   public toggleFullscreen(): void;
 }
 
+export { AudioMotionAnalyzer };
 export default AudioMotionAnalyzer;

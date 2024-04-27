@@ -1,7 +1,8 @@
 {
-  "presets": ["@babel/env"],
   "plugins": [
-    "add-module-exports",
-    "@babel/plugin-transform-modules-umd"
-  ]
+    [
+      "@babel/plugin-transform-modules-umd"
+    ]
+  ],
+  "moduleId": "amAnalyzer"
 }
