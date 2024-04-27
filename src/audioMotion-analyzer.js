@@ -187,7 +187,7 @@ if ( ! Array.prototype.findLastIndex ) {
 
 // AudioMotionAnalyzer class
 
-export default class AudioMotionAnalyzer {
+class AudioMotionAnalyzer {
 
 /**
  * CONSTRUCTOR
@@ -2650,3 +2650,6 @@ export default class AudioMotionAnalyzer {
 	}
 
 }
+
+export { AudioMotionAnalyzer };
+export default AudioMotionAnalyzer;
