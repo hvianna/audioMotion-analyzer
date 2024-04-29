@@ -92,6 +92,7 @@ const DEFAULT_SETTINGS = {
 	fillAlpha      : 1,
 	frequencyScale : SCALE_LOG,
 	gradient       : GRADIENTS[0][0],
+	gravity        : 1,
 	height         : undefined,
 	ledBars        : false,
 	linearAmplitude: false,
@@ -483,6 +484,13 @@ class AudioMotionAnalyzer {
 	}
 	set gradientRight( value ) {
 		this._setGradient( value, 1 );
+	}
+
+	get gravity() {
+		return this._gravity;
+	}
+	set gravity( value ) {
+		this._gravity = value > 0 ? +value : this._gravity || DEFAULT_SETTINGS.gravity;
 	}
 
 	get height() {
@@ -1767,6 +1775,7 @@ class AudioMotionAnalyzer {
 			    _energy,
 			    fillAlpha,
 			    _fps,
+			    _gravity,
 			    _linearAmplitude,
 			    _lineWidth,
 			    maxDecibels,
@@ -1909,7 +1918,7 @@ class AudioMotionAnalyzer {
 			if ( _energy.peak > 0 ) {
 				_energy.hold--;
 				if ( _energy.hold < 0 )
-					_energy.peak += _energy.hold / ( holdFrames * holdFrames / 2 );
+					_energy.peak += _energy.hold / ( holdFrames * holdFrames / _gravity );
 			}
 			if ( newVal >= _energy.peak ) {
 				_energy.peak = newVal;
@@ -2141,7 +2150,7 @@ class AudioMotionAnalyzer {
 					bar.hold[ channel ]--;
 					// if hold is negative, it becomes the "acceleration" for peak drop
 					if ( bar.hold[ channel ] < 0 )
-						bar.peak[ channel ] += bar.hold[ channel ] / ( holdFrames * holdFrames / 2 );
+						bar.peak[ channel ] += bar.hold[ channel ] / ( holdFrames * holdFrames / _gravity );
 				}
 
 				// check if it's a new peak for this bar

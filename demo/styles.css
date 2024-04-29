@@ -173,6 +173,13 @@ fieldset button {
 	margin: 10px 0 20px;
 	padding: 0 5px 10px;
 }
+.analyzer-configuration a {
+	color: inherit;
+	text-decoration: none;
+}
+.analyzer-configuration a:hover {
+	border-bottom: 1px dotted currentColor;
+}
 
 .credits {
 	font-size: 12px;

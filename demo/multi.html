@@ -44,8 +44,8 @@
 			<fieldset class="slim">
 				<legend>Selected analyzer</legend>
 
-				<label><input type="radio" name="analyzer" value="0" checked> Main &nbsp;</label>
-				<label><input type="radio" name="analyzer" value="1"> Top &nbsp;</label>
+				<label><input type="radio" name="analyzer" value="0" checked> Main</label>
+				<label><input type="radio" name="analyzer" value="1"> Top</label>
 				<label><input type="radio" name="analyzer" value="2"> Bottom</label>
 			</fieldset>
 
@@ -109,6 +109,11 @@
 					<option value="dual-horizontal">dual-horizontal</option>
 					<option value="dual-vertical">dual-vertical</option>
 				</select>
+			</label>
+
+			<label class="label">gravity
+				<input type="range" min="0.5" max="5" step=".5" data-setting="gravity">
+				<div class="value"></div>
 			</label>
 
 			<label class="label">volume

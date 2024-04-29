@@ -28,6 +28,7 @@ export interface Options {
   gradient?: string;
   gradientLeft?: string;
   gradientRight?: string;
+  gravity?: number;
   height?: number;
   ledBars?: boolean;
   linearAmplitude?: boolean;
@@ -164,6 +165,9 @@ declare class AudioMotionAnalyzer {
 
   get gradientRight(): string;
   set gradientRight(value: string);
+
+  get gravity(): number;
+  set gravity(value: number);
 
   get height(): number;
   set height(h: number);

@@ -140,6 +140,7 @@ options = {<br>
 &emsp;&emsp;[gradient](#gradient-string): **'classic'**,<br>
 &emsp;&emsp;[gradientLeft](#gradientleft-string): *undefined*,<br>
 &emsp;&emsp;[gradientRight](#gradientright-string): *undefined*,<br>
+&emsp;&emsp;[gravity](#gravity-number): **1**,<br>
 &emsp;&emsp;[height](#height-number): *undefined*,<br>
 &emsp;&emsp;[ledBars](#ledbars-boolean): **false**,<br>
 &emsp;&emsp;[linearAmplitude](#linearamplitude-boolean): **false**,<br>
@@ -498,6 +499,16 @@ For **_dual-combined_** channel layout or [`radial`](#radial-boolean) spectrum, 
 
 See also [`gradient`](#gradient-string) and [`splitGradient`](#splitgradient-boolean).
 
+### `gravity` *number*
+
+*Available since v4.5.0*
+
+Controls the acceleration of [peaks](#showpeaks-boolean) falling down.
+
+It must be a number greater than zero. Invalid values are ignored and no error is thrown.
+
+Defaults to **1**.
+
 ### `height` *number*
 ### `width` *number*
 
@@ -607,7 +618,7 @@ Defaults to **false**.
 
 *Available since v4.0.0*
 
-Performs an *n*th-root to amplify low energy values when using linear scale for the amplitude.
+Performs an *n*th-root operation to amplify low energy values when using linear scale for the amplitude.
 
 It should be a number >= 1, while 1 means no boosting. Only effective when [`linearAmplitude`](#linearamplitude-boolean) is set to *true*.
 
@@ -906,9 +917,11 @@ and setting `showBgColor` to ***true*** will make the "unlit" LEDs visible inste
 
 ### `showPeaks` *boolean*
 
-*true* to show amplitude peaks. Defaults to **true**.
+*true* to show amplitude peaks.
 
-See also [`peakLine`](#peakline-boolean).
+See also [`gravity`](#gravity-number) and [`peakLine`](#peakline-boolean).
+
+Defaults to **true**.
 
 ### `showScaleX` *boolean*
 
