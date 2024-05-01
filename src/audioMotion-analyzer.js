@@ -110,6 +110,7 @@ const DEFAULT_SETTINGS = {
 	noteLabels     : false,
 	outlineBars    : false,
 	overlay        : false,
+	peakHoldTime   : 500,
 	peakLine       : false,
 	radial		   : false,
 	radialInvert   : false,
@@ -631,6 +632,13 @@ class AudioMotionAnalyzer {
 	set outlineBars( value ) {
 		this._outlineBars = !! value;
 		this._calcBars();
+	}
+
+	get peakHoldTime() {
+		return this._peakHoldTime;
+	}
+	set peakHoldTime( value ) {
+		this._peakHoldTime = +value || 0;
 	}
 
 	get peakLine() {
@@ -1789,9 +1797,10 @@ class AudioMotionAnalyzer {
 			    useCanvas,
 			    _weightingFilter } = this,
 
+			  accelFrames      = _fps >> 1, // number of frames in half a second
 			  canvasX          = this._scaleX.canvas,
 			  canvasR          = this._scaleR.canvas,
-			  holdFrames       = _fps >> 1, // number of frames in half a second
+			  holdFrames       = _fps * this._peakHoldTime / 1e3,
 			  isDualCombined   = _chLayout == CHANNEL_COMBINED,
 			  isDualHorizontal = _chLayout == CHANNEL_HORIZONTAL,
 			  isDualVertical   = _chLayout == CHANNEL_VERTICAL,
@@ -1918,7 +1927,7 @@ class AudioMotionAnalyzer {
 			if ( _energy.peak > 0 ) {
 				_energy.hold--;
 				if ( _energy.hold < 0 )
-					_energy.peak += _energy.hold / ( holdFrames * holdFrames / _gravity );
+					_energy.peak += _energy.hold / ( accelFrames * accelFrames / _gravity );
 			}
 			if ( newVal >= _energy.peak ) {
 				_energy.peak = newVal;
@@ -2150,7 +2159,7 @@ class AudioMotionAnalyzer {
 					bar.hold[ channel ]--;
 					// if hold is negative, it becomes the "acceleration" for peak drop
 					if ( bar.hold[ channel ] < 0 )
-						bar.peak[ channel ] += bar.hold[ channel ] / ( holdFrames * holdFrames / _gravity );
+						bar.peak[ channel ] += bar.hold[ channel ] / ( accelFrames * accelFrames / _gravity );
 				}
 
 				// check if it's a new peak for this bar
