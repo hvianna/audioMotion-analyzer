@@ -88,6 +88,7 @@ const DEFAULT_SETTINGS = {
 	bgAlpha        : 0.7,
 	channelLayout  : CHANNEL_SINGLE,
 	colorMode      : COLOR_GRADIENT,
+	fadePeaks      : false,
 	fftSize        : 8192,
 	fillAlpha      : 1,
 	frequencyScale : SCALE_LOG,
@@ -110,6 +111,7 @@ const DEFAULT_SETTINGS = {
 	noteLabels     : false,
 	outlineBars    : false,
 	overlay        : false,
+	peakFadeTime   : 750,
 	peakHoldTime   : 500,
 	peakLine       : false,
 	radial		   : false,
@@ -447,6 +449,13 @@ class AudioMotionAnalyzer {
 		this._colorMode = validateFromList( value, [ COLOR_GRADIENT, COLOR_BAR_INDEX, COLOR_BAR_LEVEL ] );
 	}
 
+	get fadePeaks() {
+		return this._fadePeaks;
+	}
+	set fadePeaks( value ) {
+		this._fadePeaks = !! value;
+	}
+
 	get fftSize() {
 		return this._analyzer[0].fftSize;
 	}
@@ -632,6 +641,13 @@ class AudioMotionAnalyzer {
 	set outlineBars( value ) {
 		this._outlineBars = !! value;
 		this._calcBars();
+	}
+
+	get peakFadeTime() {
+		return this._peakFadeTime;
+	}
+	set peakFadeTime( value ) {
+		this._peakFadeTime = value >= 0 ? +value : this._peakFadeTime || DEFAULT_SETTINGS.peakFadeTime;
 	}
 
 	get peakHoldTime() {
@@ -1297,9 +1313,23 @@ class AudioMotionAnalyzer {
 		 *		unitWidth
 		 */
 
-		// helper function
-		// bar object: { posX, freq, freqLo, freqHi, binLo, binHi, ratioLo, ratioHi, peak, hold, value }
-		const barsPush = args => bars.push( { ...args, peak: [0,0], hold: [0], value: [0] } );
+		// helper function to add a bar to the bars array
+		// bar object format:
+		// {
+		//	 posX,
+		//   freq,
+		//   freqLo,
+		//   freqHi,
+		//   binLo,
+		//   binHi,
+		//   ratioLo,
+		//   ratioHi,
+		//   peak,    // peak value
+		//   hold,    // peak hold frames (negative value indicates peak falling / fading)
+		//   alpha,   // peak alpha (used by fadePeaks)
+		//   value    // current bar value
+		// }
+		const barsPush = args => bars.push( { ...args, peak: [0,0], hold: [0], alpha: [0], value: [0] } );
 
 		/*
 			A simple interpolation is used to obtain an approximate amplitude value for any given frequency,
@@ -1781,6 +1811,7 @@ class AudioMotionAnalyzer {
 			    _colorMode,
 			    _ctx,
 			    _energy,
+			    _fadePeaks,
 			    fillAlpha,
 			    _fps,
 			    _gravity,
@@ -1800,6 +1831,7 @@ class AudioMotionAnalyzer {
 			  accelFrames      = _fps >> 1, // number of frames in half a second
 			  canvasX          = this._scaleX.canvas,
 			  canvasR          = this._scaleR.canvas,
+			  fadeFrames       = _fps * this._peakFadeTime / 1e3,
 			  holdFrames       = _fps * this._peakHoldTime / 1e3,
 			  isDualCombined   = _chLayout == CHANNEL_COMBINED,
 			  isDualHorizontal = _chLayout == CHANNEL_HORIZONTAL,
@@ -2155,17 +2187,28 @@ class AudioMotionAnalyzer {
 				currentEnergy += barValue;
 
 				// update bar peak
-				if ( bar.peak[ channel ] > 0 ) {
+				if ( bar.peak[ channel ] > 0 && bar.alpha[ channel ] > 0 ) {
 					bar.hold[ channel ]--;
-					// if hold is negative, it becomes the "acceleration" for peak drop
-					if ( bar.hold[ channel ] < 0 )
-						bar.peak[ channel ] += bar.hold[ channel ] / ( accelFrames * accelFrames / _gravity );
+					// if hold is negative, start peak drop or fade out
+					if ( bar.hold[ channel ] < 0 ) {
+						if ( _fadePeaks && ! showPeakLine ) {
+							const initialAlpha = ! isAlpha || ( isOutline && _lineWidth > 0 ) ? 1 : isAlpha ? bar.peak[ channel ] : fillAlpha;
+							bar.alpha[ channel ] = initialAlpha * ( 1 + bar.hold[ channel ] / fadeFrames ); // remember hold is negative, so this is <= 1
+						}
+						else
+							bar.peak[ channel ] += bar.hold[ channel ] / ( accelFrames * accelFrames / _gravity );
+						// make sure the peak value is reset when using fadePeaks
+						if ( bar.alpha[ channel ] <= 0 )
+							bar.peak[ channel ] = 0;
+					}
 				}
 
 				// check if it's a new peak for this bar
 				if ( barValue >= bar.peak[ channel ] ) {
 					bar.peak[ channel ] = barValue;
 					bar.hold[ channel ] = holdFrames;
+					// check whether isAlpha or isOutline are active to start the peak alpha with the proper value
+					bar.alpha[ channel ] = ! isAlpha || ( isOutline && _lineWidth > 0 ) ? 1 : isAlpha ? barValue : fillAlpha;
 				}
 
 				// if not using the canvas, move earlier to the next bar
@@ -2173,10 +2216,7 @@ class AudioMotionAnalyzer {
 					continue;
 
 				// set opacity for bar effects
-				if ( isLumi || isAlpha )
-					_ctx.globalAlpha = barValue;
-				else if ( isOutline )
-					_ctx.globalAlpha = fillAlpha;
+				_ctx.globalAlpha = ( isLumi || isAlpha ) ? barValue : ( isOutline ) ? fillAlpha : 1;
 
 				// set fillStyle and strokeStyle for the current bar
 				setBarColor( barValue, barIndex );
@@ -2272,28 +2312,32 @@ class AudioMotionAnalyzer {
 				}
 
 				// Draw peak
-				const peak = bar.peak[ channel ];
-				if ( peak > 0 && showPeaks && ! showPeakLine && ! isLumi && posX >= initialX && posX < finalX ) {
-					// set opacity
-					if ( isOutline && _lineWidth > 0 )
+				const peakValue = bar.peak[ channel ],
+					  peakAlpha = bar.alpha[ channel ];
+
+				if ( peakValue > 0 && peakAlpha > 0 && showPeaks && ! showPeakLine && ! isLumi && posX >= initialX && posX < finalX ) {
+					// set opacity for peak
+					if ( _fadePeaks )
+						_ctx.globalAlpha = peakAlpha;
+					else if ( isOutline && _lineWidth > 0 ) // when lineWidth == 0 ctx.globalAlpha remains set to `fillAlpha`
 						_ctx.globalAlpha = 1;
-					else if ( isAlpha )
-						_ctx.globalAlpha = peak;
+					else if ( isAlpha )						// also, isAlpha supersedes fillAlpha when lineWidth == 0
+						_ctx.globalAlpha = peakValue;
 
 					// select the peak color for 'bar-level' colorMode or 'trueLeds'
 					if ( _colorMode == COLOR_BAR_LEVEL || isTrueLeds )
-						setBarColor( peak );
+						setBarColor( peakValue );
 
 					// render peak according to current mode / effect
 					if ( isLeds ) {
-						const ledPeak = ledPosY( peak );
+						const ledPeak = ledPosY( peakValue );
 						if ( ledPeak >= ledSpaceV ) // avoid peak below first led
 							_ctx.fillRect( posX, analyzerBottom - ledPeak, width, ledHeight );
 					}
 					else if ( ! _radial )
-						_ctx.fillRect( posX, analyzerBottom - peak * maxBarHeight, width, 2 );
+						_ctx.fillRect( posX, analyzerBottom - peakValue * maxBarHeight, width, 2 );
 					else if ( _mode != MODE_GRAPH ) { // radial (peaks for graph mode are done by the peakLine code)
-						const y = peak * maxBarHeight;
+						const y = peakValue * maxBarHeight;
 						radialPoly( posX, y, width, ! this._radialInvert || isDualVertical || y + innerRadius >= 2 ? -2 : 2 );
 					}
 				}

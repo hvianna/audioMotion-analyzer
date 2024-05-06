@@ -22,6 +22,7 @@ export interface Options {
   bgAlpha?: number;
   channelLayout?: ChannelLayout;
   colorMode?: ColorMode;
+  fadePeaks?: boolean;
   fftSize?: number;
   fillAlpha?: number;
   frequencyScale?: FrequencyScale;
@@ -48,6 +49,7 @@ export interface Options {
   onCanvasResize?: OnCanvasResizeFunction;
   outlineBars?: boolean;
   overlay?: boolean;
+  peakFadeTime?: number;
   peakHoldTime?: number;
   peakLine?: boolean;
   radial?: boolean;
@@ -145,6 +147,9 @@ declare class AudioMotionAnalyzer {
   get connectedSources(): AudioNode[];
   get connectedTo(): AudioNode[];
 
+  get fadePeaks(): boolean;
+  set fadePeaks(value: boolean);
+
   get fftSize(): number;
   set fftSize(value: number);
 
@@ -234,6 +239,9 @@ declare class AudioMotionAnalyzer {
   set outlineBars(value: boolean);
 
   public overlay: boolean;
+
+  get peakFadeTime(): number;
+  set peakFadeTime(value: number);
 
   get peakHoldTime(): number;
   set peakHoldTime(value: number);
