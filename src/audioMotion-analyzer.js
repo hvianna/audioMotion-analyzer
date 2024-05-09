@@ -93,7 +93,7 @@ const DEFAULT_SETTINGS = {
 	fillAlpha      : 1,
 	frequencyScale : SCALE_LOG,
 	gradient       : GRADIENTS[0][0],
-	gravity        : 1,
+	gravity        : 3.8,
 	height         : undefined,
 	ledBars        : false,
 	linearAmplitude: false,
@@ -1814,7 +1814,6 @@ class AudioMotionAnalyzer {
 			    _fadePeaks,
 			    fillAlpha,
 			    _fps,
-			    _gravity,
 			    _linearAmplitude,
 			    _lineWidth,
 			    maxDecibels,
@@ -1828,10 +1827,11 @@ class AudioMotionAnalyzer {
 			    useCanvas,
 			    _weightingFilter } = this,
 
-			  accelFrames      = _fps >> 1, // number of frames in half a second
 			  canvasX          = this._scaleX.canvas,
 			  canvasR          = this._scaleR.canvas,
 			  fadeFrames       = _fps * this._peakFadeTime / 1e3,
+			  fpsSquared       = _fps ** 2,
+			  gravity          = this._gravity * 1e3,
 			  holdFrames       = _fps * this._peakHoldTime / 1e3,
 			  isDualCombined   = _chLayout == CHANNEL_COMBINED,
 			  isDualHorizontal = _chLayout == CHANNEL_HORIZONTAL,
@@ -1842,6 +1842,7 @@ class AudioMotionAnalyzer {
 			  finalX           = initialX + analyzerWidth,
 			  showPeakLine     = showPeaks && this._peakLine && _mode == MODE_GRAPH,
 			  maxBarHeight     = _radial ? outerRadius - innerRadius : analyzerHeight,
+			  nominalMaxHeight = maxBarHeight / this._pixelRatio, // for consistent gravity on lo-res or hi-dpi
 			  dbRange 		   = maxDecibels - minDecibels,
 			  [ ledCount, ledSpaceH, ledSpaceV, ledHeight ] = this._leds || [];
 
@@ -1959,7 +1960,8 @@ class AudioMotionAnalyzer {
 			if ( _energy.peak > 0 ) {
 				_energy.hold--;
 				if ( _energy.hold < 0 )
-					_energy.peak += _energy.hold / ( accelFrames * accelFrames / _gravity );
+					_energy.peak += _energy.hold * gravity / fpsSquared / canvas.height * this._pixelRatio;
+					// TO-DO: replace `canvas.height * this._pixelRatio` with `maxNominalHeight` when implementing dual-channel energy
 			}
 			if ( newVal >= _energy.peak ) {
 				_energy.peak = newVal;
@@ -2193,10 +2195,10 @@ class AudioMotionAnalyzer {
 					if ( bar.hold[ channel ] < 0 ) {
 						if ( _fadePeaks && ! showPeakLine ) {
 							const initialAlpha = ! isAlpha || ( isOutline && _lineWidth > 0 ) ? 1 : isAlpha ? bar.peak[ channel ] : fillAlpha;
-							bar.alpha[ channel ] = initialAlpha * ( 1 + bar.hold[ channel ] / fadeFrames ); // remember hold is negative, so this is <= 1
+							bar.alpha[ channel ] = initialAlpha * ( 1 + bar.hold[ channel ] / fadeFrames ); // hold is negative, so this is <= 1
 						}
 						else
-							bar.peak[ channel ] += bar.hold[ channel ] / ( accelFrames * accelFrames / _gravity );
+							bar.peak[ channel ] += bar.hold[ channel ] * gravity / fpsSquared / nominalMaxHeight;
 						// make sure the peak value is reset when using fadePeaks
 						if ( bar.alpha[ channel ] <= 0 )
 							bar.peak[ channel ] = 0;
