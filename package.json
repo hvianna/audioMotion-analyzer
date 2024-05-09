@@ -2,26 +2,27 @@
   "name": "audiomotion-analyzer",
   "description": "High-resolution real-time graphic audio spectrum analyzer JavaScript module with no dependencies.",
   "version": "4.5.0-beta.0",
-  "main": "./src/audioMotion-analyzer.js",
+  "main": "./dist/index.js",
   "module": "./src/audioMotion-analyzer.js",
   "types": "./src/index.d.ts",
-  "type": "module",
   "exports": {
     ".": {
       "import": "./src/audioMotion-analyzer.js",
-      "require": "./src/audioMotion-analyzer.js",
+      "require": "./dist/index.js",
       "types": "./src/index.d.ts"
     }
   },
   "files": [
-    "src/**/*.js",
-    "src/**/*.d.ts"
+    "dist",
+    "src"
   ],
   "funding": {
     "type": "Ko-fi",
     "url": "https://ko-fi.com/hvianna"
   },
   "scripts": {
+    "build": "rm -rf dist/* && babel src/audioMotion-analyzer.js --out-file dist/index.js && sed -i -e 's/= mod.exports;/= mod.exports.default;/' dist/index.js",
+    "prepare": "npm run build",
     "start": "npx http-server"
   },
   "repository": {
@@ -40,5 +41,11 @@
   "bugs": {
     "url": "https://github.com/hvianna/audioMotion-analyzer/issues"
   },
-  "homepage": "https://audiomotion.dev"
+  "homepage": "https://audiomotion.dev",
+  "devDependencies": {
+    "@babel/cli": "^7.24.1",
+    "@babel/core": "^7.24.3",
+    "@babel/plugin-transform-modules-umd": "^7.24.1",
+    "@babel/preset-env": "^7.24.3"
+  }
 }
