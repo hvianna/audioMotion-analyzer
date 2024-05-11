@@ -3,16 +3,16 @@
 <head>
 	<meta charset="utf-8">
 	<link href="styles.css" rel="stylesheet">
-	<title>Octave bands viewer | audioMotion-analyzer</title>
+	<title>Octave bands frequency distribution | audioMotion-analyzer</title>
 </head>
 
 <body>
 <div class="container">
-	<div>
+	<div class="settings">
 		<h1>audioMotion-analyzer</h1>
-		<h2>octave bands viewer tool</h2>
+		<h2>octave bands frequency distribution</h2>
 		<div class="flex">
-			<label><span class="info" data-text="[audioMotion.fftSize] Higher values provide more detail in the frequency domain, but less detail in the temporal domain (slower response).">FFT size</span> (samples)</label>
+			<label><a href="https://audiomotion.dev/#/?id=fftsize-number" class="info" data-text="[audioMotion.fftSize] Higher values provide more detail in the frequency domain, but less detail in the temporal domain (slower response)." target="_blank">FFT size</a> (samples)</label>
 			<select id="fftsize">
 				<option>512</option>
 				<option>1024</option>
@@ -25,7 +25,7 @@
 		</div>
 
 		<div class="flex">
-			<label><span class="info" data-text="[audioCtx.sampleRate] The sample rate depends on the output device, but it's usually 44100 or 48000 Hz.">Sample rate</span> (Hz)</label>
+			<label><a href="https://audiomotion.dev/#/?id=audioctx-audiocontext-object-read-only" class="info" data-text="[audioCtx.sampleRate] The sample rate depends on the output device, but it's usually 44100 or 48000 Hz." target="_blank">Sample rate</a> (Hz)</label>
 			<select id="samplerate">
 				<option>44100</option>
 				<option>48000</option>
@@ -34,17 +34,17 @@
 		</div>
 
 		<div class="flex">
-			<label><span class="info" data-text="[audioMotion.minFreq] The lowest valid value is 1.">Min. Frequency</span> (Hz)</label>
+			<label><a href="https://audiomotion.dev/#/?id=maxfreq-number" class="info" data-text="[audioMotion.minFreq] The lowest valid value is 1." target="_blank">Min. Frequency</a> (Hz)</label>
 			<input id="minFreq" type="text" size="5" value="20">
 		</div>
 
 		<div class="flex">
-			<label><span class="info" data-text="[audioMotion.maxFreq] The highest valid value is half the Sample Rate.">Max. Frequency</span> (Hz)</label>
+			<label><a href="https://audiomotion.dev/#/?id=maxfreq-number" class="info" data-text="[audioMotion.maxFreq] The highest valid value is half the Sample Rate." target="_blank">Max. Frequency</a> (Hz)</label>
 			<input id="maxFreq" type="text" size="5" value="22000">
 		</div>
 
 		<div class="flex">
-			<label><span class="info" data-text="[audioMotion.mode]">Visualization Mode</span></label>
+			<label><a href="https://audiomotion.dev/#/?id=mode-number" class="info" data-text="[audioMotion.mode]" target="_blank">Visualization Mode</a></label>
 			<select id="mode">
 				<option value="8">Full octave bands</option>
 				<option value="7">Half octave bands</option>
@@ -58,12 +58,12 @@
 		</div>
 
 		<div class="flex">
-			<label for="ansi"><span class="info" data-text="[audioMotion.ansiBands]">ANSI Standard Octave Bands</span></label>
+			<label for="ansi"><a href="https://audiomotion.dev/#/?id=ansibands-boolean" class="info" data-text="[audioMotion.ansiBands]" target="_blank">ANSI Standard Octave Bands</a></span></label>
 			<input id="ansi" type="checkbox">
 		</div>
 
 		<label>
-			<button id="generate">Generate Analyzer Bars</button>
+			<button id="generate">Update data table &gt; </button>
 		</label>
 
 		<div>
