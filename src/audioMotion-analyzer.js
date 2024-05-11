@@ -2323,7 +2323,7 @@ class AudioMotionAnalyzer {
 						_ctx.globalAlpha = peakAlpha;
 					else if ( isOutline && _lineWidth > 0 ) // when lineWidth == 0 ctx.globalAlpha remains set to `fillAlpha`
 						_ctx.globalAlpha = 1;
-					else if ( isAlpha )						// also, isAlpha supersedes fillAlpha when lineWidth == 0
+					else if ( isAlpha )						// isAlpha (alpha based on peak value) supersedes fillAlpha if lineWidth == 0
 						_ctx.globalAlpha = peakValue;
 
 					// select the peak color for 'bar-level' colorMode or 'trueLeds'

@@ -3,7 +3,7 @@
 
 **audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer built upon **Web Audio** and **Canvas** JavaScript APIs.
 
-It was originally conceived as part of my full-featured music player called [**audioMotion**](https://audiomotion.me), but I later decided
+It was originally conceived as part of my full-featured media player called [**audioMotion**](https://audiomotion.app), but I later decided
 to make the spectrum analyzer available as a self-contained module, so other developers could use it in their own JS projects.
 
 My goal is to make this the best looking, most accurate and customizable spectrum analyzer around, in a small-footprint and high-performance package.
@@ -35,7 +35,7 @@ What users are saying:
 + Additional effects: LED bars, luminance bars, mirroring and reflection, radial spectrum
 + Choose from 5 built-in color gradients or easily add your own!
 + Fullscreen support, ready for retina / HiDPI displays
-+ Zero-dependency native ES6+ module (ESM), \~25kB minified
++ Zero-dependency native ES6+ module (ESM), \~30kB minified
 
 ## Online demos
 
@@ -57,7 +57,27 @@ What users are saying:
 
 ## Usage
 
-### Native ES6 module (ESM)
+### Node.js project
+
+Install via npm:
+
+```console
+npm i audiomotion-analyzer
+```
+
+Use ES6 import:
+
+```js
+import AudioMotionAnalyzer from 'audiomotion-analyzer';
+```
+
+Or CommonJS require:
+
+```js
+const { AudioMotionAnalyzer } = require('audioMotion-analyzer');
+```
+
+### In the browser using native ES6 module (ESM)
 
 Load from Skypack CDN:
 
@@ -70,19 +90,17 @@ Load from Skypack CDN:
 
 Or download the [latest version](https://github.com/hvianna/audioMotion-analyzer/releases) and copy the `audioMotion-analyzer.js` file from the `src/` folder into your project folder.
 
-### npm project
+### In the browser using global variable
 
-Install as a dependency:
+Load from Unpkg CDN:
 
-```console
-$ npm i audiomotion-analyzer
+```html
+<script src="https://unpkg.com/audiomotion-analyzer/dist"></script>
+<script>
+  // available as AudioMotionAnalyzer global
+</script>
 ```
 
-Use ES6 import syntax:
-
-```js
-import AudioMotionAnalyzer from 'audiomotion-analyzer';
-```
 
 ## Constructor
 
@@ -133,6 +151,7 @@ options = {<br>
 &emsp;&emsp;[channelLayout](#channellayout-string): **'single'**,<br>
 &emsp;&emsp;[colorMode](#colormode-string): **'gradient'**,<br>
 &emsp;&emsp;[connectSpeakers](#connectspeakers-boolean): **true**, // constructor only<br>
+&emsp;&emsp;[fadePeaks](#fadepeaks-boolean): **false**,<br>
 &emsp;&emsp;[fftSize](#fftsize-number): **8192**,<br>
 &emsp;&emsp;[fillAlpha](#fillalpha-number): **1**,<br>
 &emsp;&emsp;[frequencyScale](#frequencyscale-string): **'log'**,<br>
@@ -140,7 +159,7 @@ options = {<br>
 &emsp;&emsp;[gradient](#gradient-string): **'classic'**,<br>
 &emsp;&emsp;[gradientLeft](#gradientleft-string): *undefined*,<br>
 &emsp;&emsp;[gradientRight](#gradientright-string): *undefined*,<br>
-&emsp;&emsp;[gravity](#gravity-number): **1**,<br>
+&emsp;&emsp;[gravity](#gravity-number): **3.8**,<br>
 &emsp;&emsp;[height](#height-number): *undefined*,<br>
 &emsp;&emsp;[ledBars](#ledbars-boolean): **false**,<br>
 &emsp;&emsp;[linearAmplitude](#linearamplitude-boolean): **false**,<br>
@@ -160,6 +179,8 @@ options = {<br>
 &emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *undefined*,<br>
 &emsp;&emsp;[outlineBars](#outlinebars-boolean): **false**,<br>
 &emsp;&emsp;[overlay](#overlay-boolean): **false**,<br>
+&emsp;&emsp;[peakFadeTime](#peakfadetime-number): **750**,<br>
+&emsp;&emsp;[peakHoldTime](#peakholdtime-number): **500**,<br>
 &emsp;&emsp;[peakLine](#peakline-boolean): **false**,<br>
 &emsp;&emsp;[radial](#radial-boolean): **false**,<br>
 &emsp;&emsp;[radialInvert](#radialinvert-boolean): **false**,<br>
@@ -401,6 +422,18 @@ By default, **audioMotion-analyzer** is connected to the *AudioContext* `destina
 
 See also [`connectOutput()`](#connectoutput-node-).
 
+### `fadePeaks` *boolean*
+
+*Available since v4.5.0*
+
+When *true*, peaks fade out instead of falling down. It has no effect when [`peakLine`](#peakline-boolean) is active.
+
+Fade time can be customized via [`peakFadeTime`](#peakfadetime-number).
+
+See also [`peakHoldTime`](#peakholdtime-number) and [`showPeaks`](#showpeaks-boolean).
+
+Defaults to **false**.
+
 ### `fftSize` *number*
 
 Number of samples used for the FFT performed by the [*AnalyzerNode*](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode).
@@ -503,11 +536,17 @@ See also [`gradient`](#gradient-string) and [`splitGradient`](#splitgradient-boo
 
 *Available since v4.5.0*
 
-Controls the acceleration of [peaks](#showpeaks-boolean) falling down.
+Customize the acceleration of falling peaks.
 
-It must be a number greater than zero. Invalid values are ignored and no error is thrown.
+It must be a number **greater than zero,** representing _thousands of pixels per second squared_. Invalid values are ignored and no error is thrown.
 
-Defaults to **1**.
+With the default value and analyzer height of 1080px, a peak at maximum amplitude takes approximately 750ms to fall to zero.
+
+You can use the [peak drop analysis tool](/tools/peak-drop.html) to see the decay curve for different values of gravity.
+
+See also [`peakHoldTime`](#peakholdtime-number) and [`showPeaks`](#showpeaks-boolean).
+
+Defaults to **3.8**.
 
 ### `height` *number*
 ### `width` *number*
@@ -779,6 +818,30 @@ Defaults to **false**.
 
 ?> In order to keep elements other than the canvas visible in fullscreen, you'll need to set the [`fsElement`](#fselement-htmlelement-object) property in the [constructor](#constructor) options.
 
+### `peakFadeTime` *number*
+
+*Available since v4.5.0*
+
+Time in milliseconds for peaks to completely fade out, when [`fadePeaks`](#fadepeaks-boolean) is active.
+
+It must be a number greater than or equal to zero. Invalid values are ignored and no error is thrown.
+
+See also [`peakHoldTime`](#peakholdtime-number) and [`showPeaks`](#showpeaks-boolean).
+
+Defaults to **750**.
+
+### `peakHoldTime` *number*
+
+*Available since v4.5.0*
+
+Time in milliseconds for peaks to hold their value before they begin to fall or fade.
+
+It must be a number greater than or equal to zero. Invalid values are ignored and no error is thrown.
+
+See also [`fadePeaks`](#fadepeaks-boolean), [`gravity`](#gravity-number), [`peakFadeTime`](#peakfadetime-number) and [`showPeaks`](#showpeaks-boolean).
+
+Defaults to **500**.
+
 ### `peakLine` *boolean*
 
 *Available since v4.2.0*
@@ -919,7 +982,7 @@ and setting `showBgColor` to ***true*** will make the "unlit" LEDs visible inste
 
 *true* to show amplitude peaks.
 
-See also [`gravity`](#gravity-number) and [`peakLine`](#peakline-boolean).
+See also [`gravity`](#gravity-number), [`peakFadeTime`](#peakfadetime-number), [`peakHoldTime`](#peakholdtime-number) and [`peakLine`](#peakline-boolean).
 
 Defaults to **true**.
 
