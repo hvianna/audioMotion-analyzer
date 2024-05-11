@@ -107,11 +107,6 @@
 				</select>
 			</label>
 
-			<label class="label"><a href="https://audiomotion.dev/#/?id=gravity-number" target="_blank">gravity</a>
-				<input type="range" min="0.5" max="5" step=".5" data-setting="gravity">
-				<div class="value"></div>
-			</label>
-
 			<label class="label"><a href="https://audiomotion.dev/#/?id=volume-number" target="_blank">volume</a>
 				<input type="range" min="0" max="1" step=".1" data-setting="volume">
 				<div class="value"></div>
@@ -296,39 +291,29 @@
 			</fieldset>
 		</div>
 
-		<div class="box center">
+		<div class="box center flex">
 			<fieldset>
-				<legend>Switches & read-only flags</legend>
-				<button data-prop="alphaBars">alphaBars</button>
-				<button data-prop="ansiBands">ansiBands</button>
-				<button data-prop="ledBars">ledBars</button>
-				<button data-prop="loRes">loRes</button>
-				<button data-prop="lumiBars">lumiBars</button>
-				<button data-prop="noteLabels">noteLabels</button>
-				<button data-prop="outlineBars">outlineBars</button>
+				<legend>Peak behavior</legend>
+				<button data-prop="fadePeaks">fadePeaks</button>
 				<button data-prop="peakLine">peakLine</button>
-				<button data-prop="roundBars">roundBars</button>
-				<button data-prop="splitGradient">splitGradient</button>
-				<button data-prop="trueLeds">trueLeds</button>
-				<br>
-				<button data-prop="showBgColor">showBgColor</button>
 				<button data-prop="showPeaks">showPeaks</button>
-				<button data-prop="showScaleX">showScaleX</button>
-				<button data-prop="showScaleY">showScaleY</button>
-				<hr>
-				<span class="flag" data-flag="isAlphaBars">isAlphaBars</span>
-				<span class="flag" data-flag="isBandsMode">isBandsMode</span>
-				<span class="flag" data-flag="isDestroyed">isDestroyed</span>
-				<span class="flag" data-flag="isLedBars">isLedBars</span>
-				<span class="flag" data-flag="isLumiBars">isLumiBars</span>
-				<span class="flag" data-flag="isOctaveBands">isOctaveBands</span>
-				<span class="flag" data-flag="isOutlineBars">isOutlineBars</span>
-				<span class="flag" data-flag="isRoundBars">isRoundBars</span>
-				<span class="flag" data-flag="isOn">isOn</span>
-			</fieldset>
-		</div>
 
-		<div class="box flex center evenly stretch">
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peakgravity-number" target="_blank">gravity</a>
+					<input type="range" min="0.1" max="20" step=".1" data-setting="gravity">
+					<div class="value"></div>
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peakfadetime-number" target="_blank">peakFadeTime</a>
+					<input type="range" min="0" max="2000" step="50" data-setting="peakFadeTime">
+					<div class="value"></div>
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peakhold-number" target="_blank">peakHoldTime</a>
+					<input type="range" min="0" max="1000" step="50" data-setting="peakHoldTime">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+
 			<fieldset>
 				<legend>Custom LED parameters</legend>
 				<label class="label">set
@@ -346,15 +331,8 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>Demo features added via callback</legend>
-				<button data-feature="showLogo">Logo</button>
-				<button data-feature="energyMeter">Energy meters</button>
-				<button data-feature="songProgress">Progress bar</button>
-			</fieldset>
-
-			<fieldset>
 				<legend>Frame rate</legend>
-
+				<button data-prop="showFPS">showFPS</button>
 				<label class="label"><a href="https://audiomotion.dev/#/?id=maxfps-number" target="_blank">maxFPS</a>
 					<select data-setting="maxFPS">
 						<option value="0">0</option>
@@ -365,7 +343,43 @@
 						<option value="120">120</option>
 					</select>
 				</label>
-				<button data-prop="showFPS">showFPS</button>
+			</fieldset>
+		</div>
+
+		<div class="box center flex stretch">
+			<fieldset>
+				<legend>Switches & read-only flags</legend>
+				<button data-prop="alphaBars">alphaBars</button>
+				<button data-prop="ansiBands">ansiBands</button>
+				<button data-prop="ledBars">ledBars</button>
+				<button data-prop="loRes">loRes</button>
+				<button data-prop="lumiBars">lumiBars</button>
+				<button data-prop="noteLabels">noteLabels</button>
+				<button data-prop="outlineBars">outlineBars</button>
+				<button data-prop="roundBars">roundBars</button>
+				<button data-prop="splitGradient">splitGradient</button>
+				<button data-prop="trueLeds">trueLeds</button>
+				<br>
+				<button data-prop="showBgColor">showBgColor</button>
+				<button data-prop="showScaleX">showScaleX</button>
+				<button data-prop="showScaleY">showScaleY</button>
+				<hr>
+				<span class="flag" data-flag="isAlphaBars">isAlphaBars</span>
+				<span class="flag" data-flag="isBandsMode">isBandsMode</span>
+				<span class="flag" data-flag="isDestroyed">isDestroyed</span>
+				<span class="flag" data-flag="isLedBars">isLedBars</span>
+				<span class="flag" data-flag="isLumiBars">isLumiBars</span>
+				<span class="flag" data-flag="isOctaveBands">isOctaveBands</span>
+				<span class="flag" data-flag="isOutlineBars">isOutlineBars</span>
+				<span class="flag" data-flag="isRoundBars">isRoundBars</span>
+				<span class="flag" data-flag="isOn">isOn</span>
+			</fieldset>
+
+			<fieldset>
+				<legend>Demo features added via callback</legend>
+				<button data-feature="showLogo" class="full-width">Pulsating Logo</button><br>
+				<button data-feature="energyMeter" class="full-width">Energy meters</button><br>
+				<button data-feature="songProgress" class="full-width">Song progress bar</button>
 			</fieldset>
 		</div>
 

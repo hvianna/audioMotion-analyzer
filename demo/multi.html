@@ -44,8 +44,8 @@
 			<fieldset class="slim">
 				<legend>Selected analyzer</legend>
 
-				<label><input type="radio" name="analyzer" value="0" checked> Main</label>
-				<label><input type="radio" name="analyzer" value="1"> Top</label>
+				<label><input type="radio" name="analyzer" value="0" checked> Main &nbsp;</label>
+				<label><input type="radio" name="analyzer" value="1"> Top &nbsp;</label>
 				<label><input type="radio" name="analyzer" value="2"> Bottom</label>
 			</fieldset>
 
@@ -109,11 +109,6 @@
 					<option value="dual-horizontal">dual-horizontal</option>
 					<option value="dual-vertical">dual-vertical</option>
 				</select>
-			</label>
-
-			<label class="label">gravity
-				<input type="range" min="0.5" max="5" step=".5" data-setting="gravity">
-				<div class="value"></div>
 			</label>
 
 			<label class="label">volume
@@ -215,6 +210,19 @@
 					<div class="value"></div>
 				</label>
 			</fieldset>
+
+			<fieldset>
+				<legend>mode 10 / outlineBars</legend>
+				<label class="label">lineWidth
+					<input type="range" id="line_width" min="0" max="4" step=".5" data-setting="lineWidth">
+					<div class="value"></div>
+				</label>
+
+				<label class="label">fillAlpha
+					<input type="range" id="fill_alpha" min="0" max="1" step=".1" data-setting="fillAlpha">
+					<div class="value"></div>
+				</label>
+			</fieldset>
 		</div>
 
 		<div class="box center">
@@ -230,19 +238,6 @@
 						<option value="0.75">0.75</option>
 						<option value="1">1 (legacy)</option>
 					</select>
-				</label>
-			</fieldset>
-
-			<fieldset>
-				<legend>mode 10 / outlineBars</legend>
-				<label class="label">lineWidth
-					<input type="range" id="line_width" min="0" max="4" step=".5" data-setting="lineWidth">
-					<div class="value"></div>
-				</label>
-
-				<label class="label">fillAlpha
-					<input type="range" id="fill_alpha" min="0" max="1" step=".1" data-setting="fillAlpha">
-					<div class="value"></div>
 				</label>
 			</fieldset>
 
@@ -286,11 +281,30 @@
 					<div class="value"></div>
 				</label>
 			</fieldset>
+
+			<fieldset>
+				<legend>Peak behavior</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peakgravity-number" target="_blank">gravity</a>
+					<input type="range" min="0.1" max="20" step=".1" data-setting="gravity">
+					<div class="value"></div>
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peakfadetime-number" target="_blank">peakFadeTime</a>
+					<input type="range" min="0" max="2000" step="50" data-setting="peakFadeTime">
+					<div class="value"></div>
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peakhold-number" target="_blank">peakHoldTime</a>
+					<input type="range" min="0" max="1000" step="50" data-setting="peakHoldTime">
+					<div class="value"></div>
+				</label>
+			</fieldset>
 		</div>
 
 		<div class="box">
 			<button data-prop="alphaBars">alphaBars</button>
 			<button data-prop="ansiBands">ansiBands</button>
+			<button data-prop="fadePeaks">fadePeaks</button>
 			<button data-prop="ledBars">ledBars</button>
 			<button data-prop="lumiBars">lumiBars</button>
 			<button data-prop="noteLabels">noteLabels</button>

@@ -168,9 +168,8 @@ function updateRangeElement( el ) {
 // Update UI elements to reflect the selected analyzer's current settings
 function updateUI() {
 	document.querySelectorAll('canvas').forEach( el => el.classList.toggle( 'selected', el.parentElement.id.slice(-1) == selectedAnalyzer ) );
-
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ selectedAnalyzer ][ el.dataset.setting ] );
-
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
 	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', audioMotion[ selectedAnalyzer ][ el.dataset.prop ] ) );
+	document.querySelector('[data-setting="volume"').disabled = selectedAnalyzer != 0;
 }

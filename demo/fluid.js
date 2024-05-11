@@ -58,7 +58,7 @@ const presets = [
 		}
 	},
 	{
-		name: 'Radial + Overlay',
+		name: 'Radial spectrum + Overlay',
 		options: {
 			mode: 5,
 			barSpace: .1,
@@ -76,7 +76,7 @@ const presets = [
 		}
 	},
 	{
-		name: 'Bark + Linear amplitude',
+		name: 'Bark scale + Linear amplitude',
 		options: {
 			mode: 0,
 			channelLayout: 'single',
@@ -121,7 +121,7 @@ const presets = [
 		}
 	},
 	{
-		name: 'roundBars + bar-level',
+		name: 'roundBars + bar-level colorMode',
 		options: {
 			mode: 2,
 			alphaBars: false,
@@ -149,7 +149,7 @@ const presets = [
 		}
 	},
 	{
-		name: 'Test-1 (reflex + mirror)',
+		name: 'Testing config 1 (reflex + mirror)',
 		options: {
 			mode: 10,
 			channelLayout: 'single',
@@ -168,7 +168,7 @@ const presets = [
 		}
 	},
 	{
-		name: 'Test-2 (dual LED bars)',
+		name: 'Testing config 2 (dual LED bars)',
 		options: {
 			mode: 2,
 			alphaBars: false,
@@ -191,7 +191,7 @@ const presets = [
 	},
 	{
 		// gradient sample images for docs are created with a 27.5Hz square wave (volume: 1) in the oscillator
-		name: 'Test-3 (for screenshots)',
+		name: 'Testing config 3 (gradient samples)',
 		options: {
 			mode: 6,
 			alphaBars: false,
