@@ -43,9 +43,8 @@
   },
   "homepage": "https://audiomotion.dev",
   "devDependencies": {
-    "@babel/cli": "^7.24.1",
-    "@babel/core": "^7.24.3",
-    "@babel/plugin-transform-modules-umd": "^7.24.1",
-    "@babel/preset-env": "^7.24.3"
+    "@babel/cli": "^7.24.5",
+    "@babel/core": "^7.24.5",
+    "@babel/plugin-transform-modules-umd": "^7.24.1"
   }
 }
