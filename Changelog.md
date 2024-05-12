@@ -1,6 +1,23 @@
 Changelog
 =========
 
+## version 4.5.0 (2024-05-12)
+
+### Added: <!-- {docsify-ignore} -->
+
++ [`fadePeaks`](README.md#fadepeaks-boolean) - peaks fade out instead of falling down - thanks **@TF3RDL** for this [idea](https://codepen.io/TF3RDL/pen/MWLzPoO);
++ [`gravity`](README.md#gravity-number) - customize peak drop acceleration;
++ [`peakFadeTime`](README.md#peakfadetime-number) - customize peak fade-out time;
++ [`peakHoldTime`](README.md#peakholdtime-number) - customize peak hold time;
++ UMD module export - allows using the module via _require()_ and provides a global variable for easier usage in the browser - thanks **@shahkashani** for the suggestion ([#71](https://github.com/hvianna/audioMotion-analyzer/issues/71) and [#72](https://github.com/hvianna/audioMotion-analyzer/issues/72));
+  **see the [Usage](README.md#usage) section for more details.**
+
+The new gravity equation restores the original peak drop behavior and decay curve (using the default value) of versions 1.0.0 through 3.4.0.
+Check out the [peak drop analysis tool](/tools/peak-drop.html) for more information on the evolution of the equation and to compare different values of `gravity`.
+
+As usual, you can interact with all the new properties in the [fluid demo](/demo/fluid.html).
+
+
 ## version 4.4.0 (2024-01-26)
 
 ### Added: <!-- {docsify-ignore} -->
