@@ -22,12 +22,14 @@ export interface Options {
   bgAlpha?: number;
   channelLayout?: ChannelLayout;
   colorMode?: ColorMode;
+  fadePeaks?: boolean;
   fftSize?: number;
   fillAlpha?: number;
   frequencyScale?: FrequencyScale;
   gradient?: string;
   gradientLeft?: string;
   gradientRight?: string;
+  gravity?: number;
   height?: number;
   ledBars?: boolean;
   linearAmplitude?: boolean;
@@ -47,6 +49,8 @@ export interface Options {
   onCanvasResize?: OnCanvasResizeFunction;
   outlineBars?: boolean;
   overlay?: boolean;
+  peakFadeTime?: number;
+  peakHoldTime?: number;
   peakLine?: boolean;
   radial?: boolean;
   radialInvert?: boolean;
@@ -143,6 +147,9 @@ declare class AudioMotionAnalyzer {
   get connectedSources(): AudioNode[];
   get connectedTo(): AudioNode[];
 
+  get fadePeaks(): boolean;
+  set fadePeaks(value: boolean);
+
   get fftSize(): number;
   set fftSize(value: number);
 
@@ -164,6 +171,9 @@ declare class AudioMotionAnalyzer {
 
   get gradientRight(): string;
   set gradientRight(value: string);
+
+  get gravity(): number;
+  set gravity(value: number);
 
   get height(): number;
   set height(h: number);
@@ -229,6 +239,12 @@ declare class AudioMotionAnalyzer {
   set outlineBars(value: boolean);
 
   public overlay: boolean;
+
+  get peakFadeTime(): number;
+  set peakFadeTime(value: number);
+
+  get peakHoldTime(): number;
+  set peakHoldTime(value: number);
 
   get peakLine(): boolean;
   set peakLine(value: boolean);
@@ -319,4 +335,5 @@ declare class AudioMotionAnalyzer {
   public toggleFullscreen(): void;
 }
 
+export { AudioMotionAnalyzer };
 export default AudioMotionAnalyzer;

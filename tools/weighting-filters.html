@@ -3,15 +3,16 @@
 <head>
 	<meta charset="utf-8">
 	<link href="styles.css" rel="stylesheet">
-	<title>Weighting filters viewer | audioMotion-analyzer</title>
+	<title>Weighting filters response curves | audioMotion-analyzer</title>
 </head>
 <body>
 	<div class="container">
 		<div>
 			<h1>audioMotion-analyzer</h1>
-			<h2>weighting filters viewer tool</h2>
+			<h2>weighting filters response curves</h2>
 			<canvas id="canvas" width="400" height="400"></canvas>
-			<div id="filterLegend"></div>
+			<div id="legend"></div>
+			<div class="note">Click labels to show / hide the corresponding curves</div>
 			<p>References:</p>
 			<ul>
 				<li><a href="https://en.wikipedia.org/wiki/Weighting_filter" target="_blank">https://en.wikipedia.org/wiki/Weighting_filter</a></li>
@@ -45,27 +46,34 @@
 <script>
 const table   = document.getElementById('tableFilters').tBodies[0],
 	  canvas  = document.getElementById('canvas'),
-	  filterLegend = document.getElementById('filterLegend'),
+	  legend  = document.getElementById('legend'),
 	  ctx     = canvas.getContext('2d'),
 	  colors  = [ '#039aff', '#ffd800', '#ff3500', '#000000', '#00aa2e' ],
 	  filters = [ 'A', 'B', 'C', 'D', '468' ];
 
 function buildGraph() {
 
-	const maxPos  = 350,
-		  minPos  = 50,
+	const GRAPH_BORDER = 50,
+		  GRAPH_HEIGHT = 400,
+		  GRAPH_WIDTH  = 700;
+
+	const maxX    = GRAPH_WIDTH - GRAPH_BORDER,
+		  minX    = GRAPH_BORDER,
+		  maxY    = GRAPH_HEIGHT - GRAPH_BORDER,
+		  minY    = GRAPH_BORDER,
 		  maxdB   = 20,
 		  mindB   = -50,
 		  dbRange = maxdB - mindB,
-		  graphX  = val => ( maxPos - minPos ) / 4 * ( Math.log10( val ) - 1 ) + minPos,
-		  graphY  = val => ( maxPos - minPos ) / dbRange * ( maxdB - val ) + minPos;
+		  graphX  = val => minX + ( maxX - minX ) / 4 * ( Math.log10( val ) - 1 ),
+		  graphY  = val => minY + ( maxY - minY ) / dbRange * ( maxdB - val );
 
-	canvas.width |= 0; // clear canvas
+	canvas.width  = GRAPH_WIDTH;
+	canvas.height = GRAPH_HEIGHT;
 
 	ctx.lineWidth = 2;
-	ctx.moveTo( minPos-1, minPos-1 );
-	ctx.lineTo( minPos-1, maxPos+1 );
-	ctx.lineTo( maxPos+1, maxPos+1 );
+	ctx.moveTo( minX - 1, minY - 1 );
+	ctx.lineTo( minX - 1, maxY + 1 );
+	ctx.lineTo( maxX + 1, maxY + 1 );
 	ctx.stroke();
 
 	ctx.lineWidth = 1.5;
@@ -76,10 +84,10 @@ function buildGraph() {
 	ctx.beginPath();
 	for ( let gain = 20; gain >= -50; gain -= 10 ) {
 		const y = graphY( gain ) | 0;
-		ctx.fillText( ( gain > 0 ? '+' : '' ) + gain, minPos - 7, y + 5 );
+		ctx.fillText( ( gain > 0 ? '+' : '' ) + gain, minX - 7, y + 5 );
 		if ( gain > -50 ) {
-			ctx.moveTo( minPos, y );
-			ctx.lineTo( maxPos, y );
+			ctx.moveTo( minX, y );
+			ctx.lineTo( maxX, y );
 		}
 	}
 
@@ -88,17 +96,17 @@ function buildGraph() {
 
 	ctx.save();
 	ctx.rotate( -Math.PI / 2 );
-	ctx.fillText( 'Gain (dB)', -canvas.width / 2, 10 );
+	ctx.fillText( 'Gain (dB)', -canvas.height / 2, 10 );
 	ctx.restore();
 
 	for ( let pow = 1; pow <= 5; pow++ ) {
 		const freq = 10 ** pow;
-		ctx.fillText( freq > 1000 ? freq / 1000 + 'k' : freq, graphX( freq ), maxPos + 20 );
+		ctx.fillText( freq > 1000 ? freq / 1000 + 'k' : freq, graphX( freq ), maxY + 20 );
 		if ( pow < 5 ) {
 			for ( let i = 2; i < 11; i++ ) {
 				const x = graphX( freq * i );
-				ctx.moveTo( x, minPos );
-				ctx.lineTo( x, maxPos );
+				ctx.moveTo( x, minY );
+				ctx.lineTo( x, maxY );
 			}
 		}
 	}
@@ -138,7 +146,7 @@ for ( const freq of [ 16, 31.5, 63, 100, 125, 200, 250, 400, 500, 800, 1e3, 2e3,
 }
 
 for ( let i = 0; i < filters.length; i++ )
-	filterLegend.innerHTML += `<label class="filterSelector"><input type="checkbox" id="filter-${ filters[ i ] }" checked> <span class="bullet" style="background: ${ colors[ i ] }"></span> ${ filters[ i ] }</label>`;
+	legend.innerHTML += `<label class="filterSelector"><input type="checkbox" id="filter-${ filters[ i ] }" checked> <span class="bullet" style="background: ${ colors[ i ] }"></span> ${ filters[ i ] }</label>`;
 
 for ( const el of document.querySelectorAll('input[id^="filter-"]') )
 	el.addEventListener( 'click', () => buildGraph() );

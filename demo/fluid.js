@@ -121,7 +121,7 @@ const presets = [
 		}
 	},
 	{
-		name: 'roundBars + "bar-level" colorMode',
+		name: 'roundBars + bar-level colorMode',
 		options: {
 			mode: 2,
 			alphaBars: false,

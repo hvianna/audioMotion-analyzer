@@ -7,7 +7,7 @@
 - Single or dual channel view of discrete FFT frequencies or up to 240 bands
 - High-resolution (retina / HiDPI ready) fullscreen support
 - Easy to use, yet super customizable
-- No dependencies, \~25kB minified file
+- No dependencies, \~30kB minified file
 
 [Demos](/demo/)
 [About](#about)
