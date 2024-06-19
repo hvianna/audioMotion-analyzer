@@ -45,6 +45,7 @@
   "devDependencies": {
     "@babel/cli": "^7.24.5",
     "@babel/core": "^7.24.5",
-    "@babel/plugin-transform-modules-umd": "^7.24.1"
+    "@babel/plugin-transform-modules-umd": "^7.24.1",
+    "typescript": "^5.4.5"
   }
 }
