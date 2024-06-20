@@ -4,10 +4,10 @@
  * https://github.com/hvianna/audioMotion-analyzer
  */
 
-import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
+import AudioMotionAnalyzer from '../dist/esm/index.mjs';
 
 const audioEl = document.getElementById('audio'),
-	  presetSelection = document.getElementById('presets');
+	presetSelection = document.getElementById('presets');
 
 // Visualization presets
 const presets = [
@@ -233,133 +233,133 @@ try {
 		{
 			source: audioEl, // main audio source is the HTML <audio> element
 			onCanvasDraw: drawCallback, // callback function used to add custom features for this demo
-			onCanvasResize: ( reason, instance ) => {
-				console.log( `onCanvasResize called. Reason: ${reason}\nCanvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
-				if ( reason != 'create' )
+			onCanvasResize: (reason, instance) => {
+				console.log(`onCanvasResize called. Reason: ${reason}\nCanvas size is: ${instance.canvas.width} x ${instance.canvas.height}`);
+				if (reason != 'create')
 					updateUI();
 			}
 		}
 	);
 }
-catch( err ) {
-	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: ${ err.code ? '<strong>' + err.code + '</strong>' : '' } <em>${ err.code ? err.message : err }</em></p>`;
+catch (err) {
+	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: ${err.code ? '<strong>' + err.code + '</strong>' : ''} <em>${err.code ? err.message : err}</em></p>`;
 }
 
 // Display package version at the footer
 document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 // Create oscillator, gain and stereoPanner nodes in audioMotion's AudioContext
-const audioCtx   = audioMotion.audioCtx,
-	  oscillator = audioCtx.createOscillator(),
-	  gainNode   = audioCtx.createGain(),
-	  panNode    = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : false; // Safari >= 14.1; iOS Safari >= 14.5
+const audioCtx = audioMotion.audioCtx,
+	oscillator = audioCtx.createOscillator(),
+	gainNode = audioCtx.createGain(),
+	panNode = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : false; // Safari >= 14.1; iOS Safari >= 14.5
 
 gainNode.gain.value = 0;
 oscillator.start();
 
 // Connect audio nodes: oscillator -> panNode -> gainNode
-if ( panNode ) {
-	oscillator.connect( panNode );
-	panNode.connect( gainNode );
+if (panNode) {
+	oscillator.connect(panNode);
+	panNode.connect(gainNode);
 }
 else
-	oscillator.connect( gainNode );
+	oscillator.connect(gainNode);
 
 // Connect gainNode to audioMotion's input
-audioMotion.connectInput( gainNode );
+audioMotion.connectInput(gainNode);
 
 // Event listeners for UI controls
 
-document.querySelectorAll('[data-prop]').forEach( el => {
-	el.addEventListener( 'click', () => {
-		if ( el.dataset.func )
-			audioMotion[ el.dataset.func ]();
+document.querySelectorAll('[data-prop]').forEach(el => {
+	el.addEventListener('click', () => {
+		if (el.dataset.func)
+			audioMotion[el.dataset.func]();
 		else
-			audioMotion[ el.dataset.prop ] = ! audioMotion[ el.dataset.prop ];
+			audioMotion[el.dataset.prop] = !audioMotion[el.dataset.prop];
 		updateUI();
 	});
 });
 
-document.querySelectorAll('[data-feature]').forEach( el => {
-	el.addEventListener( 'click', () => {
-		features[ el.dataset.feature ] = ! features[ el.dataset.feature ];
-		el.classList.toggle( 'active' );
+document.querySelectorAll('[data-feature]').forEach(el => {
+	el.addEventListener('click', () => {
+		features[el.dataset.feature] = !features[el.dataset.feature];
+		el.classList.toggle('active');
 	});
 });
 
-document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'change', () => {
-		audioMotion[ el.dataset.setting ] = el.value;
+document.querySelectorAll('[data-setting]').forEach(el => {
+	el.addEventListener('change', () => {
+		audioMotion[el.dataset.setting] = el.value;
 		updateUI();
 	});
 });
 
-document.querySelectorAll('[data-custom]').forEach( el => {
-	el.addEventListener( 'change', () => {
-		const active  = document.getElementById('customLeds').checked,
-			  maxLeds = document.getElementById('maxLeds').value,
-			  spaceV  = document.getElementById('spaceV').value,
-			  spaceH  = document.getElementById('spaceH').value;
-		audioMotion.setLedParams( active ? { maxLeds, spaceV, spaceH } : undefined );
+document.querySelectorAll('[data-custom]').forEach(el => {
+	el.addEventListener('change', () => {
+		const active = document.getElementById('customLeds').checked,
+			maxLeds = document.getElementById('maxLeds').value,
+			spaceV = document.getElementById('spaceV').value,
+			spaceH = document.getElementById('spaceH').value;
+		audioMotion.setLedParams(active ? { maxLeds, spaceV, spaceH } : undefined);
 	});
 });
 
 // Display value of ranged input elements
-document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
+document.querySelectorAll('input[type="range"]').forEach(el => el.addEventListener('change', () => updateRangeElement(el)));
 
 // Populate the UI presets select element
 
-presets.forEach( ( preset, index ) => {
-	const option = new Option( preset.name, index );
-	presetSelection.append( option );
+presets.forEach((preset, index) => {
+	const option = new Option(preset.name, index);
+	presetSelection.append(option);
 });
 
-presetSelection.addEventListener( 'change', () => {
-	audioMotion.setOptions( presets[ presetSelection.value ].options );
+presetSelection.addEventListener('change', () => {
+	audioMotion.setOptions(presets[presetSelection.value].options);
 	updateUI();
 });
 
 // Create an 88-key piano keyboard
 
-const ROOT12 = 2 ** ( 1 / 12 ),
-	  scale = [ 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B' ];
+const ROOT12 = 2 ** (1 / 12),
+	scale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
-let html   = '',
-	freq   = 27.50, // A0 (first key)
+let html = '',
+	freq = 27.50, // A0 (first key)
 	octave = 0,
-	note   = 9;
+	note = 9;
 
 do {
-	const key     = scale[ note ],
-		  isSharp = key.endsWith('#');
+	const key = scale[note],
+		isSharp = key.endsWith('#');
 
 	html += `
-		${ isSharp ? '' : '<div class="key">' }
-		<div class="${ isSharp ? 'black' : 'white' }${ octave == 4 && note == 0 ? ' c4' : '' }" data-freq="${ freq.toFixed(2) }" title="${ key + octave }"></div>
-		${ isSharp || key == 'E' || key == 'B' ? '</div>' : '' }
+		${isSharp ? '' : '<div class="key">'}
+		<div class="${isSharp ? 'black' : 'white'}${octave == 4 && note == 0 ? ' c4' : ''}" data-freq="${freq.toFixed(2)}" title="${key + octave}"></div>
+		${isSharp || key == 'E' || key == 'B' ? '</div>' : ''}
 	`;
 
 	freq *= ROOT12;
 	note++;
-	if ( note > 11 ) {
+	if (note > 11) {
 		note = 0;
 		octave++;
 	}
-} while ( freq < 4200 ); // go up to C8 (4186 Hz)
+} while (freq < 4200); // go up to C8 (4186 Hz)
 
 document.getElementById('piano').innerHTML = html;
 
 let keyDown = false;
-document.querySelectorAll('.black, .white').forEach( key => {
-	key.addEventListener( 'mousedown', () => {
+document.querySelectorAll('.black, .white').forEach(key => {
+	key.addEventListener('mousedown', () => {
 		keyDown = true;
-		playTone( key.dataset.freq );
+		playTone(key.dataset.freq);
 	});
-	key.addEventListener( 'mouseover', () => {
-		if ( keyDown )
-			playTone( key.dataset.freq );
+	key.addEventListener('mouseover', () => {
+		if (keyDown)
+			playTone(key.dataset.freq);
 	});
-	key.addEventListener( 'mouseup', () => {
+	key.addEventListener('mouseup', () => {
 		keyDown = false;
 		playTone();
 	});
@@ -368,73 +368,73 @@ document.querySelectorAll('.black, .white').forEach( key => {
 // Test tones playback
 
 const elNote = document.getElementById('note'),
-	  elFreq = document.getElementById('frequency'),
-	  elVol  = document.getElementById('volume');
+	elFreq = document.getElementById('frequency'),
+	elVol = document.getElementById('volume');
 
-[ elNote, elFreq ].forEach( el => {
-	el.addEventListener( 'input', () => {
-		if ( el == elFreq )
+[elNote, elFreq].forEach(el => {
+	el.addEventListener('input', () => {
+		if (el == elFreq)
 			elNote.selectedIndex = 0;
-		document.getElementById('btn_play').dispatchEvent( new Event('click') );
+		document.getElementById('btn_play').dispatchEvent(new Event('click'));
 	});
 });
 
-document.getElementById('wave').addEventListener( 'change', e => oscillator.type = e.target.value );
+document.getElementById('wave').addEventListener('change', e => oscillator.type = e.target.value);
 
-document.getElementById('pan').addEventListener( 'change', e => {
-	if ( panNode )
-		panNode.pan.setValueAtTime( e.target.value, audioCtx.currentTime );
+document.getElementById('pan').addEventListener('change', e => {
+	if (panNode)
+		panNode.pan.setValueAtTime(e.target.value, audioCtx.currentTime);
 });
 
-elVol.addEventListener( 'change', () => {
-	if ( gainNode.gain.value )
+elVol.addEventListener('change', () => {
+	if (gainNode.gain.value)
 		gainNode.gain.value = elVol.value;
 });
 
-document.getElementById('btn_play').addEventListener( 'click', () => playTone( elNote.value || elFreq.value ) );
+document.getElementById('btn_play').addEventListener('click', () => playTone(elNote.value || elFreq.value));
 
-document.getElementById('btn_soundoff').addEventListener( 'click', () => playTone() );
+document.getElementById('btn_soundoff').addEventListener('click', () => playTone());
 
 // File upload
-document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
+document.getElementById('uploadFile').addEventListener('change', e => loadSong(e.target));
 
 // Microphone and disconnectOutput (mute) buttons
-const micButton  = document.getElementById('btn_mic'),
-	  muteButton = document.getElementById('btn_mute');
+const micButton = document.getElementById('btn_mic'),
+	muteButton = document.getElementById('btn_mute');
 
 let micStream,
 	isMute = false;
 
-micButton.addEventListener( 'click', () => {
-	if ( micStream ) {
-		audioMotion.disconnectInput( micStream, true ); // disconnect mic stream and release audio track
-		toggleMute( false );
+micButton.addEventListener('click', () => {
+	if (micStream) {
+		audioMotion.disconnectInput(micStream, true); // disconnect mic stream and release audio track
+		toggleMute(false);
 		micButton.className = '';
 		micStream = null;
 	}
 	else {
-		navigator.mediaDevices.getUserMedia( { audio: true } )
-		.then( stream => {
-			micStream = audioMotion.audioCtx.createMediaStreamSource( stream );
-			toggleMute( true ); // mute the speakers to avoid feedback loop from the microphone
-			audioMotion.connectInput( micStream );
-			micButton.className = 'active';
-		})
-		.catch( err => console.log('Error accessing user microphone.') );
+		navigator.mediaDevices.getUserMedia({ audio: true })
+			.then(stream => {
+				micStream = audioMotion.audioCtx.createMediaStreamSource(stream);
+				toggleMute(true); // mute the speakers to avoid feedback loop from the microphone
+				audioMotion.connectInput(micStream);
+				micButton.className = 'active';
+			})
+			.catch(err => console.log('Error accessing user microphone.'));
 	}
 });
 
-muteButton.addEventListener( 'click', () => toggleMute() );
+muteButton.addEventListener('click', () => toggleMute());
 
 // getBars() button
-document.getElementById('btn_getBars').addEventListener( 'click', () => console.log( 'getBars(): ', audioMotion.getBars() ) );
+document.getElementById('btn_getBars').addEventListener('click', () => console.log('getBars(): ', audioMotion.getBars()));
 
 // getOptions() button
-document.getElementById('btn_getOptions').addEventListener( 'click', () => {
+document.getElementById('btn_getOptions').addEventListener('click', () => {
 	const options = audioMotion.getOptions();
-	console.log( 'getOptions(): ', options );
-	navigator.clipboard.writeText( JSON.stringify( options, null, 2 ) )
-		.then( () => console.log( 'Options object copied to clipboard.' ) );
+	console.log('getOptions(): ', options);
+	navigator.clipboard.writeText(JSON.stringify(options, null, 2))
+		.then(() => console.log('Options object copied to clipboard.'));
 });
 
 // Initialize UI elements
@@ -444,96 +444,96 @@ updateUI();
 /** Functions **/
 
 // Play tone on oscillator
-function playTone( freq ) {
-	if ( freq ) {
+function playTone(freq) {
+	if (freq) {
 		elFreq.value = freq;
-		oscillator.frequency.setValueAtTime( freq, audioCtx.currentTime );
-		gainNode.gain.setValueAtTime( elVol.value, audioCtx.currentTime );
+		oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+		gainNode.gain.setValueAtTime(elVol.value, audioCtx.currentTime);
 	}
 	else // fade-out in 0.1 second
-		gainNode.gain.linearRampToValueAtTime( 0, audioCtx.currentTime + .1 );
+		gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + .1);
 }
 
 // Load song from user's computer
-function loadSong( el ) {
+function loadSong(el) {
 	const fileBlob = el.files[0];
 
-	if ( fileBlob ) {
-		audioEl.src = URL.createObjectURL( fileBlob );
+	if (fileBlob) {
+		audioEl.src = URL.createObjectURL(fileBlob);
 		audioEl.play();
 	}
 }
 
 // Connect or disconnect output to speakers
-function toggleMute( status ) {
-	isMute = ( status === undefined ) ? ! isMute : !! status;
-	if ( isMute )
+function toggleMute(status) {
+	isMute = (status === undefined) ? !isMute : !!status;
+	if (isMute)
 		audioMotion.disconnectOutput();
 	else
 		audioMotion.connectOutput();
-	muteButton.classList.toggle( 'active', isMute );
+	muteButton.classList.toggle('active', isMute);
 }
 
 // Update value div of range input elements
-function updateRangeElement( el ) {
+function updateRangeElement(el) {
 	const s = el.nextElementSibling;
-	if ( s && s.className == 'value' )
+	if (s && s.className == 'value')
 		s.innerText = el.value;
 }
 
 // Update UI elements to reflect the analyzer's current settings
 function updateUI() {
-	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
-	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', audioMotion[ el.dataset.prop ] ) );
-	document.querySelectorAll('button[data-feature]').forEach( el => el.classList.toggle( 'active', features[ el.dataset.feature ] ) );
-	document.querySelectorAll('[data-flag]').forEach( el => el.classList.toggle( 'active', audioMotion[ el.dataset.flag ] ) );
+	document.querySelectorAll('[data-setting]').forEach(el => el.value = audioMotion[el.dataset.setting]);
+	document.querySelectorAll('input[type="range"]').forEach(el => updateRangeElement(el));
+	document.querySelectorAll('button[data-prop]').forEach(el => el.classList.toggle('active', audioMotion[el.dataset.prop]));
+	document.querySelectorAll('button[data-feature]').forEach(el => el.classList.toggle('active', features[el.dataset.feature]));
+	document.querySelectorAll('[data-flag]').forEach(el => el.classList.toggle('active', audioMotion[el.dataset.flag]));
 }
 
 // Callback function used to add custom features for this demo
 
 function drawCallback() {
 
-	const canvas     = audioMotion.canvas,
-		  ctx        = audioMotion.canvasCtx,
-		  pixelRatio = audioMotion.pixelRatio, // for scaling the size of things drawn on canvas, on Hi-DPI screens or loRes mode
-		  baseSize   = Math.max( 20 * pixelRatio, canvas.height / 27 | 0 ),
-		  centerX    = canvas.width >> 1,
-		  centerY    = canvas.height >> 1;
+	const canvas = audioMotion.canvas,
+		ctx = audioMotion.canvasCtx,
+		pixelRatio = audioMotion.pixelRatio, // for scaling the size of things drawn on canvas, on Hi-DPI screens or loRes mode
+		baseSize = Math.max(20 * pixelRatio, canvas.height / 27 | 0),
+		centerX = canvas.width >> 1,
+		centerY = canvas.height >> 1;
 
-	if ( features.energyMeter ) {
-		const energy     = audioMotion.getEnergy(),
-			  peakEnergy = audioMotion.getEnergy('peak');
+	if (features.energyMeter) {
+		const energy = audioMotion.getEnergy(),
+			peakEnergy = audioMotion.getEnergy('peak');
 
 		// overall energy peak
 		const width = 50 * pixelRatio;
-		const peakY = -canvas.height * ( peakEnergy - 1 );
+		const peakY = -canvas.height * (peakEnergy - 1);
 		ctx.fillStyle = '#f008';
-		ctx.fillRect( width, peakY, width, 2 );
+		ctx.fillRect(width, peakY, width, 2);
 
-		ctx.font = `${ 16 * pixelRatio }px sans-serif`;
+		ctx.font = `${16 * pixelRatio}px sans-serif`;
 		ctx.textAlign = 'left';
-		ctx.fillText( peakEnergy.toFixed(4), width, peakY - 4 );
+		ctx.fillText(peakEnergy.toFixed(4), width, peakY - 4);
 
 		// overall energy bar
 		ctx.fillStyle = '#fff8';
-		ctx.fillRect( width, canvas.height, width, -canvas.height * energy );
+		ctx.fillRect(width, canvas.height, width, -canvas.height * energy);
 
 		// bass, midrange and treble meters
 
-		const drawLight = ( posX, color, alpha ) => {
-			const halfWidth   = width >> 1,
-				  doubleWidth = width << 1;
+		const drawLight = (posX, color, alpha) => {
+			const halfWidth = width >> 1,
+				doubleWidth = width << 1;
 
-			const grad = ctx.createLinearGradient( 0, 0, 0, canvas.height );
-			grad.addColorStop( 0, color );
-			grad.addColorStop( .75, `${color}0` );
+			const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+			grad.addColorStop(0, color);
+			grad.addColorStop(.75, `${color}0`);
 
 			ctx.beginPath();
-			ctx.moveTo( posX - halfWidth, 0 );
-			ctx.lineTo( posX - doubleWidth, canvas.height );
-			ctx.lineTo( posX + doubleWidth, canvas.height );
-			ctx.lineTo( posX + halfWidth, 0 );
+			ctx.moveTo(posX - halfWidth, 0);
+			ctx.lineTo(posX - doubleWidth, canvas.height);
+			ctx.lineTo(posX + doubleWidth, canvas.height);
+			ctx.lineTo(posX + halfWidth, 0);
 
 			ctx.save();
 			ctx.fillStyle = grad;
@@ -549,42 +549,42 @@ function drawCallback() {
 		const growSize = baseSize * 4;
 
 		const bassEnergy = audioMotion.getEnergy('bass');
-		ctx.font = `bold ${ baseSize + growSize * bassEnergy }px sans-serif`;
-		ctx.fillText( 'BASS', canvas.width * .15, centerY );
-		drawLight( canvas.width * .15, '#f00', bassEnergy );
+		ctx.font = `bold ${baseSize + growSize * bassEnergy}px sans-serif`;
+		ctx.fillText('BASS', canvas.width * .15, centerY);
+		drawLight(canvas.width * .15, '#f00', bassEnergy);
 
-		drawLight( canvas.width * .325, '#f80', audioMotion.getEnergy('lowMid') );
+		drawLight(canvas.width * .325, '#f80', audioMotion.getEnergy('lowMid'));
 
 		const midEnergy = audioMotion.getEnergy('mid');
-		ctx.font = `bold ${ baseSize + growSize * midEnergy }px sans-serif`;
-		ctx.fillText( 'MIDRANGE', centerX, centerY );
-		drawLight( centerX, '#ff0', midEnergy );
+		ctx.font = `bold ${baseSize + growSize * midEnergy}px sans-serif`;
+		ctx.fillText('MIDRANGE', centerX, centerY);
+		drawLight(centerX, '#ff0', midEnergy);
 
-		drawLight( canvas.width * .675, '#0f0', audioMotion.getEnergy('highMid') );
+		drawLight(canvas.width * .675, '#0f0', audioMotion.getEnergy('highMid'));
 
 		const trebleEnergy = audioMotion.getEnergy('treble');
-		ctx.font = `bold ${ baseSize + growSize * trebleEnergy }px sans-serif`;
-		ctx.fillText( 'TREBLE', canvas.width * .85, centerY );
-		drawLight( canvas.width * .85, '#0ff', trebleEnergy );
+		ctx.font = `bold ${baseSize + growSize * trebleEnergy}px sans-serif`;
+		ctx.fillText('TREBLE', canvas.width * .85, centerY);
+		drawLight(canvas.width * .85, '#0ff', trebleEnergy);
 	}
 
-	if ( features.showLogo ) {
+	if (features.showLogo) {
 		// the overall energy provides a simple way to sync a pulsating text/image to the beat
 		// it usually works best than specific frequency ranges, for a wider range of music styles
-		ctx.font = `${ baseSize + audioMotion.getEnergy() * 25 * pixelRatio }px Orbitron, sans-serif`;
+		ctx.font = `${baseSize + audioMotion.getEnergy() * 25 * pixelRatio}px Orbitron, sans-serif`;
 
 		ctx.fillStyle = '#fff8';
 		ctx.textAlign = 'center';
-		ctx.fillText( 'audioMotion', canvas.width - baseSize * 8, baseSize * 2 );
+		ctx.fillText('audioMotion', canvas.width - baseSize * 8, baseSize * 2);
 	}
 
-	if ( features.songProgress ) {
+	if (features.songProgress) {
 		const lineWidth = canvas.height / 40,
-			  posY = lineWidth >> 1;
+			posY = lineWidth >> 1;
 
 		ctx.beginPath();
-		ctx.moveTo( 0, posY );
-		ctx.lineTo( canvas.width * audioEl.currentTime / audioEl.duration, posY );
+		ctx.moveTo(0, posY);
+		ctx.lineTo(canvas.width * audioEl.currentTime / audioEl.duration, posY);
 		ctx.lineCap = 'round';
 		ctx.lineWidth = lineWidth;
 		ctx.globalAlpha = audioMotion.getEnergy(); // use the song energy to control the bar opacity
