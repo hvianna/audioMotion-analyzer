@@ -1,0 +1,20 @@
+{
+    "$schema": "https://swc.rs/schema.json",
+    "module": {
+        "type": "es6",
+        // These are defaults.
+        "strict": false,
+        "strictMode": true,
+        "lazy": false,
+        "noInterop": false
+    },
+    "jsc": {
+        "target": "es2015",
+        "parser": {
+            "syntax": "typescript",
+            "tsx": false,
+            "decorators": false,
+            "dynamicImport": false
+        }
+    }
+}

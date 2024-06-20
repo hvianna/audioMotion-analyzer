@@ -4,7 +4,7 @@
  * https://github.com/hvianna/audioMotion-analyzer
  */
 
-import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
+import AudioMotionAnalyzer from '../dist/esm/index.mjs';
 
 let audioMotion = [],
 	selectedAnalyzer = 0;
@@ -21,25 +21,25 @@ let audioMotion = [],
 // Only the first instance is connected to the speakers, to avoid unintended output amplification.
 
 try {
-	for ( let i = 0; i < 3; i++ ) {
-		const isFirst = ( i == 0 );
+	for (let i = 0; i < 3; i++) {
+		const isFirst = (i == 0);
 
-		audioMotion[ i ] = new AudioMotionAnalyzer(	document.getElementById( `container${i}` ), {
+		audioMotion[i] = new AudioMotionAnalyzer(document.getElementById(`container${i}`), {
 			source: isFirst ? document.getElementById('audio') : audioMotion[0].connectedSources[0],
 			connectSpeakers: isFirst,
 			height: isFirst ? 340 : 160,
 
-			onCanvasResize: ( reason, instance ) => {
+			onCanvasResize: (reason, instance) => {
 				const instNo = instance.canvas.parentElement.id.slice(-1); // get instance number from container id
-				console.log( `[#${instNo}] ${reason}: ${instance.canvas.width} x ${instance.canvas.height}` );
-				if ( reason != 'create' )
+				console.log(`[#${instNo}] ${reason}: ${instance.canvas.width} x ${instance.canvas.height}`);
+				if (reason != 'create')
 					updateUI();
 			}
 		});
 	}
 }
-catch( err ) {
-	document.getElementById('container0').innerHTML = `<p>audioMotion-analyzer failed with error: ${ err.code ? '<strong>' + err.code + '</strong>' : '' } <em>${ err.code ? err.message : err }</em></p>`;
+catch (err) {
+	document.getElementById('container0').innerHTML = `<p>audioMotion-analyzer failed with error: ${err.code ? '<strong>' + err.code + '</strong>' : ''} <em>${err.code ? err.message : err}</em></p>`;
 }
 
 // Display package version at the footer
@@ -98,16 +98,16 @@ audioMotion[2].setOptions({
 
 // Analyzer selector
 
-document.querySelectorAll('[name="analyzer"]').forEach( el => {
-	el.addEventListener( 'click', () => {
+document.querySelectorAll('[name="analyzer"]').forEach(el => {
+	el.addEventListener('click', () => {
 		selectedAnalyzer = document.querySelector('[name="analyzer"]:checked').value;
 		updateUI();
 	});
 });
 
 // user can also select an analyzer by clicking on it
-document.querySelectorAll('canvas').forEach( el => {
-	el.addEventListener( 'click', () => {
+document.querySelectorAll('canvas').forEach(el => {
+	el.addEventListener('click', () => {
 		selectedAnalyzer = el.parentElement.id.slice(-1);
 		document.querySelector(`[name="analyzer"][value="${selectedAnalyzer}"`).checked = true;
 		updateUI();
@@ -116,60 +116,60 @@ document.querySelectorAll('canvas').forEach( el => {
 
 // Event listeners for UI controls
 
-document.querySelectorAll('button[data-prop]').forEach( el => {
-	el.addEventListener( 'click', () => {
-		if ( el.dataset.func )
-			audioMotion[ selectedAnalyzer ][ el.dataset.func ]();
+document.querySelectorAll('button[data-prop]').forEach(el => {
+	el.addEventListener('click', () => {
+		if (el.dataset.func)
+			audioMotion[selectedAnalyzer][el.dataset.func]();
 		else
-			audioMotion[ selectedAnalyzer ][ el.dataset.prop ] = ! audioMotion[ selectedAnalyzer ][ el.dataset.prop ];
-		el.classList.toggle( 'active', audioMotion[ selectedAnalyzer ][ el.dataset.prop ] );
+			audioMotion[selectedAnalyzer][el.dataset.prop] = !audioMotion[selectedAnalyzer][el.dataset.prop];
+		el.classList.toggle('active', audioMotion[selectedAnalyzer][el.dataset.prop]);
 	});
 });
 
-document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'change', () => audioMotion[ selectedAnalyzer ][ el.dataset.setting ] = el.value );
+document.querySelectorAll('[data-setting]').forEach(el => {
+	el.addEventListener('change', () => audioMotion[selectedAnalyzer][el.dataset.setting] = el.value);
 });
 
 // Display value of ranged input elements
-document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
+document.querySelectorAll('input[type="range"]').forEach(el => el.addEventListener('change', () => updateRangeElement(el)));
 
 // File upload
-document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
+document.getElementById('uploadFile').addEventListener('change', e => loadSong(e.target));
 
 // getOptions() button
-document.getElementById('btn_getOptions').addEventListener( 'click', () => {
-	const options = audioMotion[ selectedAnalyzer ].getOptions(['width','height','useCanvas']); // ignore some options
-	console.log( 'getOptions(): ', options );
-	navigator.clipboard.writeText( JSON.stringify( options, null, 2 ) )
-		.then( () => console.log( 'Options object copied to clipboard.' ) );
+document.getElementById('btn_getOptions').addEventListener('click', () => {
+	const options = audioMotion[selectedAnalyzer].getOptions(['width', 'height', 'useCanvas']); // ignore some options
+	console.log('getOptions(): ', options);
+	navigator.clipboard.writeText(JSON.stringify(options, null, 2))
+		.then(() => console.log('Options object copied to clipboard.'));
 });
 
 // Initialize UI elements
 updateUI();
 
 // Load song from user's computer
-function loadSong( el ) {
+function loadSong(el) {
 	const fileBlob = el.files[0],
-		  audioEl  = document.getElementById('audio');
+		audioEl = document.getElementById('audio');
 
-	if ( fileBlob ) {
-		audioEl.src = URL.createObjectURL( fileBlob );
+	if (fileBlob) {
+		audioEl.src = URL.createObjectURL(fileBlob);
 		audioEl.play();
 	}
 }
 
 // Update value div of range input elements
-function updateRangeElement( el ) {
+function updateRangeElement(el) {
 	const s = el.nextElementSibling;
-	if ( s && s.className == 'value' )
+	if (s && s.className == 'value')
 		s.innerText = el.value;
 }
 
 // Update UI elements to reflect the selected analyzer's current settings
 function updateUI() {
-	document.querySelectorAll('canvas').forEach( el => el.classList.toggle( 'selected', el.parentElement.id.slice(-1) == selectedAnalyzer ) );
-	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ selectedAnalyzer ][ el.dataset.setting ] );
-	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', audioMotion[ selectedAnalyzer ][ el.dataset.prop ] ) );
+	document.querySelectorAll('canvas').forEach(el => el.classList.toggle('selected', el.parentElement.id.slice(-1) == selectedAnalyzer));
+	document.querySelectorAll('[data-setting]').forEach(el => el.value = audioMotion[selectedAnalyzer][el.dataset.setting]);
+	document.querySelectorAll('input[type="range"]').forEach(el => updateRangeElement(el));
+	document.querySelectorAll('button[data-prop]').forEach(el => el.classList.toggle('active', audioMotion[selectedAnalyzer][el.dataset.prop]));
 	document.querySelector('[data-setting="volume"').disabled = selectedAnalyzer != 0;
 }
