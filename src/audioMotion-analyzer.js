@@ -95,6 +95,7 @@ const DEFAULT_SETTINGS = {
 	gradient       : GRADIENTS[0][0],
 	gravity        : 3.8,
 	height         : undefined,
+	hideScaleX     : false,
 	ledBars        : false,
 	linearAmplitude: false,
 	linearBoost    : 1,
@@ -1632,6 +1633,9 @@ class AudioMotionAnalyzer {
 	 */
 	_createScales() {
 		if ( ! this._ready )
+			return;
+
+		if ( ! this.hideScaleX )
 			return;
 
 		const { analyzerWidth, initialX, innerRadius, scaleMin, unitWidth } = this._aux,
