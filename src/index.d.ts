@@ -31,6 +31,7 @@ export interface Options {
   gradientRight?: string;
   gravity?: number;
   height?: number;
+  hideScaleX?: boolean;
   ledBars?: boolean;
   linearAmplitude?: boolean;
   linearBoost?: number;
