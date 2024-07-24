@@ -108,7 +108,7 @@ export type GradientColorStop = string | { pos?: number; color: string; level?: 
 export type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
 
 export interface GradientOptions {
-  bgColor: string;
+  bgColor?: string;
   dir?: "h";
   colorStops: GradientColorStop[];
 }
