@@ -2268,7 +2268,7 @@ class AudioMotionAnalyzer {
 						// draw line to the current point
 						// avoid X values lower than the origin when mirroring left, otherwise draw them for best graph accuracy
 						if ( isDualHorizontal || _mirror != -1 || posX >= initialX )
-							_ctx.lineTo( posX, analyzerBottom - barHeight );
+							_ctx.lineTo( barCenter, analyzerBottom - barHeight );
 					}
 				}
 				else {
