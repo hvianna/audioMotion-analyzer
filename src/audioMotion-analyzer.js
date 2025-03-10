@@ -37,7 +37,8 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  FONT_FAMILY              = 'sans-serif',
 	  FPS_COLOR                = '#0f0',
 	  LEDS_UNLIT_COLOR         = '#7f7f7f22',
-	  MODE_GRAPH               = 10,
+	  MODE_BARS                = 'bars',
+	  MODE_GRAPH               = 'graph',
 	  REASON_CREATE            = 'create',
 	  REASON_FSCHANGE          = 'fschange',
 	  REASON_LORES             = 'lores',
@@ -108,7 +109,7 @@ const DEFAULT_SETTINGS = {
 	minDecibels    : -85,
 	minFreq        : 20,
 	mirror         : 0,
-	mode           : 0,
+	mode           : MODE_BARS,
 	noteLabels     : false,
 	outlineBars    : false,
 	overlay        : false,
@@ -144,7 +145,6 @@ const ERR_AUDIO_CONTEXT_FAIL     = [ 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create
 	  ERR_INVALID_AUDIO_CONTEXT  = [ 'ERR_INVALID_AUDIO_CONTEXT', 'Provided audio context is not valid' ],
 	  ERR_UNKNOWN_GRADIENT       = [ 'ERR_UNKNOWN_GRADIENT', 'Unknown gradient' ],
 	  ERR_FREQUENCY_TOO_LOW      = [ 'ERR_FREQUENCY_TOO_LOW', 'Frequency values must be >= 1' ],
-	  ERR_INVALID_MODE           = [ 'ERR_INVALID_MODE', 'Invalid mode' ],
 	  ERR_REFLEX_OUT_OF_RANGE    = [ 'ERR_REFLEX_OUT_OF_RANGE', 'Reflex ratio must be >= 0 and < 1' ],
 	  ERR_INVALID_AUDIO_SOURCE   = [ 'ERR_INVALID_AUDIO_SOURCE', 'Audio source must be an instance of HTMLMediaElement or AudioNode' ],
 	  ERR_GRADIENT_INVALID_NAME  = [ 'ERR_GRADIENT_INVALID_NAME', 'Gradient name must be a non-empty string' ],
@@ -631,14 +631,9 @@ class AudioMotionAnalyzer {
 		return this._mode;
 	}
 	set mode( value ) {
-		const mode = value | 0;
-		if ( mode >= 0 && mode <= 10 && mode != 9 ) {
-			this._mode = mode;
-			this._calcBars();
-			this._makeGrad();
-		}
-		else
-			throw new AudioMotionError( ERR_INVALID_MODE, value );
+		this._mode = validateFromList( value, [ MODE_BARS, MODE_GRAPH ] );
+		this._calcBars();
+		this._makeGrad();
 	}
 
 	get noteLabels() {
