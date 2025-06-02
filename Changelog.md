@@ -1,6 +1,15 @@
 Changelog
 =========
 
+## version 4.5.1 (2025-06-02)
+
+### Minor bugfix release <!-- {docsify-ignore} -->
+
++ Fixes audio context not being properly started in some cases, e.g., when a `click` event is programmatically triggered before an actual user click;
++ Fixes optional `bgColor` property in the `GradientOptions` type definition - thanks **jgabriel98** for reporting it ([#82](https://github.com/hvianna/audioMotion-analyzer/issues/82));
++ Adds a [demo file for the UMD module](/demo/umd.html).
+
+
 ## version 4.5.0 (2024-05-12)
 
 ### Added: <!-- {docsify-ignore} -->
