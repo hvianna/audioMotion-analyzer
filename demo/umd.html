@@ -3,14 +3,14 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>audioMotion-analyzer minimal demo</title>
+	<title>audioMotion-analyzer UMD minimal demo</title>
 	<link href="https://fonts.googleapis.com/css?family=Orbitron:900" rel="stylesheet">
 	<link href="styles.css" rel="stylesheet">
 </head>
 
 <body>
 	<header>
-		<h1><a href="https://audiomotion.dev" class="logo">audioMotion-analyzer</a> | minimal demo</h1>
+		<h1><a href="https://audiomotion.dev" class="logo">audioMotion-analyzer</a> | UMD minimal demo</h1>
 		<ul class="header-nav">
 			<li><a href="index.html">Demos</a></li>
             <li><a href="https://audiomotion.dev">Home</a></li>
@@ -21,15 +21,14 @@
 	<div id="container">
 		<div id="notice">
 			<p>
-				In this demo, the <strong>audioMotion-analyzer</strong> object is instantiated within a function triggered by a user click.
-				This method prevents the <em>"The AudioContext was not allowed to start"</em> warning message in the browser console and also
-				ensures that the AudioContext is started before any attempt to play audio.
+				This demonstrates the usage of the UMD module.
 			</p>
 
 			<p>
-				<strong>audioMotion-analyzer</strong> automatically starts its AudioContext on the first user gesture it detects, but be aware
-				that clicks on native controls of <code>&lt;audio&gt;</code> or <code>&lt;video&gt;</code> elements cannot be intercepted by JavaScript.
+				The module is included with <code>&lt;script src="https://unpkg.com/audiomotion-analyzer/dist"&gt;&lt;/script&gt;</code>
+				<br>and the class is available via <code>AudioMotionAnalyzer</code> global.
 			</p>
+
 			<button id="btn_start">Start audioMotion</button>
 		</div>
 	</div>
@@ -37,18 +36,12 @@
 	<div id="message" class="box center"></div>
 	<div><button id="btn_destroy">Destroy audioMotion</button></div>
 	<div class="credits">
-		<strong>audioMotion-analyzer</strong> v<span id="version"></span> Copyright &copy; 2018-2025 Henrique Avila Vianna. Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
+		<strong>audioMotion-analyzer</strong> v<span id="version"></span></strong> Copyright &copy; 2018-2025 Henrique Avila Vianna. Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
 		Live stream: <a href="https://federalfm.ufpel.edu.br">Rádio Federal FM</a>.
 	</div>
 
+	<script src="https://unpkg.com/audiomotion-analyzer/dist"></script>
 	<script>
-		if ( location.href.startsWith('file://') )
-			alert("This demo won't work when loaded via file:// protocol.\nTry the umd.html file, or see the README file inside the demo folder for more information.");
-	</script>
-
-	<script type="module">
-		import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
-
 		const container      = document.getElementById('container'),
 			  audioContainer = document.getElementById('audio-container'),
 			  destroyButton  = document.getElementById('btn_destroy'),
@@ -63,9 +56,11 @@
 
 		let audioEl, audioMotion; // global variables for the audio element and analyzer object
 
+		console.log( 'AudioMotionAnalyzer global:\n\n', AudioMotionAnalyzer );
+
 		function initialize() {
 			// create new <audio> element
-			audioEl = new Audio('https://icecast2.ufpel.edu.br/live');
+			audioEl = new Audio('https://radio4.cdm-radio.com:18004/stream-mp3-Zen');
 			audioEl.controls = true;
 			audioEl.crossOrigin = 'anonymous';
 			audioEl.onloadstart  = () => messageDiv.innerText = 'Buffering audio... please wait...';

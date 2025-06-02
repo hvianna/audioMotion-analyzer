@@ -2,12 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 4.5.0
+ * @version 4.5.1
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const VERSION = '4.5.0';
+const VERSION = '4.5.1';
 
 // internal constants
 const PI      = Math.PI,
@@ -368,8 +368,7 @@ class AudioMotionAnalyzer {
 		// Resume audio context if in suspended state (browsers' autoplay policy)
 		const unlockContext = () => {
 			if ( audioCtx.state == 'suspended' )
-				audioCtx.resume();
-			window.removeEventListener( EVENT_CLICK, unlockContext );
+				audioCtx.resume().then( () => window.removeEventListener( EVENT_CLICK, unlockContext ) );
 		}
 		window.addEventListener( EVENT_CLICK, unlockContext );
 
