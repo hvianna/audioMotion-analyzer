@@ -368,8 +368,7 @@ class AudioMotionAnalyzer {
 		// Resume audio context if in suspended state (browsers' autoplay policy)
 		const unlockContext = () => {
 			if ( audioCtx.state == 'suspended' )
-				audioCtx.resume();
-			window.removeEventListener( EVENT_CLICK, unlockContext );
+				audioCtx.resume().then( () => window.removeEventListener( EVENT_CLICK, unlockContext ) );
 		}
 		window.addEventListener( EVENT_CLICK, unlockContext );
 
