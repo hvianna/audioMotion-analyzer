@@ -37,7 +37,8 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  FONT_FAMILY              = 'sans-serif',
 	  FPS_COLOR                = '#0f0',
 	  LEDS_UNLIT_COLOR         = '#7f7f7f22',
-	  MODE_GRAPH               = 10,
+	  MODE_BARS                = 'bars',
+	  MODE_GRAPH               = 'graph',
 	  REASON_CREATE            = 'create',
 	  REASON_FSCHANGE          = 'fschange',
 	  REASON_LORES             = 'lores',
@@ -84,6 +85,7 @@ const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', 
 const DEFAULT_SETTINGS = {
 	alphaBars      : false,
 	ansiBands      : false,
+	bandResolution : 0,
 	barSpace       : 0.1,
 	bgAlpha        : 0.7,
 	channelLayout  : CHANNEL_SINGLE,
@@ -107,7 +109,7 @@ const DEFAULT_SETTINGS = {
 	minDecibels    : -85,
 	minFreq        : 20,
 	mirror         : 0,
-	mode           : 0,
+	mode           : MODE_BARS,
 	noteLabels     : false,
 	outlineBars    : false,
 	overlay        : false,
@@ -143,7 +145,6 @@ const ERR_AUDIO_CONTEXT_FAIL     = [ 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create
 	  ERR_INVALID_AUDIO_CONTEXT  = [ 'ERR_INVALID_AUDIO_CONTEXT', 'Provided audio context is not valid' ],
 	  ERR_UNKNOWN_GRADIENT       = [ 'ERR_UNKNOWN_GRADIENT', 'Unknown gradient' ],
 	  ERR_FREQUENCY_TOO_LOW      = [ 'ERR_FREQUENCY_TOO_LOW', 'Frequency values must be >= 1' ],
-	  ERR_INVALID_MODE           = [ 'ERR_INVALID_MODE', 'Invalid mode' ],
 	  ERR_REFLEX_OUT_OF_RANGE    = [ 'ERR_REFLEX_OUT_OF_RANGE', 'Reflex ratio must be >= 0 and < 1' ],
 	  ERR_INVALID_AUDIO_SOURCE   = [ 'ERR_INVALID_AUDIO_SOURCE', 'Audio source must be an instance of HTMLMediaElement or AudioNode' ],
 	  ERR_GRADIENT_INVALID_NAME  = [ 'ERR_GRADIENT_INVALID_NAME', 'Gradient name must be a non-empty string' ],
@@ -159,21 +160,26 @@ class AudioMotionError extends Error {
 	}
 }
 
-// helper function - output deprecation warning message on console
+/* helper functions */
+
+// clamp a given value between `min` and `max`
+const clamp = ( val, min, max ) => val <= min ? min : val >= max ? max : val;
+
+// output deprecation warning message on console
 const deprecate = ( name, alternative ) => console.warn( `${name} is deprecated. Use ${alternative} instead.` );
 
-// helper function - check if a given object is empty (also returns `true` on null, undefined or any non-object value)
+// check if a given object is empty (also returns `true` on null, undefined or any non-object value)
 const isEmpty = obj => {
 	for ( const p in obj )
 		return false;
 	return true;
 }
 
-// helper function - validate a given value with an array of strings (by default, all lowercase)
+// validate a given value with an array of strings (by default, all lowercase)
 // returns the validated value, or the first element of `list` if `value` is not found in the array
 const validateFromList = ( value, list, modifier = 'toLowerCase' ) => list[ Math.max( 0, list.indexOf( ( '' + value )[ modifier ]() ) ) ];
 
-// helper function - find the Y-coordinate of a point located between two other points, given its X-coordinate
+// find the Y-coordinate of a point located between two other points, given its X-coordinate
 const findY = ( x1, y1, x2, y2, x ) => y1 + ( y2 - y1 ) * ( x - x1 ) / ( x2 - x1 );
 
 // Polyfill for Array.findLastIndex()
@@ -416,6 +422,14 @@ class AudioMotionAnalyzer {
 		this._calcBars();
 	}
 
+	get bandResolution() {
+		return this._bandRes;
+	}
+	set bandResolution( value ) {
+		this._bandRes = clamp( value | 0, 0, 8 );
+		this._calcBars();
+	}
+
 	get barSpace() {
 		return this._barSpace;
 	}
@@ -616,14 +630,9 @@ class AudioMotionAnalyzer {
 		return this._mode;
 	}
 	set mode( value ) {
-		const mode = value | 0;
-		if ( mode >= 0 && mode <= 10 && mode != 9 ) {
-			this._mode = mode;
-			this._calcBars();
-			this._makeGrad();
-		}
-		else
-			throw new AudioMotionError( ERR_INVALID_MODE, value );
+		this._mode = validateFromList( value, [ MODE_BARS, MODE_GRAPH ] );
+		this._calcBars();
+		this._makeGrad();
 	}
 
 	get noteLabels() {
@@ -1258,7 +1267,7 @@ class AudioMotionAnalyzer {
 			return;
 		}
 
-		const { _ansiBands, _barSpace, canvas, _chLayout, _maxFreq, _minFreq, _mirror, _mode, _radial, _radialInvert, _reflexRatio } = this,
+		const { _ansiBands, _bandRes, _barSpace, canvas, _chLayout, _maxFreq, _minFreq, _mirror, _mode, _radial, _radialInvert, _reflexRatio } = this,
 			  centerX          = canvas.width >> 1,
 			  centerY          = canvas.height >> 1,
 			  isDualVertical   = _chLayout == CHANNEL_VERTICAL && ! _radial,
@@ -1266,7 +1275,7 @@ class AudioMotionAnalyzer {
 
 			  // COMPUTE FLAGS
 
-			  isBands   = _mode % 10 != 0, // true for modes 1 to 9
+			  isBands   = _bandRes > 0,
 			  isOctaves = isBands && this._frequencyScale == SCALE_LOG,
 			  isLeds    = this._showLeds && isBands && ! _radial,
 			  isLumi    = this._lumiBars && isBands && ! _radial,
@@ -1387,7 +1396,7 @@ class AudioMotionAnalyzer {
 
 			// ANSI standard octave bands use the base-10 frequency ratio, as preferred by [ANSI S1.11-2004, p.2]
 			// The equal-tempered scale uses the base-2 ratio
-			const bands = [0,24,12,8,6,4,3,2,1][ _mode ],
+			const bands = [0,1,2,3,4,6,8,12,24][ _bandRes ],
 				  bandWidth = _ansiBands ? 10 ** ( 3 / ( bands * 10 ) ) : 2 ** ( 1 / bands ), // 10^(3/10N) or 2^(1/N)
 				  halfBand  = bandWidth ** .5;
 
@@ -1442,7 +1451,7 @@ class AudioMotionAnalyzer {
 		}
 		else if ( isBands ) { // a bands mode is selected, but frequency scale is not logarithmic
 
-			const bands = [0,24,12,8,6,4,3,2,1][ _mode ] * 10;
+			const bands = [0,1,2,3,4,6,8,12,24][ _bandRes ] * 10;
 
 			const invFreqScaling = x => {
 				switch ( this._frequencyScale ) {
@@ -1522,19 +1531,19 @@ class AudioMotionAnalyzer {
 			const dPR = this._pixelRatio / ( window.devicePixelRatio > 1 && window.screen.height <= 540 ? 2 : 1 );
 
 			const params = [ [],
-				[ 128,  3, .45  ], // mode 1
-				[ 128,  4, .225 ], // mode 2
-				[  96,  6, .225 ], // mode 3
-				[  80,  6, .225 ], // mode 4
-				[  80,  6, .125 ], // mode 5
-				[  64,  6, .125 ], // mode 6
-				[  48,  8, .125 ], // mode 7
-				[  24, 16, .125 ], // mode 8
+				[  24, 16, .125 ], // full octave
+				[  48,  8, .125 ], // half octave
+				[  64,  6, .125 ], // 1/3rd
+				[  80,  6, .125 ], // 1/4th
+				[  80,  6, .225 ], // 1/6th
+				[  96,  6, .225 ], // 1/8th
+				[ 128,  4, .225 ], // 1/12th
+				[ 128,  3, .45  ]  // 1/24th
 			];
 
 			// use custom LED parameters if set, or the default parameters for the current mode
 			const customParams = this._ledParams,
-				  [ maxLeds, spaceVRatio, spaceHRatio ] = customParams || params[ _mode ];
+				  [ maxLeds, spaceVRatio, spaceHRatio ] = customParams || params[ _bandRes ];
 
 			let ledCount, maxHeight = analyzerHeight;
 
@@ -2258,7 +2267,7 @@ class AudioMotionAnalyzer {
 						// draw line to the current point
 						// avoid X values lower than the origin when mirroring left, otherwise draw them for best graph accuracy
 						if ( isDualHorizontal || _mirror != -1 || posX >= initialX )
-							_ctx.lineTo( posX, analyzerBottom - barHeight );
+							_ctx.lineTo( barCenter, analyzerBottom - barHeight );
 					}
 				}
 				else {
@@ -2576,7 +2585,6 @@ class AudioMotionAnalyzer {
 	_normalizedB( value ) {
 		const isLinear   = this._linearAmplitude,
 			  boost      = isLinear ? 1 / this._linearBoost : 1,
-			  clamp      = ( val, min, max ) => val <= min ? min : val >= max ? max : val,
 			  dBToLinear = val => 10 ** ( val / 20 );
 
 		let maxValue = this.maxDecibels,

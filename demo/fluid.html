@@ -47,16 +47,22 @@
 
 			<label class="label"><a href="https://audiomotion.dev/#/?id=mode-number" target="_blank">mode</a>
 				<select data-setting="mode">
-					<option value="0">[ 0 ] Discrete frequencies</option>
-					<option value="1">[ 1 ] 1/24th octave / 240 bands</option>
-					<option value="2">[ 2 ] 1/12th octave / 120 bands</option>
-					<option value="3">[ 3 ] 1/8th octave / 80 bands</option>
-					<option value="4">[ 4 ] 1/6th octave / 60 bands</option>
-					<option value="5">[ 5 ] 1/4th octave / 40 bands</option>
-					<option value="6">[ 6 ] 1/3rd octave / 30 bands</option>
-					<option value="7">[ 7 ] Half octave / 20 bands</option>
-					<option value="8">[ 8 ] Full octave / 10 bands</option>
-					<option value="10">[10] Line / Area graph</option>
+					<option value="bars">bars</option>
+					<option value="graph">graph</option>
+				</select>
+			</label>
+
+			<label class="label"><a href="https://audiomotion.dev/#/?id=mode-number" target="_blank">bandResolution</a>
+				<select data-setting="bandResolution">
+					<option value="0">[ 0 ] Discrete FFT frequencies</option>
+					<option value="1">[ 1 ] Full octave / 10 bands</option>
+					<option value="2">[ 2 ] Half octave / 20 bands</option>
+					<option value="3">[ 3 ] 1/3rd octave / 30 bands</option>
+					<option value="4">[ 4 ] 1/4th octave / 40 bands</option>
+					<option value="5">[ 5 ] 1/6th octave / 60 bands</option>
+					<option value="6">[ 6 ] 1/8th octave / 80 bands</option>
+					<option value="7">[ 7 ] 1/12th octave / 120 bands</option>
+					<option value="8">[ 8 ] 1/24th octave / 240 bands</option>
 				</select>
 			</label>
 
@@ -220,7 +226,7 @@
 
 		<div class="box center flex">
 			<fieldset>
-				<legend>modes 1-8 only</legend>
+				<legend>bars mode only</legend>
 				<label class="label"><a href="https://audiomotion.dev/#/?id=barspace-number" target="_blank">barSpace</a>
 					<select data-setting="barSpace">
 						<option value="0">0</option>
@@ -237,7 +243,7 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>mode 10 / outlineBars</legend>
+				<legend>graph mode / outlineBars</legend>
 				<label class="label"><a href="https://audiomotion.dev/#/?id=linewidth-number" target="_blank">lineWidth</a>
 					<input type="range" min="0" max="4" step=".5" data-setting="lineWidth">
 					<div class="value"></div>
