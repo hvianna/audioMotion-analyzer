@@ -18,6 +18,7 @@ export type CanvasResizeReason = "create" | "fschange" | "lores" | "resize" | "u
 export interface Options {
   alphaBars?: boolean;
   ansiBands?: boolean;
+  bandResolution?: number;
   barSpace?: number;
   channelLayout?: ChannelLayout;
   colorMode?: ColorMode;
@@ -42,7 +43,7 @@ export interface Options {
   minDecibels?: number;
   minFreq?: number;
   mirror?: number;
-  mode?: number;
+  mode?: VisualizationMode;
   noteLabels?: boolean;
   onCanvasDraw?: OnCanvasDrawFunction;
   onCanvasResize?: OnCanvasResizeFunction;
@@ -103,6 +104,8 @@ export type FrequencyScale = "bark" | "linear" | "log" | "mel";
 
 export type GradientColorStop = string | { pos?: number; color: string; level?: number };
 
+export type VisualizationMode = "bars" | "graph";
+
 export type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
 
 export interface GradientOptions {
@@ -130,6 +133,9 @@ declare class AudioMotionAnalyzer {
   get audioCtx(): AudioContext;
   get canvas(): HTMLCanvasElement;
   get canvasCtx(): CanvasRenderingContext2D;
+
+  get bandResolution(): number;
+  set bandResolution(value: number);
 
   get barSpace(): number;
   set barSpace(value: number);
@@ -225,8 +231,8 @@ declare class AudioMotionAnalyzer {
   get mirror(): number;
   set mirror(value: number);
 
-  get mode(): number;
-  set mode(value: number);
+  get mode(): VisualizationMode;
+  set mode(value: VisualizationMode);
 
   get noteLabels(): boolean;
   set noteLabels(value: boolean);
