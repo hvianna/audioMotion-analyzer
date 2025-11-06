@@ -19,7 +19,6 @@ export interface Options {
   alphaBars?: boolean;
   ansiBands?: boolean;
   barSpace?: number;
-  bgAlpha?: number;
   channelLayout?: ChannelLayout;
   colorMode?: ColorMode;
   fadePeaks?: boolean;
@@ -48,7 +47,6 @@ export interface Options {
   onCanvasDraw?: OnCanvasDrawFunction;
   onCanvasResize?: OnCanvasResizeFunction;
   outlineBars?: boolean;
-  overlay?: boolean;
   peakFadeTime?: number;
   peakHoldTime?: number;
   peakLine?: boolean;
@@ -60,8 +58,8 @@ export interface Options {
   reflexFit?: boolean;
   reflexRatio?: number;
   roundBars?: boolean;
-  showBgColor?: boolean;
   showFPS?: boolean;
+  showLedMask?: boolean;
   showPeaks?: boolean;
   showScaleX?: boolean;
   showScaleY?: boolean;
@@ -135,8 +133,6 @@ declare class AudioMotionAnalyzer {
 
   get barSpace(): number;
   set barSpace(value: number);
-
-  public bgAlpha: number;
 
   get channelLayout(): ChannelLayout;
   set channelLayout(value: ChannelLayout);
@@ -238,8 +234,6 @@ declare class AudioMotionAnalyzer {
   get outlineBars(): boolean;
   set outlineBars(value: boolean);
 
-  public overlay: boolean;
-
   get peakFadeTime(): number;
   set peakFadeTime(value: number);
 
@@ -270,8 +264,8 @@ declare class AudioMotionAnalyzer {
   get roundBars(): boolean;
   set roundBars(value: boolean);
 
-  public showBgColor: boolean;
   public showFPS: boolean;
+  public showLedMask: boolean;
   public showPeaks: boolean;
   public showScaleX: boolean;
   public showScaleY: boolean;
