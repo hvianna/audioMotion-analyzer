@@ -15,8 +15,7 @@ const PI      = Math.PI,
 	  HALF_PI = PI / 2,
 	  C_1     = 8.17579892;  // frequency for C -1
 
-const CANVAS_BACKGROUND_COLOR  = '#000',
-	  CHANNEL_COMBINED         = 'dual-combined',
+const CHANNEL_COMBINED         = 'dual-combined',
 	  CHANNEL_HORIZONTAL       = 'dual-horizontal',
 	  CHANNEL_SINGLE           = 'single',
 	  CHANNEL_VERTICAL         = 'dual-vertical',
@@ -27,7 +26,6 @@ const CANVAS_BACKGROUND_COLOR  = '#000',
 	  EVENT_CLICK              = 'click',
 	  EVENT_FULLSCREENCHANGE   = 'fullscreenchange',
 	  EVENT_RESIZE             = 'resize',
- 	  GRADIENT_DEFAULT_BGCOLOR = '#111',
  	  FILTER_NONE              = '',
  	  FILTER_A                 = 'A',
  	  FILTER_B                 = 'B',
@@ -87,7 +85,6 @@ const DEFAULT_SETTINGS = {
 	ansiBands      : false,
 	bandResolution : 0,
 	barSpace       : 0.1,
-	bgAlpha        : 0.7,
 	channelLayout  : CHANNEL_SINGLE,
 	colorMode      : COLOR_GRADIENT,
 	fadePeaks      : false,
@@ -112,7 +109,6 @@ const DEFAULT_SETTINGS = {
 	mode           : MODE_BARS,
 	noteLabels     : false,
 	outlineBars    : false,
-	overlay        : false,
 	peakFadeTime   : 750,
 	peakHoldTime   : 500,
 	peakLine       : false,
@@ -124,8 +120,8 @@ const DEFAULT_SETTINGS = {
 	reflexFit      : true,
 	reflexRatio    : 0,
 	roundBars      : false,
-	showBgColor    : true,
 	showFPS        : false,
+	showLedMask    : true,
 	showPeaks      : true,
 	showScaleX     : true,
 	showScaleY     : false,
@@ -1100,7 +1096,6 @@ class AudioMotionAnalyzer {
 		colorStops[0].level = 1;
 
 		this._gradients[ name ] = {
-			bgColor:    options.bgColor || GRADIENT_DEFAULT_BGCOLOR,
 			dir:        options.dir,
 			colorStops: colorStops
 		};
@@ -1828,9 +1823,8 @@ class AudioMotionAnalyzer {
 			    minDecibels,
 			    _mirror,
 			    _mode,
-			    overlay,
 			    _radial,
-			    showBgColor,
+			    showLedMask,
 			    showPeaks,
 			    useCanvas,
 			    _weightingFilter } = this,
@@ -1979,8 +1973,8 @@ class AudioMotionAnalyzer {
 
 		/* MAIN FUNCTION */
 
-		if ( overlay )
-			_ctx.clearRect( 0, 0, canvas.width, canvas.height );
+		// clear canvas
+		_ctx.clearRect( 0, 0, canvas.width, canvas.height );
 
 		let currentEnergy = 0;
 
@@ -1993,7 +1987,6 @@ class AudioMotionAnalyzer {
 				  channelGradient  = this._gradients[ this._selectedGrads[ channel ] ],
 				  colorStops       = channelGradient.colorStops,
 				  colorCount       = colorStops.length,
-				  bgColor          = ( ! showBgColor || isLeds && ! overlay ) ? '#000' : channelGradient.bgColor,
 				  radialDirection  = isDualVertical && _radial && channel ? -1 : 1, // 1 = outwards, -1 = inwards
 				  invertedChannel  = ( ! channel && _mirror == -1 ) || ( channel && _mirror == 1 ),
 				  radialOffsetX    = ! isDualHorizontal || ( channel && _mirror != 1 ) ? 0 : analyzerWidth >> ( channel || ! invertedChannel ),
@@ -2123,20 +2116,6 @@ class AudioMotionAnalyzer {
 				  		  flipX      = invertedChannel ? -1 : 1;
 
 					_ctx.setTransform( flipX, 0, 0, 1, translateX, 0 );
-				}
-
-				// fill the analyzer background if needed (not overlay or overlay + showBgColor)
-				if ( ! overlay || showBgColor ) {
-					if ( overlay )
-						_ctx.globalAlpha = this.bgAlpha;
-
-					_ctx.fillStyle = bgColor;
-
-					// exclude the reflection area when overlay is true and reflexAlpha == 1 (avoids alpha over alpha difference, in case bgAlpha < 1)
-					if ( channel == 0 || ( ! _radial && ! isDualCombined ) )
-						_ctx.fillRect( initialX, channelTop - channelGap, analyzerWidth, ( overlay && this.reflexAlpha == 1 ? analyzerHeight : channelHeight ) + channelGap );
-
-					_ctx.globalAlpha = 1;
 				}
 
 				// draw dB scale (Y-axis) - avoid drawing it twice on 'dual-combined' channel layout
@@ -2273,14 +2252,10 @@ class AudioMotionAnalyzer {
 				else {
 					if ( isLeds ) {
 						// draw "unlit" leds - avoid drawing it twice on 'dual-combined' channel layout
-						if ( showBgColor && ! overlay && ( channel == 0 || ! isDualCombined ) ) {
-							const alpha = _ctx.globalAlpha;
+						if ( showLedMask && ( ! isDualCombined || channel == 0 ) ) {
 							_ctx.strokeStyle = LEDS_UNLIT_COLOR;
-							_ctx.globalAlpha = 1;
 							strokeBar( barCenter, channelTop, analyzerBottom );
-							// restore properties
 							_ctx.strokeStyle = _ctx.fillStyle;
-							_ctx.globalAlpha = alpha;
 						}
 						if ( isTrueLeds ) {
 							// ledPosY() is used below to fit one entire led height into the selected range
@@ -2634,12 +2609,6 @@ class AudioMotionAnalyzer {
 		// apply new dimensions
 		canvas.width  = newWidth;
 		canvas.height = newHeight;
-
-		// if not in overlay mode, paint the canvas black
-		if ( ! this.overlay ) {
-			_ctx.fillStyle = '#000';
-			_ctx.fillRect( 0, 0, newWidth, newHeight );
-		}
 
 		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
 		_ctx.lineJoin = 'bevel';

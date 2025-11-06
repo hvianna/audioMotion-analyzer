@@ -165,6 +165,13 @@ fieldset button {
 	-webkit-mask-size: 200%;
 }
 
+.msg {
+	left: 50%;
+	position: absolute;
+	top: 50%;
+	transform: translate(-50%, -50%);
+}
+
 @keyframes shine {
 	0% { -webkit-mask-position: 110%; }
 	100% { -webkit-mask-position: -10%; }
@@ -255,12 +262,6 @@ fieldset button {
 	position: sticky;
 	top: 0;
 	z-index: 1;
-}
-
-/* background animation for overlay test on fluid demo */
-.fluid canvas {
-	background-image: url(media/sealoop.gif);
-	background-size: cover;
 }
 
 .center {

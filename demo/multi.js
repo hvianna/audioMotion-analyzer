@@ -49,7 +49,8 @@ document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 // main analyzer
 audioMotion[0].setOptions({
-	mode: 6,
+	mode: 'bars',
+	bandResolution: 3,
 	barSpace: .4,
 	frequencyScale: 'bark',
 	ledBars: true,
@@ -64,7 +65,8 @@ audioMotion[0].setOptions({
 
 // top right
 audioMotion[1].setOptions({
-	mode: 10,
+	mode: 'graph',
+	bandResolution: 0,
 	channelLayout: 'dual-combined',
 	fillAlpha: .3,
 	gradientLeft: 'steelblue',
@@ -82,7 +84,8 @@ audioMotion[1].setOptions({
 
 // bottom right
 audioMotion[2].setOptions({
-	mode: 2,
+	mode: 'bars',
+	bandResolution: 7,
 	barSpace: .1,
 	gradient: 'prism',
 	lumiBars: true,
@@ -90,7 +93,6 @@ audioMotion[2].setOptions({
 	maxDecibels: -30,
 	maxFreq: 16000,
 	minFreq: 30,
-	showBgColor: false,
 	showPeaks: false,
 	showScaleX: false,
 	weightingFilter: 'D'
@@ -127,7 +129,7 @@ document.querySelectorAll('button[data-prop]').forEach( el => {
 });
 
 document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'change', () => audioMotion[ selectedAnalyzer ][ el.dataset.setting ] = el.value );
+	el.addEventListener( 'input', () => audioMotion[ el.dataset.setting == 'volume' ? 0 : selectedAnalyzer ][ el.dataset.setting ] = el.value );
 });
 
 // Display value of ranged input elements
@@ -161,15 +163,25 @@ function loadSong( el ) {
 // Update value div of range input elements
 function updateRangeElement( el ) {
 	const s = el.nextElementSibling;
-	if ( s && s.className == 'value' )
-		s.innerText = el.value;
+	if ( s && s.className == 'value' ) {
+		let text = el.value;
+		if ( el.dataset.setting == 'bandResolution' ) {
+			text = `[${text}] `;
+			if ( el.value == 0 )
+				text += 'FFT freqs.';
+			else if ( audioMotion[ selectedAnalyzer ].isOctaveBands )
+				text += ['','octaves','half','1/3rd','1/4th','1/6th','1/8th','1/12th','1/24th'][ el.value ] + ( el.value > 1 ? ' octs.' : '' );
+			else
+				text += ['','10','20','30','40','60','80','120','240'][ el.value ] + ' bands';
+		}
+		s.innerText = text;
+	}
 }
 
 // Update UI elements to reflect the selected analyzer's current settings
 function updateUI() {
 	document.querySelectorAll('canvas').forEach( el => el.classList.toggle( 'selected', el.parentElement.id.slice(-1) == selectedAnalyzer ) );
-	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ selectedAnalyzer ][ el.dataset.setting ] );
+	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting == 'volume' ? 0 : selectedAnalyzer ][ el.dataset.setting ] );
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', audioMotion[ selectedAnalyzer ][ el.dataset.prop ] ) );
-	document.querySelector('[data-setting="volume"').disabled = selectedAnalyzer != 0;
+	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', !! audioMotion[ selectedAnalyzer ][ el.dataset.prop ] ) );
 }

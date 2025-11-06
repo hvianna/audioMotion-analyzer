@@ -45,25 +45,20 @@
 				<select id="presets"></select>
 			</label>
 
-			<label class="label"><a href="https://audiomotion.dev/#/?id=mode-number" target="_blank">mode</a>
+			<label class="label">Background
+				<select id="bgColor"></select>
+			</label>
+
+			<label class="label"><a href="https://audiomotion.dev/#/?id=mode-string" target="_blank">mode</a>
 				<select data-setting="mode">
 					<option value="bars">bars</option>
 					<option value="graph">graph</option>
 				</select>
 			</label>
 
-			<label class="label"><a href="https://audiomotion.dev/#/?id=mode-number" target="_blank">bandResolution</a>
-				<select data-setting="bandResolution">
-					<option value="0">[ 0 ] Discrete FFT frequencies</option>
-					<option value="1">[ 1 ] Full octave / 10 bands</option>
-					<option value="2">[ 2 ] Half octave / 20 bands</option>
-					<option value="3">[ 3 ] 1/3rd octave / 30 bands</option>
-					<option value="4">[ 4 ] 1/4th octave / 40 bands</option>
-					<option value="5">[ 5 ] 1/6th octave / 60 bands</option>
-					<option value="6">[ 6 ] 1/8th octave / 80 bands</option>
-					<option value="7">[ 7 ] 1/12th octave / 120 bands</option>
-					<option value="8">[ 8 ] 1/24th octave / 240 bands</option>
-				</select>
+			<label class="label"><a href="https://audiomotion.dev/#/?id=bandresolution-number" target="_blank">bandResolution</a>
+				<input type="range" min="0" max="8" data-setting="bandResolution" style="width: 100px;">
+				<div class="value"></div>
 			</label>
 
 			<label class="label"><a href="https://audiomotion.dev/#/?id=colormode-string" target="_blank">colorMode</a>
@@ -213,15 +208,6 @@
 					<div class="value"></div>
 				</label>
 			</fieldset>
-
-			<fieldset>
-				<legend>Overlay mode</legend>
-				<button data-prop="overlay">overlay</button>
-				<label class="label"><a href="https://audiomotion.dev/#/?id=bgalpha-number" target="_blank">bgAlpha</a>
-					<input type="range" id="bg_alpha" min="0" max="1" step=".1" data-setting="bgAlpha">
-					<div class="value"></div>
-				</label>
-			</fieldset>
 		</div>
 
 		<div class="box center flex">
@@ -274,7 +260,7 @@
 			<fieldset>
 				<legend>Reflex & Mirror</legend>
 				<label class="label"><a href="https://audiomotion.dev/#/?id=reflexratio-number" target="_blank">reflexRatio</a>
-					<input type="range" min="0" max=".9" step=".1" data-setting="reflexRatio">
+					<input type="range" min="0" max=".9" step=".05" data-setting="reflexRatio">
 					<div class="value"></div>
 				</label>
 
@@ -366,7 +352,7 @@
 				<button data-prop="splitGradient">splitGradient</button>
 				<button data-prop="trueLeds">trueLeds</button>
 				<br>
-				<button data-prop="showBgColor">showBgColor</button>
+				<button data-prop="showLedMask">showLedMask</button>
 				<button data-prop="showScaleX">showScaleX</button>
 				<button data-prop="showScaleY">showScaleY</button>
 				<hr>

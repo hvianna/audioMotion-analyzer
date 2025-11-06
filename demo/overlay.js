@@ -1,5 +1,5 @@
 /**
- * audioMotion-analyzer Overlay demo
+ * audioMotion-analyzer Video overlay demo
  *
  * https://github.com/hvianna/audioMotion-analyzer
  */
@@ -19,9 +19,9 @@ const presets = [
 	{
 		name: 'Classic LEDs',
 		options: {
-			mode: 3,
+			mode: 'bars',
+			bandResolution: 6,
 			barSpace: .5,
-			bgAlpha: .7,
 			colorMode: 'gradient',
 			gradient: 'classic',
 			ledBars: true,
@@ -29,16 +29,15 @@ const presets = [
 			maxFreq: 16000,
 			radial: false,
 			reflexRatio: 0,
-			showBgColor: true,
-			showPeaks: true,
-			overlay: true
+			showLedMask: true,
+			showPeaks: true
 		}
 	},
 	{
 		name: 'Mirror wave',
 		options: {
-			mode: 10,
-			bgAlpha: .7,
+			mode: 'graph',
+			bandResolution: 0,
 			fillAlpha: .6,
 			gradient: 'rainbow',
 			lineWidth: 2,
@@ -48,17 +47,15 @@ const presets = [
 			reflexAlpha: 1,
 			reflexBright: 1,
 			reflexRatio: .5,
-			showBgColor: false,
-			showPeaks: false,
-			overlay: true
+			showPeaks: false
 		}
 	},
 	{
 		name: 'Radial inverse',
 		options: {
-			mode: 3,
+			mode: 'bars',
+			bandResolution: 6,
 			barSpace: .25,
-			bgAlpha: .5,
 			fillAlpha: .5,
 			gradient: 'prism',
 			ledBars: false,
@@ -69,20 +66,18 @@ const presets = [
 			maxFreq: 16000,
 			radial: true,
 			radialInvert: true,
-			showBgColor: true,
 			showPeaks: true,
 			spinSpeed: 2,
 			outlineBars: true,
-			overlay: true,
 			weightingFilter: 'D'
 		}
 	},
 	{
 		name: 'Reflex Bars',
 		options: {
-			mode: 5,
+			mode: 'bars',
+			bandResolution: 4,
 			barSpace: .25,
-			bgAlpha: .5,
 			colorMode: 'bar-level',
 			gradient: 'prism',
 			ledBars: false,
@@ -92,9 +87,7 @@ const presets = [
 			reflexAlpha: .5,
 			reflexFit: true,
 			reflexRatio: .3,
-			showBgColor: false,
 			showPeaks: true,
-			overlay: true,
 			outlineBars: false
 		}
 	}
@@ -153,8 +146,19 @@ updateUI();
 // Update value div of range input elements
 function updateRangeElement( el ) {
 	const s = el.nextElementSibling;
-	if ( s && s.className == 'value' )
-		s.innerText = el.value;
+	if ( s && s.className == 'value' ) {
+		let text = el.value;
+		if ( el.dataset.setting == 'bandResolution' ) {
+			text = `[${text}] `;
+			if ( el.value == 0 )
+				text += 'FFT freqs.';
+			else if ( audioMotion.isOctaveBands )
+				text += ['','octaves','half','1/3rd','1/4th','1/6th','1/8th','1/12th','1/24th'][ el.value ] + ( el.value > 1 ? ' octs.' : '' );
+			else
+				text += ['','10','20','30','40','60','80','120','240'][ el.value ] + ' bands';
+		}
+		s.innerText = text;
+	}
 }
 
 // Update UI elements to reflect the analyzer's current settings
@@ -162,5 +166,5 @@ function updateUI() {
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
 
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', audioMotion[ el.dataset.prop ] ) );
+	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', !! audioMotion[ el.dataset.prop ] ) );
 }
