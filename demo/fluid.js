@@ -6,8 +6,18 @@
 
 import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
 
-const audioEl = document.getElementById('audio'),
-	  presetSelection = document.getElementById('presets');
+const audioEl             = document.getElementById('audio'),
+	  backgroundSelection = document.getElementById('bgColor'),
+	  container           = document.getElementById('container'),
+	  presetSelection     = document.getElementById('presets');
+
+// container background options
+const bgOptions = [
+	[ 'Dark',  'transparent' ],
+	[ 'Light', '#eee' ],
+	[ 'Gray',  'dimgray' ],
+	[ 'Image', 'url(media/synthwave.jpg) center/contain' ]
+];
 
 // Visualization presets
 const presets = [
@@ -18,9 +28,10 @@ const presets = [
 	{
 		name: 'Classic LED bars',
 		options: {
-			mode: 6,
+			mode: 'bars',
 			alphaBars: false,
 			ansiBands: true,
+			bandResolution: 3,
 			barSpace: .5,
 			channelLayout: 'single',
 			colorMode: 'gradient',
@@ -33,7 +44,7 @@ const presets = [
 			mirror: 0,
 			radial: false,
 			reflexRatio: 0,
-			showBgColor: true,
+			showLedMask: true,
 			showPeaks: true,
 			trueLeds: true
 		}
@@ -41,7 +52,8 @@ const presets = [
 	{
 		name: 'Mirror wave',
 		options: {
-			mode: 10,
+			mode: 'graph',
+			bandResolution: 0,
 			channelLayout: 'single',
 			fillAlpha: .6,
 			gradient: 'rainbow',
@@ -58,9 +70,10 @@ const presets = [
 		}
 	},
 	{
-		name: 'Radial spectrum + Overlay',
+		name: 'Radial spectrum',
 		options: {
-			mode: 5,
+			mode: 'bars',
+			bandResolution: 4,
 			barSpace: .1,
 			channelLayout: 'single',
 			gradient: 'prism',
@@ -69,16 +82,15 @@ const presets = [
 			minFreq: 20,
 			mirror: 0,
 			radial: true,
-			showBgColor: true,
 			showPeaks: true,
-			spinSpeed: 1,
-			overlay: true
+			spinSpeed: 1
 		}
 	},
 	{
-		name: 'Bark scale + Linear amplitude',
+		name: 'Bark scale + Linear level',
 		options: {
-			mode: 0,
+			mode: 'bars',
+			bandResolution: 0,
 			channelLayout: 'single',
 			frequencyScale: 'bark',
 			gradient: 'rainbow',
@@ -87,12 +99,11 @@ const presets = [
 			maxFreq: 20000,
 			minFreq: 20,
 			mirror: 0,
-			overlay: false,
 			radial: false,
 			reflexAlpha: .25,
 			reflexBright: 1,
 			reflexFit: true,
-			reflexRatio: .3,
+			reflexRatio: .25,
 			showPeaks: true,
 			showScaleX: true,
 			weightingFilter: 'D'
@@ -101,7 +112,8 @@ const presets = [
 	{
 		name: 'Dual channel combined',
 		options: {
-			mode: 10,
+			mode: 'graph',
+			bandResolution: 0,
 			channelLayout: 'dual-combined',
 			fillAlpha: .25,
 			frequencyScale: 'bark',
@@ -113,7 +125,6 @@ const presets = [
 			maxFreq: 20000,
 			minFreq: 20,
 			mirror: 0,
-			overlay: false,
 			radial: false,
 			reflexRatio: 0,
 			showPeaks: false,
@@ -121,9 +132,10 @@ const presets = [
 		}
 	},
 	{
-		name: 'roundBars + bar-level colorMode',
+		name: 'roundBars + bar-level',
 		options: {
-			mode: 2,
+			mode: 'bars',
+			bandResolution: 7,
 			alphaBars: false,
 			ansiBands: false,
 			barSpace: .25,
@@ -149,28 +161,28 @@ const presets = [
 		}
 	},
 	{
-		name: 'Testing config 1 (reflex + mirror)',
+		name: 'Testing config 1',
 		options: {
-			mode: 10,
+			mode: 'graph',
+			bandResolution: 0,
 			channelLayout: 'single',
 			gradient: 'rainbow',
 			linearAmplitude: false,
 			reflexRatio: .4,
-			showBgColor: true,
 			showPeaks: true,
 			showScaleX: false,
 			mirror: -1,
 			maxFreq: 8000,
 			minFreq: 20,
-			overlay: true,
 			lineWidth: 2,
 			fillAlpha: .2
 		}
 	},
 	{
-		name: 'Testing config 2 (dual LED bars)',
+		name: 'Testing config 2',
 		options: {
-			mode: 2,
+			mode: 'bars',
+			bandResolution: 7,
 			alphaBars: false,
 			ansiBands: false,
 			barSpace: .1,
@@ -185,15 +197,15 @@ const presets = [
 			showScaleX: false,
 			mirror: 0,
 			maxFreq: 16000,
-			minFreq: 20,
-			overlay: false,
+			minFreq: 20
 		}
 	},
 	{
 		// gradient sample images for docs are created with a 27.5Hz square wave (volume: 1) in the oscillator
-		name: 'Testing config 3 (gradient samples)',
+		name: 'Testing config 3',
 		options: {
-			mode: 6,
+			mode: 'bars',
+			bandResolution: 3,
 			alphaBars: false,
 			ansiBands: false,
 			barSpace: .4,
@@ -208,7 +220,6 @@ const presets = [
 			maxFreq: 12000,
 			minFreq: 60,
 			mirror: 0,
-			overlay: false,
 			radial: false,
 			reflexRatio: 0,
 			showPeaks: false,
@@ -229,9 +240,10 @@ const features = {
 
 try {
 	var audioMotion = new AudioMotionAnalyzer(
-		document.getElementById('container'),
+		container,
 		{
 			source: audioEl, // main audio source is the HTML <audio> element
+			fsElement: container, // element to be rendered in fullscreen (defaults to the canvas, here we use the container to take the background to fullscreen as well)
 			onCanvasDraw: drawCallback, // callback function used to add custom features for this demo
 			onCanvasResize: ( reason, instance ) => {
 				console.log( `onCanvasResize called. Reason: ${reason}\nCanvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
@@ -242,7 +254,7 @@ try {
 	);
 }
 catch( err ) {
-	document.getElementById('container').innerHTML = `<p>audioMotion-analyzer failed with error: ${ err.code ? '<strong>' + err.code + '</strong>' : '' } <em>${ err.code ? err.message : err }</em></p>`;
+	container.innerHTML = `<p>audioMotion-analyzer failed with error: ${ err.code ? '<strong>' + err.code + '</strong>' : '' } <em>${ err.code ? err.message : err }</em></p>`;
 }
 
 // Display package version at the footer
@@ -288,7 +300,7 @@ document.querySelectorAll('[data-feature]').forEach( el => {
 });
 
 document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'change', () => {
+	el.addEventListener( 'input', () => {
 		audioMotion[ el.dataset.setting ] = el.value;
 		updateUI();
 	});
@@ -307,7 +319,7 @@ document.querySelectorAll('[data-custom]').forEach( el => {
 // Display value of ranged input elements
 document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
 
-// Populate the UI presets select element
+// Populate the UI select elements for presets and background color
 
 presets.forEach( ( preset, index ) => {
 	const option = new Option( preset.name, index );
@@ -318,6 +330,11 @@ presetSelection.addEventListener( 'change', () => {
 	audioMotion.setOptions( presets[ presetSelection.value ].options );
 	updateUI();
 });
+
+bgOptions.forEach( ( [ text, value ] ) => backgroundSelection.append( new Option( text, value ) ) );
+setBackground(); // initialize background
+
+backgroundSelection.addEventListener( 'change', () => setBackground() );
 
 // Create an 88-key piano keyboard
 
@@ -443,6 +460,11 @@ updateUI();
 
 /** Functions **/
 
+// set container background
+function setBackground() {
+	container.style.background = backgroundSelection.value;
+}
+
 // Play tone on oscillator
 function playTone( freq ) {
 	if ( freq ) {
@@ -477,17 +499,31 @@ function toggleMute( status ) {
 // Update value div of range input elements
 function updateRangeElement( el ) {
 	const s = el.nextElementSibling;
-	if ( s && s.className == 'value' )
-		s.innerText = el.value;
+	if ( s && s.className == 'value' ) {
+		let text = el.value;
+		if ( el.dataset.setting == 'bandResolution' ) {
+			text = `[${text}] `;
+			if ( el.value == 0 )
+				text += 'FFT freqs.';
+			else if ( audioMotion.isOctaveBands )
+				text += ['','octaves','half','1/3rd','1/4th','1/6th','1/8th','1/12th','1/24th'][ el.value ] + ( el.value > 1 ? ' octs.' : '' );
+			else
+				text += ['','10','20','30','40','60','80','120','240'][ el.value ] + ' bands';
+		}
+		s.innerText = text;
+	}
 }
 
 // Update UI elements to reflect the analyzer's current settings
 function updateUI() {
+	if ( audioMotion.isDestroyed )
+		container.innerHTML = '<div class="msg">audioMotion instance has been destroyed. Reload the page to start again.</div>';
+
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', audioMotion[ el.dataset.prop ] ) );
-	document.querySelectorAll('button[data-feature]').forEach( el => el.classList.toggle( 'active', features[ el.dataset.feature ] ) );
-	document.querySelectorAll('[data-flag]').forEach( el => el.classList.toggle( 'active', audioMotion[ el.dataset.flag ] ) );
+	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', !! audioMotion[ el.dataset.prop ] ) );
+	document.querySelectorAll('button[data-feature]').forEach( el => el.classList.toggle( 'active', !! features[ el.dataset.feature ] ) );
+	document.querySelectorAll('[data-flag]').forEach( el => el.classList.toggle( 'active', !! audioMotion[ el.dataset.flag ] ) );
 }
 
 // Callback function used to add custom features for this demo
