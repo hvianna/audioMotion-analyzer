@@ -62,6 +62,10 @@ const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', 
 				{ color: 'lime', level: .475 }
 			]
 	  }],
+	  [ 'mono', {
+	  		colorStops: [ '#eee' ],
+	  		peakColor: 'red'
+	  }],
 	  [ 'prism', {
 			colorStops: PRISM
 	  }],
@@ -1076,7 +1080,7 @@ class AudioMotionAnalyzer {
 		if ( typeof options != 'object' )
 			throw new AudioMotionError( ERR_GRADIENT_NOT_AN_OBJECT );
 
-		const { colorStops } = options;
+		const { colorStops, peakColor } = options;
 
 		if ( ! Array.isArray( colorStops ) || ! colorStops.length )
 			throw new AudioMotionError( ERR_GRADIENT_MISSING_COLOR );
@@ -1101,10 +1105,7 @@ class AudioMotionAnalyzer {
 		colorStops.sort( ( a, b ) => a.level < b.level ? 1 : a.level > b.level ? -1 : 0 );
 		colorStops[0].level = 1;
 
-		this._gradients[ name ] = {
-			dir:        options.dir,
-			colorStops: colorStops
-		};
+		this._gradients[ name ] = { colorStops, peakColor };
 
 		// if the registered gradient is one of the currently selected gradients, regenerate them
 		if ( this._selectedGrads.includes( name ) )
@@ -2315,9 +2316,14 @@ class AudioMotionAnalyzer {
 					else if ( isAlpha )						// isAlpha (alpha based on peak value) supersedes fillAlpha if lineWidth == 0
 						_ctx.globalAlpha = peakValue;
 
-					// select the peak color for 'bar-level' colorMode or 'trueLeds'
-					if ( _colorMode == COLOR_BAR_LEVEL || isTrueLeds )
+					// use peakColor when defined by the gradient in use
+					if ( channelGradient.peakColor ) {
+						_ctx.fillStyle = _ctx.strokeStyle = channelGradient.peakColor;
+					}
+					else if ( _colorMode == COLOR_BAR_LEVEL || isTrueLeds ) {
+						// select the proper peak color for 'bar-level' colorMode or 'trueLeds'
 						setBarColor( peakValue );
+					}
 
 					// render peak according to current mode / effect
 					if ( isLeds ) {
