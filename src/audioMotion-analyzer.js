@@ -1045,6 +1045,15 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Returns a list of keys (names) of registered gradients
+	 *
+	 * @returns {array}
+	 */
+	getRegisteredGradients() {
+		return Object.keys( this._gradients );
+	}
+
+	/**
 	 * Returns current analyzer settings in object format
 	 *
 	 * @param [{string|array}] a property name or an array of property names to not include in the returned object
@@ -1241,6 +1250,19 @@ class AudioMotionAnalyzer {
 			else if ( fsEl.webkitRequestFullscreen )
 				fsEl.webkitRequestFullscreen();
 		}
+	}
+
+	/**
+	 * Unregisters a gradient
+	 *
+	 * @param {string} name
+	 * @return {boolean} `true` on success or `false` if gradient is not registered or in use
+	 */
+	unregisterGradient( name ) {
+		if ( ! this.getRegisteredGradients().includes( name ) || this._selectedGrads.includes( name ) )
+			return false;
+
+		return delete this._gradients[ name ];
 	}
 
 	/**
