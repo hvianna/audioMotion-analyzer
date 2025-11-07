@@ -66,15 +66,12 @@ const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', 
 			colorStops: PRISM
 	  }],
 	  [ 'rainbow', {
-			dir: 'h',
 			colorStops: [ '#817', ...PRISM, '#639' ]
 	  }],
 	  [ 'orangered', {
-	  		bgColor: '#3e2f29',
 	  		colorStops: [ 'OrangeRed' ]
 	  }],
 	  [ 'steelblue', {
-	  		bgColor: '#222c35',
 	  		colorStops: [ 'SteelBlue' ]
 	  }]
 ];
@@ -94,6 +91,7 @@ const DEFAULT_SETTINGS = {
 	gradient       : GRADIENTS[0][0],
 	gravity        : 3.8,
 	height         : undefined,
+	horizontalGradient: false,
 	ledBars        : false,
 	linearAmplitude: false,
 	linearBoost    : 1,
@@ -518,6 +516,14 @@ class AudioMotionAnalyzer {
 	set height( h ) {
 		this._height = h;
 		this._setCanvas( REASON_USER );
+	}
+
+	get horizontalGradient() {
+		return this._horizGrad;
+	}
+	set horizontalGradient( value ) {
+		this._horizGrad = !! value;
+		this._makeGrad();
 	}
 
 	get ledBars() {
@@ -2482,7 +2488,7 @@ class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const { canvas, _ctx, _radial, _reflexRatio } = this,
+		const { canvas, _ctx, _horizGrad, _radial, _reflexRatio } = this,
 			  { analyzerWidth, centerX, centerY, initialX, innerRadius, outerRadius } = this._aux,
 			  { isLumi }     = this._flg,
 			  isDualVertical = this._chLayout == CHANNEL_VERTICAL,
@@ -2500,10 +2506,10 @@ class AudioMotionAnalyzer {
 			if ( _radial )
 				grad = _ctx.createRadialGradient( centerX, centerY, outerRadius, centerX, centerY, innerRadius - ( outerRadius - innerRadius ) * isDualVertical );
 			else
-				grad = _ctx.createLinearGradient( ...( isHorizontal ? [ initialX, 0, initialX + analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
+				grad = _ctx.createLinearGradient( ...( _horizGrad ? [ initialX, 0, initialX + analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
 
 			if ( colorStops ) {
-				const dual = isDualVertical && ! this._splitGradient && ( ! isHorizontal || _radial );
+				const dual = isDualVertical && ! this._splitGradient && ( ! _horizGrad || _radial );
 
 				for ( let channelArea = 0; channelArea < 1 + dual; channelArea++ ) {
 					const maxIndex = colorStops.length - 1;
@@ -2516,7 +2522,7 @@ class AudioMotionAnalyzer {
 							offset /= 2;
 
 						// constrain the offset within the useful analyzer areas (avoid reflex areas)
-						if ( isDualVertical && ! isLumi && ! _radial && ! isHorizontal ) {
+						if ( isDualVertical && ! isLumi && ! _radial && ! _horizGrad ) {
 							offset *= analyzerRatio;
 							// skip the first reflex area in split mode
 							if ( ! dual && offset > .5 * analyzerRatio )
