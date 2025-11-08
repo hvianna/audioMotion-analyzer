@@ -14,7 +14,7 @@ const audioEl             = document.getElementById('audio'),
 // container background options
 const bgOptions = [
 	[ 'Dark',  'transparent' ],
-	[ 'Light', '#eee' ],
+	[ 'Light', '#ccc' ],
 	[ 'Gray',  'dimgray' ],
 	[ 'Image', 'url(media/synthwave.jpg) center/contain' ]
 ];
@@ -317,9 +317,9 @@ document.querySelectorAll('[data-custom]').forEach( el => {
 });
 
 // Display value of ranged input elements
-document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
+document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el, audioMotion ) ) );
 
-// Populate the UI select elements for presets and background color
+// Populate UI select elements and add event listeners
 
 presets.forEach( ( preset, index ) => {
 	const option = new Option( preset.name, index );
@@ -335,6 +335,12 @@ bgOptions.forEach( ( [ text, value ] ) => backgroundSelection.append( new Option
 setBackground(); // initialize background
 
 backgroundSelection.addEventListener( 'change', () => setBackground() );
+
+for ( const name of audioMotion.getRegisteredGradients() ) {
+	for ( const el of ['', 'Left', 'Right'] ) {
+		document.querySelector(`[data-setting="gradient${el}"]`).append( new Option( name ) );
+	}
+}
 
 // Create an 88-key piano keyboard
 
@@ -496,31 +502,13 @@ function toggleMute( status ) {
 	muteButton.classList.toggle( 'active', isMute );
 }
 
-// Update value div of range input elements
-function updateRangeElement( el ) {
-	const s = el.nextElementSibling;
-	if ( s && s.className == 'value' ) {
-		let text = el.value;
-		if ( el.dataset.setting == 'bandResolution' ) {
-			text = `[${text}] `;
-			if ( el.value == 0 )
-				text += 'FFT freqs.';
-			else if ( audioMotion.isOctaveBands )
-				text += ['','octaves','half','1/3rd','1/4th','1/6th','1/8th','1/12th','1/24th'][ el.value ] + ( el.value > 1 ? ' octs.' : '' );
-			else
-				text += ['','10','20','30','40','60','80','120','240'][ el.value ] + ' bands';
-		}
-		s.innerText = text;
-	}
-}
-
 // Update UI elements to reflect the analyzer's current settings
 function updateUI() {
 	if ( audioMotion.isDestroyed )
 		container.innerHTML = '<div class="msg">audioMotion instance has been destroyed. Reload the page to start again.</div>';
 
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
-	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
+	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el, audioMotion ) );
 	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', !! audioMotion[ el.dataset.prop ] ) );
 	document.querySelectorAll('button[data-feature]').forEach( el => el.classList.toggle( 'active', !! features[ el.dataset.feature ] ) );
 	document.querySelectorAll('[data-flag]').forEach( el => el.classList.toggle( 'active', !! audioMotion[ el.dataset.flag ] ) );

@@ -132,8 +132,14 @@ document.querySelectorAll('[data-setting]').forEach( el => {
 	el.addEventListener( 'input', () => audioMotion[ el.dataset.setting == 'volume' ? 0 : selectedAnalyzer ][ el.dataset.setting ] = el.value );
 });
 
+for ( const name of audioMotion[0].getRegisteredGradients() ) {
+	for ( const el of ['', 'Left', 'Right'] ) {
+		document.querySelector(`[data-setting="gradient${el}"]`).append( new Option( name ) );
+	}
+}
+
 // Display value of ranged input elements
-document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
+document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'input', () => updateRangeElement( el, audioMotion[ selectedAnalyzer ] ) ) );
 
 // File upload
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
@@ -160,28 +166,10 @@ function loadSong( el ) {
 	}
 }
 
-// Update value div of range input elements
-function updateRangeElement( el ) {
-	const s = el.nextElementSibling;
-	if ( s && s.className == 'value' ) {
-		let text = el.value;
-		if ( el.dataset.setting == 'bandResolution' ) {
-			text = `[${text}] `;
-			if ( el.value == 0 )
-				text += 'FFT freqs.';
-			else if ( audioMotion[ selectedAnalyzer ].isOctaveBands )
-				text += ['','octaves','half','1/3rd','1/4th','1/6th','1/8th','1/12th','1/24th'][ el.value ] + ( el.value > 1 ? ' octs.' : '' );
-			else
-				text += ['','10','20','30','40','60','80','120','240'][ el.value ] + ' bands';
-		}
-		s.innerText = text;
-	}
-}
-
 // Update UI elements to reflect the selected analyzer's current settings
 function updateUI() {
 	document.querySelectorAll('canvas').forEach( el => el.classList.toggle( 'selected', el.parentElement.id.slice(-1) == selectedAnalyzer ) );
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting == 'volume' ? 0 : selectedAnalyzer ][ el.dataset.setting ] );
-	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
+	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el, audioMotion[ selectedAnalyzer ] ) );
 	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', !! audioMotion[ selectedAnalyzer ][ el.dataset.prop ] ) );
 }

@@ -121,7 +121,7 @@ document.querySelectorAll('button[data-prop]').forEach( el => {
 });
 
 document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'change', () => audioMotion[ el.dataset.setting ] = el.value );
+	el.addEventListener( 'input', () => audioMotion[ el.dataset.setting ] = el.value );
 });
 
 presetSelection.addEventListener( 'change', () => {
@@ -130,7 +130,7 @@ presetSelection.addEventListener( 'change', () => {
 });
 
 // Display value of ranged input elements
-document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
+document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'input', () => updateRangeElement( el, audioMotion ) ) );
 
 // Populate the UI presets select element
 presets.forEach( ( preset, index ) => {
@@ -143,28 +143,10 @@ presetSelection.value = 3;
 audioMotion.setOptions( presets[ presetSelection.value ].options );
 updateUI();
 
-// Update value div of range input elements
-function updateRangeElement( el ) {
-	const s = el.nextElementSibling;
-	if ( s && s.className == 'value' ) {
-		let text = el.value;
-		if ( el.dataset.setting == 'bandResolution' ) {
-			text = `[${text}] `;
-			if ( el.value == 0 )
-				text += 'FFT freqs.';
-			else if ( audioMotion.isOctaveBands )
-				text += ['','octaves','half','1/3rd','1/4th','1/6th','1/8th','1/12th','1/24th'][ el.value ] + ( el.value > 1 ? ' octs.' : '' );
-			else
-				text += ['','10','20','30','40','60','80','120','240'][ el.value ] + ' bands';
-		}
-		s.innerText = text;
-	}
-}
-
 // Update UI elements to reflect the analyzer's current settings
 function updateUI() {
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
 
-	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
+	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el, audioMotion ) );
 	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', !! audioMotion[ el.dataset.prop ] ) );
 }

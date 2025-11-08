@@ -70,33 +70,15 @@
 			</label>
 
 			<label class="label"><a href="https://audiomotion.dev/#/?id=gradient-string" target="_blank">gradient</a>
-				<select data-setting="gradient">
-					<option value="classic">classic</option>
-					<option value="prism">prism</option>
-					<option value="rainbow">rainbow</option>
-					<option value="steelblue">steelblue</option>
-					<option value="orangered">orangered</option>
-				</select>
+				<select data-setting="gradient"></select>
 			</label>
 
 			<label class="label"><a href="https://audiomotion.dev/#/?id=gradientleft-string" target="_blank">gradientLeft</a>
-				<select data-setting="gradientLeft">
-					<option value="classic">classic</option>
-					<option value="prism">prism</option>
-					<option value="rainbow">rainbow</option>
-					<option value="steelblue">steelblue</option>
-					<option value="orangered">orangered</option>
-				</select>
+				<select data-setting="gradientLeft"></select>
 			</label>
 
 			<label class="label"><a href="https://audiomotion.dev/#/?id=gradientright-string" target="_blank">gradientRight</a>
-				<select data-setting="gradientRight">
-					<option value="classic">classic</option>
-					<option value="prism">prism</option>
-					<option value="rainbow">rainbow</option>
-					<option value="steelblue">steelblue</option>
-					<option value="orangered">orangered</option>
-				</select>
+				<select data-setting="gradientRight"></select>
 			</label>
 
 			<label class="label"><a href="https://audiomotion.dev/#/?id=channellayout-string" target="_blank">channelLayout</a>
@@ -212,19 +194,10 @@
 
 		<div class="box center flex">
 			<fieldset>
-				<legend>bars mode only</legend>
+				<legend>bandRes > 0 only</legend>
 				<label class="label"><a href="https://audiomotion.dev/#/?id=barspace-number" target="_blank">barSpace</a>
-					<select data-setting="barSpace">
-						<option value="0">0</option>
-						<option value="0.1">0.1</option>
-						<option value="0.2">0.2</option>
-						<option value="0.25">0.25</option>
-						<option value="0.4">0.4</option>
-						<option value="0.5">0.5</option>
-						<option value="0.75">0.75</option>
-						<option value="0.9">0.9</option>
-						<option value="1">1 (legacy)</option>
-					</select>
+					<input type="range" min="0" max="1" step=".05" data-setting="barSpace" style="width: 90px">
+					<div class="value"></div>
 				</label>
 			</fieldset>
 
@@ -308,7 +281,7 @@
 
 			<fieldset>
 				<legend>Custom LED parameters</legend>
-				<label class="label">set
+				<label class="label">Enable
 					<input id="customLeds" type="checkbox" data-custom="ledParams">
 				</label>
 				<label class="label"><a href="https://audiomotion.dev/#/?id=setledparams-params-" target="_blank">maxLeds</a>
@@ -341,20 +314,24 @@
 		<div class="box center flex stretch">
 			<fieldset>
 				<legend>Switches & read-only flags</legend>
-				<button data-prop="alphaBars">alphaBars</button>
-				<button data-prop="ansiBands">ansiBands</button>
-				<button data-prop="ledBars">ledBars</button>
-				<button data-prop="loRes">loRes</button>
-				<button data-prop="lumiBars">lumiBars</button>
-				<button data-prop="noteLabels">noteLabels</button>
-				<button data-prop="outlineBars">outlineBars</button>
-				<button data-prop="roundBars">roundBars</button>
-				<button data-prop="splitGradient">splitGradient</button>
-				<button data-prop="trueLeds">trueLeds</button>
-				<br>
-				<button data-prop="showLedMask">showLedMask</button>
-				<button data-prop="showScaleX">showScaleX</button>
-				<button data-prop="showScaleY">showScaleY</button>
+				<div class="button-grid">
+					<button data-prop="alphaBars">alphaBars</button>
+					<button data-prop="ansiBands">ansiBands</button>
+					<button data-prop="flipGradient">flipGradient</button>
+					<button data-prop="horizontalGradient">horizontalGradient</button>
+					<button data-prop="ledBars">ledBars</button>
+					<button data-prop="loRes">loRes</button>
+					<button data-prop="lumiBars">lumiBars</button>
+					<button data-prop="noteLabels">noteLabels</button>
+<!--				<br> -->
+					<button data-prop="outlineBars">outlineBars</button>
+					<button data-prop="roundBars">roundBars</button>
+					<button data-prop="splitGradient">splitGradient</button>
+					<button data-prop="trueLeds">trueLeds</button>
+					<button data-prop="showLedMask">showLedMask</button>
+					<button data-prop="showScaleX">showScaleX</button>
+					<button data-prop="showScaleY">showScaleY</button>
+				</div>
 				<hr>
 				<span class="flag" data-flag="isAlphaBars">isAlphaBars</span>
 				<span class="flag" data-flag="isBandsMode">isBandsMode</span>
@@ -433,6 +410,7 @@
 		<strong>audioMotion-analyzer v<span id="version"></span></strong> Copyright &copy; 2018-2025 Henrique Avila Vianna. Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
 	</div>
 
+	<script src="functions.js"></script>
 	<script src="fluid.js" type="module"></script>
 
 	<script>

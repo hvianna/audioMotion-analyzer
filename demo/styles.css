@@ -116,6 +116,17 @@ ul {
 	margin-right: 1em;
 }
 
+.button-grid {
+	display: grid;
+	grid-auto-flow: column;
+	grid-template-rows: 1fr 1fr;
+	gap: 10px;
+	margin: 5px 0;
+}
+.button-grid button {
+	margin: 0;
+}
+
 .topbar {
 	margin: 10px 0;
 }

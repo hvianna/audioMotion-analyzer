@@ -70,33 +70,15 @@
 			</label>
 
 			<label class="label">gradient
-				<select data-setting="gradient">
-					<option value="classic">classic</option>
-					<option value="prism">prism</option>
-					<option value="rainbow">rainbow</option>
-					<option value="steelblue">steelblue</option>
-					<option value="orangered">orangered</option>
-				</select>
+				<select data-setting="gradient"></select>
 			</label>
 
 			<label class="label">gradientLeft
-				<select data-setting="gradientLeft">
-					<option value="classic">classic</option>
-					<option value="prism">prism</option>
-					<option value="rainbow">rainbow</option>
-					<option value="steelblue">steelblue</option>
-					<option value="orangered">orangered</option>
-				</select>
+				<select data-setting="gradientLeft"></select>
 			</label>
 
 			<label class="label">gradientRight
-				<select data-setting="gradientRight">
-					<option value="classic">classic</option>
-					<option value="prism">prism</option>
-					<option value="rainbow">rainbow</option>
-					<option value="steelblue">steelblue</option>
-					<option value="orangered">orangered</option>
-				</select>
+				<select data-setting="gradientRight"></select>
 			</label>
 
 			<label class="label">channelLayout
@@ -209,7 +191,7 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>mode 10 / outlineBars</legend>
+				<legend>graph mode / outlineBars</legend>
 				<label class="label">lineWidth
 					<input type="range" id="line_width" min="0" max="4" step=".5" data-setting="lineWidth">
 					<div class="value"></div>
@@ -224,17 +206,10 @@
 
 		<div class="box center">
 			<fieldset>
-				<legend>modes 1-8 only</legend>
+				<legend>bandRes > 0 only</legend>
 				<label class="label">barSpace
-					<select data-setting="barSpace">
-						<option value="0">0</option>
-						<option value="0.1">0.1</option>
-						<option value="0.25">0.25</option>
-						<option value="0.4">0.4</option>
-						<option value="0.5">0.5</option>
-						<option value="0.75">0.75</option>
-						<option value="1">1 (legacy)</option>
-					</select>
+					<input type="range" min="0" max="1" step=".05" data-setting="barSpace" style="width: 90px">
+					<div class="value"></div>
 				</label>
 			</fieldset>
 
@@ -299,24 +274,54 @@
 		</div>
 
 		<div class="box">
-			<button data-prop="alphaBars">alphaBars</button>
-			<button data-prop="ansiBands">ansiBands</button>
-			<button data-prop="fadePeaks">fadePeaks</button>
-			<button data-prop="ledBars">ledBars</button>
-			<button data-prop="lumiBars">lumiBars</button>
-			<button data-prop="noteLabels">noteLabels</button>
-			<button data-prop="outlineBars">outlineBars</button>
-			<button data-prop="peakLine">peakLine</button>
-			<button data-prop="roundBars">roundBars</button>
-			<button data-prop="loRes">loRes</button>
-			<button data-prop="splitGradient">splitGradient</button>
-			<button data-prop="trueLeds">trueLeds</button>
-			<br>
-			<button data-prop="showFPS">showFPS</button>
-			<button data-prop="showLedMask">showLedMask</button>
-			<button data-prop="showPeaks">showPeaks</button>
-			<button data-prop="showScaleX">showScaleX</button>
-			<button data-prop="showScaleY">showScaleY</button>
+			<fieldset>
+				<legend>Bar effects</legend>
+				<div class="button-grid">
+					<button data-prop="alphaBars">alphaBars</button>
+					<button data-prop="lumiBars">lumiBars</button>
+					<button data-prop="outlineBars">outlineBars</button>
+					<button data-prop="roundBars">roundBars</button>
+				</div>
+			</fieldset>
+
+			<fieldset>
+				<legend>Display</legend>
+				<div class="button-grid">
+					<button data-prop="ansiBands">ansiBands</button>
+					<button data-prop="noteLabels">noteLabels</button>
+					<button data-prop="loRes">loRes</button>
+					<button data-prop="showFPS">showFPS</button>
+					<button data-prop="showScaleX">showScaleX</button>
+					<button data-prop="showScaleY">showScaleY</button>
+				</div>
+			</fieldset>
+
+			<fieldset>
+				<legend>Gradient modifiers</legend>
+				<div class="button-grid">
+					<button data-prop="flipGradient">flipGradient</button>
+					<button data-prop="horizontalGradient">horizontalGradient</button>
+					<button data-prop="splitGradient">splitGradient</button>
+				</div>
+			</fieldset>
+
+			<fieldset>
+				<legend>LEDs</legend>
+				<div class="button-grid">
+					<button data-prop="ledBars">ledBars</button>
+					<button data-prop="showLedMask">showLedMask</button>
+					<button data-prop="trueLeds">trueLeds</button>
+				</div>
+			</fieldset>
+
+			<fieldset>
+				<legend>Peaks</legend>
+				<div class="button-grid">
+					<button data-prop="fadePeaks">fadePeaks</button>
+					<button data-prop="peakLine">peakLine</button>
+					<button data-prop="showPeaks">showPeaks</button>
+				</div>
+			</fieldset>
 		</div>
 
 	</div>
@@ -325,6 +330,7 @@
 		<strong>audioMotion-analyzer v<span id="version"></span></strong> Copyright &copy; 2018-2025 Henrique Avila Vianna. Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
 	</div>
 
+	<script src="functions.js"></script>
 	<script src="multi.js" type="module"></script>
 
 	<script>
