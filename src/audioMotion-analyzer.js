@@ -62,19 +62,20 @@ const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', 
 				{ color: 'lime', level: .475 }
 			]
 	  }],
+	  [ 'mono', {
+	  		colorStops: [ '#eee' ],
+	  		peakColor: 'red'
+	  }],
 	  [ 'prism', {
 			colorStops: PRISM
 	  }],
 	  [ 'rainbow', {
-			dir: 'h',
 			colorStops: [ '#817', ...PRISM, '#639' ]
 	  }],
 	  [ 'orangered', {
-	  		bgColor: '#3e2f29',
 	  		colorStops: [ 'OrangeRed' ]
 	  }],
 	  [ 'steelblue', {
-	  		bgColor: '#222c35',
 	  		colorStops: [ 'SteelBlue' ]
 	  }]
 ];
@@ -90,10 +91,12 @@ const DEFAULT_SETTINGS = {
 	fadePeaks      : false,
 	fftSize        : 8192,
 	fillAlpha      : 1,
+	flipGradient   : false,
 	frequencyScale : SCALE_LOG,
 	gradient       : GRADIENTS[0][0],
 	gravity        : 3.8,
 	height         : undefined,
+	horizontalGradient: false,
 	ledBars        : false,
 	linearAmplitude: false,
 	linearBoost    : 1,
@@ -208,6 +211,7 @@ class AudioMotionAnalyzer {
 		// Initialize internal objects
 		this._aux = {};				// auxiliary variables
 		this._canvasGradients = []; // CanvasGradient objects for channels 0 and 1
+		this._colorStops = [];      // current colorStops for channels 0 and 1 (modified by flipGradient)
 		this._destroyed = false;
 		this._energy = { val: 0, peak: 0, hold: 0 };
 		this._flg = {};				// flags
@@ -476,6 +480,14 @@ class AudioMotionAnalyzer {
 		this._calcBars();
 	}
 
+	get flipGradient() {
+		return this._flipGrad;
+	}
+	set flipGradient( value ) {
+		this._flipGrad = !! value;
+		this._makeGrad();
+	}
+
 	get frequencyScale() {
 		return this._frequencyScale;
 	}
@@ -518,6 +530,14 @@ class AudioMotionAnalyzer {
 	set height( h ) {
 		this._height = h;
 		this._setCanvas( REASON_USER );
+	}
+
+	get horizontalGradient() {
+		return this._horizGrad;
+	}
+	set horizontalGradient( value ) {
+		this._horizGrad = !! value;
+		this._makeGrad();
 	}
 
 	get ledBars() {
@@ -1035,6 +1055,15 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Returns a list of keys (names) of registered gradients
+	 *
+	 * @returns {array}
+	 */
+	getRegisteredGradients() {
+		return Object.keys( this._gradients );
+	}
+
+	/**
 	 * Returns current analyzer settings in object format
 	 *
 	 * @param [{string|array}] a property name or an array of property names to not include in the returned object
@@ -1070,7 +1099,7 @@ class AudioMotionAnalyzer {
 		if ( typeof options != 'object' )
 			throw new AudioMotionError( ERR_GRADIENT_NOT_AN_OBJECT );
 
-		const { colorStops } = options;
+		const { colorStops, peakColor } = options;
 
 		if ( ! Array.isArray( colorStops ) || ! colorStops.length )
 			throw new AudioMotionError( ERR_GRADIENT_MISSING_COLOR );
@@ -1095,10 +1124,7 @@ class AudioMotionAnalyzer {
 		colorStops.sort( ( a, b ) => a.level < b.level ? 1 : a.level > b.level ? -1 : 0 );
 		colorStops[0].level = 1;
 
-		this._gradients[ name ] = {
-			dir:        options.dir,
-			colorStops: colorStops
-		};
+		this._gradients[ name ] = { colorStops, peakColor };
 
 		// if the registered gradient is one of the currently selected gradients, regenerate them
 		if ( this._selectedGrads.includes( name ) )
@@ -1234,6 +1260,19 @@ class AudioMotionAnalyzer {
 			else if ( fsEl.webkitRequestFullscreen )
 				fsEl.webkitRequestFullscreen();
 		}
+	}
+
+	/**
+	 * Unregisters a gradient
+	 *
+	 * @param {string} name
+	 * @return {boolean} `true` on success or `false` if gradient is not registered or in use
+	 */
+	unregisterGradient( name ) {
+		if ( ! this.getRegisteredGradients().includes( name ) || this._selectedGrads.includes( name ) )
+			return false;
+
+		return delete this._gradients[ name ];
 	}
 
 	/**
@@ -1985,7 +2024,7 @@ class AudioMotionAnalyzer {
 
 			const { channelTop, channelBottom, analyzerBottom } = channelCoords[ channel ],
 				  channelGradient  = this._gradients[ this._selectedGrads[ channel ] ],
-				  colorStops       = channelGradient.colorStops,
+				  colorStops       = this._colorStops[ channel ],
 				  colorCount       = colorStops.length,
 				  radialDirection  = isDualVertical && _radial && channel ? -1 : 1, // 1 = outwards, -1 = inwards
 				  invertedChannel  = ( ! channel && _mirror == -1 ) || ( channel && _mirror == 1 ),
@@ -2309,9 +2348,14 @@ class AudioMotionAnalyzer {
 					else if ( isAlpha )						// isAlpha (alpha based on peak value) supersedes fillAlpha if lineWidth == 0
 						_ctx.globalAlpha = peakValue;
 
-					// select the peak color for 'bar-level' colorMode or 'trueLeds'
-					if ( _colorMode == COLOR_BAR_LEVEL || isTrueLeds )
+					// use peakColor when defined by the gradient in use
+					if ( channelGradient.peakColor ) {
+						_ctx.fillStyle = _ctx.strokeStyle = channelGradient.peakColor;
+					}
+					else if ( _colorMode == COLOR_BAR_LEVEL || isTrueLeds ) {
+						// select the proper peak color for 'bar-level' colorMode or 'trueLeds'
 						setBarColor( peakValue );
+					}
 
 					// render peak according to current mode / effect
 					if ( isLeds ) {
@@ -2482,7 +2526,7 @@ class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const { canvas, _ctx, _radial, _reflexRatio } = this,
+		const { canvas, _ctx, _flipGrad, _horizGrad, _radial, _reflexRatio } = this,
 			  { analyzerWidth, centerX, centerY, initialX, innerRadius, outerRadius } = this._aux,
 			  { isLumi }     = this._flg,
 			  isDualVertical = this._chLayout == CHANNEL_VERTICAL,
@@ -2492,22 +2536,27 @@ class AudioMotionAnalyzer {
 
 		for ( const channel of [0,1] ) {
 			const currGradient = this._gradients[ this._selectedGrads[ channel ] ],
-				  colorStops   = currGradient.colorStops,
-				  isHorizontal = currGradient.dir == 'h';
+				  colorStops   = JSON.parse( JSON.stringify( currGradient.colorStops ) ), // deep copy, so the original is not modified by `flipGradient`
+				  isHorizontal = currGradient.dir == 'h',
+				  maxIndex     = colorStops.length - 1;
+
+			if ( _flipGrad ) {
+				// swap colors, but preserve the offsets and level thresholds of each colorstop
+				for ( let i = 0; i <= maxIndex >> 1; i++ )
+					[ colorStops[ i ].color, colorStops[ maxIndex - i ].color ] = [ colorStops[ maxIndex - i ].color, colorStops[ i ].color ]
+			}
 
 			let grad;
 
 			if ( _radial )
 				grad = _ctx.createRadialGradient( centerX, centerY, outerRadius, centerX, centerY, innerRadius - ( outerRadius - innerRadius ) * isDualVertical );
 			else
-				grad = _ctx.createLinearGradient( ...( isHorizontal ? [ initialX, 0, initialX + analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
+				grad = _ctx.createLinearGradient( ...( _horizGrad ? [ initialX, 0, initialX + analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
 
 			if ( colorStops ) {
-				const dual = isDualVertical && ! this._splitGradient && ( ! isHorizontal || _radial );
+				const dual = isDualVertical && ! this._splitGradient && ( ! _horizGrad || _radial );
 
 				for ( let channelArea = 0; channelArea < 1 + dual; channelArea++ ) {
-					const maxIndex = colorStops.length - 1;
-
 					colorStops.forEach( ( colorStop, index ) => {
 						let offset = colorStop.pos;
 
@@ -2516,7 +2565,7 @@ class AudioMotionAnalyzer {
 							offset /= 2;
 
 						// constrain the offset within the useful analyzer areas (avoid reflex areas)
-						if ( isDualVertical && ! isLumi && ! _radial && ! isHorizontal ) {
+						if ( isDualVertical && ! isLumi && ! _radial && ! _horizGrad ) {
 							offset *= analyzerRatio;
 							// skip the first reflex area in split mode
 							if ( ! dual && offset > .5 * analyzerRatio )
@@ -2550,6 +2599,7 @@ class AudioMotionAnalyzer {
 				} // for ( let channelArea = 0; channelArea < 1 + dual; channelArea++ )
 			}
 
+			this._colorStops[ channel ] = colorStops;
 			this._canvasGradients[ channel ] = grad;
 		} // for ( const channel of [0,1] )
 	}

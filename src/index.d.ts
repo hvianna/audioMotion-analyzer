@@ -25,12 +25,14 @@ export interface Options {
   fadePeaks?: boolean;
   fftSize?: number;
   fillAlpha?: number;
+  flipGradient?: boolean;
   frequencyScale?: FrequencyScale;
   gradient?: string;
   gradientLeft?: string;
   gradientRight?: string;
   gravity?: number;
   height?: number;
+  horizontalGradient?: boolean;
   ledBars?: boolean;
   linearAmplitude?: boolean;
   linearBoost?: number;
@@ -109,9 +111,8 @@ export type VisualizationMode = "bars" | "graph";
 export type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
 
 export interface GradientOptions {
-  bgColor?: string;
-  dir?: "h";
   colorStops: GradientColorStop[];
+  peakColor?: string;
 }
 
 export interface LedParameters {
@@ -157,6 +158,9 @@ declare class AudioMotionAnalyzer {
 
   public fillAlpha: number;
 
+  get flipGradient(): boolean;
+  set flipGradient(value: boolean);
+
   get fps(): number;
 
   get fsHeight(): number;
@@ -180,8 +184,8 @@ declare class AudioMotionAnalyzer {
   get height(): number;
   set height(h: number);
 
-  get width(): number;
-  set width(w: number);
+  get horizontalGradient(): boolean;
+  set horizontalGradient(value: boolean);
 
   get isAlphaBars(): boolean;
   get isBandsMode(): boolean;
@@ -299,6 +303,9 @@ declare class AudioMotionAnalyzer {
   get weightingFilter(): WeightingFilter;
   set weightingFilter(value: WeightingFilter);
 
+  get width(): number;
+  set width(w: number);
+
   static get version(): string;
 
   public onCanvasDraw: OnCanvasDrawFunction | undefined;
@@ -314,6 +321,8 @@ declare class AudioMotionAnalyzer {
   public disconnectOutput(node?: AudioNode): void;
 
   public getBars(): AnalyzerBarData[];
+
+  public getRegisteredGradients(): string[];
 
   public getEnergy(preset?: EnergyPreset): number;
   public getEnergy(startFreq: number, endFreq?: number): number;
@@ -333,6 +342,8 @@ declare class AudioMotionAnalyzer {
 
   public toggleAnalyzer(force?: boolean): boolean;
   public toggleFullscreen(): void;
+
+  public unregisterGradient(name: string): boolean;
 }
 
 export { AudioMotionAnalyzer };
