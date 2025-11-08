@@ -34,6 +34,7 @@ const CHANNEL_COMBINED         = 'dual-combined',
  	  FILTER_468               = '468',
 	  FONT_FAMILY              = 'sans-serif',
 	  FPS_COLOR                = '#0f0',
+	  LED_PARAMETERS           = [ 6, 7 ],
 	  LEDS_UNLIT_COLOR         = '#7f7f7f22',
 	  MODE_BARS                = 'bars',
 	  MODE_GRAPH               = 'graph',
@@ -218,6 +219,7 @@ class AudioMotionAnalyzer {
 		this._fps = 0;
 		this._gradients = {};       // registered gradients
 		this._last = 0;				// timestamp of last rendered frame
+		this._leds = [];			// current led attributes: ledCount, ledHeight, ledGap
 		this._outNodes = [];		// output nodes
 		this._ownContext = false;
 		this._selectedGrads = [];   // names of the currently selected gradients for channels 0 and 1
@@ -1162,18 +1164,15 @@ class AudioMotionAnalyzer {
 	 * Set custom parameters for LED effect
 	 * If called with no arguments or if any property is invalid, clears any previous custom parameters
 	 *
-	 * @param {object} [params]
+	 * @param {number} height of each led element (in pixels)
+	 * @param {number} gap between led elements (in pixels)
 	 */
-	setLedParams( params ) {
-		let maxLeds, spaceV;
-
+	setLedParams( ledHeight, ledGap ) {
 		// coerce parameters to Number; `NaN` results are rejected in the condition below
-		if ( params ) {
-			maxLeds = params.maxLeds | 0, // ensure integer
-			spaceV  = +params.spaceV
-		}
+		ledHeight = +ledHeight;
+		ledGap = +ledGap;
 
-		this._ledParams = maxLeds > 0 && spaceV > 0 ? [ maxLeds, spaceV ] : undefined;
+		this._ledParams = ledHeight > 0 && ledGap > 0 ? [ ledHeight, ledGap ] : undefined;
 		this._calcBars();
 	}
 
@@ -1551,62 +1550,25 @@ class AudioMotionAnalyzer {
 		 *		noLedGap
 		 *
 		 *	GENERATES:
-		 * 		spaceV
 		 *		this._leds
 		 */
-
-		let spaceV = 0;
 
 		if ( isLeds ) {
 			// adjustment for high pixel-ratio values on low-resolution screens (Android TV)
 			const dPR = this._pixelRatio / ( window.devicePixelRatio > 1 && window.screen.height <= 540 ? 2 : 1 );
 
-			const params = [ [],
-				[  24, 16 ], // full octave
-				[  48,  8 ], // half octave
-				[  64,  6 ], // 1/3rd
-				[  80,  6 ], // 1/4th
-				[  80,  6 ], // 1/6th
-				[  96,  6 ], // 1/8th
-				[ 128,  4 ], // 1/12th
-				[ 128,  3 ]  // 1/24th
-			];
+			let [ ledHeight, ledGap ] = ( this._ledParams || LED_PARAMETERS ).map( v => v * dPR ),
+				maxHeight  = analyzerHeight + ( noLedGap ? ledGap : 0 ), // increase maxHeight to avoid extra spacing below last line of LEDs (noLedGap)
+				unitHeight = ledHeight + ledGap,
+				gapRatio   = ledGap / unitHeight,
+				ledCount   = maxHeight / unitHeight | 0; // make sure we have an integer number of led elements
 
-			// use custom LED parameters if set, or the default parameters for the current mode
-			const customParams = this._ledParams,
-				  [ maxLeds, spaceVRatio ] = customParams || params[ _bandRes ];
+			// recalculate ledHeight and ledGap to fit channel height exactly
+			unitHeight = maxHeight / ledCount;
+			ledGap     = unitHeight * gapRatio;
+			ledHeight  = unitHeight * ( 1 - gapRatio );
 
-			let ledCount, maxHeight = analyzerHeight;
-
-			if ( customParams ) {
-				const minHeight = 2 * dPR;
-				let blockHeight;
-				ledCount = maxLeds + 1;
-				do {
-					ledCount--;
-					blockHeight = maxHeight / ledCount / ( 1 + spaceVRatio );
-					spaceV = blockHeight * spaceVRatio;
-				} while ( ( blockHeight < minHeight || spaceV < minHeight ) && ledCount > 1 );
-			}
-			else {
-				// calculate vertical spacing - aim for the reference ratio, but make sure it's at least 2px
-				const refRatio = 540 / spaceVRatio;
-				spaceV = Math.min( spaceVRatio * dPR, Math.max( 2, maxHeight / refRatio + .1 | 0 ) );
-			}
-
-			// remove the extra spacing below the last line of LEDs
-			if ( noLedGap )
-				maxHeight += spaceV;
-
-			// recalculate the number of leds, considering the effective spaceV
-			if ( ! customParams )
-				ledCount = Math.min( maxLeds, maxHeight / ( spaceV * 2 ) | 0 );
-
-			this._leds = [
-				ledCount,
-				spaceV,
-				maxHeight / ledCount - spaceV // ledHeight
-			];
+			this._leds = [ ledCount, ledHeight, ledGap ];
 		}
 
 		// COMPUTE ADDITIONAL BAR POSITIONING, ACCORDING TO THE CURRENT SETTINGS
@@ -1643,13 +1605,15 @@ class AudioMotionAnalyzer {
 			bar.width = width;
 		});
 
-		// COMPUTE CHANNEL COORDINATES (uses spaceV)
+		// COMPUTE CHANNEL COORDINATES
 
-		const channelCoords = [];
+		const channelCoords = [],
+			  [,, ledGap ]  = this._leds;
+
 		for ( const channel of [0,1] ) {
 			const channelTop     = _chLayout == CHANNEL_VERTICAL ? ( channelHeight + channelGap ) * channel : 0,
 				  channelBottom  = channelTop + channelHeight,
-				  analyzerBottom = channelTop + analyzerHeight - ( ! isLeds || noLedGap ? 0 : spaceV );
+				  analyzerBottom = channelTop + analyzerHeight - ( ! isLeds || noLedGap ? 0 : ledGap );
 
 			channelCoords.push( { channelTop, channelBottom, analyzerBottom } );
 		}
@@ -1879,7 +1843,7 @@ class AudioMotionAnalyzer {
 			  maxBarHeight     = _radial ? outerRadius - innerRadius : analyzerHeight,
 			  nominalMaxHeight = maxBarHeight / this._pixelRatio, // for consistent gravity on lo-res or hi-dpi
 			  dbRange 		   = maxDecibels - minDecibels,
-			  [ ledCount, ledSpaceV, ledHeight ] = this._leds || [];
+			  [ ledCount, ledHeight, ledGap ] = this._leds;
 
 		if ( _energy.val > 0 && _fps > 0 )
 			this._spinAngle += this._spinSpeed * TAU / 60 / _fps; // spinSpeed * angle increment per frame for 1 RPM
@@ -1987,7 +1951,7 @@ class AudioMotionAnalyzer {
 		}
 
 		// converts a value in [0;1] range to a height in pixels that fits into the current LED elements
-		const ledPosY = value => Math.max( 0, ( value * ledCount | 0 ) * ( ledHeight + ledSpaceV ) - ledSpaceV );
+		const ledPosY = value => Math.max( 0, ( value * ledCount | 0 ) * ( ledHeight + ledGap ) - ledGap );
 
 		// update energy information
 		const updateEnergy = newVal => {
@@ -2157,7 +2121,7 @@ class AudioMotionAnalyzer {
 
 				// set line width and dash for LEDs effect
 				if ( isLeds ) {
-					_ctx.setLineDash( [ ledHeight, ledSpaceV ] );
+					_ctx.setLineDash( [ ledHeight, ledGap ] );
 					_ctx.lineWidth = _bars[0].width;
 				}
 				else // for outline effect ensure linewidth is not greater than half the bar width
@@ -2298,7 +2262,7 @@ class AudioMotionAnalyzer {
 								_ctx.strokeStyle = colorStops[ i ].color;
 								let y = analyzerBottom - ( i == colorIndex ? barHeight : ledPosY( colorStops[ i ].level ) );
 								strokeBar( barCenter, last, y );
-								last = y - ledSpaceV;
+								last = y - ledGap;
 							}
 						}
 						else
@@ -2354,7 +2318,7 @@ class AudioMotionAnalyzer {
 					// render peak according to current mode / effect
 					if ( isLeds ) {
 						const ledPeak = ledPosY( peakValue );
-						if ( ledPeak >= ledSpaceV ) // avoid peak below first led
+						if ( ledPeak >= ledGap ) // avoid peak below first led
 							_ctx.fillRect( posX, analyzerBottom - ledPeak, width, ledHeight );
 					}
 					else if ( ! _radial )
