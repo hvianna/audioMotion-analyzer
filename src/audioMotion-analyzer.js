@@ -1165,16 +1165,15 @@ class AudioMotionAnalyzer {
 	 * @param {object} [params]
 	 */
 	setLedParams( params ) {
-		let maxLeds, spaceV, spaceH;
+		let maxLeds, spaceV;
 
 		// coerce parameters to Number; `NaN` results are rejected in the condition below
 		if ( params ) {
 			maxLeds = params.maxLeds | 0, // ensure integer
-			spaceV  = +params.spaceV,
-			spaceH  = +params.spaceH;
+			spaceV  = +params.spaceV
 		}
 
-		this._ledParams = maxLeds > 0 && spaceV > 0 && spaceH >= 0 ? [ maxLeds, spaceV, spaceH ] : undefined;
+		this._ledParams = maxLeds > 0 && spaceV > 0 ? [ maxLeds, spaceV ] : undefined;
 		this._calcBars();
 	}
 
@@ -1552,32 +1551,30 @@ class AudioMotionAnalyzer {
 		 *		noLedGap
 		 *
 		 *	GENERATES:
-		 * 		spaceH
 		 * 		spaceV
 		 *		this._leds
 		 */
 
-		let spaceH = 0,
-			spaceV = 0;
+		let spaceV = 0;
 
 		if ( isLeds ) {
 			// adjustment for high pixel-ratio values on low-resolution screens (Android TV)
 			const dPR = this._pixelRatio / ( window.devicePixelRatio > 1 && window.screen.height <= 540 ? 2 : 1 );
 
 			const params = [ [],
-				[  24, 16, .125 ], // full octave
-				[  48,  8, .125 ], // half octave
-				[  64,  6, .125 ], // 1/3rd
-				[  80,  6, .125 ], // 1/4th
-				[  80,  6, .225 ], // 1/6th
-				[  96,  6, .225 ], // 1/8th
-				[ 128,  4, .225 ], // 1/12th
-				[ 128,  3, .45  ]  // 1/24th
+				[  24, 16 ], // full octave
+				[  48,  8 ], // half octave
+				[  64,  6 ], // 1/3rd
+				[  80,  6 ], // 1/4th
+				[  80,  6 ], // 1/6th
+				[  96,  6 ], // 1/8th
+				[ 128,  4 ], // 1/12th
+				[ 128,  3 ]  // 1/24th
 			];
 
 			// use custom LED parameters if set, or the default parameters for the current mode
 			const customParams = this._ledParams,
-				  [ maxLeds, spaceVRatio, spaceHRatio ] = customParams || params[ _bandRes ];
+				  [ maxLeds, spaceVRatio ] = customParams || params[ _bandRes ];
 
 			let ledCount, maxHeight = analyzerHeight;
 
@@ -1605,23 +1602,20 @@ class AudioMotionAnalyzer {
 			if ( ! customParams )
 				ledCount = Math.min( maxLeds, maxHeight / ( spaceV * 2 ) | 0 );
 
-			spaceH = spaceHRatio >= 1 ? spaceHRatio : barWidth * spaceHRatio;
-
 			this._leds = [
 				ledCount,
-				spaceH,
 				spaceV,
 				maxHeight / ledCount - spaceV // ledHeight
 			];
 		}
 
 		// COMPUTE ADDITIONAL BAR POSITIONING, ACCORDING TO THE CURRENT SETTINGS
-		// uses: _barSpace, barWidth, spaceH
+		// uses: _barSpace, barWidth
 
 		const barSpacePx = Math.min( barWidth - 1, _barSpace * ( _barSpace > 0 && _barSpace < 1 ? barWidth : 1 ) );
 
 		if ( isBands )
-			barWidth -= Math.max( isLeds ? spaceH : 0, barSpacePx );
+			barWidth -= Math.max( 0, barSpacePx );
 
 		bars.forEach( ( bar, index ) => {
 			let posX  = bar.posX,
@@ -1640,7 +1634,7 @@ class AudioMotionAnalyzer {
 					}
 				}
 				else
-					posX += Math.max( ( isLeds ? spaceH : 0 ), barSpacePx ) / 2;
+					posX += Math.max( 0, barSpacePx ) / 2;
 
 				bar.posX = posX; // update
 			}
@@ -1885,7 +1879,7 @@ class AudioMotionAnalyzer {
 			  maxBarHeight     = _radial ? outerRadius - innerRadius : analyzerHeight,
 			  nominalMaxHeight = maxBarHeight / this._pixelRatio, // for consistent gravity on lo-res or hi-dpi
 			  dbRange 		   = maxDecibels - minDecibels,
-			  [ ledCount, ledSpaceH, ledSpaceV, ledHeight ] = this._leds || [];
+			  [ ledCount, ledSpaceV, ledHeight ] = this._leds || [];
 
 		if ( _energy.val > 0 && _fps > 0 )
 			this._spinAngle += this._spinSpeed * TAU / 60 / _fps; // spinSpeed * angle increment per frame for 1 RPM
