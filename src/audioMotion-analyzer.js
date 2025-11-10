@@ -2302,7 +2302,9 @@ class AudioMotionAnalyzer {
 					if ( isLeds ) {
 						// draw led mask - avoid drawing it twice on 'dual-combined' channel layout
 						if ( showLedMask && ( ! isDualCombined || channel == 0 ) ) {
-							const mask = this._ledMask[ channel ];
+							const mask       = this._ledMask[ channel ],
+								  savedAlpha = _ctx.globalAlpha;
+							_ctx.globalAlpha = 1; // TO-DO: maybe set the led mask alpha here, instead of doing it in each color?
 							if ( isTrueLeds )
 								renderTrueLeds( mask.colorStops, barCenter, maxBarHeight, 1 );
 							else {
@@ -2314,6 +2316,7 @@ class AudioMotionAnalyzer {
 								strokeBar( barCenter, channelTop, analyzerBottom );
 								_ctx.fillStyle = _ctx.strokeStyle = savedColor;
 							}
+							_ctx.globalAlpha = savedAlpha;
 						}
 						if ( isTrueLeds )
 							renderTrueLeds( colorStops, barCenter, barHeight, barValue );
