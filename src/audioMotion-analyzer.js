@@ -2224,7 +2224,7 @@ class AudioMotionAnalyzer {
 							bar.alpha[ channel ] = initialAlpha * ( 1 + bar.hold[ channel ] / fadeFrames ); // hold is negative, so this is <= 1
 						}
 						else
-							bar.peak[ channel ] += bar.hold[ channel ] * gravity / fpsSquared / nominalMaxHeight;
+							bar.peak[ channel ] += bar.hold[ channel ] * gravity / fpsSquared / Math.abs( nominalMaxHeight );
 						// make sure the peak value is reset when using fadePeaks
 						if ( bar.alpha[ channel ] <= 0 )
 							bar.peak[ channel ] = 0;
