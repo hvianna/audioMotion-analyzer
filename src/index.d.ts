@@ -115,12 +115,6 @@ export interface GradientOptions {
   peakColor?: string;
 }
 
-export interface LedParameters {
-  maxLeds: number;
-  spaceV: number;
-  spaceH: number;
-}
-
 declare class AudioMotionAnalyzer {
   constructor(container?: HTMLElement, options?: ConstructorOptions);
   constructor(options?: ConstructorOptions);
@@ -333,7 +327,7 @@ declare class AudioMotionAnalyzer {
 
   public setCanvasSize(width: number, height: number): void;
   public setFreqRange(minFreq: number, maxFreq: number): void;
-  public setLedParams(params?: LedParameters): void;
+  public setLedParams(ledHeight: number, ledGap: number): void;
   public setOptions(options?: Options): void;
   public setSensitivity(minDecibels: number, maxDecibels: number): void;
 

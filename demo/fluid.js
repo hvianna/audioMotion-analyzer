@@ -307,17 +307,16 @@ document.querySelectorAll('[data-setting]').forEach( el => {
 });
 
 document.querySelectorAll('[data-custom]').forEach( el => {
-	el.addEventListener( 'change', () => {
-		const active  = document.getElementById('customLeds').checked,
-			  maxLeds = document.getElementById('maxLeds').value,
-			  spaceV  = document.getElementById('spaceV').value,
-			  spaceH  = document.getElementById('spaceH').value;
-		audioMotion.setLedParams( active ? { maxLeds, spaceV, spaceH } : undefined );
+	el.addEventListener( 'input', () => {
+		const active    = document.getElementById('customLeds').checked,
+			  ledHeight = document.getElementById('ledHeight').value,
+			  ledGap    = document.getElementById('ledGap').value;
+		audioMotion.setLedParams( ...( active ? [ ledHeight, ledGap ] : [] ) );
 	});
 });
 
 // Display value of ranged input elements
-document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el, audioMotion ) ) );
+document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'input', () => updateRangeElement( el, audioMotion ) ) );
 
 // Populate UI select elements and add event listeners
 
