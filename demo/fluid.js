@@ -36,7 +36,6 @@ const presets = [
 			channelLayout: 'single',
 			colorMode: 'gradient',
 			frequencyScale: 'log',
-			gradient: 'classic',
 			ledBars: true,
 			lumiBars: false,
 			maxFreq: 20000,
@@ -46,6 +45,7 @@ const presets = [
 			reflexRatio: 0,
 			showLedMask: true,
 			showPeaks: true,
+			theme: 'classic',
 			trueLeds: true
 		}
 	},
@@ -56,7 +56,6 @@ const presets = [
 			bandResolution: 0,
 			channelLayout: 'single',
 			fillAlpha: .6,
-			gradient: 'rainbow',
 			lineWidth: 1.5,
 			maxFreq: 20000,
 			minFreq: 30,
@@ -66,7 +65,8 @@ const presets = [
 			reflexBright: 1,
 			reflexRatio: .5,
 			showPeaks: false,
-			showScaleX: false
+			showScaleX: false,
+			theme: 'rainbow'
 		}
 	},
 	{
@@ -76,14 +76,14 @@ const presets = [
 			bandResolution: 4,
 			barSpace: .1,
 			channelLayout: 'single',
-			gradient: 'prism',
 			ledBars: false,
 			maxFreq: 20000,
 			minFreq: 20,
 			mirror: 0,
 			radial: true,
 			showPeaks: true,
-			spinSpeed: 1
+			spinSpeed: 1,
+			theme: 'prism',
 		}
 	},
 	{
@@ -93,7 +93,6 @@ const presets = [
 			bandResolution: 0,
 			channelLayout: 'single',
 			frequencyScale: 'bark',
-			gradient: 'rainbow',
 			linearAmplitude: true,
 			linearBoost: 1.8,
 			maxFreq: 20000,
@@ -106,6 +105,7 @@ const presets = [
 			reflexRatio: .25,
 			showPeaks: true,
 			showScaleX: true,
+			theme: 'rainbow',
 			weightingFilter: 'D'
 		}
 	},
@@ -117,8 +117,6 @@ const presets = [
 			channelLayout: 'dual-combined',
 			fillAlpha: .25,
 			frequencyScale: 'bark',
-			gradientLeft: 'steelblue',
-			gradientRight: 'orangered',
 			linearAmplitude: true,
 			linearBoost: 1.8,
 			lineWidth: 1.5,
@@ -128,6 +126,8 @@ const presets = [
 			radial: false,
 			reflexRatio: 0,
 			showPeaks: false,
+			themeLeft: 'steelblue',
+			themeRight: 'orangered',
 			weightingFilter: 'D'
 		}
 	},
@@ -142,7 +142,6 @@ const presets = [
 			channelLayout: 'single',
 			colorMode: 'bar-level',
 			frequencyScale: 'log',
-			gradient: 'prism',
 			ledBars: false,
 			linearAmplitude: true,
 			linearBoost: 1.6,
@@ -157,6 +156,7 @@ const presets = [
 			showPeaks: false,
 			showScaleX: false,
 			smoothing: .7,
+			theme: 'prism',
 			weightingFilter: 'D'
 		}
 	},
@@ -166,7 +166,6 @@ const presets = [
 			mode: 'graph',
 			bandResolution: 0,
 			channelLayout: 'single',
-			gradient: 'rainbow',
 			linearAmplitude: false,
 			reflexRatio: .4,
 			showPeaks: true,
@@ -175,7 +174,8 @@ const presets = [
 			maxFreq: 8000,
 			minFreq: 20,
 			lineWidth: 2,
-			fillAlpha: .2
+			fillAlpha: .2,
+			theme: 'rainbow',
 		}
 	},
 	{
@@ -187,8 +187,6 @@ const presets = [
 			ansiBands: false,
 			barSpace: .1,
 			channelLayout: 'dual-vertical',
-			gradientLeft: 'steelblue',
-			gradientRight: 'orangered',
 			ledBars: true,
 			lumiBars: false,
 			radial: false,
@@ -197,7 +195,9 @@ const presets = [
 			showScaleX: false,
 			mirror: 0,
 			maxFreq: 16000,
-			minFreq: 20
+			minFreq: 20,
+			themeLeft: 'steelblue',
+			themeRight: 'orangered'
 		}
 	},
 	{
@@ -318,6 +318,14 @@ document.querySelectorAll('[data-custom]').forEach( el => {
 // Display value of ranged input elements
 document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'input', () => updateRangeElement( el, audioMotion ) ) );
 
+// Add custom theme
+audioMotion.registerTheme( 'bluey', {
+	colorStops: [
+		'red',
+		{ color: '#1ea1df', level: .9, pos: .9 }
+	]
+});
+
 // Populate UI select elements and add event listeners
 
 presets.forEach( ( preset, index ) => {
@@ -335,11 +343,7 @@ setBackground(); // initialize background
 
 backgroundSelection.addEventListener( 'change', () => setBackground() );
 
-for ( const name of audioMotion.getRegisteredGradients() ) {
-	for ( const el of ['', 'Left', 'Right'] ) {
-		document.querySelector(`[data-setting="gradient${el}"]`).append( new Option( name ) );
-	}
-}
+populateThemeSelections( audioMotion );
 
 // Create an 88-key piano keyboard
 
@@ -515,7 +519,7 @@ function updateUI() {
 
 // Callback function used to add custom features for this demo
 
-function drawCallback() {
+function drawCallback( instance, { timestamp, themes } ) {
 
 	const canvas     = audioMotion.canvas,
 		  ctx        = audioMotion.canvasCtx,
@@ -610,7 +614,8 @@ function drawCallback() {
 		ctx.lineTo( canvas.width * audioEl.currentTime / audioEl.duration, posY );
 		ctx.lineCap = 'round';
 		ctx.lineWidth = lineWidth;
-		ctx.globalAlpha = audioMotion.getEnergy(); // use the song energy to control the bar opacity
+		ctx.globalAlpha = audioMotion.getEnergy(); // use song energy to control the bar opacity
+		ctx.strokeStyle = themes[0].gradient;      // use left channel color gradient to draw the progress bar
 		ctx.stroke();
 	}
 

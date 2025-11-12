@@ -1,5 +1,15 @@
-// Update value div of range input elements
 
+function populateThemeSelections( instance ) {
+	for ( const name of instance.getRegisteredThemes().sort() ) {
+		for ( const channel of ['', 'Left', 'Right'] ) {
+			const el = document.querySelector(`[data-setting="theme${channel}"]`);
+			if ( el )
+				el.append( new Option( name ) );
+		}
+	}
+}
+
+// Update value div of range input elements
 function updateRangeElement( el, instance ) {
 	const s = el.nextElementSibling;
 	if ( s && s.className == 'value' ) {

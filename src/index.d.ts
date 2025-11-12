@@ -5,7 +5,18 @@ export type OnCanvasDrawFunction = (
 
 export type CanvasDrawInfo = {
   timestamp: DOMHighResTimeStamp,
-  canvasGradients: CanvasGradient[]
+  themes: ActiveTheme[]
+}
+
+export type ActiveTheme = {
+  name: string,
+  colorStops: GradientColorStop[],
+  gradient: CanvasGradient,
+  muted: {
+    colorStops: GradientColorStop[],
+    gradient: CanvasGradient,
+  }
+  peakColor: string
 }
 
 export type OnCanvasResizeFunction = (
@@ -27,9 +38,6 @@ export interface Options {
   fillAlpha?: number;
   flipGradient?: boolean;
   frequencyScale?: FrequencyScale;
-  gradient?: string;
-  gradientLeft?: string;
-  gradientRight?: string;
   gravity?: number;
   height?: number;
   horizontalGradient?: boolean;
@@ -71,6 +79,9 @@ export interface Options {
   splitGradient?: boolean;
   start?: boolean;
   stereo?: boolean;
+  theme?: string;
+  themeLeft?: string;
+  themeRight?: string;
   trueLeds?: boolean;
   useCanvas?: boolean;
   volume?: number;
@@ -162,15 +173,6 @@ declare class AudioMotionAnalyzer {
 
   get frequencyScale(): FrequencyScale;
   set frequencyScale(value: FrequencyScale);
-
-  get gradient(): string;
-  set gradient(value: string);
-
-  get gradientLeft(): string;
-  set gradientLeft(value: string);
-
-  get gradientRight(): string;
-  set gradientRight(value: string);
 
   get gravity(): number;
   set gravity(value: number);
@@ -286,6 +288,15 @@ declare class AudioMotionAnalyzer {
   get stereo(): boolean;
   set stereo(value: boolean);
 
+  get theme(): string;
+  set theme(value: string);
+
+  get themeLeft(): string;
+  set themeLeft(value: string);
+
+  get themeRight(): string;
+  set themeRight(value: string);
+
   get trueLeds(): boolean;
   set trueLeds(value: boolean);
 
@@ -316,14 +327,14 @@ declare class AudioMotionAnalyzer {
 
   public getBars(): AnalyzerBarData[];
 
-  public getRegisteredGradients(): string[];
+  public getRegisteredThemes(): string[];
 
   public getEnergy(preset?: EnergyPreset): number;
   public getEnergy(startFreq: number, endFreq?: number): number;
 
   public getOptions(ignore?: string | string[]): Options;
 
-  public registerGradient(name: string, options: GradientOptions): void;
+  public registerTheme(name: string, options: GradientOptions): void;
 
   public setCanvasSize(width: number, height: number): void;
   public setFreqRange(minFreq: number, maxFreq: number): void;
@@ -337,7 +348,7 @@ declare class AudioMotionAnalyzer {
   public toggleAnalyzer(force?: boolean): boolean;
   public toggleFullscreen(): void;
 
-  public unregisterGradient(name: string): boolean;
+  public unregisterTheme(name: string): boolean;
 }
 
 export { AudioMotionAnalyzer };

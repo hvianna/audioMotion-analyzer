@@ -69,8 +69,6 @@ audioMotion[1].setOptions({
 	bandResolution: 0,
 	channelLayout: 'dual-combined',
 	fillAlpha: .3,
-	gradientLeft: 'steelblue',
-	gradientRight: 'orangered',
 	linearAmplitude: true,
 	linearBoost: 1.2,
 	lineWidth: 0,
@@ -79,6 +77,8 @@ audioMotion[1].setOptions({
 	peakLine: true,
 	showScaleX: false,
 	showPeaks: true,
+	themeLeft: 'steelblue',
+	themeRight: 'orangered',
 	weightingFilter: 'D'
 });
 
@@ -87,7 +87,6 @@ audioMotion[2].setOptions({
 	mode: 'bars',
 	bandResolution: 7,
 	barSpace: .1,
-	gradient: 'prism',
 	lumiBars: true,
 	minDecibels: -60,
 	maxDecibels: -30,
@@ -95,6 +94,7 @@ audioMotion[2].setOptions({
 	minFreq: 30,
 	showPeaks: false,
 	showScaleX: false,
+	theme: 'prism',
 	weightingFilter: 'D'
 });
 
@@ -132,11 +132,7 @@ document.querySelectorAll('[data-setting]').forEach( el => {
 	el.addEventListener( 'input', () => audioMotion[ el.dataset.setting == 'volume' ? 0 : selectedAnalyzer ][ el.dataset.setting ] = el.value );
 });
 
-for ( const name of audioMotion[0].getRegisteredGradients() ) {
-	for ( const el of ['', 'Left', 'Right'] ) {
-		document.querySelector(`[data-setting="gradient${el}"]`).append( new Option( name ) );
-	}
-}
+populateThemeSelections( audioMotion[0] );
 
 // Display value of ranged input elements
 document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'input', () => updateRangeElement( el, audioMotion[ selectedAnalyzer ] ) ) );
