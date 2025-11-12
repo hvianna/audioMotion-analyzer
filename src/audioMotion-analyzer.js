@@ -56,9 +56,9 @@ const CHANNEL_COMBINED         = 'dual-combined',
 	  SCALE_LOG                = 'log',
 	  SCALE_MEL                = 'mel';
 
-// built-in gradients
+// built-in color themes
 const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', '#09c', '#36b' ],
-	  GRADIENTS = [
+	  THEMES = [
 	  [ 'classic', {
 			colorStops: [
 				'red',
@@ -97,7 +97,6 @@ const DEFAULT_SETTINGS = {
 	fillAlpha      : 1,
 	flipGradient   : false,
 	frequencyScale : SCALE_LOG,
-	gradient       : GRADIENTS[0][0],
 	gravity        : 3.8,
 	height         : undefined,
 	horizontalGradient: false,
@@ -136,6 +135,7 @@ const DEFAULT_SETTINGS = {
 	spinSpeed      : 0,
 	splitGradient  : false,
 	start          : true,
+	theme          : THEMES[0][0],
 	trueLeds       : false,
 	useCanvas      : true,
 	volume         : 1,
@@ -245,20 +245,17 @@ class AudioMotionAnalyzer {
 
 		// Initialize internal objects
 		this._aux = {};				// auxiliary variables
-		this._canvasGradients = []; // CanvasGradient objects for channels 0 and 1
-		this._colorStops = [];      // current colorStops for channels 0 and 1 (modified by flipGradient)
+		this._activeThemes = [];	// currently active themes for channels 0 and 1 (refer to _makeGrad() for object structure)
 		this._destroyed = false;
 		this._energy = { val: 0, peak: 0, hold: 0 };
 		this._flg = {};				// flags
 		this._fps = 0;
-		this._gradients = {};       // registered gradients
 		this._last = 0;				// timestamp of last rendered frame
-		this._ledMask = [];			// LED mask gradients and colorStops for channels 0 and 1
 		this._leds = [];			// current led attributes: ledCount, ledHeight, ledGap
 		this._outNodes = [];		// output nodes
 		this._ownContext = false;
-		this._selectedGrads = [];   // names of the currently selected gradients for channels 0 and 1
 		this._sources = [];			// input nodes
+		this._themes = {}; 			// registered color themes
 
 		// Check if options object passed as first argument
 		if ( ! ( container instanceof Element ) ) {
@@ -274,9 +271,9 @@ class AudioMotionAnalyzer {
 		canvas.style = 'max-width: 100%;';
 		this._ctx = canvas.getContext('2d');
 
-		// Register built-in gradients
-		for ( const [ name, options ] of GRADIENTS )
-			this.registerGradient( name, options );
+		// Register built-in color themes
+		for ( const [ name, options ] of THEMES )
+			this.registerTheme( name, options );
 
 		// Set container
 		this._container = container || ( ! this._ownCanvas && canvas.parentElement ) || document.body;
@@ -533,27 +530,6 @@ class AudioMotionAnalyzer {
 		this._calcBars();
 	}
 
-	get gradient() {
-		return this._selectedGrads[0];
-	}
-	set gradient( value ) {
-		this._setGradient( value );
-	}
-
-	get gradientLeft() {
-		return this._selectedGrads[0];
-	}
-	set gradientLeft( value ) {
-		this._setGradient( value, 0 );
-	}
-
-	get gradientRight() {
-		return this._selectedGrads[1];
-	}
-	set gradientRight( value ) {
-		this._setGradient( value, 1 );
-	}
-
 	get gravity() {
 		return this._gravity;
 	}
@@ -807,6 +783,27 @@ class AudioMotionAnalyzer {
 	set stereo( value ) {
 		deprecate( 'stereo', 'channelLayout' );
 		this.channelLayout = value ? CHANNEL_VERTICAL : CHANNEL_SINGLE;
+	}
+
+	get theme() {
+		return this.themeLeft;
+	}
+	set theme( value ) {
+		this._setTheme( value );
+	}
+
+	get themeLeft() {
+		return this._activeThemes[0].name;
+	}
+	set themeLeft( value ) {
+		this._setTheme( value, 0 );
+	}
+
+	get themeRight() {
+		return this._activeThemes[1].name;
+	}
+	set themeRight( value ) {
+		this._setTheme( value, 1 );
 	}
 
 	get trueLeds() {
@@ -1092,12 +1089,12 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Returns a list of keys (names) of registered gradients
+	 * Returns the names of registered themes
 	 *
 	 * @returns {array}
 	 */
-	getRegisteredGradients() {
-		return Object.keys( this._gradients );
+	getRegisteredThemes() {
+		return Object.keys( this._themes );
 	}
 
 	/**
@@ -1112,9 +1109,9 @@ class AudioMotionAnalyzer {
 		let options = {};
 		for ( const prop of Object.keys( DEFAULT_SETTINGS ) ) {
 			if ( ! ignore.includes( prop ) ) {
-				if ( prop == 'gradient' && this.gradientLeft != this.gradientRight ) {
-					options.gradientLeft = this.gradientLeft;
-					options.gradientRight = this.gradientRight;
+				if ( prop == 'theme' && this.themeLeft != this.themeRight ) {
+					options.themeLeft = this.themeLeft;
+					options.themeRight = this.themeRight;
 				}
 				else if ( prop != 'start' )
 					options[ prop ] = this[ prop ];
@@ -1124,19 +1121,19 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Registers a custom gradient
+	 * Registers a custom color theme
 	 *
 	 * @param {string} name
 	 * @param {object} options
 	 */
-	registerGradient( name, options ) {
+	registerTheme( name, options ) {
 		if ( typeof name != 'string' || name.trim().length == 0 )
 			throw new AudioMotionError( ERR_GRADIENT_INVALID_NAME );
 
 		if ( typeof options != 'object' )
 			throw new AudioMotionError( ERR_GRADIENT_NOT_AN_OBJECT );
 
-		const { colorStops, peakColor } = options;
+		const { colorStops, peakColor } = deepCloneObject( options ); // avoid modifying user's original object (see discussions #58)
 
 		if ( ! Array.isArray( colorStops ) || ! colorStops.length )
 			throw new AudioMotionError( ERR_GRADIENT_MISSING_COLOR );
@@ -1161,10 +1158,25 @@ class AudioMotionAnalyzer {
 		colorStops.sort( ( a, b ) => a.level < b.level ? 1 : a.level > b.level ? -1 : 0 );
 		colorStops[0].level = 1;
 
-		this._gradients[ name ] = { colorStops, peakColor };
+		// generate the muted colorstops for the led mask
+		const mutedColorStops = deepCloneObject( colorStops );
+		for ( let i = 0; i < count; i++ ) {
+			const cs = mutedColorStops[ i ],
+				  [ h, s, l ] = cssColorToHSL( cs.color );
 
-		// if the registered gradient is one of the currently selected gradients, regenerate them
-		if ( this._selectedGrads.includes( name ) )
+			cs.color = `hsla( ${h}, ${ LED_MASK_SATURATION }%, ${l}%, ${ LED_MASK_ALPHA } )`;
+		}
+
+		this._themes[ name ] = {
+			colorStops,
+			muted: {
+				colorStops: mutedColorStops
+			},
+			peakColor
+		};
+
+		// if the registered theme is one of the currently selected ones, regenerate the gradients
+		if ( this._activeThemes.some( theme => theme.name == name ) )
 			this._makeGrad();
 	}
 
@@ -1296,16 +1308,16 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Unregisters a gradient
+	 * Unregisters a color theme
 	 *
 	 * @param {string} name
-	 * @return {boolean} `true` on success or `false` if gradient is not registered or in use
+	 * @return {boolean} `true` on success or `false` if theme is not registered or in use
 	 */
-	unregisterGradient( name ) {
-		if ( ! this.getRegisteredGradients().includes( name ) || this._selectedGrads.includes( name ) )
+	unregisterTheme( name ) {
+		if ( ! this.getRegisteredThemes().includes( name ) || this._activeThemes.some( theme => theme.name == name ) )
 			return false;
 
-		return delete this._gradients[ name ];
+		return delete this._themes[ name ];
 	}
 
 	/**
@@ -1839,9 +1851,9 @@ class AudioMotionAnalyzer {
 			    innerRadius,
 			    outerRadius }  = this._aux,
 
-			  { _bars,
+			  { _activeThemes,
+			  	_bars,
 			    canvas,
-			    _canvasGradients,
 			    _chLayout,
 			    _colorMode,
 			    _ctx,
@@ -2015,9 +2027,9 @@ class AudioMotionAnalyzer {
 
 		for ( let channel = 0; channel < nChannels; channel++ ) {
 
-			const { channelTop, channelBottom, analyzerBottom } = channelCoords[ channel ],
-				  channelGradient  = this._gradients[ this._selectedGrads[ channel ] ],
-				  colorStops       = this._colorStops[ channel ],
+			const theme            = _activeThemes[ channel ],
+				  { colorStops, gradient, muted } = theme,
+				  { channelTop, channelBottom, analyzerBottom } = channelCoords[ channel ],
 				  colorCount       = colorStops.length,
 				  radialDirection  = isDualVertical && _radial && channel ? -1 : 1, // 1 = outwards, -1 = inwards
 				  invertedChannel  = ( ! channel && _mirror == -1 ) || ( channel && _mirror == 1 ),
@@ -2143,12 +2155,12 @@ class AudioMotionAnalyzer {
 				_ctx.strokeStyle = savedStrokeStyle;
 			}
 
-			// set fillStyle and strokeStyle according to current colorMode (uses: channel, colorStops, colorCount)
+			// set fillStyle and strokeStyle according to current colorMode (uses: colorStops, colorCount, gradient)
 			const setBarColor = ( colorStops, value = 0, barIndex = 0 ) => {
 				let color;
 				// for graph mode, always use the channel gradient (ignore colorMode)
 				if ( ( _colorMode == COLOR_GRADIENT && ! isTrueLeds ) || _mode == MODE_GRAPH )
-					color = _canvasGradients[ channel ];
+					color = gradient;
 				else {
 					const selectedIndex = _colorMode == COLOR_BAR_INDEX ? barIndex % colorCount : colorStops.findLastIndex( item => isLeds ? ledPosY( value ) <= ledPosY( item.level ) : value <= item.level );
 					color = colorStops[ selectedIndex ].color;
@@ -2302,17 +2314,16 @@ class AudioMotionAnalyzer {
 					if ( isLeds ) {
 						// draw led mask - avoid drawing it twice on 'dual-combined' channel layout
 						if ( showLedMask && ( ! isDualCombined || channel == 0 ) ) {
-							const mask       = this._ledMask[ channel ],
-								  savedAlpha = _ctx.globalAlpha;
+							const savedAlpha = _ctx.globalAlpha;
 							_ctx.globalAlpha = 1; // TO-DO: maybe set the led mask alpha here, instead of doing it in each color?
 							if ( isTrueLeds )
-								renderTrueLeds( mask.colorStops, barCenter, maxBarHeight, 1 );
+								renderTrueLeds( muted.colorStops, barCenter, maxBarHeight, 1 );
 							else {
 								const savedColor = _ctx.fillStyle;
 								if ( _colorMode == COLOR_GRADIENT )
-									_ctx.strokeStyle = mask.gradient;
+									_ctx.strokeStyle = muted.gradient;
 								else
-									setBarColor( mask.colorStops, 0, barIndex );
+									setBarColor( muted.colorStops, 0, barIndex );
 								strokeBar( barCenter, channelTop, analyzerBottom );
 								_ctx.fillStyle = _ctx.strokeStyle = savedColor;
 							}
@@ -2361,9 +2372,9 @@ class AudioMotionAnalyzer {
 					else if ( isAlpha )						// isAlpha (alpha based on peak value) supersedes fillAlpha if lineWidth == 0
 						_ctx.globalAlpha = peakValue;
 
-					// use peakColor when defined by the gradient in use
-					if ( channelGradient.peakColor ) {
-						_ctx.fillStyle = _ctx.strokeStyle = channelGradient.peakColor;
+					// use peakColor when defined by the theme in use
+					if ( theme.peakColor ) {
+						_ctx.fillStyle = _ctx.strokeStyle = theme.peakColor;
 					}
 					else if ( _colorMode == COLOR_BAR_LEVEL || isTrueLeds ) {
 						// select the proper peak color for 'bar-level' colorMode or 'trueLeds'
@@ -2395,7 +2406,7 @@ class AudioMotionAnalyzer {
 
 			// Fill/stroke drawing path for graph mode
 			if ( _mode == MODE_GRAPH ) {
-				setBarColor( colorStops ); // select channel gradient
+				setBarColor(); // select channel gradient
 
 				if ( _radial && ! isDualHorizontal ) {
 					if ( _mirror ) {
@@ -2500,8 +2511,7 @@ class AudioMotionAnalyzer {
 		// call callback function, if defined
 		if ( this.onCanvasDraw ) {
 			_ctx.save();
-			_ctx.fillStyle = _ctx.strokeStyle = _canvasGradients[0];
-			this.onCanvasDraw( this, { timestamp, canvasGradients: _canvasGradients } );
+			this.onCanvasDraw( this, { timestamp, themes: _activeThemes } );
 			_ctx.restore();
 		}
 	}
@@ -2533,7 +2543,21 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Generate currently selected gradient
+	 * Generates canvas gradients and updates _activeThemes properties
+	 *
+	 * 	_activeThemes = [
+	 *		{ // per channel
+	 *			name: <string> // theme name - set by _setTheme()
+	 *			colorStops: <array>
+	 *			gradient: <CanvasGradient>
+	 *			muted: { // alternate colors and gradient used for the led mask
+	 *				colorStops: <array>
+	 *				gradient: <CanvasGradient>
+	 *			}
+	 *			peakColor: <string>
+	 *		}
+	 *	]
+	 *
 	 */
 	_makeGrad() {
 		if ( ! this._ready )
@@ -2547,41 +2571,32 @@ class AudioMotionAnalyzer {
 			  gradientHeight = isLumi ? canvas.height : canvas.height * ( 1 - _reflexRatio * ( ! isDualVertical ) ) | 0;
 			  				   // for vertical stereo we keep the full canvas height and handle the reflex areas while generating the color stops
 
+		// helper function
+		const createNewGradient = () => _ctx.createLinearGradient( ...( _horizGrad ? [ initialX, 0, initialX + analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
+
 		for ( const channel of [0,1] ) {
-			const currGradient = this._gradients[ this._selectedGrads[ channel ] ],
-				  colorStops   = deepCloneObject( currGradient.colorStops ), // deep copy, so the original is not modified by `flipGradient`
-				  isHorizontal = currGradient.dir == 'h',
-				  maxIndex     = colorStops.length - 1;
+			const { name }        = this._activeThemes[ channel ],
+				  sourceTheme     = deepCloneObject( this._themes[ name ] ),
+				  { colorStops, muted } = sourceTheme,
+				  mutedColorStops = muted.colorStops,
+				  maxIndex        = colorStops.length - 1;
 
 			if ( _flipGrad ) {
-				// swap colors, but preserve the offsets and level thresholds of each colorstop
-				for ( let i = 0; i <= maxIndex >> 1; i++ )
-					[ colorStops[ i ].color, colorStops[ maxIndex - i ].color ] = [ colorStops[ maxIndex - i ].color, colorStops[ i ].color ]
-			}
-
-			let grad      = _radial
-					 		? _ctx.createRadialGradient( centerX, centerY, outerRadius, centerX, centerY, innerRadius - ( outerRadius - innerRadius ) * isDualVertical )
-					 		: _ctx.createLinearGradient( ...( _horizGrad ? [ initialX, 0, initialX + analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) ),
-				maskGrad  = _radial
-							? null // no LEDs in radial
-							: _ctx.createLinearGradient( ...( _horizGrad ? [ initialX, 0, initialX + analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) ),
-				maskCS    = [];
-
-			if ( maskGrad ) {
-				for ( let i = 0; i <= maxIndex; i++ ) {
-					const cs = colorStops[ i ],
-					 	  [ h, s, l ] = cssColorToHSL( cs.color );
-
-					maskCS.push( deepCloneObject( cs ) );
-					maskCS[ i ].color = `hsla( ${h}, ${ LED_MASK_SATURATION }%, ${l}%, ${ LED_MASK_ALPHA } )`;
+				// reverse colors only (preserve offsets and level thresholds of each colorstop)
+				for ( let i = 0; i <= maxIndex >> 1; i++ ) {
+					[ colorStops[ i ].color, colorStops[ maxIndex - i ].color ] = [ colorStops[ maxIndex - i ].color, colorStops[ i ].color ];
+					[ mutedColorStops[ i ].color, mutedColorStops[ maxIndex - i ].color ] = [ mutedColorStops[ maxIndex - i ].color, mutedColorStops[ i ].color ]
 				}
 			}
+
+			let gradient      = _radial	? _ctx.createRadialGradient( centerX, centerY, outerRadius, centerX, centerY, innerRadius - ( outerRadius - innerRadius ) * isDualVertical ) : createNewGradient(),
+				mutedGradient = _radial ? null : createNewGradient() // no LEDs in radial
 
 			if ( colorStops ) {
 				const dual = isDualVertical && ! this._splitGradient && ( ! _horizGrad || _radial );
 
-				const buildGradient = ( grad, colorStops, channelArea ) => {
-					colorStops.forEach( ( colorStop, index ) => {
+				const buildGradient = ( grad, cs, area ) => {
+					cs.forEach( ( colorStop, index ) => {
 						let offset = colorStop.pos;
 
 						// in dual mode (not split), use half the original offset for each channel
@@ -2597,11 +2612,11 @@ class AudioMotionAnalyzer {
 						}
 
 						// only for dual-vertical non-split gradient (creates full gradient on both halves of the canvas)
-						if ( channelArea == 1 ) {
+						if ( area == 1 ) {
 							// add colors in reverse order if radial or lumi are active
 							if ( _radial || isLumi ) {
 								const revIndex = maxIndex - index;
-								colorStop = colorStops[ revIndex ];
+								colorStop = cs[ revIndex ];
 								offset = 1 - colorStop.pos / 2;
 							}
 							else {
@@ -2620,18 +2635,27 @@ class AudioMotionAnalyzer {
 						if ( isDualVertical && index == maxIndex && offset < .5 )
 							grad.addColorStop( .5, colorStop.color );
 					});
-				}
+				} // buildGradient()
 
 				for ( let channelArea = 0; channelArea < 1 + dual; channelArea++ ) {
-					buildGradient( grad, colorStops, channelArea );
-					if ( maskGrad )
-						buildGradient( maskGrad, maskCS, channelArea );
+					buildGradient( gradient, colorStops, channelArea );
+					if ( mutedGradient )
+						buildGradient( mutedGradient, mutedColorStops, channelArea );
 				}
 			}
 
-			this._colorStops[ channel ] = colorStops;
-			this._canvasGradients[ channel ] = grad;
-			this._ledMask[ channel ] = { gradient: maskGrad, colorStops: maskCS };
+			this._activeThemes[ channel ] = {
+				name,			// set by _setTheme()
+				...sourceTheme, // preserves properties from the source theme, not changed here, like `peakColor`
+				colorStops,		// from the source theme, but modified by this method if `flipGrad` is on
+				gradient,		// generated by this method
+				muted: {
+					...sourceTheme.muted,        // preserves any original properties (future-proof!)
+					colorStops: mutedColorStops, // from the source theme, but modified by this method if `flipGrad` is on
+					gradient: mutedGradient      // generated by this method
+				}
+			};
+
 		} // for ( const channel of [0,1] )
 	}
 
@@ -2701,7 +2725,7 @@ class AudioMotionAnalyzer {
 		// calculate bar positions and led options
 		this._calcBars();
 
-		// (re)generate gradient
+		// (re)generate gradients
 		this._makeGrad();
 
 		// detect fullscreen changes (for Safari)
@@ -2715,25 +2739,6 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Select a gradient for one or both channels
-	 *
-	 * @param {string} name gradient name
-	 * @param [{number}] desired channel (0 or 1) - if empty or invalid, sets both channels
-	 */
-	_setGradient( name, channel ) {
-		if ( ! this._gradients.hasOwnProperty( name ) )
-			throw new AudioMotionError( ERR_UNKNOWN_GRADIENT, name );
-
-		if ( ! [0,1].includes( channel ) ) {
-			this._selectedGrads[1] = name;
-			channel = 0;
-		}
-
-		this._selectedGrads[ channel ] = name;
-		this._makeGrad();
-	}
-
-	/**
 	 * Set object properties
 	 */
 	_setProps( options, useDefaults ) {
@@ -2741,7 +2746,7 @@ class AudioMotionAnalyzer {
 		const callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
 
 		// properties not in the defaults (`stereo` is deprecated)
-		const extraProps = [ 'gradientLeft', 'gradientRight', 'stereo' ];
+		const extraProps = [ 'themeLeft', 'themeRight', 'stereo' ];
 
 		// build an array of valid properties; `start` is not an actual property and is handled after setting everything else
 		const validProps = Object.keys( DEFAULT_SETTINGS ).filter( e => e != 'start' ).concat( callbacks, extraProps );
@@ -2759,6 +2764,25 @@ class AudioMotionAnalyzer {
 		// deprecated - move this to the constructor in the next major release (`start` should be constructor-specific)
 		if ( options.start !== undefined )
 			this.toggleAnalyzer( options.start );
+	}
+
+	/**
+	 * Select a color theme for one or both channels
+	 *
+	 * @param {string} theme name
+	 * @param [{number}] desired channel (0 or 1) - if empty or invalid, sets both channels
+	 */
+	_setTheme( name, channel ) {
+		if ( ! this._themes.hasOwnProperty( name ) )
+			throw new AudioMotionError( ERR_UNKNOWN_GRADIENT, name );
+
+		for ( const ch of [0,1].includes( channel ) ? [ channel ] : [0,1] ) {
+			if ( ! this._activeThemes[ ch ] )
+				this._activeThemes[ ch ] = {};
+			this._activeThemes[ ch ].name = name;
+		}
+
+		this._makeGrad();
 	}
 
 }
