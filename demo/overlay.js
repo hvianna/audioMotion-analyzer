@@ -23,14 +23,14 @@ const presets = [
 			bandResolution: 6,
 			barSpace: .5,
 			colorMode: 'gradient',
-			gradient: 'classic',
 			ledBars: true,
 			lumiBars: false,
 			maxFreq: 16000,
 			radial: false,
 			reflexRatio: 0,
 			showLedMask: true,
-			showPeaks: true
+			showPeaks: true,
+			theme: 'classic'
 		}
 	},
 	{
@@ -39,7 +39,6 @@ const presets = [
 			mode: 'graph',
 			bandResolution: 0,
 			fillAlpha: .6,
-			gradient: 'rainbow',
 			lineWidth: 2,
 			lumiBars: false,
 			maxFreq: 16000,
@@ -47,7 +46,8 @@ const presets = [
 			reflexAlpha: 1,
 			reflexBright: 1,
 			reflexRatio: .5,
-			showPeaks: false
+			showPeaks: false,
+			theme: 'rainbow'
 		}
 	},
 	{
@@ -57,7 +57,6 @@ const presets = [
 			bandResolution: 6,
 			barSpace: .25,
 			fillAlpha: .5,
-			gradient: 'prism',
 			ledBars: false,
 			linearAmplitude: true,
 			linearBoost: 1.8,
@@ -69,6 +68,7 @@ const presets = [
 			showPeaks: true,
 			spinSpeed: 2,
 			outlineBars: true,
+			theme: 'prism',
 			weightingFilter: 'D'
 		}
 	},
@@ -79,16 +79,16 @@ const presets = [
 			bandResolution: 4,
 			barSpace: .25,
 			colorMode: 'bar-level',
-			gradient: 'prism',
 			ledBars: false,
 			lumiBars: false,
 			maxFreq: 16000,
+			outlineBars: false,
 			radial: false,
 			reflexAlpha: .5,
 			reflexFit: true,
 			reflexRatio: .3,
 			showPeaks: true,
-			outlineBars: false
+			theme: 'prism'
 		}
 	}
 ];
@@ -137,6 +137,8 @@ presets.forEach( ( preset, index ) => {
 	const option = new Option( preset.name, index );
 	presetSelection.append( option );
 });
+
+populateThemeSelections( audioMotion );
 
 // Initialize settings with options from a preset
 presetSelection.value = 3;
