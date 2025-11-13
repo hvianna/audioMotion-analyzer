@@ -1,6 +1,47 @@
 Changelog
 =========
 
+## version 5.0.0-alpha.0
+
+### Overview: <!-- {docsify-ignore} -->
+
++ **_Gradients_ are now called "Themes" -** related properties and methods have been renamed to match the new term (see *breaking changes* below);
++ The canvas background is now always transparent, so **all background-related properties are gone,** including that from ~~gradient~~ theme definition;
++ LED bars now apply the same element height and vertical spacing for all band resolutions and canvas sizes - now it's the number of LED elements that will adjust
+  to fit the canvas, keeping the **LED visuals more consistent and predictable among different screen sizes;**
++ LED bars no longer require a minimum horizontal gap between them, and **now follow the value set to [`barSpace`](README.md#barspace-number);**
++ **Custom LED formats are much easier to create** with new [`setLeds()`](README.md#setleds-ledheight-ledgap) method, using streamlined logic and parameters;
++ Canvas `fillStyle` and `strokeStyle` are no longer explicitly set prior to the [`onCanvasDraw`](README.md#oncanvasdraw-function) call - the callback can now obtain all color information
+  from the currently active themes, via the `themes` property in the passed object.
+
+### 🚨 BREAKING CHANGES: <!-- {docsify-ignore} -->
+
++ [`mode`](README.md#mode-string) is now a string (either `'bars'` or `'graph'`) - band count is now defined by [`bandResolution`](README.md#bandresolution-number);
++ Removed methods and properties:
+
+Removed               | Use this instead
+----------------------|-----------------------------------------------
+`bgAlpha`             | *set the desired opacity via CSS*
+`gradient`            | `theme`
+`gradientLeft`        | `themeLeft`
+`gradientRight`       | `themeRight`
+`registerGradient()`  | `registerTheme()`
+`setLedParams()`      | `setLeds()`
+`showBgColor`         | *set the desired background color via CSS*
+`overlay`             | *no replacement*
+
+### Added: <!-- {docsify-ignore} -->
+
++ [`bandResolution`](README.md#bandresolution-number)
++ `flipGradient`
++ `horizontalGradient`
++ `showLedMask`
++ `peakColor` property in theme options
++ `getRegisteredThemes()` and `unregisterTheme()` methods
+
+
+
+
 ## version 4.5.1 (2025-06-02)
 
 ### Minor bugfix release <!-- {docsify-ignore} -->
