@@ -126,6 +126,7 @@ const DEFAULT_SETTINGS = {
 	reflexFit      : true,
 	reflexRatio    : 0,
 	roundBars      : false,
+	scaleXOverlay  : false,
 	showFPS        : false,
 	showLedMask    : true,
 	showPeaks      : true,
@@ -750,6 +751,24 @@ class AudioMotionAnalyzer {
 		this._calcBars();
 	}
 
+	get scaleXOverlay() {
+		return this._sxover;
+	}
+	set scaleXOverlay( value ) {
+		this._sxover = !! value;
+		this._calcBars();
+		this._makeGrad();
+	}
+
+	get showScaleX() {
+		return this._sxshow;
+	}
+	set showScaleX( value ) {
+		this._sxshow = !! value;
+		this._calcBars();
+		this._makeGrad();
+	}
+
 	get smoothing() {
 		return this._analyzer[0].smoothingTimeConstant;
 	}
@@ -1354,21 +1373,22 @@ class AudioMotionAnalyzer {
 
 			  // COMPUTE FLAGS
 
-			  isBands   = _bandRes > 0,
-			  isOctaves = isBands && this._frequencyScale == SCALE_LOG,
-			  isLeds    = this._showLeds && isBands && ! _radial,
-			  isLumi    = this._lumiBars && isBands && ! _radial,
-			  isAlpha   = this._alphaBars && ! isLumi && _mode != MODE_GRAPH,
-			  isOutline = this._outlineBars && isBands && ! isLumi && ! isLeds,
-			  isRound   = this._roundBars && isBands && ! isLumi && ! isLeds,
-			  noLedGap  = _chLayout != CHANNEL_VERTICAL || _reflexRatio > 0 && ! isLumi,
+			  isBands     = _bandRes > 0,
+			  isOctaves   = isBands && this._frequencyScale == SCALE_LOG,
+			  isLeds      = this._showLeds && isBands && ! _radial,
+			  isLumi      = this._lumiBars && isBands && ! _radial,
+			  isAlpha     = this._alphaBars && ! isLumi && _mode != MODE_GRAPH,
+			  isOutline   = this._outlineBars && isBands && ! isLumi && ! isLeds,
+			  isRound     = this._roundBars && isBands && ! isLumi && ! isLeds,
+			  scaleHeight = this._scaleX.canvas.height * ( ! this._sxover && this._sxshow ),
+			  noLedGap    = _chLayout != CHANNEL_VERTICAL || _reflexRatio > 0 && ! isLumi || scaleHeight > 0,
 
 			  // COMPUTE AUXILIARY VALUES
 
 			  // channelHeight is the total canvas height dedicated to each channel, including the reflex area, if any)
 			  channelHeight  = canvas.height - ( isDualVertical && ! isLeds ? .5 : 0 ) >> isDualVertical,
 			  // analyzerHeight is the effective height used to render the analyzer, excluding the reflex area
-			  analyzerHeight = channelHeight * ( isLumi || _radial ? 1 : 1 - _reflexRatio ) | 0,
+			  analyzerHeight = ( channelHeight * ( isLumi || _radial ? 1 : 1 - _reflexRatio ) | 0 ) - scaleHeight,
 
 			  analyzerWidth  = canvas.width - centerX * ( isDualHorizontal || _mirror != 0 ),
 
@@ -1927,7 +1947,7 @@ class AudioMotionAnalyzer {
 
 		// draw scale on X-axis
 		const drawScaleX = () => {
-			if ( this.showScaleX ) {
+			if ( this._sxshow ) {
 				if ( _radial ) {
 					_ctx.save();
 					_ctx.translate( centerX, centerY );
@@ -1936,8 +1956,11 @@ class AudioMotionAnalyzer {
 					_ctx.drawImage( canvasR, -canvasR.width >> 1, -canvasR.width >> 1 );
 					_ctx.restore();
 				}
-				else
+				else {
 					_ctx.drawImage( canvasX, 0, canvas.height - canvasX.height );
+					if ( isDualVertical && ! this._sxover )
+						_ctx.drawImage( canvasX, 0, ( canvas.height >> 1 ) - canvasX.height );
+				}
 			}
 		}
 
