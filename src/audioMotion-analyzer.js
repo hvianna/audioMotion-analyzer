@@ -46,9 +46,6 @@ const CHANNEL_COMBINED         = 'dual-combined',
 	  REASON_LORES             = 'lores',
 	  REASON_RESIZE            = EVENT_RESIZE,
 	  REASON_USER              = 'user',
-	  SCALEX_BACKGROUND_COLOR  = '#000c',
-	  SCALEX_LABEL_COLOR       = '#fff',
-	  SCALEX_HIGHLIGHT_COLOR   = '#4f4',
 	  SCALEY_LABEL_COLOR       = '#888',
 	  SCALEY_MIDLINE_COLOR     = '#555',
 	  SCALE_BARK               = 'bark',
@@ -126,7 +123,6 @@ const DEFAULT_SETTINGS = {
 	reflexFit      : true,
 	reflexRatio    : 0,
 	roundBars      : false,
-	scaleXOverlay  : false,
 	showFPS        : false,
 	showLedMask    : true,
 	showPeaks      : true,
@@ -203,12 +199,18 @@ const deepCloneObject = obj => JSON.parse( JSON.stringify( obj ) );
 // output deprecation warning message on console
 const deprecate = ( name, alternative ) => console.warn( `${name} is deprecated. Use ${alternative} instead.` );
 
+// shorthand for Array.isArray()
+const { isArray } = Array;
+
 // check if a given object is empty (also returns `true` on null, undefined or any non-object value)
 const isEmpty = obj => {
 	for ( const p in obj )
 		return false;
 	return true;
 }
+
+// check if given value is an object (not null or array, which are also considered objects)
+const isObject = val => typeof val == 'object' && !! val && ! Array.isArray( val );
 
 // validate a given value with an array of strings (by default, all lowercase)
 // returns the validated value, or the first element of `list` if `value` is not found in the array
@@ -257,6 +259,7 @@ class AudioMotionAnalyzer {
 		this._ownContext = false;
 		this._sources = [];			// input nodes
 		this._themes = {}; 			// registered color themes
+		this._xAxis = {};           // parameters for generating the X-axis scale labels
 
 		// Check if options object passed as first argument
 		if ( ! ( container instanceof Element ) ) {
@@ -420,6 +423,9 @@ class AudioMotionAnalyzer {
 				this._time = performance.now();
 			}
 		}, { signal } );
+
+		// Set X-axis default parameters
+		this.setXAxis();
 
 		// Set configuration options and use defaults for any missing properties
 		this._setProps( options, true );
@@ -749,15 +755,6 @@ class AudioMotionAnalyzer {
 	set roundBars( value ) {
 		this._roundBars = !! value;
 		this._calcBars();
-	}
-
-	get scaleXOverlay() {
-		return this._sxover;
-	}
-	set scaleXOverlay( value ) {
-		this._sxover = !! value;
-		this._calcBars();
-		this._makeGrad();
 	}
 
 	get showScaleX() {
@@ -1149,7 +1146,7 @@ class AudioMotionAnalyzer {
 		if ( typeof name != 'string' || name.trim().length == 0 )
 			throw new AudioMotionError( ERR_GRADIENT_INVALID_NAME );
 
-		if ( typeof options != 'object' )
+		if ( ! isObject( options ) )
 			throw new AudioMotionError( ERR_GRADIENT_NOT_AN_OBJECT );
 
 		const { colorStops, peakColor } = deepCloneObject( options ); // avoid modifying user's original object (see discussions #58)
@@ -1163,7 +1160,7 @@ class AudioMotionAnalyzer {
 		// normalize all colorStops as objects with `pos`, `color` and `level` properties
 		colorStops.forEach( ( colorStop, index ) => {
 			const pos = index / Math.max( 1, count - 1 );
-			if ( typeof colorStop != 'object' ) // only color string was defined
+			if ( ! isObject( colorStop ) ) // only color string was defined
 				colorStops[ index ] = {	pos, color: colorStop };
 			else if ( isInvalid( colorStop.pos ) )
 				colorStop.pos = pos;
@@ -1262,6 +1259,32 @@ class AudioMotionAnalyzer {
 			this._analyzer[ i ].minDecibels = Math.min( min, max );
 			this._analyzer[ i ].maxDecibels = Math.max( min, max );
 		}
+	}
+
+	/**
+	 * Customize X-Axis display
+	 *
+	 * @param {object} options
+	 */
+	setXAxis( options ) {
+		const defaultOptions = {
+			addLabels      : false,
+			backgroundColor: '#0008',
+			color          : '#fff',
+			height         : .03,
+			highlightColor : '#4f4',
+			labels         : [],
+			overlay        : false
+		};
+
+		this._xAxis = {
+			...defaultOptions,
+			// if `options` is valid, add its properties on top of current settings; otherwise keep just the defaults
+			...( isObject( options ) ? { ...this._xAxis, ...options } : [] )
+		};
+
+		this._calcBars(); // note that changes to `height` and `overlay` affect usable canvas height
+		this._makeGrad();
 	}
 
 	/**
@@ -1365,11 +1388,14 @@ class AudioMotionAnalyzer {
 			return;
 		}
 
-		const { _ansiBands, _bandRes, _barSpace, canvas, _chLayout, _maxFreq, _minFreq, _mirror, _mode, _radial, _radialInvert, _reflexRatio } = this,
-			  centerX          = canvas.width >> 1,
-			  centerY          = canvas.height >> 1,
-			  isDualVertical   = _chLayout == CHANNEL_VERTICAL && ! _radial,
-			  isDualHorizontal = _chLayout == CHANNEL_HORIZONTAL,
+		const { _ansiBands, _bandRes, _barSpace, canvas, _chLayout, _maxFreq, _minFreq, _mirror, _mode, _pixelRatio, _radial, _radialInvert, _reflexRatio, _xAxis } = this,
+			  centerX            = canvas.width >> 1,
+			  centerY            = canvas.height >> 1,
+			  isDualVertical     = _chLayout == CHANNEL_VERTICAL && ! _radial,
+			  isDualHorizontal   = _chLayout == CHANNEL_HORIZONTAL,
+			  minCanvasDimension = Math.min( canvas.width, canvas.height ),
+			  scaleHeight        = Math.max( 20 * _pixelRatio, _xAxis.height * ( _xAxis.height > 1 ? 1 : minCanvasDimension ) | 0 ),
+			  scaleGap           = scaleHeight * ( ! _xAxis.overlay && this._sxshow ),
 
 			  // COMPUTE FLAGS
 
@@ -1380,15 +1406,14 @@ class AudioMotionAnalyzer {
 			  isAlpha     = this._alphaBars && ! isLumi && _mode != MODE_GRAPH,
 			  isOutline   = this._outlineBars && isBands && ! isLumi && ! isLeds,
 			  isRound     = this._roundBars && isBands && ! isLumi && ! isLeds,
-			  scaleHeight = this._scaleX.canvas.height * ( ! this._sxover && this._sxshow ),
-			  noLedGap    = _chLayout != CHANNEL_VERTICAL || _reflexRatio > 0 && ! isLumi || scaleHeight > 0,
+			  noLedGap    = _chLayout != CHANNEL_VERTICAL || _reflexRatio > 0 && ! isLumi || scaleGap > 0,
 
 			  // COMPUTE AUXILIARY VALUES
 
 			  // channelHeight is the total canvas height dedicated to each channel, including the reflex area, if any)
 			  channelHeight  = canvas.height - ( isDualVertical && ! isLeds ? .5 : 0 ) >> isDualVertical,
 			  // analyzerHeight is the effective height used to render the analyzer, excluding the reflex area
-			  analyzerHeight = ( channelHeight * ( isLumi || _radial ? 1 : 1 - _reflexRatio ) | 0 ) - scaleHeight,
+			  analyzerHeight = ( channelHeight * ( isLumi || _radial ? 1 : 1 - _reflexRatio ) | 0 ) - scaleGap,
 
 			  analyzerWidth  = canvas.width - centerX * ( isDualHorizontal || _mirror != 0 ),
 
@@ -1398,7 +1423,7 @@ class AudioMotionAnalyzer {
 
 			  initialX       = centerX * ( _mirror == -1 && ! isDualHorizontal && ! _radial );
 
-		let innerRadius = Math.min( canvas.width, canvas.height ) * .375 * ( _chLayout == CHANNEL_VERTICAL ? 1 : this._radius ) | 0,
+		let innerRadius = minCanvasDimension * .375 * ( _chLayout == CHANNEL_VERTICAL ? 1 : this._radius ) | 0,
 			outerRadius = Math.min( centerX, centerY );
 
 		if ( _radialInvert && _chLayout != CHANNEL_VERTICAL )
@@ -1622,7 +1647,7 @@ class AudioMotionAnalyzer {
 
 		if ( isLeds ) {
 			// adjustment for high pixel-ratio values on low-resolution screens (Android TV)
-			const dPR = this._pixelRatio / ( window.devicePixelRatio > 1 && window.screen.height <= 540 ? 2 : 1 );
+			const dPR = _pixelRatio / ( window.devicePixelRatio > 1 && window.screen.height <= 540 ? 2 : 1 );
 
 			let [ ledHeight, ledGap ] = ( this._ledParams || LED_PARAMETERS ).map( v => v * dPR ),
 				maxHeight  = analyzerHeight + ( noLedGap ? ledGap : 0 ), // increase maxHeight to avoid extra spacing below last line of LEDs (noLedGap)
@@ -1690,7 +1715,8 @@ class AudioMotionAnalyzer {
 		this._aux = { analyzerHeight, analyzerWidth, centerX, centerY, channelCoords, channelHeight, channelGap, initialX, innerRadius, outerRadius, scaleMin, unitWidth };
 		this._flg = { isAlpha, isBands, isLeds, isLumi, isOctaves, isOutline, isRound, noLedGap };
 
-		// generate the X-axis and radial scales
+		// update height of the X-axis canvas and generate scale labels
+		this._scaleX.canvas.height = scaleHeight;
 		this._createScales();
 	}
 
@@ -1702,48 +1728,59 @@ class AudioMotionAnalyzer {
 			return;
 
 		const { analyzerWidth, initialX, innerRadius, scaleMin, unitWidth } = this._aux,
-			  { canvas, _frequencyScale, _mirror, _noteLabels, _radial, _scaleX, _scaleR } = this,
-			  canvasX          = _scaleX.canvas,
-			  canvasR          = _scaleR.canvas,
-			  freqLabels       = [],
-			  isDualHorizontal = this._chLayout == CHANNEL_HORIZONTAL,
-			  isDualVertical   = this._chLayout == CHANNEL_VERTICAL,
-			  minDimension     = Math.min( canvas.width, canvas.height ),
-			  scale            = [ 'C',, 'D',, 'E', 'F',, 'G',, 'A',, 'B' ], // for note labels (no sharp notes)
-			  scaleHeight      = minDimension / 34 | 0, // circular scale height (radial mode)
-  			  fontSizeX        = canvasX.height >> 1,
-			  fontSizeR        = scaleHeight >> 1,
-			  labelWidthX      = fontSizeX * ( _noteLabels ? .7 : 1.5 ),
-			  labelWidthR      = fontSizeR * ( _noteLabels ? 1 : 2 ),
-		  	  root12           = 2 ** ( 1 / 12 );
+			  { canvas, _frequencyScale, _mirror, _noteLabels, _radial, _scaleX, _scaleR, _xAxis } = this,
+			  canvasX            = _scaleX.canvas,
+			  canvasR            = _scaleR.canvas,
+			  freqLabels         = isArray( _xAxis.labels ) && ! _noteLabels ? [ ..._xAxis.labels ] : [],
+			  isDualHorizontal   = this._chLayout == CHANNEL_HORIZONTAL,
+			  isDualVertical     = this._chLayout == CHANNEL_VERTICAL,
+			  minCanvasDimension = Math.min( canvas.width, canvas.height ),
+			  scale              = [ 'C',, 'D',, 'E', 'F',, 'G',, 'A',, 'B' ], // for note labels (no sharp notes)
+			  radialScaleHeight  = minCanvasDimension / 34 | 0, // circular scale height (radial mode)
+			  fontSizeR          = radialScaleHeight >> 1,
+			  fontSizeX          = canvasX.height >> 1,
+			  labelWidthR        = fontSizeR * ( _noteLabels ? 1 : 2 ),
+			  labelWidthX        = fontSizeX * ( _noteLabels ? .7 : 1.5 ),
+		  	  root12             = 2 ** ( 1 / 12 );
 
-		if ( ! _noteLabels && ( this._ansiBands || _frequencyScale != SCALE_LOG ) ) {
-			freqLabels.push( 16, 31.5, 63, 125, 250, 500, 1e3, 2e3, 4e3 );
-			if ( _frequencyScale == SCALE_LINEAR )
-				freqLabels.push( 6e3, 8e3, 10e3, 12e3, 14e3, 16e3, 18e3, 20e3, 22e3 );
-			else
-				freqLabels.push( 8e3, 16e3 );
-		}
-		else {
-			let freq = C_1;
-			for ( let octave = -1; octave < 11; octave++ ) {
-				for ( let note = 0; note < 12; note++ ) {
-					if ( freq >= this._minFreq && freq <= this._maxFreq ) {
-						const pitch = scale[ note ],
-							  isC   = pitch == 'C';
-						if ( ( pitch && _noteLabels && ! _mirror && ! isDualHorizontal ) || isC )
-							freqLabels.push( _noteLabels ? [ freq, pitch + ( isC ? octave : '' ) ] : freq );
+		// helper function - format a value using compact engineering notation (e.g.: 1000 -> 1k, 16700 -> 16k7)
+		const formatLabel = f => f < 1e3 ? f | 0 : ( f / 1e3 ).toFixed(1).replace( /([\.])([\d])$/, ( m, p1, p2 ) => 'k' + ( +p2 || '' ) );
+
+		// generate labels if not customized via setXAxis()
+		if ( ! freqLabels.length || _xAxis.addLabels ) {
+			if ( ! _noteLabels && ( this._ansiBands || _frequencyScale != SCALE_LOG ) ) {
+				freqLabels.push( 16, 31.5, 63, 125, 250, 500, 1e3, 2e3, 4e3 );
+				if ( _frequencyScale == SCALE_LINEAR )
+					freqLabels.push( 6e3, 8e3, 10e3, 12e3, 14e3, 16e3, 18e3, 20e3, 22e3 );
+				else
+					freqLabels.push( 8e3, 16e3 );
+			}
+			else {
+				let freq = C_1;
+				for ( let octave = -1; octave < 11; octave++ ) {
+					for ( let note = 0; note < 12; note++ ) {
+						if ( freq >= this._minFreq && freq <= this._maxFreq ) {
+							const pitch = scale[ note ],
+								  isC   = pitch == 'C';
+							if ( ( pitch && _noteLabels && ! _mirror && ! isDualHorizontal ) || isC ) {
+								const highlight = isC && ! _mirror && ! isDualHorizontal;
+								freqLabels.push( _noteLabels ? [ freq, pitch + ( isC ? octave : '' ), highlight ] : freq );
+							}
+						}
+						freq *= root12;
 					}
-					freq *= root12;
 				}
 			}
 		}
 
+		// make sure labels added via setXAxis() are in asceding order
+		freqLabels.sort( ( a, b ) => ( isArray( a ) ? a[0] : a ) - ( isArray( b ) ? b[0] : b ) );
+
 		// in radial dual-vertical layout, the scale is positioned exactly between both channels, by making the canvas a bit larger than the inner diameter
-		canvasR.width = canvasR.height = Math.max( minDimension * .15, ( innerRadius << 1 ) + ( isDualVertical * scaleHeight ) );
+		canvasR.width = canvasR.height = Math.max( minCanvasDimension * .15, ( innerRadius << 1 ) + ( isDualVertical * radialScaleHeight ) );
 
 		const centerR = canvasR.width >> 1,
-			  radialY = centerR - scaleHeight * .7;	// vertical position of text labels in the circular scale
+			  radialY = centerR - radialScaleHeight * .7;	// vertical position of text labels in the circular scale
 
 		// helper function
 		const radialLabel = ( x, label ) => {
@@ -1759,17 +1796,19 @@ class AudioMotionAnalyzer {
 			_scaleR.restore();
 		}
 
-		// clear scale canvas
-		canvasX.width |= 0;
+		// update scale canvas width and clear it - note: height is updated previously by calcBars()
+		canvasX.width = canvas.width;
 
-		_scaleX.fillStyle = _scaleR.strokeStyle = SCALEX_BACKGROUND_COLOR;
-		_scaleX.fillRect( 0, 0, canvasX.width, canvasX.height );
+		if ( _xAxis.backgroundColor ) {
+			_scaleX.fillStyle = _scaleR.strokeStyle = _xAxis.backgroundColor;
+			_scaleX.fillRect( 0, 0, canvasX.width, canvasX.height );
 
-		_scaleR.arc( centerR, centerR, centerR - scaleHeight / 2, 0, TAU );
-		_scaleR.lineWidth = scaleHeight;
-		_scaleR.stroke();
+			_scaleR.arc( centerR, centerR, centerR - radialScaleHeight / 2, 0, TAU );
+			_scaleR.lineWidth = radialScaleHeight;
+			_scaleR.stroke();
+		}
 
-		_scaleX.fillStyle = _scaleR.fillStyle = SCALEX_LABEL_COLOR;
+		_scaleX.fillStyle = _scaleR.fillStyle = _xAxis.color;
 		_scaleX.font = `${ fontSizeX }px ${FONT_FAMILY}`;
 		_scaleR.font = `${ fontSizeR }px ${FONT_FAMILY}`;
 		_scaleX.textAlign = _scaleR.textAlign = 'center';
@@ -1778,14 +1817,14 @@ class AudioMotionAnalyzer {
 			prevR = -labelWidthR;
 
 		for ( const item of freqLabels ) {
-			const [ freq, label ] = Array.isArray( item ) ? item : [ item, item < 1e3 ? item | 0 : `${ ( item / 100 | 0 ) / 10 }k` ],
+			const [ freq, label, highlight ] = isArray( item ) ? item : [ item, formatLabel( item ) ],
 				  x    = unitWidth * ( this._freqScaling( freq ) - scaleMin ),
 				  y    = canvasX.height * .75,
 				  isC  = label[0] == 'C',
 	  			  maxW = fontSizeX * ( _noteLabels && ! _mirror && ! isDualHorizontal ? ( isC ? 1.2 : .6 ) : 3 );
 
 	  		// set label color - no highlight when mirror effect is active (only Cs displayed)
-			_scaleX.fillStyle = _scaleR.fillStyle = isC && ! _mirror && ! isDualHorizontal ? SCALEX_HIGHLIGHT_COLOR : SCALEX_LABEL_COLOR;
+			_scaleX.fillStyle = _scaleR.fillStyle = highlight ? _xAxis.highlightColor : _xAxis.color;
 
 			// prioritizes which note labels are displayed, due to the restricted space on some ranges/scales
 			if ( _noteLabels ) {
@@ -1958,7 +1997,7 @@ class AudioMotionAnalyzer {
 				}
 				else {
 					_ctx.drawImage( canvasX, 0, canvas.height - canvasX.height );
-					if ( isDualVertical && ! this._sxover )
+					if ( isDualVertical )
 						_ctx.drawImage( canvasX, 0, ( canvas.height >> 1 ) - canvasX.height );
 				}
 			}
@@ -2710,7 +2749,6 @@ class AudioMotionAnalyzer {
 			return;
 
 		const { canvas, _ctx } = this,
-			  canvasX    = this._scaleX.canvas,
 			  pixelRatio = window.devicePixelRatio / ( this._loRes + 1 );
 
 		let screenWidth  = window.screen.width  * pixelRatio,
@@ -2740,10 +2778,6 @@ class AudioMotionAnalyzer {
 
 		// set lineJoin property for area fill mode (this is reset whenever the canvas size changes)
 		_ctx.lineJoin = 'bevel';
-
-		// update dimensions of the scale canvas
-		canvasX.width = newWidth;
-		canvasX.height = Math.max( 20 * pixelRatio, Math.min( newWidth, newHeight ) / 32 | 0 );
 
 		// calculate bar positions and led options
 		this._calcBars();
