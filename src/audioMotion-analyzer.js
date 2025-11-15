@@ -46,8 +46,6 @@ const CHANNEL_COMBINED         = 'dual-combined',
 	  REASON_LORES             = 'lores',
 	  REASON_RESIZE            = EVENT_RESIZE,
 	  REASON_USER              = 'user',
-	  SCALEY_LABEL_COLOR       = '#888',
-	  SCALEY_MIDLINE_COLOR     = '#555',
 	  SCALE_BARK               = 'bark',
 	  SCALE_LINEAR             = 'linear',
 	  SCALE_LOG                = 'log',
@@ -259,7 +257,8 @@ class AudioMotionAnalyzer {
 		this._ownContext = false;
 		this._sources = [];			// input nodes
 		this._themes = {}; 			// registered color themes
-		this._xAxis = {};           // parameters for generating the X-axis scale labels
+		this._xAxis = {};           // X-axis label parameters
+		this._yAxis = {};           // Y-axis label parameters
 
 		// Check if options object passed as first argument
 		if ( ! ( container instanceof Element ) ) {
@@ -424,8 +423,9 @@ class AudioMotionAnalyzer {
 			}
 		}, { signal } );
 
-		// Set X-axis default parameters
+		// Set default parameters for X- and Y-axis labels
 		this.setXAxis();
+		this.setYAxis();
 
 		// Set configuration options and use defaults for any missing properties
 		this._setProps( options, true );
@@ -1288,6 +1288,30 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Customize Y-axis display
+	 *
+	 * @param {object} options
+	 */
+	setYAxis( options ) {
+		const defaultOptions = {
+			color: '#888',
+			lineDash: [2,4],
+			midLineColor: '#555',
+			midLineDash: [2,8],
+			operation: 'screen',
+			width: .03
+		}
+
+		this._yAxis = {
+			...defaultOptions,
+			// if `options` is valid, add its properties on top of current settings; otherwise keep just the defaults
+			...( isObject( options ) ? { ...this._yAxis, ...options } : [] )
+		}
+
+		this._calcBars(); // only to compute yAxisWidth - TO-DO: improve this?
+	}
+
+	/**
 	 * Start the analyzer
 	 */
 	start() {
@@ -1388,14 +1412,16 @@ class AudioMotionAnalyzer {
 			return;
 		}
 
-		const { _ansiBands, _bandRes, _barSpace, canvas, _chLayout, _maxFreq, _minFreq, _mirror, _mode, _pixelRatio, _radial, _radialInvert, _reflexRatio, _xAxis } = this,
+		const { _ansiBands, _bandRes, _barSpace, canvas, _chLayout, _maxFreq, _minFreq, _mirror, _mode,
+			    _pixelRatio, _radial, _radialInvert, _reflexRatio, _xAxis, _yAxis } = this,
 			  centerX            = canvas.width >> 1,
 			  centerY            = canvas.height >> 1,
 			  isDualVertical     = _chLayout == CHANNEL_VERTICAL && ! _radial,
 			  isDualHorizontal   = _chLayout == CHANNEL_HORIZONTAL,
 			  minCanvasDimension = Math.min( canvas.width, canvas.height ),
-			  scaleHeight        = Math.max( 20 * _pixelRatio, _xAxis.height * ( _xAxis.height > 1 ? 1 : minCanvasDimension ) | 0 ),
-			  scaleGap           = scaleHeight * ( ! _xAxis.overlay && this._sxshow ),
+			  xAxisHeight        = Math.max( 20 * _pixelRatio, _xAxis.height * ( _xAxis.height > 1 ? 1 : minCanvasDimension ) | 0 ),
+			  yAxisWidth         = Math.max( 20 * _pixelRatio, _yAxis.width  * ( _yAxis.width  > 1 ? 1 : minCanvasDimension ) | 0 ),
+			  scaleGap           = xAxisHeight * ( ! _xAxis.overlay && this._sxshow ),
 
 			  // COMPUTE FLAGS
 
@@ -1712,11 +1738,11 @@ class AudioMotionAnalyzer {
 
 		// SAVE INTERNAL PROPERTIES
 
-		this._aux = { analyzerHeight, analyzerWidth, centerX, centerY, channelCoords, channelHeight, channelGap, initialX, innerRadius, outerRadius, scaleMin, unitWidth };
+		this._aux = { analyzerHeight, analyzerWidth, centerX, centerY, channelCoords, channelHeight, channelGap,
+					  initialX, innerRadius, outerRadius, scaleMin, unitWidth, xAxisHeight, yAxisWidth };
 		this._flg = { isAlpha, isBands, isLeds, isLumi, isOctaves, isOutline, isRound, noLedGap };
 
-		// update height of the X-axis canvas and generate scale labels
-		this._scaleX.canvas.height = scaleHeight;
+		// generate X-axis and radial scale labels
 		this._createScales();
 	}
 
@@ -1727,7 +1753,7 @@ class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const { analyzerWidth, initialX, innerRadius, scaleMin, unitWidth } = this._aux,
+		const { analyzerWidth, initialX, innerRadius, scaleMin, unitWidth, xAxisHeight } = this._aux,
 			  { canvas, _frequencyScale, _mirror, _noteLabels, _radial, _scaleX, _scaleR, _xAxis } = this,
 			  canvasX            = _scaleX.canvas,
 			  canvasR            = _scaleR.canvas,
@@ -1738,7 +1764,7 @@ class AudioMotionAnalyzer {
 			  scale              = [ 'C',, 'D',, 'E', 'F',, 'G',, 'A',, 'B' ], // for note labels (no sharp notes)
 			  radialScaleHeight  = minCanvasDimension / 34 | 0, // circular scale height (radial mode)
 			  fontSizeR          = radialScaleHeight >> 1,
-			  fontSizeX          = canvasX.height >> 1,
+			  fontSizeX          = xAxisHeight >> 1,
 			  labelWidthR        = fontSizeR * ( _noteLabels ? 1 : 2 ),
 			  labelWidthX        = fontSizeX * ( _noteLabels ? .7 : 1.5 ),
 		  	  root12             = 2 ** ( 1 / 12 );
@@ -1796,8 +1822,9 @@ class AudioMotionAnalyzer {
 			_scaleR.restore();
 		}
 
-		// update scale canvas width and clear it - note: height is updated previously by calcBars()
-		canvasX.width = canvas.width;
+		// update scale canvas dimensions and clear it
+		canvasX.width  = canvas.width;
+		canvasX.height = xAxisHeight;
 
 		if ( _xAxis.backgroundColor ) {
 			_scaleX.fillStyle = _scaleR.strokeStyle = _xAxis.backgroundColor;
@@ -1908,7 +1935,8 @@ class AudioMotionAnalyzer {
 			    channelGap,
 			    initialX,
 			    innerRadius,
-			    outerRadius }  = this._aux,
+			    outerRadius,
+			    yAxisWidth }   = this._aux,
 
 			  { _activeThemes,
 			  	_bars,
@@ -1930,7 +1958,8 @@ class AudioMotionAnalyzer {
 			    showLedMask,
 			    showPeaks,
 			    useCanvas,
-			    _weightingFilter } = this,
+			    _weightingFilter,
+			    _yAxis }       = this,
 
 			  canvasX          = this._scaleX.canvas,
 			  canvasR          = this._scaleR.canvas,
@@ -2001,6 +2030,54 @@ class AudioMotionAnalyzer {
 						_ctx.drawImage( canvasX, 0, ( canvas.height >> 1 ) - canvasX.height );
 				}
 			}
+		}
+
+		// draw scale on Y-axis
+		const drawScaleY = () => {
+			if ( ! this.showScaleY || isLumi || _radial )
+				return;
+
+			const { color, midLineColor, lineDash, midLineDash, operation } = _yAxis,
+				  fontSize   = yAxisWidth >> 1,
+				  max        = _linearAmplitude ? 100 : maxDecibels,
+				  min        = _linearAmplitude ? 0 : minDecibels,
+				  incr       = _linearAmplitude ? 20 : 5,
+				  interval   = analyzerHeight / ( max - min );
+
+			_ctx.save();
+			_ctx.globalCompositeOperation = operation;
+			_ctx.fillStyle = _yAxis.color;
+			_ctx.font = `${fontSize}px ${FONT_FAMILY}`;
+			_ctx.textAlign = 'right';
+			_ctx.lineWidth = 1;
+
+			for ( let channel = 0; channel < 1 + isDualVertical; channel++ ) {
+				const { channelTop } = channelCoords[ channel ];
+				for ( let val = max; val > min; val -= incr ) {
+					const posY = channelTop + ( max - val ) * interval,
+						  even = ( val % 2 == 0 ) | 0;
+
+					if ( even ) {
+						const labelY = posY + fontSize * ( posY == channelTop ? .8 : .35 );
+						_ctx.fillText( val, yAxisWidth * .85, labelY );
+						_ctx.fillText( val, canvas.width - yAxisWidth * .1, labelY );
+						_ctx.strokeStyle = color;
+						_ctx.setLineDash( lineDash );
+						_ctx.lineDashOffset = 0;
+					}
+					else {
+						_ctx.strokeStyle = midLineColor;
+						_ctx.setLineDash( midLineDash );
+						_ctx.lineDashOffset = 1;
+					}
+
+					_ctx.beginPath();
+					_ctx.moveTo( yAxisWidth * even, ~~posY + .5 ); // for sharp 1px line (https://stackoverflow.com/a/13879402/2370385)
+					_ctx.lineTo( canvas.width - yAxisWidth * even, ~~posY + .5 );
+					_ctx.stroke();
+				}
+			}
+			_ctx.restore();
 		}
 
 		// returns the gain (in dB) for a given frequency, considering the currently selected weighting filter
@@ -2120,50 +2197,6 @@ class AudioMotionAnalyzer {
 				}
 			}
 */
-			// draw scale on Y-axis (uses: channel, channelTop)
-			const drawScaleY = () => {
-				const scaleWidth = canvasX.height,
-					  fontSize   = scaleWidth >> 1,
-					  max        = _linearAmplitude ? 100 : maxDecibels,
-					  min        = _linearAmplitude ? 0 : minDecibels,
-					  incr       = _linearAmplitude ? 20 : 5,
-					  interval   = analyzerHeight / ( max - min ),
-					  atStart    = _mirror != -1 && ( ! isDualHorizontal || channel == 0 || _mirror == 1 ),
-					  atEnd      = _mirror != 1 && ( ! isDualHorizontal || channel != _mirror );
-
-				_ctx.save();
-				_ctx.fillStyle = SCALEY_LABEL_COLOR;
-				_ctx.font = `${fontSize}px ${FONT_FAMILY}`;
-				_ctx.textAlign = 'right';
-				_ctx.lineWidth = 1;
-
-				for ( let val = max; val > min; val -= incr ) {
-					const posY = channelTop + ( max - val ) * interval,
-						  even = ( val % 2 == 0 ) | 0;
-
-					if ( even ) {
-						const labelY = posY + fontSize * ( posY == channelTop ? .8 : .35 );
-						if ( atStart )
-							_ctx.fillText( val, scaleWidth * .85, labelY );
-						if ( atEnd )
-							_ctx.fillText( val, ( isDualHorizontal ? analyzerWidth : canvas.width ) - scaleWidth * .1, labelY );
-						_ctx.strokeStyle = SCALEY_LABEL_COLOR;
-						_ctx.setLineDash([2,4]);
-						_ctx.lineDashOffset = 0;
-					}
-					else {
-						_ctx.strokeStyle = SCALEY_MIDLINE_COLOR;
-						_ctx.setLineDash([2,8]);
-						_ctx.lineDashOffset = 1;
-					}
-
-					_ctx.beginPath();
-					_ctx.moveTo( initialX + scaleWidth * even * atStart, ~~posY + .5 ); // for sharp 1px line (https://stackoverflow.com/a/13879402/2370385)
-					_ctx.lineTo( finalX - scaleWidth * even * atEnd, ~~posY + .5 );
-					_ctx.stroke();
-				}
-				_ctx.restore();
-			}
 
 			// FFT bin data interpolation (uses fftData)
 			const interpolate = ( bin, ratio ) => {
@@ -2240,10 +2273,6 @@ class AudioMotionAnalyzer {
 
 					_ctx.setTransform( flipX, 0, 0, 1, translateX, 0 );
 				}
-
-				// draw dB scale (Y-axis) - avoid drawing it twice on 'dual-combined' channel layout
-				if ( this.showScaleY && ! isLumi && ! _radial && ( channel == 0 || ! isDualCombined ) )
-					drawScaleY();
 
 				// set line width and dash for LEDs effect
 				if ( isLeds ) {
@@ -2557,7 +2586,8 @@ class AudioMotionAnalyzer {
 			// restore solid lines
 			_ctx.setLineDash([]);
 
-			// draw frequency scale (X-axis)
+			// draw scales
+			drawScaleY();
 			drawScaleX();
 		}
 
