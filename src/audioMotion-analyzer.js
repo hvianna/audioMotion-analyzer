@@ -210,7 +210,7 @@ const isEmpty = obj => {
 }
 
 // check if given value is an object (not null or array, which are also considered objects)
-const isObject = val => typeof val == 'object' && !! val && ! Array.isArray( val );
+const isObject = val => typeof val == 'object' && !! val && ! isArray( val );
 
 // validate a given value with an array of strings (by default, all lowercase)
 // returns the validated value, or the first element of `list` if `value` is not found in the array
@@ -1015,7 +1015,7 @@ class AudioMotionAnalyzer {
 	disconnectInput( sources, stopTracks ) {
 		if ( ! sources )
 			sources = Array.from( this._sources );
-		else if ( ! Array.isArray( sources ) )
+		else if ( ! isArray( sources ) )
 			sources = [ sources ];
 
 		for ( const node of sources ) {
@@ -1120,7 +1120,7 @@ class AudioMotionAnalyzer {
 	 * @returns {object} Options object
 	 */
 	getOptions( ignore ) {
-		if ( ! Array.isArray( ignore ) )
+		if ( ! isArray( ignore ) )
 			ignore = [ ignore ];
 		let options = {};
 		for ( const prop of Object.keys( DEFAULT_SETTINGS ) ) {
@@ -1151,7 +1151,7 @@ class AudioMotionAnalyzer {
 
 		const { colorStops, peakColor } = deepCloneObject( options ); // avoid modifying user's original object (see discussions #58)
 
-		if ( ! Array.isArray( colorStops ) || ! colorStops.length )
+		if ( ! isArray( colorStops ) || ! colorStops.length )
 			throw new AudioMotionError( ERR_GRADIENT_MISSING_COLOR );
 
 		const count     = colorStops.length,
