@@ -115,6 +115,8 @@ export type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "tre
 
 export type FrequencyScale = "bark" | "linear" | "log" | "mel";
 
+export type FrequencyLabel = number | [ frequency: number; label: string; highlight?: boolean ];
+
 export type GradientColorStop = string | { pos?: number; color: string; level?: number };
 
 export type VisualizationMode = "bars" | "graph";
@@ -124,6 +126,28 @@ export type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
 export interface GradientOptions {
   colorStops: GradientColorStop[];
   peakColor?: string;
+}
+
+export interface XAxisOptions {
+  addLabels?: boolean;
+  backgroundColor?: string;
+  color?: string;
+  height?: number;
+  highlightColor?: string;
+  labels?: FrequencyLabel[];
+  overlay?: boolean;
+}
+
+export interface YAxisOptions {
+  color?: string;
+  dbInterval?: number;
+  linearInterval?: number;
+  lineDash?: number[];
+  operation?: string;
+  showSubdivisions?: boolean;
+  subLineColor?: string;
+  subLineDash?: number[];
+  width?: number;
 }
 
 declare class AudioMotionAnalyzer {
@@ -341,6 +365,9 @@ declare class AudioMotionAnalyzer {
   public setLedParams(ledHeight: number, ledGap: number): void;
   public setOptions(options?: Options): void;
   public setSensitivity(minDecibels: number, maxDecibels: number): void;
+
+  public setXAxis( options: XAxisOptions ): void;
+  public setYAxis( options: YAxisOptions ): void;
 
   public start(): void;
   public stop(): void;
