@@ -16,28 +16,30 @@ Changelog
 
 ### 🚨 BREAKING CHANGES: <!-- {docsify-ignore} -->
 
-+ [`mode`](README.md#mode-string) is now a string (either `'bars'` or `'graph'`) - band count is now defined by [`bandResolution`](README.md#bandresolution-number);
++ [`mode`](README.md#mode-string) is now a string (either `'bars'` or `'graph'`) - [see the documentation](README.md#mode-string) for migration details;
 + Removed methods and properties:
 
 Removed               | Use this instead
 ----------------------|-----------------------------------------------
-`bgAlpha`             | *set the desired opacity via CSS*
-`gradient`            | `theme`
-`gradientLeft`        | `themeLeft`
-`gradientRight`       | `themeRight`
-`registerGradient()`  | `registerTheme()`
+`bgAlpha`             | *set desired opacity via CSS*
+`gradient`            | [`theme`](README.md#theme-string)
+`gradientLeft`        | [`themeLeft`](README.md#themeleft-string)
+`gradientRight`       | [`themeRight`](README.md#themeright-string)
+`registerGradient()`  | [`registerTheme()`](README.md#registertheme-name-options-)
 `setLedParams()`      | `setLeds()`
-`showBgColor`         | *set the desired background color via CSS*
-`overlay`             | *no replacement*
+`showBgColor`         | *set desired background color via CSS*
+`stereo`              | `channelLayout`
+`overlay`             | *current default behavior is equivalent to `overlay: true` &mdash; if desired, set an opaque background color via CSS*
 
 ### Added: <!-- {docsify-ignore} -->
 
 + [`bandResolution`](README.md#bandresolution-number)
-+ `flipGradient`
-+ `horizontalGradient`
++ [`flipColors`](README.md#flipcolors-boolean)
++ [`horizontalGradient`](README.md#horizontalgradient-boolean)
 + `showLedMask`
-+ `peakColor` property in theme options
-+ `getRegisteredThemes()` and `unregisterTheme()` methods
++ `peakColor` property in theme definition - see [`registerTheme()`](README.md#registertheme-name-options-)
++ [`getRegisteredThemes()`](README.md#getregisteredthemes) and [`unregisterTheme()`](README.md#unregistertheme-name) methods
++ [`setXAxis()`](README.md#setxaxis-options) and [`setYAxis()`](README.md#setyaxis-options) methods for customizable look of scale labels
 
 
 
