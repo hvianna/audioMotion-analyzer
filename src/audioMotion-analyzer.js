@@ -91,7 +91,7 @@ const DEFAULT_SETTINGS = {
 	fadePeaks      : false,
 	fftSize        : 8192,
 	fillAlpha      : 1,
-	flipGradient   : false,
+	flipColors     : false,
 	frequencyScale : SCALE_LOG,
 	gravity        : 3.8,
 	height         : undefined,
@@ -522,11 +522,11 @@ class AudioMotionAnalyzer {
 		this._calcBars();
 	}
 
-	get flipGradient() {
-		return this._flipGrad;
+	get flipColors() {
+		return this._flipColors;
 	}
-	set flipGradient( value ) {
-		this._flipGrad = !! value;
+	set flipColors( value ) {
+		this._flipColors = !! value;
 		this._makeGrad();
 	}
 
@@ -2661,7 +2661,7 @@ class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const { canvas, _ctx, _flipGrad, _horizGrad, _radial, _reflexRatio } = this,
+		const { canvas, _ctx, _flipColors, _horizGrad, _radial, _reflexRatio } = this,
 			  { analyzerWidth, centerX, centerY, initialX, innerRadius, outerRadius } = this._aux,
 			  { isLumi }     = this._flg,
 			  isDualVertical = this._chLayout == CHANNEL_VERTICAL,
@@ -2679,7 +2679,7 @@ class AudioMotionAnalyzer {
 				  mutedColorStops = muted.colorStops,
 				  maxIndex        = colorStops.length - 1;
 
-			if ( _flipGrad ) {
+			if ( _flipColors ) {
 				// reverse colors only (preserve offsets and level thresholds of each colorstop)
 				for ( let i = 0; i <= maxIndex >> 1; i++ ) {
 					[ colorStops[ i ].color, colorStops[ maxIndex - i ].color ] = [ colorStops[ maxIndex - i ].color, colorStops[ i ].color ];

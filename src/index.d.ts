@@ -36,7 +36,7 @@ export interface Options {
   fadePeaks?: boolean;
   fftSize?: number;
   fillAlpha?: number;
-  flipGradient?: boolean;
+  flipColors?: boolean;
   frequencyScale?: FrequencyScale;
   gravity?: number;
   height?: number;
@@ -187,8 +187,8 @@ declare class AudioMotionAnalyzer {
 
   public fillAlpha: number;
 
-  get flipGradient(): boolean;
-  set flipGradient(value: boolean);
+  get flipColors(): boolean;
+  set flipColors(value: boolean);
 
   get fps(): number;
 
