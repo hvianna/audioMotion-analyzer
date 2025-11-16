@@ -1294,13 +1294,16 @@ class AudioMotionAnalyzer {
 	 */
 	setYAxis( options ) {
 		const defaultOptions = {
-			color: '#888',
-			lineDash: [2,4],
-			midLineColor: '#555',
-			midLineDash: [2,8],
-			operation: 'screen',
-			width: .03
-		}
+			color           : '#888',
+			dbInterval      : 10,
+			linearInterval  : 20,
+			lineDash        : [2,4],
+			operation       : 'screen',
+			showSubdivisions: true,
+			subLineColor    : '#555',
+			subLineDash     : [2,8],
+			width           : .03
+		};
 
 		this._yAxis = {
 			...defaultOptions,
@@ -2037,12 +2040,12 @@ class AudioMotionAnalyzer {
 			if ( ! this.showScaleY || isLumi || _radial )
 				return;
 
-			const { color, midLineColor, lineDash, midLineDash, operation } = _yAxis,
+			const { color, dbInterval, linearInterval, lineDash, operation, showSubdivisions, subLineColor, subLineDash } = _yAxis,
 				  fontSize   = yAxisWidth >> 1,
 				  max        = _linearAmplitude ? 100 : maxDecibels,
 				  min        = _linearAmplitude ? 0 : minDecibels,
-				  incr       = _linearAmplitude ? 20 : 5,
-				  interval   = analyzerHeight / ( max - min );
+				  increment  = ( _linearAmplitude ? linearInterval : dbInterval ) / ( 1 + showSubdivisions ),
+				  unitHeight = analyzerHeight / ( max - min );
 
 			_ctx.save();
 			_ctx.globalCompositeOperation = operation;
@@ -2053,11 +2056,15 @@ class AudioMotionAnalyzer {
 
 			for ( let channel = 0; channel < 1 + isDualVertical; channel++ ) {
 				const { channelTop } = channelCoords[ channel ];
-				for ( let val = max; val > min; val -= incr ) {
-					const posY = channelTop + ( max - val ) * interval,
-						  even = ( val % 2 == 0 ) | 0;
+				for ( let val = max, minor = false; val > min; val -= increment ) {
+					const posY = channelTop + ( max - val ) * unitHeight;
 
-					if ( even ) {
+					if ( minor && showSubdivisions ) {
+						_ctx.strokeStyle = subLineColor;
+						_ctx.setLineDash( subLineDash );
+						_ctx.lineDashOffset = 1;
+					}
+					else {
 						const labelY = posY + fontSize * ( posY == channelTop ? .8 : .35 );
 						_ctx.fillText( val, yAxisWidth * .85, labelY );
 						_ctx.fillText( val, canvas.width - yAxisWidth * .1, labelY );
@@ -2065,16 +2072,14 @@ class AudioMotionAnalyzer {
 						_ctx.setLineDash( lineDash );
 						_ctx.lineDashOffset = 0;
 					}
-					else {
-						_ctx.strokeStyle = midLineColor;
-						_ctx.setLineDash( midLineDash );
-						_ctx.lineDashOffset = 1;
-					}
 
 					_ctx.beginPath();
-					_ctx.moveTo( yAxisWidth * even, ~~posY + .5 ); // for sharp 1px line (https://stackoverflow.com/a/13879402/2370385)
-					_ctx.lineTo( canvas.width - yAxisWidth * even, ~~posY + .5 );
+					_ctx.moveTo( yAxisWidth * ! minor, ~~posY + .5 ); // for sharp 1px line (https://stackoverflow.com/a/13879402/2370385)
+					_ctx.lineTo( canvas.width - yAxisWidth * ! minor, ~~posY + .5 );
 					_ctx.stroke();
+
+					if ( showSubdivisions )
+						minor = ! minor;
 				}
 			}
 			_ctx.restore();
