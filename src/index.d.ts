@@ -366,8 +366,8 @@ declare class AudioMotionAnalyzer {
   public setOptions(options?: Options): void;
   public setSensitivity(minDecibels: number, maxDecibels: number): void;
 
-  public setXAxis( options: XAxisOptions ): void;
-  public setYAxis( options: YAxisOptions ): void;
+  public setXAxis(options?: XAxisOptions): void;
+  public setYAxis(options?: YAxisOptions): void;
 
   public start(): void;
   public stop(): void;

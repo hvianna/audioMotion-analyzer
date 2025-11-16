@@ -1299,7 +1299,7 @@ class AudioMotionAnalyzer {
 			dbInterval      : 10,
 			linearInterval  : 20,
 			lineDash        : [2,4],
-			operation       : 'screen',
+			operation       : 'destination-over',
 			showSubdivisions: true,
 			subLineColor    : '#555',
 			subLineDash     : [2,8],
