@@ -1231,7 +1231,7 @@ class AudioMotionAnalyzer {
 	 * @param {number} height of each led element (in pixels)
 	 * @param {number} gap between led elements (in pixels)
 	 */
-	setLedParams( ledHeight, ledGap ) {
+	setLeds( ledHeight, ledGap ) {
 		// coerce parameters to Number; `NaN` results are rejected in the condition below
 		ledHeight = +ledHeight;
 		ledGap = +ledGap;
