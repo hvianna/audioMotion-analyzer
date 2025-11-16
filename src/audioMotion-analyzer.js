@@ -39,6 +39,7 @@ const CHANNEL_COMBINED         = 'dual-combined',
 	  LED_MASK_LIGHTNESS       = 20, // use this instead of alpha??
 	  LED_MASK_SATURATION      = 20, // 40 ?
 	  LED_PARAMETERS           = [ 6, 7 ],
+	  MIN_AXIS_DIMENSION       = 20,
 	  MODE_BARS                = 'bars',
 	  MODE_GRAPH               = 'graph',
 	  REASON_CREATE            = 'create',
@@ -1422,8 +1423,8 @@ class AudioMotionAnalyzer {
 			  isDualVertical     = _chLayout == CHANNEL_VERTICAL && ! _radial,
 			  isDualHorizontal   = _chLayout == CHANNEL_HORIZONTAL,
 			  minCanvasDimension = Math.min( canvas.width, canvas.height ),
-			  xAxisHeight        = Math.max( 20 * _pixelRatio, _xAxis.height * ( _xAxis.height > 1 ? 1 : minCanvasDimension ) | 0 ),
-			  yAxisWidth         = Math.max( 20 * _pixelRatio, _yAxis.width  * ( _yAxis.width  > 1 ? 1 : minCanvasDimension ) | 0 ),
+			  xAxisHeight        = Math.max( MIN_AXIS_DIMENSION * _pixelRatio, _xAxis.height * ( _xAxis.height > 1 ? _pixelRatio : minCanvasDimension ) | 0 ),
+			  yAxisWidth         = Math.max( MIN_AXIS_DIMENSION * _pixelRatio, _yAxis.width  * ( _yAxis.width  > 1 ? _pixelRatio : minCanvasDimension ) | 0 ),
 			  scaleGap           = xAxisHeight * ( ! _xAxis.overlay && this._sxshow ),
 
 			  // COMPUTE FLAGS
