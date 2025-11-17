@@ -36,7 +36,7 @@ const CHANNEL_COMBINED         = 'dual-combined',
 	  FPS_COLOR                = '#0f0',
 	  LED_MASK_ALPHA           = .2, // .5 ?
 	  LED_MASK_COLOR           = '#7f7f7f22',
-	  LED_MASK_LIGHTNESS       = 20, // use this instead of alpha??
+	  LED_MASK_LIGHTNESS       = 20, // TO-DO: use this instead of alpha?? (clean-up)
 	  LED_MASK_SATURATION      = 20, // 40 ?
 	  LED_PARAMETERS           = [ 6, 7 ],
 	  MIN_AXIS_DIMENSION       = 20,
@@ -1106,15 +1106,6 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Returns the names of registered themes
-	 *
-	 * @returns {array}
-	 */
-	getRegisteredThemes() {
-		return Object.keys( this._themes );
-	}
-
-	/**
 	 * Returns current analyzer settings in object format
 	 *
 	 * @param [{string|array}] a property name or an array of property names to not include in the returned object
@@ -1135,6 +1126,15 @@ class AudioMotionAnalyzer {
 			}
 		}
 		return options;
+	}
+
+	/**
+	 * Returns the available themes
+	 *
+	 * @returns {object}
+	 */
+	getThemes() {
+		return deepCloneObject( this._themes );
 	}
 
 	/**
