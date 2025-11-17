@@ -2043,14 +2043,17 @@ class AudioMotionAnalyzer {
 
 			const { color, dbInterval, linearInterval, lineDash, operation, showSubdivisions, subLineColor, subLineDash } = _yAxis,
 				  fontSize   = yAxisWidth >> 1,
+				  increment  = ( _linearAmplitude ? linearInterval : dbInterval ) / ( 1 + showSubdivisions ),
+				  left       = yAxisWidth * .85,
 				  max        = _linearAmplitude ? 100 : maxDecibels,
 				  min        = _linearAmplitude ? 0 : minDecibels,
-				  increment  = ( _linearAmplitude ? linearInterval : dbInterval ) / ( 1 + showSubdivisions ),
+				  right      = canvas.width - yAxisWidth * .1,
+				  unit       = _linearAmplitude ? '%' : 'dB',
 				  unitHeight = analyzerHeight / ( max - min );
 
 			_ctx.save();
 			_ctx.globalCompositeOperation = operation;
-			_ctx.fillStyle = _yAxis.color;
+			_ctx.fillStyle = color;
 			_ctx.font = `${fontSize}px ${FONT_FAMILY}`;
 			_ctx.textAlign = 'right';
 			_ctx.lineWidth = 1;
@@ -2066,9 +2069,18 @@ class AudioMotionAnalyzer {
 						_ctx.lineDashOffset = 1;
 					}
 					else {
-						const labelY = posY + fontSize * ( posY == channelTop ? .8 : .35 );
-						_ctx.fillText( val, yAxisWidth * .85, labelY );
-						_ctx.fillText( val, canvas.width - yAxisWidth * .1, labelY );
+						let labelY = posY + fontSize * ( posY == channelTop ? .8 : .35 );
+
+						_ctx.fillText( val, left, labelY );
+						_ctx.fillText( val, right, labelY );
+
+						if ( val == max ) {
+							// display unit (dB or %) below the first (top) labels
+							labelY += fontSize * 1.5;
+							_ctx.fillText( unit, left, labelY );
+							_ctx.fillText( unit, right, labelY );
+						}
+
 						_ctx.strokeStyle = color;
 						_ctx.setLineDash( lineDash );
 						_ctx.lineDashOffset = 0;
