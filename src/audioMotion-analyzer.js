@@ -1293,6 +1293,7 @@ class AudioMotionAnalyzer {
 			lineDash        : [2,4],
 			operation       : 'destination-over',
 			showSubdivisions: true,
+			showUnit        : true,
 			subLineColor    : '#555',
 			subLineDash     : [2,8],
 			width           : .03
@@ -2023,14 +2024,14 @@ class AudioMotionAnalyzer {
 			}
 		}
 
-		// draw scale on Y-axis
+		// draw scale on Y-axis - TO-DO: handle reflex!
 		const drawScaleY = () => {
 			if ( ! this.showScaleY || isLumi || _radial )
 				return;
 
-			const { color, dbInterval, linearInterval, lineDash, operation, showSubdivisions, subLineColor, subLineDash } = _yAxis,
+			const { color, dbInterval, linearInterval, lineDash, operation, showSubdivisions, showUnit, subLineColor, subLineDash } = _yAxis,
 				  fontSize   = yAxisWidth >> 1,
-				  increment  = ( _linearAmplitude ? linearInterval : dbInterval ) / ( 1 + showSubdivisions ),
+				  increment  = ( _linearAmplitude ? linearInterval : dbInterval ) / ( showSubdivisions ? 2 : 1 ),
 				  left       = yAxisWidth * .85,
 				  max        = _linearAmplitude ? 100 : maxDecibels,
 				  min        = _linearAmplitude ? 0 : minDecibels,
@@ -2061,8 +2062,8 @@ class AudioMotionAnalyzer {
 						_ctx.fillText( val, left, labelY );
 						_ctx.fillText( val, right, labelY );
 
-						if ( val == max ) {
-							// display unit (dB or %) below the first (top) labels
+						if ( showUnit && val - increment * ( showSubdivisions ? 2 : 1 ) <= min ) {
+							// display unit (dB or %) below the bottom label on both sides
 							labelY += fontSize * 1.5;
 							_ctx.fillText( unit, left, labelY );
 							_ctx.fillText( unit, right, labelY );
