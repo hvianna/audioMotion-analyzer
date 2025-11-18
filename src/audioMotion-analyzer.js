@@ -794,15 +794,6 @@ class AudioMotionAnalyzer {
 		this._makeGrad();
 	}
 
-	get stereo() {
-		deprecate( 'stereo', 'channelLayout' );
-		return this._chLayout != CHANNEL_SINGLE;
-	}
-	set stereo( value ) {
-		deprecate( 'stereo', 'channelLayout' );
-		this.channelLayout = value ? CHANNEL_VERTICAL : CHANNEL_SINGLE;
-	}
-
 	get theme() {
 		return this.themeLeft;
 	}
@@ -1989,7 +1980,7 @@ class AudioMotionAnalyzer {
 		const doReflex = channel => {
 			if ( this._reflexRatio > 0 && ! isLumi && ! _radial ) {
 				let posY, height;
-				if ( this.reflexFit || isDualVertical ) { // always fit reflex in vertical stereo mode
+				if ( this.reflexFit || isDualVertical ) { // always fit reflex in dual-vertical mode
 					posY   = isDualVertical && channel == 0 ? channelHeight + channelGap : 0;
 					height = channelHeight - analyzerHeight;
 				}
@@ -2675,7 +2666,7 @@ class AudioMotionAnalyzer {
 			  isDualVertical = this._chLayout == CHANNEL_VERTICAL,
 			  analyzerRatio  = 1 - _reflexRatio,
 			  gradientHeight = isLumi ? canvas.height : canvas.height * ( 1 - _reflexRatio * ( ! isDualVertical ) ) | 0;
-			  				   // for vertical stereo we keep the full canvas height and handle the reflex areas while generating the color stops
+			  				   // for dual-vertical we keep the full canvas height and handle the reflex areas while generating the color stops
 
 		// helper function
 		const createNewGradient = () => _ctx.createLinearGradient( ...( _horizGrad ? [ initialX, 0, initialX + analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
@@ -2846,8 +2837,8 @@ class AudioMotionAnalyzer {
 		// callback functions properties
 		const callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
 
-		// properties not in the defaults (`stereo` is deprecated)
-		const extraProps = [ 'themeLeft', 'themeRight', 'stereo' ];
+		// allow other properties not in the defaults
+		const extraProps = [ 'themeLeft', 'themeRight' ];
 
 		// build an array of valid properties; `start` is not an actual property and is handled after setting everything else
 		const validProps = Object.keys( DEFAULT_SETTINGS ).filter( e => e != 'start' ).concat( callbacks, extraProps );

@@ -78,7 +78,6 @@ export interface Options {
   spinSpeed?: number;
   splitGradient?: boolean;
   start?: boolean;
-  stereo?: boolean;
   theme?: string;
   themeLeft?: string;
   themeRight?: string;
@@ -308,9 +307,6 @@ declare class AudioMotionAnalyzer {
 
   get splitGradient(): boolean;
   set splitGradient(value: boolean);
-
-  get stereo(): boolean;
-  set stereo(value: boolean);
 
   get theme(): string;
   set theme(value: string);
