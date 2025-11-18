@@ -248,6 +248,7 @@ class AudioMotionAnalyzer {
 		// Initialize internal objects
 		this._aux = {};				// auxiliary variables
 		this._activeThemes = [];	// currently active themes for channels 0 and 1 (refer to _makeGrad() for object structure)
+		this._bars = [];
 		this._destroyed = false;
 		this._energy = { val: 0, peak: 0, hold: 0 };
 		this._flg = {};				// flags
@@ -258,8 +259,8 @@ class AudioMotionAnalyzer {
 		this._ownContext = false;
 		this._sources = [];			// input nodes
 		this._themes = {}; 			// registered color themes
-		this._xAxis = {};           // X-axis label parameters
-		this._yAxis = {};           // Y-axis label parameters
+		this._xAxis = {};			// X-axis label parameters
+		this._yAxis = {};			// Y-axis label parameters
 
 		// Check if options object passed as first argument
 		if ( ! ( container instanceof Element ) ) {
@@ -1409,15 +1410,12 @@ class AudioMotionAnalyzer {
 	 * Compute all internal data required for the analyzer, based on its current settings
 	 */
 	_calcBars() {
-		const bars = this._bars = []; // initialize object property
-
-		if ( ! this._ready ) {
-			this._flg = { isAlpha: false, isBands: false, isLeds: false, isLumi: false, isOctaves: false, isOutline: false, isRound: false, noLedGap: false };
+		if ( ! this._ready )
 			return;
-		}
 
 		const { _ansiBands, _bandRes, _barSpace, canvas, _chLayout, _maxFreq, _minFreq, _mirror, _mode,
 			    _pixelRatio, _radial, _radialInvert, _reflexRatio, _xAxis, _yAxis } = this,
+			  bars               = [],
 			  centerX            = canvas.width >> 1,
 			  centerY            = canvas.height >> 1,
 			  isDualVertical     = _chLayout == CHANNEL_VERTICAL && ! _radial,
@@ -1448,7 +1446,7 @@ class AudioMotionAnalyzer {
 			  analyzerWidth  = canvas.width - centerX * ( isDualHorizontal || _mirror != 0 ),
 
 			  // channelGap is **0** if isLedDisplay == true (LEDs already have spacing); **1** if canvas height is odd (windowed); **2** if it's even
-			  // TODO: improve this, make it configurable?
+			  // TO-DO: improve this, make it configurable?
 			  channelGap     = isDualVertical ? canvas.height - channelHeight * 2 : 0,
 
 			  initialX       = centerX * ( _mirror == -1 && ! isDualHorizontal && ! _radial );
@@ -1741,6 +1739,7 @@ class AudioMotionAnalyzer {
 		}
 
 		// SAVE INTERNAL PROPERTIES
+		this._bars = bars;
 
 		this._aux = { analyzerHeight, analyzerWidth, centerX, centerY, channelCoords, channelHeight, channelGap,
 					  initialX, innerRadius, outerRadius, scaleMin, unitWidth, xAxisHeight, yAxisWidth };
@@ -1923,13 +1922,10 @@ class AudioMotionAnalyzer {
 		// initialize local constants
 
 		const { isAlpha,
-			    isBands,
 			    isLeds,
 			    isLumi,
-			    isOctaves,
 			    isOutline,
-			    isRound,
-			    noLedGap }     = this._flg,
+			    isRound }      = this._flg,
 
 			  { analyzerHeight,
 			    centerX,
