@@ -2,12 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 4.5.1
+ * @version 4.5.2
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const VERSION = '4.5.1';
+const VERSION = '4.5.2';
 
 // internal constants
 const PI      = Math.PI,
@@ -2197,7 +2197,7 @@ class AudioMotionAnalyzer {
 							bar.alpha[ channel ] = initialAlpha * ( 1 + bar.hold[ channel ] / fadeFrames ); // hold is negative, so this is <= 1
 						}
 						else
-							bar.peak[ channel ] += bar.hold[ channel ] * gravity / fpsSquared / nominalMaxHeight;
+							bar.peak[ channel ] += bar.hold[ channel ] * gravity / fpsSquared / Math.abs( nominalMaxHeight );
 						// make sure the peak value is reset when using fadePeaks
 						if ( bar.alpha[ channel ] <= 0 )
 							bar.peak[ channel ] = 0;
