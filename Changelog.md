@@ -1,6 +1,13 @@
 Changelog
 =========
 
+## version 4.5.2 (2025-11-21)
+
+### Minor bugfix release <!-- {docsify-ignore} -->
+
++ Fixes visual glitches in radial mode, when [`radialInvert`](README.md#radialinvert-boolean) and [`showPeaks`](README.md#showpeaks-boolean) are enabled.
+
+
 ## version 4.5.1 (2025-06-02)
 
 ### Minor bugfix release <!-- {docsify-ignore} -->
