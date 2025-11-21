@@ -58,8 +58,8 @@ const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', 
 	  [ 'classic', {
 			colorStops: [
 				'red',
-				{ color: 'yellow', level: .85, pos: .6 },
-				{ color: 'lime', level: .475 }
+				{ color: 'yellow', level: .9, pos: .6 },
+				{ color: 'lime', level: .6 }
 			]
 	  }],
 	  [ 'mono', {
@@ -1150,11 +1150,11 @@ class AudioMotionAnalyzer {
 		const count     = colorStops.length,
 			  isInvalid = val => +val != val || val < 0 || val > 1;
 
-		// normalize all colorStops as objects with `pos`, `color` and `level` properties
+		// normalize all colorStops as objects with `color`, `level` and `pos` properties
 		colorStops.forEach( ( colorStop, index ) => {
 			const pos = index / Math.max( 1, count - 1 );
 			if ( ! isObject( colorStop ) ) // only color string was defined
-				colorStops[ index ] = {	pos, color: colorStop };
+				colorStops[ index ] = {	color: colorStop, pos };
 			else if ( isInvalid( colorStop.pos ) )
 				colorStop.pos = pos;
 
@@ -1162,9 +1162,8 @@ class AudioMotionAnalyzer {
 				colorStops[ index ].level = 1 - index / count;
 		});
 
-		// make sure colorStops is in descending `level` order and that the first one has `level == 1`
-		// this is crucial for proper operation of 'bar-level' colorMode!
-		colorStops.sort( ( a, b ) => a.level < b.level ? 1 : a.level > b.level ? -1 : 0 );
+		// important: ensure colorStops is in descending `level` order and the first colorStop has `level: 1`
+		colorStops.sort( ( a, b ) => b.level - a.level );
 		colorStops[0].level = 1;
 
 		// generate the muted colorstops for the led mask
@@ -1953,6 +1952,7 @@ class AudioMotionAnalyzer {
 			    _weightingFilter,
 			    _yAxis }       = this,
 
+			  [ ledCount, ledHeight, ledGap ] = this._leds,
 			  canvasX          = this._scaleX.canvas,
 			  canvasR          = this._scaleR.canvas,
 			  fadeFrames       = _fps * this._peakFadeTime / 1e3,
@@ -1970,7 +1970,7 @@ class AudioMotionAnalyzer {
 			  maxBarHeight     = _radial ? outerRadius - innerRadius : analyzerHeight,
 			  nominalMaxHeight = maxBarHeight / this._pixelRatio, // for consistent gravity on lo-res or hi-dpi
 			  dbRange 		   = maxDecibels - minDecibels,
-			  [ ledCount, ledHeight, ledGap ] = this._leds;
+			  ledUnitHeight    = ledHeight + ledGap;
 
 		if ( _energy.val > 0 && _fps > 0 )
 			this._spinAngle += this._spinSpeed * TAU / 60 / _fps; // spinSpeed * angle increment per frame for 1 RPM
@@ -2142,8 +2142,11 @@ class AudioMotionAnalyzer {
 			}
 		}
 
-		// converts a value in [0;1] range to a height in pixels that fits into the current LED elements
-		const ledPosY = value => Math.max( 0, ( value * ledCount | 0 ) * ( ledHeight + ledGap ) - ledGap );
+		// converts an amplitude value (0-1) to an integer number of LED elements
+		const ledUnits = value => Math.round( clamp( value, 0, 1 ) * ledCount );
+
+		// converts an amplitude value (0-1) to a height that, when subtracted from `analyzerBottom`, matches the top position of a LED element
+		const ledPosY = value => Math.max( 0, ledUnits( value ) * ledUnitHeight - ledGap );
 
 		// update energy information
 		const updateEnergy = newVal => {
@@ -2241,7 +2244,7 @@ class AudioMotionAnalyzer {
 
 			// render a bar of LEDs where each element has a single color (uses: analyzerBottom, isLumi)
 			const renderTrueLeds = ( colorStops, barCenter, barHeight, barValue ) => {
-				const colorIndex       = isLumi ? 0 : colorStops.findLastIndex( item => ledPosY( barValue ) <= ledPosY( item.level ) ),
+				const colorIndex       = isLumi ? 0 : colorStops.findLastIndex( item => ledUnits( barValue ) <= ledUnits( item.level ) ),
 					  savedStrokeStyle = _ctx.strokeStyle;
 
 				let last = analyzerBottom;
@@ -2263,7 +2266,7 @@ class AudioMotionAnalyzer {
 				if ( ( _colorMode == COLOR_GRADIENT && ! isTrueLeds ) || _mode == MODE_GRAPH )
 					color = gradient;
 				else {
-					const selectedIndex = _colorMode == COLOR_BAR_INDEX ? barIndex % colorCount : colorStops.findLastIndex( item => isLeds ? ledPosY( value ) <= ledPosY( item.level ) : value <= item.level );
+					const selectedIndex = _colorMode == COLOR_BAR_INDEX ? barIndex % colorCount : colorStops.findLastIndex( item => isLeds ? ledUnits( value ) <= ledUnits( item.level ) : value <= item.level );
 					color = colorStops[ selectedIndex ].color;
 				}
 				_ctx.fillStyle = _ctx.strokeStyle = color;
