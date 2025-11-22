@@ -1956,8 +1956,6 @@ class AudioMotionAnalyzer {
 			  canvasX          = this._scaleX.canvas,
 			  canvasR          = this._scaleR.canvas,
 			  fadeFrames       = _fps * this._peakFadeTime / 1e3,
-			  fpsSquared       = _fps ** 2,
-			  gravity          = this._gravity * 1e3,
 			  holdFrames       = _fps * this._peakHoldTime / 1e3,
 			  isDualCombined   = _chLayout == CHANNEL_COMBINED,
 			  isDualHorizontal = _chLayout == CHANNEL_HORIZONTAL,
@@ -1968,8 +1966,9 @@ class AudioMotionAnalyzer {
 			  finalX           = initialX + analyzerWidth,
 			  showPeakLine     = showPeaks && this._peakLine && _mode == MODE_GRAPH,
 			  maxBarHeight     = _radial ? outerRadius - innerRadius : analyzerHeight,
-			  nominalMaxHeight = maxBarHeight / this._pixelRatio, // for consistent gravity on lo-res or hi-dpi
+			  nominalMaxHeight = Math.abs( maxBarHeight / this._pixelRatio ), // for consistent gravity on lo-res or hi-dpi; abs prevents negative value on radialInvert
 			  dbRange 		   = maxDecibels - minDecibels,
+			  decayRate        = ( this._gravity * 1e3 ) / ( _fps ** 2 ),
 			  ledUnitHeight    = ledHeight + ledGap;
 
 		if ( _energy.val > 0 && _fps > 0 )
@@ -2154,8 +2153,8 @@ class AudioMotionAnalyzer {
 			if ( _energy.peak > 0 ) {
 				_energy.hold--;
 				if ( _energy.hold < 0 )
-					_energy.peak += _energy.hold * gravity / fpsSquared / canvas.height * this._pixelRatio;
-					// TO-DO: replace `canvas.height * this._pixelRatio` with `maxNominalHeight` when implementing dual-channel energy
+					_energy.peak += _energy.hold * decayRate / canvas.height * this._pixelRatio;
+					// TO-DO: replace `canvas.height * this._pixelRatio` with `maxNominalHeight` and consolidate with `decayRate` when implementing dual-channel energy
 			}
 			if ( newVal >= _energy.peak ) {
 				_energy.peak = newVal;
@@ -2346,7 +2345,7 @@ class AudioMotionAnalyzer {
 							bar.alpha[ channel ] = initialAlpha * ( 1 + bar.hold[ channel ] / fadeFrames ); // hold is negative, so this is <= 1
 						}
 						else
-							bar.peak[ channel ] += bar.hold[ channel ] * gravity / fpsSquared / Math.abs( nominalMaxHeight );
+							bar.peak[ channel ] += bar.hold[ channel ] * decayRate / nominalMaxHeight;
 						// make sure the peak value is reset when using fadePeaks
 						if ( bar.alpha[ channel ] <= 0 )
 							bar.peak[ channel ] = 0;
