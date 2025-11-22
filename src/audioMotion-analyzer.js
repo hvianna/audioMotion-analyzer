@@ -130,7 +130,6 @@ const DEFAULT_SETTINGS = {
 	smoothing      : 0.5,
 	spinSpeed      : 0,
 	splitGradient  : false,
-	start          : true,
 	theme          : THEMES[0][0],
 	trueLeds       : false,
 	useCanvas      : true,
@@ -431,6 +430,9 @@ class AudioMotionAnalyzer {
 
 		// Set configuration options and use defaults for any missing properties
 		this._setProps( options, true );
+
+		// Start the analyzer, unless `start` is explicitly set to false in the options
+		this.toggleAnalyzer( options.start !== false );
 
 		// Add canvas to the container (only when canvas not provided by user)
 		if ( this.useCanvas && this._ownCanvas )
@@ -1333,13 +1335,12 @@ class AudioMotionAnalyzer {
 		if ( force === undefined )
 			force = ! hasStarted;
 
-		// Stop the analyzer if it was already running and must be disabled
 		if ( hasStarted && ! force ) {
-			cancelAnimationFrame( this._runId );
-			this._runId = 0;
+			// Stop the analyzer if it was already running and must be disabled
+			this._runId = cancelAnimationFrame( this._runId );
 		}
-		// Start the analyzer if it was stopped and must be enabled
 		else if ( ! hasStarted && force && ! this._destroyed ) {
+			// Start the analyzer if it was stopped and must be enabled
 			this._frames = 0;
 			this._time = performance.now();
 			this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) ); // arrow function preserves the scope of *this*
@@ -2843,8 +2844,8 @@ class AudioMotionAnalyzer {
 		// allow other properties not in the defaults
 		const extraProps = [ 'themeLeft', 'themeRight' ];
 
-		// build an array of valid properties; `start` is not an actual property and is handled after setting everything else
-		const validProps = Object.keys( DEFAULT_SETTINGS ).filter( e => e != 'start' ).concat( callbacks, extraProps );
+		// build an array of valid properties
+		const validProps = Object.keys( DEFAULT_SETTINGS ).concat( callbacks, extraProps );
 
 		if ( useDefaults || options === undefined )
 			options = { ...DEFAULT_SETTINGS, ...options }; // merge options with defaults
@@ -2855,10 +2856,6 @@ class AudioMotionAnalyzer {
 			else if ( validProps.includes( prop ) ) // set only valid properties
 				this[ prop ] = options[ prop ];
 		}
-
-		// deprecated - move this to the constructor in the next major release (`start` should be constructor-specific)
-		if ( options.start !== undefined )
-			this.toggleAnalyzer( options.start );
 	}
 
 	/**

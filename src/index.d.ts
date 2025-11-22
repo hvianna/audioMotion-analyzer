@@ -77,7 +77,6 @@ export interface Options {
   smoothing?: number;
   spinSpeed?: number;
   splitGradient?: boolean;
-  start?: boolean;
   theme?: string;
   themeLeft?: string;
   themeRight?: string;
@@ -104,6 +103,7 @@ export interface ConstructorOptions extends Options {
   connectSpeakers?: boolean;
   fsElement?: HTMLElement;
   source?: HTMLMediaElement | AudioNode;
+  start?: boolean;
 }
 
 export type ChannelLayout = "single" | "dual-horizontal" | "dual-vertical" | "dual-combined";
