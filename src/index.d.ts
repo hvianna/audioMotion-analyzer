@@ -363,7 +363,7 @@ declare class AudioMotionAnalyzer {
   public getTheme(name: string): ThemeOptions | null;
   public getThemeList(): string[];
 
-  public registerTheme(name: string, options: GradientOptions): void;
+  public registerTheme(name: string, options: GradientOptions): boolean;
 
   public setCanvasSize(width: number, height: number): void;
   public setFreqRange(minFreq: number, maxFreq: number): void;

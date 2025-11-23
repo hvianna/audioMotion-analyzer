@@ -139,20 +139,19 @@ const DEFAULT_SETTINGS = {
 };
 
 // custom error messages
-const ERR_AUDIO_CONTEXT_FAIL     = [ 'ERR_AUDIO_CONTEXT_FAIL', 'Could not create audio context. Web Audio API not supported?' ],
-	  ERR_INVALID_AUDIO_CONTEXT  = [ 'ERR_INVALID_AUDIO_CONTEXT', 'Provided audio context is not valid' ],
-	  ERR_UNKNOWN_GRADIENT       = [ 'ERR_UNKNOWN_GRADIENT', 'Unknown gradient' ],
-	  ERR_FREQUENCY_TOO_LOW      = [ 'ERR_FREQUENCY_TOO_LOW', 'Frequency values must be >= 1' ],
-	  ERR_REFLEX_OUT_OF_RANGE    = [ 'ERR_REFLEX_OUT_OF_RANGE', 'Reflex ratio must be >= 0 and < 1' ],
-	  ERR_INVALID_AUDIO_SOURCE   = [ 'ERR_INVALID_AUDIO_SOURCE', 'Audio source must be an instance of HTMLMediaElement or AudioNode' ],
-	  ERR_GRADIENT_INVALID_NAME  = [ 'ERR_GRADIENT_INVALID_NAME', 'Gradient name must be a non-empty string' ],
-	  ERR_GRADIENT_NOT_AN_OBJECT = [ 'ERR_GRADIENT_NOT_AN_OBJECT', 'Gradient options must be an object' ],
-	  ERR_GRADIENT_MISSING_COLOR = [ 'ERR_GRADIENT_MISSING_COLOR', 'Gradient colorStops must be a non-empty array' ];
+export const ERR_AUDIO_CONTEXT_FAIL    = 1,
+			 ERR_INVALID_AUDIO_CONTEXT = 2,
+			 ERR_INVALID_AUDIO_SOURCE  = 3;
+
+const ERROR_MESSAGE = {
+	[ ERR_AUDIO_CONTEXT_FAIL ]:    'Could not create audio context. Web Audio API not supported?',
+	[ ERR_INVALID_AUDIO_CONTEXT ]: 'Provided audio context is not valid',
+	[ ERR_INVALID_AUDIO_SOURCE ]:  'Audio source must be an instance of HTMLMediaElement or AudioNode'
+};
 
 class AudioMotionError extends Error {
-	constructor( error, value ) {
-		const [ code, message ] = error;
-		super( message + ( value !== undefined ? `: ${value}` : '' ) );
+	constructor( code, value ) {
+		super( ERROR_MESSAGE[ code ] + ( value !== undefined ? `: ${value}` : '' ) );
 		this.name = 'AudioMotionError';
 		this.code = code;
 	}
@@ -161,14 +160,14 @@ class AudioMotionError extends Error {
 /* helper functions */
 
 // clamp a given value between `min` and `max`
-const clamp = ( val, min, max ) => val <= min ? min : val >= max ? max : val;
+const clamp = ( val, min, max ) => val <= min ? min : val >= max ? max : val; // TO-DO: handle +val == NaN
 
 // convert any CSS color format to HSL format
 const cssColorToHSL = color => {
 	const ctx = document.createElement('canvas').getContext('2d'); // use a canvas to convert any CSS color to RGB format
 	ctx.fillStyle = color;
 
-	const computedColor = ctx.fillStyle, // hex string (#ffffff) - NOTE: if original color has alpha channel this will be in rgba() format
+	const computedColor = ctx.fillStyle, // hex string (#ffffff) - TO-DO: if original color has alpha channel this will be in rgba() format
 		  [ r, g, b ]   = computedColor.match( /[^#]{2}/g ).map( n => parseInt( n, 16 ) / 255 ),
 		  max           = Math.max( r, g, b ),
 		  min           = Math.min( r, g, b );
@@ -197,6 +196,9 @@ const deepCloneObject = obj => JSON.parse( JSON.stringify( obj ) );
 // output deprecation warning message on console
 const deprecate = ( name, alternative ) => console.warn( `${name} is deprecated. Use ${alternative} instead.` );
 
+// find the Y-coordinate of a point located between two other points, given its X-coordinate
+const findY = ( x1, y1, x2, y2, x ) => y1 + ( y2 - y1 ) * ( x - x1 ) / ( x2 - x1 );
+
 // shorthand for Array.isArray()
 const { isArray } = Array;
 
@@ -214,8 +216,8 @@ const isObject = val => typeof val == 'object' && !! val && ! isArray( val );
 // returns the validated value, or the first element of `list` if `value` is not found in the array
 const validateFromList = ( value, list, modifier = 'toLowerCase' ) => list[ Math.max( 0, list.indexOf( ( '' + value )[ modifier ]() ) ) ];
 
-// find the Y-coordinate of a point located between two other points, given its X-coordinate
-const findY = ( x1, y1, x2, y2, x ) => y1 + ( y2 - y1 ) * ( x - x1 ) / ( x2 - x1 );
+// output invalid value warning message on console
+const warnInvalid = ( name, value ) => console.warn( `${name}: ignoring invalid value (${value})` );
 
 // Polyfill for Array.findLastIndex()
 if ( ! Array.prototype.findLastIndex ) {
@@ -229,7 +231,7 @@ if ( ! Array.prototype.findLastIndex ) {
 	}
 }
 
-// AudioMotionAnalyzer class
+/* *********************************** class AudioMotionAnalyzer ************************************ */
 
 class AudioMotionAnalyzer {
 
@@ -629,12 +631,13 @@ class AudioMotionAnalyzer {
 		return this._maxFreq;
 	}
 	set maxFreq( value ) {
-		if ( value < 1 )
-			throw new AudioMotionError( ERR_FREQUENCY_TOO_LOW );
-		else {
-			this._maxFreq = Math.min( value, this.audioCtx.sampleRate / 2 );
-			this._calcBars();
+		if ( ! ( value > 0 ) ) { // should catch all 'falsy' and negative values (`value <= 0` would fail on NaN or undefined)
+			warnInvalid( 'maxFreq', value );
+			value = this._maxFreq || DEFAULT_SETTINGS.maxFreq; // keep previous value, if any
 		}
+
+		this._maxFreq = Math.min( value, this.audioCtx.sampleRate / 2 );
+		this._calcBars();
 	}
 
 	get minDecibels() {
@@ -649,12 +652,13 @@ class AudioMotionAnalyzer {
 		return this._minFreq;
 	}
 	set minFreq( value ) {
-		if ( value < 1 )
-			throw new AudioMotionError( ERR_FREQUENCY_TOO_LOW );
-		else {
-			this._minFreq = +value;
-			this._calcBars();
+		if ( ! ( value > 0 ) ) {
+			warnInvalid( 'minFreq', value );
+			value = this._minFreq || DEFAULT_SETTINGS.minFreq;
 		}
+
+		this._minFreq = +value;
+		this._calcBars();
 	}
 
 	get mirror() {
@@ -743,14 +747,14 @@ class AudioMotionAnalyzer {
 		return this._reflexRatio;
 	}
 	set reflexRatio( value ) {
-		value = +value || 0;
-		if ( value < 0 || value >= 1 )
-			throw new AudioMotionError( ERR_REFLEX_OUT_OF_RANGE );
-		else {
-			this._reflexRatio = value;
-			this._calcBars();
-			this._makeGrad();
+		if ( ! ( value >= 0 && value < 1 ) ) { // also catches undefined and strings that evaluate to NaN
+			warnInvalid( 'reflexRatio', value );
+			value = this._reflexRatio || DEFAULT_SETTINGS.reflexRatio;
 		}
+
+		this._reflexRatio = +value;
+		this._calcBars();
+		this._makeGrad();
 	}
 
 	get roundBars() {
@@ -1145,21 +1149,27 @@ class AudioMotionAnalyzer {
 	 *
 	 * @param {string} name
 	 * @param {object} options
+	 * @returns {boolean} true on success or false on error
 	 */
 	registerTheme( name, options ) {
+		const fail = msg => {
+			console.warn(`Cannot register theme "${ name }": ${ msg }`);
+			return false;
+		};
+
 		if ( typeof name != 'string' || name.trim().length == 0 )
-			throw new AudioMotionError( ERR_GRADIENT_INVALID_NAME );
+			return fail('name must be a non-empty string');
 
 		if ( ! isObject( options ) )
-			throw new AudioMotionError( ERR_GRADIENT_NOT_AN_OBJECT );
+			return fail('options must be an object');
 
-		const { colorStops, peakColor } = deepCloneObject( options ); // avoid modifying user's original object (see discussions #58)
+		const { colorStops, peakColor } = deepCloneObject( options ); // avoid modifying user's original object (see discussion #58)
 
 		if ( ! isArray( colorStops ) || ! colorStops.length )
-			throw new AudioMotionError( ERR_GRADIENT_MISSING_COLOR );
+			return fail( 'colorStops must be a non-empty array');
 
 		const count     = colorStops.length,
-			  isInvalid = val => +val != val || val < 0 || val > 1;
+			  isInvalid = val => +val != clamp( val, 0, 1 );
 
 		// normalize all colorStops as objects with `color`, `level` and `pos` properties
 		colorStops.forEach( ( colorStop, index ) => {
@@ -1197,6 +1207,8 @@ class AudioMotionAnalyzer {
 		// if the registered theme is one of the currently selected ones, regenerate the gradients
 		if ( this._activeThemes.some( theme => theme.name == name ) )
 			this._makeGrad();
+
+		return true;
 	}
 
 	/**
@@ -1218,8 +1230,8 @@ class AudioMotionAnalyzer {
 	 * @param {number} max highest frequency represented in the x-axis
 	 */
 	setFreqRange( min, max ) {
-		if ( min < 1 || max < 1 )
-			throw new AudioMotionError( ERR_FREQUENCY_TOO_LOW );
+		if ( ! ( min > 0 && max > 0 ) ) // also catches undefined and strings that evaluate to NaN
+			warnInvalid( 'setFreqRange', [ min, max ] );
 		else {
 			this._minFreq = Math.min( min, max );
 			this.maxFreq  = Math.max( min, max ); // use the setter for maxFreq
@@ -2874,13 +2886,17 @@ class AudioMotionAnalyzer {
 	 * @param [{number}] desired channel (0 or 1) - if empty or invalid, sets both channels
 	 */
 	_setTheme( name, channel ) {
-		if ( ! this._themes.hasOwnProperty( name ) )
-			throw new AudioMotionError( ERR_UNKNOWN_GRADIENT, name );
+		const themeNames = this.getThemeList(),
+			  isValid    = themeNames.includes( name );
 
 		for ( const ch of [0,1].includes( channel ) ? [ channel ] : [0,1] ) {
 			if ( ! this._activeThemes[ ch ] )
-				this._activeThemes[ ch ] = {};
-			this._activeThemes[ ch ].name = name;
+				this._activeThemes[ ch ] = {}; // creates the entry
+
+			this._activeThemes[ ch ].name = isValid ? name : this._activeThemes[ ch ].name || themeNames[0];
+
+			if ( ! isValid )
+				warnInvalid( `theme${ ch ? 'Right' : 'Left' }`, name );
 		}
 
 		this._makeGrad();
