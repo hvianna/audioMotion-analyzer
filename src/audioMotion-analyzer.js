@@ -1123,12 +1123,21 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Returns the available themes
+	 * Returns the theme registered with the give name
 	 *
-	 * @returns {object}
+	 * @returns {object|null} theme object or null if name is invalid
 	 */
-	getThemes() {
-		return deepCloneObject( this._themes );
+	getTheme( name ) {
+		return this.getThemeList().includes( name ) ? deepCloneObject( this._themes[ name ] ) : null;
+	}
+
+	/**
+	 * Returns the names of available themes
+	 *
+	 * @returns {array}
+	 */
+	getThemeList() {
+		return Object.keys( this._themes ).sort();
 	}
 
 	/**

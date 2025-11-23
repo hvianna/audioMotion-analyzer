@@ -19,6 +19,14 @@ export type ActiveTheme = {
   peakColor: string
 }
 
+export type ThemeOptions = {
+  colorStops: GradientColorStop[],
+  muted: {
+    colorStops: GradientColorStop[],
+  }
+  peakColor: string
+}
+
 export type OnCanvasResizeFunction = (
   reason: CanvasResizeReason,
   instance: AudioMotionAnalyzer
@@ -347,12 +355,13 @@ declare class AudioMotionAnalyzer {
 
   public getBars(): AnalyzerBarData[];
 
-  public getRegisteredThemes(): string[];
-
   public getEnergy(preset?: EnergyPreset): number;
   public getEnergy(startFreq: number, endFreq?: number): number;
 
   public getOptions(ignore?: string | string[]): Options;
+
+  public getTheme(name: string): ThemeOptions | null;
+  public getThemeList(): string[];
 
   public registerTheme(name: string, options: GradientOptions): void;
 
