@@ -1,6 +1,6 @@
 
 function populateThemeSelections( instance ) {
-	for ( const name of instance.getRegisteredThemes().sort() ) {
+	for ( const name of instance.getThemeList() ) {
 		for ( const channel of ['', 'Left', 'Right'] ) {
 			const el = document.querySelector(`[data-setting="theme${channel}"]`);
 			if ( el )

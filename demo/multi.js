@@ -58,8 +58,7 @@ audioMotion[0].setOptions({
 	linearBoost: 1.6,
 	maxFreq: 20000,
 	minFreq: 30,
-	reflexRatio: .1,
-	reflexAlpha: .25,
+	showScaleY: true,
 	weightingFilter: 'D'
 });
 

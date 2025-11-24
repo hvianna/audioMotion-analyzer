@@ -201,7 +201,8 @@ const presets = [
 		}
 	},
 	{
-		// gradient sample images for docs are created with a 27.5Hz square wave (volume: 1) in the oscillator
+		// gradient sample images for docs are created with a 27.5 Hz square wave (volume: 1) in the oscillator
+		// additional sample images created with a C2 (65.41 Hz) sawtooth wave (volume: 0.64)
 		name: 'Testing config 3',
 		options: {
 			mode: 'bars',
@@ -226,6 +227,35 @@ const presets = [
 			showScaleX: false,
 			weightingFilter: 'D'
 		}
+	},
+	{
+		// use with 16kHz test tone to compare two gradients side by side
+		name: 'Testing config 4',
+		options: {
+			bandResolution: 2,
+			barSpace: 1,
+			channelLayout: 'dual-horizontal',
+			colorMode: 'gradient',
+			flipColors: false,
+			frequencyScale: 'log',
+			horizontalGradient: false,
+			ledBars: false,
+			linearAmplitude: true,
+			lumiBars: false,
+			maxFreq: 20000,
+			minFreq: 20,
+			mirror: 1,
+			mode: 'bars',
+			outlineBars: false,
+			radial: false,
+			reflexRatio: 0,
+			showLedMask: true,
+			showPeaks: true,
+			showScaleX: true,
+			showScaleY: true,
+			splitGradient: false,
+			trueLeds: true
+		}
 	}
 ];
 
@@ -236,6 +266,8 @@ const features = {
 	songProgress: false
 }
 
+let mouseX, mouseY;
+
 // Create audioMotion-analyzer object
 
 try {
@@ -244,6 +276,12 @@ try {
 		{
 			source: audioEl, // main audio source is the HTML <audio> element
 			fsElement: container, // element to be rendered in fullscreen (defaults to the canvas, here we use the container to take the background to fullscreen as well)
+//			height: 300,
+//			minFreq: 0,
+//			maxFreq: 0,
+//			reflexRatio: 'a',
+			theme: 'laulu',
+			themeRight: 'coco',
 			onCanvasDraw: drawCallback, // callback function used to add custom features for this demo
 			onCanvasResize: ( reason, instance ) => {
 				console.log( `onCanvasResize called. Reason: ${reason}\nCanvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
@@ -254,8 +292,30 @@ try {
 	);
 }
 catch( err ) {
-	container.innerHTML = `<p>audioMotion-analyzer failed with error: ${ err.code ? '<strong>' + err.code + '</strong>' : '' } <em>${ err.code ? err.message : err }</em></p>`;
+	const msg = `audioMotion-analyzer failed with error: ${ err.code ? '<em>' + err.message + '</em> (code: ' + err.code + ')' : err }`;
+	container.innerHTML = `<div class="warn">${ msg }</div>`;
+	throw new Error( err ); // stop script
 }
+
+/*
+console.log( 'reflexRatio', audioMotion.reflexRatio );
+
+audioMotion.reflexRatio = 1;
+
+audioMotion.theme = 'mono';
+audioMotion.themeRight = 'prism';
+
+audioMotion.themeLeft = 'xoxo';
+audioMotion.themeRight = 'hauhahua';
+
+audioMotion.maxFreq = 20000;
+
+audioMotion.setFreqRange( 60, -1 );
+audioMotion.setFreqRange( 'a', 'b' );
+audioMotion.setFreqRange( '16000', '60' );
+
+audioMotion.registerTheme('a', {});
+*/
 
 // Display package version at the footer
 document.getElementById('version').innerText = AudioMotionAnalyzer.version;
@@ -311,7 +371,7 @@ document.querySelectorAll('[data-custom]').forEach( el => {
 		const active    = document.getElementById('customLeds').checked,
 			  ledHeight = document.getElementById('ledHeight').value,
 			  ledGap    = document.getElementById('ledGap').value;
-		audioMotion.setLedParams( ...( active ? [ ledHeight, ledGap ] : [] ) );
+		audioMotion.setLeds( ...( active ? [ ledHeight, ledGap ] : [] ) );
 	});
 });
 
@@ -322,9 +382,77 @@ document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListe
 audioMotion.registerTheme( 'bluey', {
 	colorStops: [
 		'red',
-		{ color: '#1ea1df', level: .9, pos: .9 }
+		{ color: '#1ea1df', level: .9, pos: .2 }
 	]
 });
+
+audioMotion.registerTheme( 'classic-2', {
+	colorStops: [
+		{ color: 'red' },
+		{ color: 'yellow', pos: .55},
+		{ color: 'lime' }
+	]
+});
+
+audioMotion.registerTheme( 'classic-A', {
+    colorStops: [ 'red', 'yellow', 'lime' ] // fully automatic color distribution
+});
+
+audioMotion.registerTheme( 'classic-B', {
+    colorStops: [
+        { color: 'red' },               // (auto) level ≤ 100% (but > 90%)
+        { color: 'yellow', level: .9 }, // level ≤ 90% (but > 60%)
+        { color: 'lime', level: .6 }    // level ≤ 60%
+    ]
+});
+
+audioMotion.registerTheme( 'bluey-A', {
+    colorStops: [
+        { color: 'red' },
+        { color: '#1ea1df', level: .9 }
+    ]
+});
+
+audioMotion.registerTheme( 'bluey-B', {
+    colorStops: [
+        { color: 'red' },
+        { color: '#1ea1df', pos: .2 } // fine-tunes the gradient
+    ]
+});
+
+audioMotion.registerTheme( 'prism-new', {
+	colorStops: [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', '#09c', '#36b', '#639', '#817' ]
+});
+
+audioMotion.setXAxis({
+	addLabels: true,
+	labels: [
+		800,
+		[ 3000, '|' ],
+		[ 440, 'A4', true ],
+	],
+//	overlay: true,
+//	height: 40
+});
+
+audioMotion.setYAxis({
+	linearInterval: 10,
+//	color: '#8888',
+//	lineDash: [2,4],
+//	midLineColor: '#5558',
+//	midLineDash: [2,8],
+//	showSubdivisions: false,
+//	operation: 'screen',
+//	showUnit: false,
+//	width: 25
+});
+
+console.log( 'tema vazio', audioMotion.getTheme() );
+console.log( 'tema inexistente', audioMotion.getTheme('lala') );
+console.log( 'tema classic', audioMotion.getTheme('classic') );
+console.log( 'tema mono', audioMotion.getTheme('mono') );
+
+//console.log( 'active themes', audioMotion.getActiveGradients() );
 
 // Populate UI select elements and add event listeners
 
@@ -344,6 +472,36 @@ setBackground(); // initialize background
 backgroundSelection.addEventListener( 'change', () => setBackground() );
 
 populateThemeSelections( audioMotion );
+
+audioMotion.canvas.addEventListener( 'mousemove', evt => {
+	mouseX = evt.offsetX;
+	mouseY = evt.offsetY;
+});
+
+audioMotion.canvas.addEventListener( 'mouseout', evt => {
+	mouseX = null;
+	mouseY = null;
+});
+
+// play/pause audio on spacebar press
+window.addEventListener( 'keyup', evt => {
+	if ( evt.code != 'Space' )
+		return;
+
+	if ( audioEl.src ) {
+		if ( audioEl.paused )
+			audioEl.play();
+		else
+			audioEl.stop();
+	}
+
+	if ( elFreq.value ) {
+		if ( gainNode.gain.value )
+			playTone();
+		else
+			playTone( elFreq.value );
+	}
+});
 
 // Create an 88-key piano keyboard
 
@@ -412,7 +570,7 @@ document.getElementById('pan').addEventListener( 'change', e => {
 		panNode.pan.setValueAtTime( e.target.value, audioCtx.currentTime );
 });
 
-elVol.addEventListener( 'change', () => {
+elVol.addEventListener( 'input', () => {
 	if ( gainNode.gain.value )
 		gainNode.gain.value = elVol.value;
 });
@@ -508,7 +666,7 @@ function toggleMute( status ) {
 // Update UI elements to reflect the analyzer's current settings
 function updateUI() {
 	if ( audioMotion.isDestroyed )
-		container.innerHTML = '<div class="msg">audioMotion instance has been destroyed. Reload the page to start again.</div>';
+		container.innerHTML = '<div class="warn">audioMotion instance has been destroyed. Reload the page to start again.</div>';
 
 	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el, audioMotion ) );
@@ -525,6 +683,7 @@ function drawCallback( instance, { timestamp, themes } ) {
 		  ctx        = audioMotion.canvasCtx,
 		  pixelRatio = audioMotion.pixelRatio, // for scaling the size of things drawn on canvas, on Hi-DPI screens or loRes mode
 		  baseSize   = Math.max( 20 * pixelRatio, canvas.height / 27 | 0 ),
+		  fontSize   = 16 * pixelRatio,
 		  centerX    = canvas.width >> 1,
 		  centerY    = canvas.height >> 1;
 
@@ -538,7 +697,7 @@ function drawCallback( instance, { timestamp, themes } ) {
 		ctx.fillStyle = '#f008';
 		ctx.fillRect( width, peakY, width, 2 );
 
-		ctx.font = `${ 16 * pixelRatio }px sans-serif`;
+		ctx.font = `${ fontSize }px sans-serif`;
 		ctx.textAlign = 'left';
 		ctx.fillText( peakEnergy.toFixed(4), width, peakY - 4 );
 
@@ -593,6 +752,24 @@ function drawCallback( instance, { timestamp, themes } ) {
 		ctx.font = `bold ${ baseSize + growSize * trebleEnergy }px sans-serif`;
 		ctx.fillText( 'TREBLE', canvas.width * .85, centerY );
 		drawLight( canvas.width * .85, '#0ff', trebleEnergy );
+
+		if ( mouseX != null ) {
+			const bar = instance.getBars().findLast( b => mouseX >= b.posX );
+			if ( bar ) {
+				ctx.fillStyle = '#fff';
+				ctx.font = `${ fontSize }px sans-serif`;
+				ctx.textAlign = mouseX < 100 ? 'left' : 'right';
+				const x = mouseX + ( mouseX < 100 ? fontSize : -fontSize );
+
+				ctx.fillText( bar.freq.toFixed(2) + 'Hz', x, mouseY );
+				ctx.fillText( bar.value[0], x, mouseY + fontSize * 1.5 );
+			}
+
+//			for ( const { posX, value } of bars ) {
+//				if ( value[0] > 0 )
+//					ctx.fillText( value[0], posX, canvas.height * ( 1 - value[0] ) + 32 );
+//			}
+		}
 	}
 
 	if ( features.showLogo ) {

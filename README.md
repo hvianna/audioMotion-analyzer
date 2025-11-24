@@ -1048,7 +1048,7 @@ Defaults to **false**.
 
 Name of the color theme used for analyzer graphs.
 
-It must be a valid registered theme name (see [`getRegisteredThemes()`](#getregisteredthemes)).
+It must be a valid theme name (see [`getThemes()`](#getthemes)).
 
 `theme` sets the theme for both analyzer channels, but its read value represents only the theme on the left (or single) channel.
 
@@ -1177,10 +1177,21 @@ If defined, this function will be called after **audioMotion-analyzer** finishes
 The callback function is passed two arguments: an *AudioMotionAnalyzer* object, and an object with the following properties:
 - `timestamp`, a [*DOMHighResTimeStamp*](https://developer.mozilla.org/en-US/docs/Web/API/DOMHighResTimeStamp)
 which indicates the elapsed time in milliseconds since the analyzer started running;
-- `canvasGradients`, an array of [*CanvasGradient*](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient])
-objects currently in use on the left (or single) and right analyzer channels.
+- `themes`, an array of the currently selected themes for the left (index 0) and right (index 1) analyzer channels.
 
-The canvas properties `fillStyle` and `strokeStyle` will be set to the left/single channel gradient before the function is called.
+Each element in the `themes` array is an object with the following structure:
+
+```
+{
+	name: <string>,               // name of the theme active on this channel
+	colorStops: <array>,          // each element is an object of { color: <string>, level: <number>, pos: <number> }
+	gradient: <CanvasGradient>,
+	muted: {
+		colorStops: <array>,
+		gradient: <CanvasGradient>
+	}
+}
+```
 
 Usage example:
 
@@ -1193,7 +1204,7 @@ const audioMotion = new AudioMotionAnalyzer(
     }
 );
 
-function drawCallback( instance, info ) {
+function drawCallback( instance, { timestamp, themes } ) {
     const baseSize  = ( instance.isFullscreen ? 40 : 20 ) * instance.pixelRatio,
           canvas    = instance.canvas,
           centerX   = canvas.width / 2,
@@ -1201,13 +1212,13 @@ function drawCallback( instance, info ) {
           ctx       = instance.canvasCtx,
           maxHeight = centerY / 2,
           maxWidth  = centerX - baseSize * 5,
-          time      = info.timestamp / 1e4;
+          time      = timestamp / 1e4;
 
     // the energy value is used here to increase the font size and make the logo pulsate to the beat
     ctx.font = `${ baseSize + instance.getEnergy() * 25 * instance.pixelRatio }px Orbitron, sans-serif`;
 
     // use the right-channel gradient to fill text
-    ctx.fillStyle = info.canvasGradients[1];
+    ctx.fillStyle = themes[ 1 ].gradient;
     ctx.textAlign = 'center';
     ctx.globalCompositeOperation = 'lighter';
 
@@ -1388,47 +1399,113 @@ Callbacks and [constructor-specific properties](#constructor-specific-options) a
 
 See also [`setOptions()`](#setoptions-options-).
 
+### `getTheme( name )`
+
+*Available since v5.0.0*
+
+Returns an object containing the theme's options (`colorStops` and optional `peakColor`), plus an additional `muted` object,
+which contains the colorStops generated for the LED mask (see [`showLedMask`](#showledmask-boolean)).
+
+`name` must be a string representing the name of an available theme - see [`getThemeList()`](#getthemelist). If undefined or invalid, returns *null*.
+
+All `colorStops` entries are normalized as objects with `color`, `level` and `pos` properties.
+
+Example:
+
+```js
+console.log( audioMotion.getTheme('classic') );
+
+{
+  colorStops: [
+    { color: "red", level: 1, pos: 0 },
+    { color: "yellow", level: 0.9, pos: 0.5 },
+    { color: "lime", level: 0.6, pos: 1 }
+  ],
+  muted: {
+    colorStops: [
+        { color: "hsla( 0, 20%, 50%, 0.2 )", level: 1, pos: 0 },
+        { color: "hsla( 60, 20%, 50%, 0.2 )", level: 0.85, pos: 0.6 },
+        { color: "hsla( 120, 20%, 50%, 0.2 )", level: 0.475, pos: 1 }
+    ]
+  }
+}
+```
+
+### `getThemeList()`
+
+*Available since v5.0.0*
+
+Returns an array with the names of available themes, including built-in and custom registered themes.
+
+
 ### `registerTheme( name, options )`
 
 *Available since v5.0.0; formerly `registerGradient()` (since v1.0.0)*
 
 Registers a custom color theme.
 
+Returns *true* on success, or *false* if any required value is missing or invalid. In that case, it does NOT throw an error, but a warning message with more information is logged to the console.
+
 `name` must be a non-empty string that will be used to select this theme, via the [`theme`](#theme-string) property. **Names are case sensitive.**
 
-`options` must be an object with the following structure:
+`options` must be an object with the following properties:
 
 property     | type   | description
 -------------|--------|-------------
-`colorStops` | array  | At least one array entry is required. Each element must be either a color string (CSS format), or a color object (described below).
-`peakColor`  | string | Optional; if defined, all peaks will be painted this color, regarless of its level.
+`colorStops` | array  | **At least one array entry is required.** Each element must be either a color string (CSS format), or a color object (see below).
+`peakColor`  | string | Optional; if defined, **all peaks** will be painted this color, regarless of their levels.
 
-Color objects defined in `colorStops` must follow the structure below:
+**Color objects** defined in `colorStops` must follow the structure below:
 
 property | type   | description
 ---------|--------|-------------
-`color`  | string | Any valid CSS color format
-`level`  | number | Optional; when [`colorMode`](#colormode-string) is set to **'bar-level'** or [`trueLeds`](#trueleds-boolean) is *true*, this color will be applied to bars (or LED elements) with amplitude **less than or equal to** `level`. It must be a number between `0` and `1`, where `1` is the maximum amplitude (top of screen).
-`pos`    | number | Optional; when [`colorMode`](#colormode-string) is set to **'gradient'**, this defines the relative position of a color in the generated gradient. It must be a number between `0` and `1`, where `0` represents the top of the screen and `1` the bottom.
+`color`  | string | Any valid CSS color format, e.g. 'red', '#f00', 'rgb(…)', 'hsl(…)', etc.
+`level`  | number | Optional; sets the **upper level** threshold for applying this color to a bar (when [`colorMode`](#colormode-string) is set to **'bar-level'**) or LED segment (when [`trueLeds`](#trueleds-boolean) is active). It must be a number between `0` and `1`, where `1` is the maximum amplitude (top of screen).
+`pos`    | number | Optional; adjusts the position of a color within the generated gradient, applied when [`colorMode`](#colormode-string) is set to **'gradient'** and [`trueLeds`](#trueleds-boolean) is *false*. It must be a number between `0` and `1`, where **`0` represents the top of the screen.**
 
 
 **Notes:**
 
-- If `pos` or `level` are not explicitly defined, colors will be evenly distributed across the gradient or amplitude range;
-- Defining `level: 0` for a colorStop will effectively prevent that color from being used for *'bar-level'* colorMode and *trueLeds* effect.
+- When not defined, `pos` and `level` values will be automatically calculated for uniform color distribution within the amplitude range, from top to bottom of the bar, following their order in the `colorStops` array. You can check the computed values by inspecting the data returned by [`getTheme()`](#gettheme);
+- Defining `level: 0` for a colorStop will effectively prevent that color from being displayed with *'bar-level'* [`colorMode`](#colormode-string) and [`trueLeds`](#trueleds-boolean) effect.
 
 Example usage:
 
 ```js
-audioMotion.registerTheme( 'myTheme', {
-    colorStops: [       // at least one color is required
-        'hsl( 0, 100%, 50% )',        // colors can be defined in any valid CSS format
-        { color: 'yellow', pos: .6 }, // in an object, use `pos` to adjust the offset (0 to 1) of a colorStop
-        { color: '#0f0', level: .5 }  // use `level` to set the max bar amplitude (0 to 1) to use this color
-    ],
-    peakColor: 'red'    // optional; if defined, all peaks will be painted this color
+audioMotion.registerTheme( 'classic-A', {
+    colorStops: [ 'red', 'yellow', 'lime' ] // fully automatic color distribution
+});
+
+audioMotion.registerTheme( 'classic-B', {
+    colorStops: [
+        { color: 'red' },               // (auto) level ≤ 100% (but > 90%)
+        { color: 'yellow', level: .9 }, // level ≤ 90% (but > 60%)
+        { color: 'lime', level: .6 }    // level ≤ 60%
+    ]
+});
+
+audioMotion.registerTheme( 'bluey-A', {
+    colorStops: [
+        { color: 'red' },
+        { color: '#1ea1df', level: .9 }
+    ]
+});
+
+audioMotion.registerTheme( 'bluey-B', {
+    colorStops: [
+        { color: 'red' },
+        { color: '#1ea1df', pos: .2 }   // fine-tunes the gradient
+    ]
 });
 ```
+
+Theme (definitions above) | gradient | [`trueLeds`](#trueleds-boolean) | *'bar-level'* [`colorMode`](#colormode-string)
+--------------------------|----------|---------------------------------|------------------------------------------------
+**classic-A**<br>(full auto color distribution)  | ![classic-a-gradient](img/levels-classic-a-gradient.png) | ![classic-a-trueleds](img/levels-classic-a-trueleds.png) | ![classic-a-barlevel](img/levels-classic-a-barlevel.png)
+**classic-B**<br>(auto gradient / custom levels) | ![classic-b-gradient](img/levels-classic-b-gradient.png) | ![classic-b-trueleds](img/levels-classic-b-trueleds.png) | ![classic-b-barlevel](img/levels-classic-b-barlevel.png)
+**bluey-A**<br>(auto gradient / custom levels)   | ![bluey-a-gradient](img/levels-bluey-a-gradient.png) | ![bluey-a-trueleds](img/levels-bluey-a-trueleds.png) | ![bluey-a-barlevel](img/levels-bluey-a-barlevel.png)
+**bluey-B**<br>(custom gradient / auto levels)   | ![bluey-b-gradient](img/levels-bluey-b-gradient.png) | ![bluey-b-trueleds](img/levels-bluey-b-trueleds.png) | ![bluey-b-barlevel](img/levels-bluey-b-barlevel.png)
+
 
 See also: [unregisterTheme()](#unregistertheme-name)
 
@@ -1450,7 +1527,7 @@ See [`minFreq` and `maxFreq`](#minfreq-number) for lower and upper limit values.
 
 Customizes the appearance of LED elements used to create the [`ledBars`](#ledbars-boolean) effect.
 
-**If called with no argument, or if any of the arguments is =< 0, both parameters are reset to their default values.**
+**If called with no argument, or if any of the arguments is ≤ 0, both parameters are reset to their default values.**
 
 argument    | description | default
 ------------|-------------|---------

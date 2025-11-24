@@ -5,14 +5,16 @@ Changelog
 
 ### Overview: <!-- {docsify-ignore} -->
 
-+ **_Gradients_ are now called "Themes" -** related properties and methods have been renamed to match the new term (see *breaking changes* below);
-+ The canvas background is now always transparent, so **all background-related properties are gone,** including that from ~~gradient~~ theme definition;
-+ LED bars now apply the same element height and vertical spacing for all band resolutions and canvas sizes - now it's the number of LED elements that will adjust
-  to fit the canvas, keeping the **LED visuals more consistent and predictable among different screen sizes;**
-+ LED bars no longer require a minimum horizontal gap between them, and **now follow the value set to [`barSpace`](README.md#barspace-number);**
-+ **Custom LED formats are much easier to create** with new [`setLeds()`](README.md#setleds-ledheight-ledgap) method, using streamlined logic and parameters;
-+ Canvas `fillStyle` and `strokeStyle` are no longer explicitly set prior to the [`onCanvasDraw`](README.md#oncanvasdraw-function) call - the callback can now obtain all color information
-  from the currently active themes, via the `themes` property in the passed object.
++ **_Gradients_ are now called "Themes" -** see *breaking changes* below for renamed properties and methods;
++ The canvas background is now always transparent, so **all background-related properties are gone,** including `bgColor` in the theme definition;
++ **LED bars look better and are easier to customize:**
+  - the "unlit" LEDs now use muted (desaturated) versions of the theme's colors for improved visuals;
+  - appearance is more consistent among different screen sizes - LED height is now constant and the number of LEDs is adjusted to fit the canvas;
+  - horizontal spacing now follow the value set to [`barSpace`](README.md#barspace-number);
+  - custom LED sizes are much easier to create with new [`setLeds()`](README.md#setleds-ledheight-ledgap-) method and streamlined logic and parameters;
++ X- and Y-axis scale labels are now customizable;
++ Non-fatal issues, like invalid options, no longer throw an error;
++ The [`onCanvasDraw`](README.md#oncanvasdraw-function) callback can now obtain all color information from the currently active themes, via the `themes` property in the passed object (`fillStyle` and `strokeStyle` are no longer explicitly set).
 
 ### 🚨 BREAKING CHANGES: <!-- {docsify-ignore} -->
 
@@ -25,8 +27,10 @@ Removed               | Use this instead
 `gradient`            | [`theme`](README.md#theme-string)
 `gradientLeft`        | [`themeLeft`](README.md#themeleft-string)
 `gradientRight`       | [`themeRight`](README.md#themeright-string)
-`registerGradient()`  | [`registerTheme()`](README.md#registertheme-name-options-)
-`setLedParams()`      | `setLeds()`
+`gravity`             | [`peakDecayTime`](README.md#peakdecaytime-number)
+`peakFadeTime`        | [`peakDecayTime`](README.md#peakdecaytime-number)
+`registerGradient()`  | [`registerTheme()`](README.md#registertheme-name-options-) *(check new properties)*
+`setLedParams()`      | `setLeds()` *(check new arguments)*
 `showBgColor`         | *set desired background color via CSS*
 `stereo`              | `channelLayout`
 `overlay`             | *current default behavior is equivalent to `overlay: true` &mdash; if desired, set an opaque background color via CSS*
@@ -38,9 +42,12 @@ Removed               | Use this instead
 + [`horizontalGradient`](README.md#horizontalgradient-boolean)
 + `showLedMask`
 + `peakColor` property in theme definition - see [`registerTheme()`](README.md#registertheme-name-options-)
-+ [`getRegisteredThemes()`](README.md#getregisteredthemes) and [`unregisterTheme()`](README.md#unregistertheme-name) methods
++ [`getThemes()`](README.md#getthemes) and [`unregisterTheme()`](README.md#unregistertheme-name) methods
 + [`setXAxis()`](README.md#setxaxis-options) and [`setYAxis()`](README.md#setyaxis-options) methods for customizable look of scale labels
 
+### Improved: <!-- {docsify-ignore} -->
+
++ Y-axis labels are no longer mirrored when [`mirror`](README.md#mirror-number) is active.
 
 
 

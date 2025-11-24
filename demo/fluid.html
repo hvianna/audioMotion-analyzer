@@ -57,7 +57,7 @@
 			</label>
 
 			<label class="label"><a href="https://audiomotion.dev/#/?id=bandresolution-number" target="_blank">bandResolution</a>
-				<input type="range" min="0" max="8" data-setting="bandResolution" style="width: 100px;">
+				<input type="range" min="0" max="8" data-setting="bandResolution" class="wide-range">
 				<div class="value"></div>
 			</label>
 
@@ -196,7 +196,7 @@
 			<fieldset>
 				<legend>bandRes > 0 only</legend>
 				<label class="label"><a href="https://audiomotion.dev/#/?id=barspace-number" target="_blank">barSpace</a>
-					<input type="range" min="0" max="1" step=".05" data-setting="barSpace" style="width: 90px">
+					<input type="range" min="0" max="1" step=".05" data-setting="barSpace" class="wide-range">
 					<div class="value"></div>
 				</label>
 			</fieldset>
@@ -263,18 +263,13 @@
 				<button data-prop="peakLine">peakLine</button>
 				<button data-prop="showPeaks">showPeaks</button>
 
-				<label class="label"><a href="https://audiomotion.dev/#/?id=peakgravity-number" target="_blank">gravity</a>
-					<input type="range" min="0.1" max="20" step=".1" data-setting="gravity">
-					<div class="value"></div>
-				</label>
-
-				<label class="label"><a href="https://audiomotion.dev/#/?id=peakfadetime-number" target="_blank">peakFadeTime</a>
-					<input type="range" min="0" max="2000" step="50" data-setting="peakFadeTime">
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peakdecaytime-number" target="_blank">peakDecayTime</a>
+					<input type="range" min="0" max="5000" step="50" data-setting="peakDecayTime" class="wide-range">
 					<div class="value"></div>
 				</label>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=peakhold-number" target="_blank">peakHoldTime</a>
-					<input type="range" min="0" max="1000" step="50" data-setting="peakHoldTime">
+					<input type="range" min="0" max="5000" step="50" data-setting="peakHoldTime" class="wide-range">
 					<div class="value"></div>
 				</label>
 			</fieldset>
@@ -288,7 +283,7 @@
 					<input id="ledHeight" type="number" min="1" max="50" value="16" data-custom="ledParams">
 				</label>
 				<label class="label"><a href="https://audiomotion.dev/#/?id=setledparams-params-" target="_blank">ledGap</a>
-					<input id="ledGap" type="number" min="1" max="50" value="4" data-custom="ledParams">
+					<input id="ledGap" type="number" min="1" max="50" value="3" data-custom="ledParams">
 				</label>
 			</fieldset>
 
@@ -314,7 +309,7 @@
 				<div class="button-grid">
 					<button data-prop="alphaBars">alphaBars</button>
 					<button data-prop="ansiBands">ansiBands</button>
-					<button data-prop="flipGradient">flipGradient</button>
+					<button data-prop="flipColors">flipColors</button>
 					<button data-prop="horizontalGradient">horizontalGradient</button>
 					<button data-prop="ledBars">ledBars</button>
 					<button data-prop="loRes">loRes</button>
@@ -374,7 +369,8 @@
 						<option value="1046.5">C6 - 1046.5 Hz</option>
 						<option value="2093">C7 - 2093 Hz</option>
 						<option value="4186.01">C8 - 4186.01 Hz</option>
-						<option value="7902.13">B8 - 7902.13 Hz</option>
+						<option value="8372.02">C9 - 8372.02 Hz</option>
+						<option value="16744.04">C10 - 16744.04 Hz</option>
 					</select>
 				</label>
 
@@ -388,7 +384,7 @@
 				</label>
 
 				<label class="label">Volume
-					<input id="volume" type="range" min="0" max="1" step=".1">
+					<input id="volume" type="range" min="0" max="1" step=".01">
 					<div class="value"></div>
 				</label>
 
