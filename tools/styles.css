@@ -147,10 +147,20 @@ input:not(:checked) + .bullet {
 }
 
 .grid {
+	align-items: baseline;
 	display: grid;
 }
 .grid-3-cols {
 	grid-template-columns: repeat(3, 1fr);
+}
+.grid-6-cols {
+	grid-template-columns: repeat(6, 1fr);
+}
+.colspan-2 {
+	grid-column: span 2;
+}
+.self-right {
+	justify-self: right;
 }
 
 .info {

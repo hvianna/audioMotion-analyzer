@@ -13,13 +13,13 @@
 			<canvas id="canvas" width="400" height="400"></canvas>
 			<div id="legend"></div>
 			<div class="note">Click labels to show / hide the corresponding curves</div>
-			<div class="grid grid-3-cols">
-				<div>Time range (ms): <input id="time-range" type="number" min="500" max="5000" step="50" value="1000"></div>
-				<div>Frame rate (fps): <input id="frame-rate" type="number" min="10" max="240" step="1" value="60"></div>
-				<div>gravity (kpx/s²): <input id="user-gravity" type="number" min=".1" max="30" step=".1" value="2.1"></div>
-				<div>Analyzer height (px): <input id="canvas-height" type="number" min="270" max="2160" step="1" value="1080"></div>
-				<div></div>
-				<button>Refresh</button>
+			<div class="grid grid-6-cols">
+				<div>Time range (ms):</div><div><input id="time-range" type="number" min="500" max="5000" step="50" value="1000"></div>
+				<div>Frame rate (fps):</div><div><input id="frame-rate" type="number" min="10" max="240" step="1" value="60"></div>
+				<div>peakDecayTime (ms):</div><div class="self-right"><input id="user-peakdecaytime" type="number" min="0" max="5000" step="50" value="1000" placeholder="default: 750"></div>
+				<div>Analyzer height (px):</div><div><input id="canvas-height" type="number" min="270" max="2160" step="1" value="1080"></div>
+				<div>v4.5.0 gravity:</div><div><input id="user-gravity" type="number" min=".1" max="30" step=".1" value="3.8" placeholder="default: 3.8"></div>
+				<button class="colspan-2">Refresh</button>
 			</div>
 			<p></p>
 			<div class="note margin-top">
@@ -28,7 +28,8 @@
 					<tr><td><span class="bullet round" style="background: #000000"></span>v1.0.0</td><td>varies with frame rate (60fps optimal)</td><td>varies with analyzer height</td></tr>
 					<tr><td><span class="bullet round" style="background: #039aff"></span>v3.5.0</td><td>varies with analyzer height</td><td>varies with frame rate</td></tr>
 					<tr><td><span class="bullet round" style="background: #ffd800"></span>v4.2.0</td><td>varies with analyzer height</td><td>constant</td></tr>
-					<tr><td><span class="bullet round" style="background: #ff3500"></span>v4.5.0</td><td>constant (customizable)</td><td>varies with analyzer height</td></tr>
+					<tr><td><span class="bullet round" style="background: #ff3500"></span>v4.5.0</td><td>customizable (kpx/s²)</td><td>varies with analyzer height</td></tr>
+					<tr><td><span class="bullet round" style="background: #00aa2e"></span>v5.0.0</td><td>varies with analyzer height</td><td>customizable (ms)</td></tr>
 				</table>
 			</div>
 			<p class="credits absolute-center">
@@ -42,13 +43,14 @@
 const canvas = document.getElementById('canvas'),
 	  legend = document.getElementById('legend'),
 	  ctx    = canvas.getContext('2d'),
-	  colors = [ '#000000', '#039aff', '#ffd800', '#ff3500', '#00aa2e' ],
+	  colors = [ '#000000', '#039aff', '#ffd800', '#ff3500', '#00aa2e', '#c200ff' ],
 	  labels = [
 			{ val: 'v100', text: 'v1.0.0' },
 		  	{ val: 'v350', text: 'v3.5.0' },
 		  	{ val: 'v420', text: 'v4.2.0' },
-			{ val: 'v450', text: 'v4.5.0 (default)' },
-			{ val: 'user', text: 'custom gravity: <span id="label-gravity"></span>' }
+			{ val: 'v450', text: 'v4.5.0 (gravity: <span id="label-gravity"></span>)' },
+			{ val: 'v500', text: 'v5.0.0 (default)' },
+			{ val: 'user', text: 'peakDecayTime: <span id="label-peakdecaytime"></span>' }
 	  ];
 
 function buildGraph() {
@@ -59,18 +61,20 @@ function buildGraph() {
 
 	// peak decay emulation settings
 
-	const canvasHeight    = +document.getElementById('canvas-height').value,
-		  frameRate       = +document.getElementById('frame-rate').value,
-		  DEFAULT_GRAVITY = 3.8;
+	const canvasHeight       = +document.getElementById('canvas-height').value,
+		  frameRate          = +document.getElementById('frame-rate').value,
+		  rangeX             = +document.getElementById('time-range').value,
+		  DEFAULT_GRAVITY    = 3.8,
+		  DEFAULT_DECAY_TIME = 750;
 
 	// This function simulates peak drop - `hold` is bar.hold[ channel ] in the `_draw()` method
 	// Returns an array of peak value for each frame
 
-	const drop = ( callback, peakValue, gravity ) => {
+	const drop = ( callback, peakValue, customParameter ) => {
 		let ret = [ peakValue ];
 		// hold decreases by 1 on every animation frame and peak decay starts when hold < 0
-		for ( let hold = -1; peakValue > 0 && hold > frameRate * -10; hold-- ) {
-			peakValue += callback( hold, gravity );
+		for ( let hold = -1; peakValue > 0 && hold > frameRate * ( rangeX / -1e3 - 1 ); hold-- ) {
+			peakValue += callback( hold, customParameter );
 			ret.push( peakValue );
 		}
 		return ret;
@@ -79,6 +83,10 @@ function buildGraph() {
 	// callbacks provide the decay equations used in different versions of audioMotion-analyzer
 
 	const callbacks = {
+		// v5.0.0
+		// computes required acceleration to meet the requested decay time (default 750ms)
+		v500: ( hold, peakDecayTime ) => hold * 2 / peakDecayTime ** 2 / frameRate ** 2,
+
 		// v4.5.0
 		// 1 to 0 in ~750ms using default gravity and canvas height = 1080px
 		v450: ( hold, gravity ) => ( hold * gravity * 1e3 / frameRate ** 2 ) / canvasHeight,
@@ -105,13 +113,15 @@ function buildGraph() {
 		  minX   = GRAPH_BORDER,
 		  maxY   = GRAPH_HEIGHT - GRAPH_BORDER,
 		  minY   = GRAPH_BORDER,
-		  rangeX = +document.getElementById('time-range').value,
 		  rangeY = 1,
 		  graphX = val => minX + ( maxX - minX ) / rangeX * val,
 		  graphY = val => maxY - ( maxY - minY ) / rangeY * val;
 
-	const userGravity = +document.getElementById('user-gravity').value;
+	const userGravity = +document.getElementById('user-gravity').value || DEFAULT_GRAVITY;
 	document.getElementById('label-gravity').innerText = userGravity; // update graph label with custom gravity
+
+	const userPeakDecayTime = +document.getElementById('user-peakdecaytime').value || DEFAULT_DECAY_TIME;
+	document.getElementById('label-peakdecaytime').innerText = userPeakDecayTime;
 
 	canvas.width  = GRAPH_WIDTH;
 	canvas.height = GRAPH_HEIGHT;
@@ -165,9 +175,9 @@ function buildGraph() {
 			ctx.beginPath();
 			ctx.strokeStyle = colors[ i ] + 'cc';
 
-			const peakValue = label == 'v100' ? canvasHeight : 1,
-				  gravity   = label == 'user' ? userGravity : DEFAULT_GRAVITY,
-				  data      = drop( callbacks[ label == 'user' ? 'v450' : label ], peakValue, gravity );
+			const peakValue       = label == 'v100' ? canvasHeight : 1,
+				  customParameter = label == 'v450' ? userGravity : ( label == 'user' ? userPeakDecayTime : DEFAULT_DECAY_TIME ) / 1e3,
+				  data            = drop( callbacks[ label == 'user' ? 'v500' : label ], peakValue, customParameter );
 
 			for ( const [ index, val ] of data.entries() ) {
 				const method = index == 0 ? 'moveTo' : 'lineTo',

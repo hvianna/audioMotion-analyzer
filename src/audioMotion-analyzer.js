@@ -93,7 +93,6 @@ const DEFAULT_SETTINGS = {
 	fillAlpha      : 1,
 	flipColors     : false,
 	frequencyScale : SCALE_LOG,
-	gravity        : 3.8,
 	height         : undefined,
 	horizontalGradient: false,
 	ledBars        : false,
@@ -111,7 +110,7 @@ const DEFAULT_SETTINGS = {
 	mode           : MODE_BARS,
 	noteLabels     : false,
 	outlineBars    : false,
-	peakFadeTime   : 750,
+	peakDecayTime  : 750,
 	peakHoldTime   : 500,
 	peakLine       : false,
 	radial		   : false,
@@ -543,13 +542,6 @@ class AudioMotionAnalyzer {
 		this._calcBars();
 	}
 
-	get gravity() {
-		return this._gravity;
-	}
-	set gravity( value ) {
-		this._gravity = value > 0 ? +value : this._gravity || DEFAULT_SETTINGS.gravity;
-	}
-
 	get height() {
 		return this._height;
 	}
@@ -695,18 +687,18 @@ class AudioMotionAnalyzer {
 		this._calcBars();
 	}
 
-	get peakFadeTime() {
-		return this._peakFadeTime;
+	get peakDecayTime() {
+		return this._peakDecayTime * 1e3;
 	}
-	set peakFadeTime( value ) {
-		this._peakFadeTime = value >= 0 ? +value : this._peakFadeTime || DEFAULT_SETTINGS.peakFadeTime;
+	set peakDecayTime( value ) {
+		this._peakDecayTime = ( value >= 0 ? +value : this._peakDecayTime || DEFAULT_SETTINGS.peakDecayTime ) / 1e3;
 	}
 
 	get peakHoldTime() {
-		return this._peakHoldTime;
+		return this._peakHoldTime * 1e3;
 	}
 	set peakHoldTime( value ) {
-		this._peakHoldTime = +value || 0;
+		this._peakHoldTime = +value / 1e3 || 0;
 	}
 
 	get peakLine() {
@@ -1977,8 +1969,7 @@ class AudioMotionAnalyzer {
 			  [ ledCount, ledHeight, ledGap ] = this._leds,
 			  canvasX          = this._scaleX.canvas,
 			  canvasR          = this._scaleR.canvas,
-			  fadeFrames       = _fps * this._peakFadeTime / 1e3,
-			  holdFrames       = _fps * this._peakHoldTime / 1e3,
+			  holdFrames       = _fps * this._peakHoldTime,
 			  isDualCombined   = _chLayout == CHANNEL_COMBINED,
 			  isDualHorizontal = _chLayout == CHANNEL_HORIZONTAL,
 			  isDualVertical   = _chLayout == CHANNEL_VERTICAL,
@@ -1988,9 +1979,8 @@ class AudioMotionAnalyzer {
 			  finalX           = initialX + analyzerWidth,
 			  showPeakLine     = showPeaks && this._peakLine && _mode == MODE_GRAPH,
 			  maxBarHeight     = _radial ? outerRadius - innerRadius : analyzerHeight,
-			  nominalMaxHeight = Math.abs( maxBarHeight / this._pixelRatio ), // for consistent gravity on lo-res or hi-dpi; abs prevents negative value on radialInvert
 			  dbRange 		   = maxDecibels - minDecibels,
-			  decayRate        = ( this._gravity * 1e3 ) / ( _fps ** 2 ),
+			  decayRate        = 2 / this._peakDecayTime ** 2 / _fps ** 2,
 			  ledUnitHeight    = ledHeight + ledGap;
 
 		if ( _energy.val > 0 && _fps > 0 )
@@ -2175,8 +2165,7 @@ class AudioMotionAnalyzer {
 			if ( _energy.peak > 0 ) {
 				_energy.hold--;
 				if ( _energy.hold < 0 )
-					_energy.peak += _energy.hold * decayRate / canvas.height * this._pixelRatio;
-					// TO-DO: replace `canvas.height * this._pixelRatio` with `maxNominalHeight` and consolidate with `decayRate` when implementing dual-channel energy
+					_energy.peak += _energy.hold * decayRate;
 			}
 			if ( newVal >= _energy.peak ) {
 				_energy.peak = newVal;
@@ -2362,12 +2351,11 @@ class AudioMotionAnalyzer {
 					bar.hold[ channel ]--;
 					// if hold is negative, start peak drop or fade out
 					if ( bar.hold[ channel ] < 0 ) {
-						if ( _fadePeaks && ! showPeakLine ) {
-							const initialAlpha = ! isAlpha || ( isOutline && _lineWidth > 0 ) ? 1 : isAlpha ? bar.peak[ channel ] : fillAlpha;
-							bar.alpha[ channel ] = initialAlpha * ( 1 + bar.hold[ channel ] / fadeFrames ); // hold is negative, so this is <= 1
-						}
+						const acceleration = bar.hold[ channel ] * decayRate;
+						if ( _fadePeaks && ! showPeakLine )
+							bar.alpha[ channel ] += acceleration;
 						else
-							bar.peak[ channel ] += bar.hold[ channel ] * decayRate / nominalMaxHeight;
+							bar.peak[ channel ] += acceleration;
 						// make sure the peak value is reset when using fadePeaks
 						if ( bar.alpha[ channel ] <= 0 )
 							bar.peak[ channel ] = 0;

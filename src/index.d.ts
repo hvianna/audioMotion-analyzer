@@ -46,7 +46,6 @@ export interface Options {
   fillAlpha?: number;
   flipColors?: boolean;
   frequencyScale?: FrequencyScale;
-  gravity?: number;
   height?: number;
   horizontalGradient?: boolean;
   ledBars?: boolean;
@@ -66,7 +65,7 @@ export interface Options {
   onCanvasDraw?: OnCanvasDrawFunction;
   onCanvasResize?: OnCanvasResizeFunction;
   outlineBars?: boolean;
-  peakFadeTime?: number;
+  peakDecayTime?: number;
   peakHoldTime?: number;
   peakLine?: boolean;
   radial?: boolean;
@@ -205,9 +204,6 @@ declare class AudioMotionAnalyzer {
   get frequencyScale(): FrequencyScale;
   set frequencyScale(value: FrequencyScale);
 
-  get gravity(): number;
-  set gravity(value: number);
-
   get height(): number;
   set height(h: number);
 
@@ -271,8 +267,8 @@ declare class AudioMotionAnalyzer {
   get outlineBars(): boolean;
   set outlineBars(value: boolean);
 
-  get peakFadeTime(): number;
-  set peakFadeTime(value: number);
+  get peakDecayTime(): number;
+  set peakDecayTime(value: number);
 
   get peakHoldTime(): number;
   set peakHoldTime(value: number);
