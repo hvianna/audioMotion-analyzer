@@ -691,6 +691,7 @@ class AudioMotionAnalyzer {
 		return this._peakDecayTime * 1e3;
 	}
 	set peakDecayTime( value ) {
+		// note: time is stored in seconds to reduce the number of operations during rendering
 		this._peakDecayTime = ( value >= 0 ? +value : this._peakDecayTime || DEFAULT_SETTINGS.peakDecayTime ) / 1e3;
 	}
 
@@ -698,6 +699,7 @@ class AudioMotionAnalyzer {
 		return this._peakHoldTime * 1e3;
 	}
 	set peakHoldTime( value ) {
+		// note: time is stored in seconds to reduce the number of operations during rendering
 		this._peakHoldTime = +value / 1e3 || 0;
 	}
 
@@ -1390,7 +1392,7 @@ class AudioMotionAnalyzer {
 	 * @return {boolean} `true` on success or `false` if theme is not registered or in use
 	 */
 	unregisterTheme( name ) {
-		if ( ! this.getRegisteredThemes().includes( name ) || this._activeThemes.some( theme => theme.name == name ) )
+		if ( ! this.getThemeList().includes( name ) || this._activeThemes.some( theme => theme.name == name ) )
 			return false;
 
 		return delete this._themes[ name ];
@@ -2874,16 +2876,16 @@ class AudioMotionAnalyzer {
 	 * @param [{number}] desired channel (0 or 1) - if empty or invalid, sets both channels
 	 */
 	_setTheme( name, channel ) {
-		const themeNames = this.getThemeList(),
-			  isValid    = themeNames.includes( name );
+		const themeNames  = this.getThemeList(),
+			  isNameValid = themeNames.includes( name );
 
 		for ( const ch of [0,1].includes( channel ) ? [ channel ] : [0,1] ) {
 			if ( ! this._activeThemes[ ch ] )
 				this._activeThemes[ ch ] = {}; // creates the entry
 
-			this._activeThemes[ ch ].name = isValid ? name : this._activeThemes[ ch ].name || themeNames[0];
+			this._activeThemes[ ch ].name = isNameValid ? name : this._activeThemes[ ch ].name || themeNames[0];
 
-			if ( ! isValid )
+			if ( ! isNameValid )
 				warnInvalid( `theme${ ch ? 'Right' : 'Left' }`, name );
 		}
 
