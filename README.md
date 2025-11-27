@@ -156,7 +156,6 @@ options = {<br>
 &emsp;&emsp;[fillAlpha](#fillalpha-number): **1**,<br>
 &emsp;&emsp;[frequencyScale](#frequencyscale-string): **'log'**,<br>
 &emsp;&emsp;[fsElement](#fselement-htmlelement-object): *undefined*, // constructor only<br>
-&emsp;&emsp;[gravity](#gravity-number): **3.8**,<br>
 &emsp;&emsp;[height](#height-number): *undefined*,<br>
 &emsp;&emsp;[ledBars](#ledbars-boolean): **false**,<br>
 &emsp;&emsp;[linearAmplitude](#linearamplitude-boolean): **false**,<br>
@@ -176,7 +175,7 @@ options = {<br>
 &emsp;&emsp;[onCanvasResize](#oncanvasresize-function): *undefined*,<br>
 &emsp;&emsp;[outlineBars](#outlinebars-boolean): **false**,<br>
 &emsp;&emsp;[overlay](#overlay-boolean): **false**,<br>
-&emsp;&emsp;[peakFadeTime](#peakfadetime-number): **750**,<br>
+&emsp;&emsp;[peakDecayTime](#peakdecaytime-number): **750**,<br>
 &emsp;&emsp;[peakHoldTime](#peakholdtime-number): **500**,<br>
 &emsp;&emsp;[peakLine](#peakline-boolean): **false**,<br>
 &emsp;&emsp;[radial](#radial-boolean): **false**,<br>
@@ -453,7 +452,7 @@ See also [`connectOutput()`](#connectoutput-node-).
 
 When *true*, peaks fade out instead of falling down. It has no effect when [`peakLine`](#peakline-boolean) is active.
 
-Fade time can be customized via [`peakFadeTime`](#peakfadetime-number).
+Fade time can be customized via [`peakDecayTime`](#peakdecaytime-number).
 
 See also [`peakHoldTime`](#peakholdtime-number) and [`showPeaks`](#showpeaks-boolean).
 
@@ -527,22 +526,6 @@ See [`fsElement`](#fselement-htmlelement-object) in the constructor options cont
 ### `fsWidth` *number* *(Read only)*
 
 Canvas dimensions used during fullscreen mode. These take the current pixel ratio into account and will change accordingly when [low-resolution mode](#lores-boolean) is set.
-
-### `gravity` *number*
-
-*Available since v4.5.0*
-
-Customize the acceleration of falling peaks.
-
-It must be a number **greater than zero,** representing _thousands of pixels per second squared_. Invalid values are ignored and no error is thrown.
-
-With the default value and analyzer height of 1080px, a peak at maximum amplitude takes approximately 750ms to fall to zero.
-
-You can use the [peak drop analysis tool](/tools/peak-drop.html) to see the decay curve for different values of gravity.
-
-See also [`peakHoldTime`](#peakholdtime-number) and [`showPeaks`](#showpeaks-boolean).
-
-Defaults to **3.8**.
 
 ### `height` *number*
 
@@ -815,11 +798,11 @@ Defaults to **false**.
 
 ?> In order to keep elements other than the canvas visible in fullscreen, you'll need to set the [`fsElement`](#fselement-htmlelement-object) property in the [constructor](#constructor) options.
 
-### `peakFadeTime` *number*
+### `peakDecayTime` *number*
 
-*Available since v4.5.0*
+*Available since v5.0.0; formerly `peakFadeTime` (since v4.5.0)*
 
-Time in milliseconds for peaks to completely fade out, when [`fadePeaks`](#fadepeaks-boolean) is active.
+Time in milliseconds for peaks to fall down from maximum amplitude to zero, or to completely fade out (when [`fadePeaks`](#fadepeaks-boolean) is *true*).
 
 It must be a number greater than or equal to zero. Invalid values are ignored and no error is thrown.
 
@@ -835,7 +818,7 @@ Time in milliseconds for peaks to hold their value before they begin to fall or 
 
 It must be a number greater than or equal to zero. Invalid values are ignored and no error is thrown.
 
-See also [`fadePeaks`](#fadepeaks-boolean), [`gravity`](#gravity-number), [`peakFadeTime`](#peakfadetime-number) and [`showPeaks`](#showpeaks-boolean).
+See also [`fadePeaks`](#fadepeaks-boolean), [`peakDecayTime`](#peakdecaytime-number) and [`showPeaks`](#showpeaks-boolean).
 
 Defaults to **500**.
 
@@ -979,7 +962,7 @@ and setting `showBgColor` to ***true*** will make the "unlit" LEDs visible inste
 
 *true* to show amplitude peaks.
 
-See also [`gravity`](#gravity-number), [`peakFadeTime`](#peakfadetime-number), [`peakHoldTime`](#peakholdtime-number) and [`peakLine`](#peakline-boolean).
+See also [`peakDecayTime`](#peakdecaytime-number), [`peakHoldTime`](#peakholdtime-number) and [`peakLine`](#peakline-boolean).
 
 Defaults to **true**.
 
@@ -1444,7 +1427,7 @@ Returns an array with the names of available themes, including built-in and cust
 
 Registers a custom color theme.
 
-Returns *true* on success, or *false* if any required value is missing or invalid. In that case, it does NOT throw an error, but a warning message with more information is logged to the console.
+Returns *true* on success, or *false* if any required value is missing or invalid. In that case, it does NOT throw an error, but a detailed warning message is logged to the console.
 
 `name` must be a non-empty string that will be used to select this theme, via the [`theme`](#theme-string) property. **Names are case sensitive.**
 
@@ -1453,7 +1436,7 @@ Returns *true* on success, or *false* if any required value is missing or invali
 property     | type   | description
 -------------|--------|-------------
 `colorStops` | array  | **At least one array entry is required.** Each element must be either a color string (CSS format), or a color object (see below).
-`peakColor`  | string | Optional; if defined, **all peaks** will be painted this color, regarless of their levels.
+`peakColor`  | string | Optional; if defined, **all peaks** will be painted this color, regardless of their levels.
 
 **Color objects** defined in `colorStops` must follow the structure below:
 
@@ -1463,48 +1446,47 @@ property | type   | description
 `level`  | number | Optional; sets the **upper level** threshold for applying this color to a bar (when [`colorMode`](#colormode-string) is set to **'bar-level'**) or LED segment (when [`trueLeds`](#trueleds-boolean) is active). It must be a number between `0` and `1`, where `1` is the maximum amplitude (top of screen).
 `pos`    | number | Optional; adjusts the position of a color within the generated gradient, applied when [`colorMode`](#colormode-string) is set to **'gradient'** and [`trueLeds`](#trueleds-boolean) is *false*. It must be a number between `0` and `1`, where **`0` represents the top of the screen.**
 
-
 **Notes:**
 
-- When not defined, `pos` and `level` values will be automatically calculated for uniform color distribution within the amplitude range, from top to bottom of the bar, following their order in the `colorStops` array. You can check the computed values by inspecting the data returned by [`getTheme()`](#gettheme);
+- When not defined, `pos` and `level` values will be automatically calculated for uniform color distribution within the amplitude range, from top to bottom, following their order in the `colorStops` array. You can check the computed values by inspecting the data returned by [`getTheme()`](#gettheme);
 - Defining `level: 0` for a colorStop will effectively prevent that color from being displayed with *'bar-level'* [`colorMode`](#colormode-string) and [`trueLeds`](#trueleds-boolean) effect.
 
 Example usage:
 
 ```js
 audioMotion.registerTheme( 'classic-A', {
-    colorStops: [ 'red', 'yellow', 'lime' ] // fully automatic color distribution
+    colorStops: [ 'red', 'yellow', 'lime' ] // automatic color distribution
 });
 
 audioMotion.registerTheme( 'classic-B', {
-    colorStops: [
-        { color: 'red' },               // (auto) level ≤ 100% (but > 90%)
-        { color: 'yellow', level: .9 }, // level ≤ 90% (but > 60%)
-        { color: 'lime', level: .6 }    // level ≤ 60%
+    colorStops: [                       // custom levels, but auto gradient positions
+        { color: 'red' },               // top color is always assigned level: 1 (amplitude 100% and lower)
+        { color: 'yellow', level: .9 }, // use this color for amplitude ≤ 90% (but > 60%)
+        { color: 'lime', level: .6 }    // use this color for amplitude ≤ 60%
     ]
 });
 
 audioMotion.registerTheme( 'bluey-A', {
-    colorStops: [
-        { color: 'red' },
-        { color: '#1ea1df', level: .9 }
-    ]
+    colorStops: [                       // only colors are defined, so automatic distribution is done
+        { color: 'red' },               // this will be assigned level: 1, pos: 0
+        { color: '#1ea1df' }            // this will be assigned level: 0.5, pos: 1
+    ]                                   // note that level decreases, while pos increases, from top to bottom
 });
 
 audioMotion.registerTheme( 'bluey-B', {
     colorStops: [
-        { color: 'red' },
-        { color: '#1ea1df', pos: .2 }   // fine-tunes the gradient
+        { color: 'red' },                         // auto-assigned
+        { color: '#1ea1df', level: .9, pos: .15 } // set level and fine-tune gradient position, for similar look
     ]
 });
 ```
 
-Theme (definitions above) | gradient | [`trueLeds`](#trueleds-boolean) | *'bar-level'* [`colorMode`](#colormode-string)
---------------------------|----------|---------------------------------|------------------------------------------------
-**classic-A**<br>(full auto color distribution)  | ![classic-a-gradient](img/levels-classic-a-gradient.png) | ![classic-a-trueleds](img/levels-classic-a-trueleds.png) | ![classic-a-barlevel](img/levels-classic-a-barlevel.png)
-**classic-B**<br>(auto gradient / custom levels) | ![classic-b-gradient](img/levels-classic-b-gradient.png) | ![classic-b-trueleds](img/levels-classic-b-trueleds.png) | ![classic-b-barlevel](img/levels-classic-b-barlevel.png)
-**bluey-A**<br>(auto gradient / custom levels)   | ![bluey-a-gradient](img/levels-bluey-a-gradient.png) | ![bluey-a-trueleds](img/levels-bluey-a-trueleds.png) | ![bluey-a-barlevel](img/levels-bluey-a-barlevel.png)
-**bluey-B**<br>(custom gradient / auto levels)   | ![bluey-b-gradient](img/levels-bluey-b-gradient.png) | ![bluey-b-trueleds](img/levels-bluey-b-trueleds.png) | ![bluey-b-barlevel](img/levels-bluey-b-barlevel.png)
+Theme | gradient | [`trueLeds`](#trueleds-boolean) | *'bar-level'* [`colorMode`](#colormode-string)
+------|----------|---------------------------------|------------------------------------------------
+**classic-A**<br>(auto gradient / auto levels)     | ![classic-a-gradient](img/levels-classic-a-gradient.png) | ![classic-a-trueleds](img/levels-classic-a-trueleds.png) | ![classic-a-barlevel](img/levels-classic-a-barlevel.png)
+**classic-B**<br>(auto gradient / custom levels)   | ![classic-b-gradient](img/levels-classic-b-gradient.png) | ![classic-b-trueleds](img/levels-classic-b-trueleds.png) | ![classic-b-barlevel](img/levels-classic-b-barlevel.png)
+**bluey-A**<br>(auto gradient / auto levels)       | ![bluey-a-gradient](img/levels-bluey-a-gradient.png) | ![bluey-a-trueleds](img/levels-bluey-a-trueleds.png) | ![bluey-a-barlevel](img/levels-bluey-a-barlevel.png)
+**bluey-B**<br>(custom gradient / custom levels)   | ![bluey-b-gradient](img/levels-bluey-b-gradient.png) | ![bluey-b-trueleds](img/levels-bluey-b-trueleds.png) | ![bluey-b-barlevel](img/levels-bluey-b-barlevel.png)
 
 
 See also: [unregisterTheme()](#unregistertheme-name)
