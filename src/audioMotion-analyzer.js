@@ -2675,13 +2675,15 @@ class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const { canvas, _ctx, _flipColors, _horizGrad, _radial, _reflexRatio } = this,
-			  { analyzerWidth, centerX, centerY, initialX, innerRadius, outerRadius } = this._aux,
+		const { canvas, _ctx, _flipColors, _horizGrad, _radial, _reflexRatio, _xAxis } = this,
+			  { analyzerWidth, centerX, centerY, channelHeight, initialX, innerRadius, outerRadius, xAxisHeight } = this._aux,
 			  { isLumi }     = this._flg,
 			  isDualVertical = this._chLayout == CHANNEL_VERTICAL,
-			  analyzerRatio  = 1 - _reflexRatio,
-			  gradientHeight = isLumi ? canvas.height : canvas.height * ( 1 - _reflexRatio * ( ! isDualVertical ) ) | 0;
-			  				   // for dual-vertical we keep the full canvas height and handle the reflex areas while generating the color stops
+			  showXAxis      = ! _radial && ! _xAxis.overlay && this._sxshow, // X-axis being displayed and not overlaid?
+  			  xAxisRatio     = showXAxis ? xAxisHeight / channelHeight : 0,   // ratio of the canvas taken by the X-axis bar
+			  // for lumi and dual-vertical we use the full canvas height and handle the exclusion areas (reflex & X-axis) while generating the color stops
+			  gradientHeight = ( isLumi || isDualVertical ? canvas.height : canvas.height * ( 1 - _reflexRatio ) | 0 ) - ( showXAxis && ! isDualVertical ? xAxisHeight : 0 ),
+			  analyzerRatio  = _radial || _horizGrad ? 1 : 1 - ( isLumi ? 0 : _reflexRatio ) - xAxisRatio;
 
 		// helper function
 		const createNewGradient = () => _ctx.createLinearGradient( ...( _horizGrad ? [ initialX, 0, initialX + analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
@@ -2705,51 +2707,53 @@ class AudioMotionAnalyzer {
 				mutedGradient = _radial ? null : createNewGradient() // no LEDs in radial
 
 			if ( colorStops ) {
-				const dual = isDualVertical && ! this._splitGradient && ( ! _horizGrad || _radial );
+				const isDualGradient = isDualVertical && ! this._splitGradient && ( ! _horizGrad || _radial );
 
 				const buildGradient = ( grad, cs, area ) => {
 					cs.forEach( ( colorStop, index ) => {
 						let offset = colorStop.pos;
 
-						// in dual mode (not split), use half the original offset for each channel
-						if ( dual )
-							offset /= 2;
+						// additional offset processing for dual-vertical layout (including radial)
+						if ( isDualVertical ) {
+							if ( isDualGradient )
+								offset /= 2; // to fit full gradient into channel when not splitting
 
-						// constrain the offset within the useful analyzer areas (avoid reflex areas)
-						if ( isDualVertical && ! isLumi && ! _radial && ! _horizGrad ) {
-							offset *= analyzerRatio;
-							// skip the first reflex area in split mode
-							if ( ! dual && offset > .5 * analyzerRatio )
-								offset += .5 * _reflexRatio;
+							if ( ! _radial && ! _horizGrad ) {
+								// split (continuous) gradient only: skip top reflex + X-axis areas, on all offsets below it (>.5)
+								if ( ! isDualGradient && offset > .5 )
+									offset += _reflexRatio / 2 + xAxisRatio / 2;
+
+								// "shrink" each offset to fit into the usable analyzer area
+								offset *= analyzerRatio;
+							}
+
+							// replicates full gradient in the bottom area of the canvas (for non-split gradient)
+							if ( area == 1 ) {
+								// add colors in reverse order if radial or lumi
+								if ( _radial || isLumi ) {
+									colorStop = cs[ maxIndex - index ];
+									offset = 1 - ( colorStop.pos * analyzerRatio / 2 ) - xAxisRatio / 2; // exclude x-Axis height (lumi only)
+								}
+								else {
+									// if the first offset is not 0, create an additional color stop to prevent bleeding from top channel
+									if ( index == 0 && offset > 0 )
+										grad.addColorStop( .5, colorStop.color );
+									// bump the offset into the second half of the gradient
+									offset += .5;
+								}
+							}
 						}
 
-						// only for dual-vertical non-split gradient (creates full gradient on both halves of the canvas)
-						if ( area == 1 ) {
-							// add colors in reverse order if radial or lumi are active
-							if ( _radial || isLumi ) {
-								const revIndex = maxIndex - index;
-								colorStop = cs[ revIndex ];
-								offset = 1 - colorStop.pos / 2;
-							}
-							else {
-								// if the first offset is not 0, create an additional color stop to prevent bleeding from the first channel
-								if ( index == 0 && offset > 0 )
-									grad.addColorStop( .5, colorStop.color );
-								// bump the offset to the second half of the gradient
-								offset += .5;
-							}
-						}
-
-						// add gradient color stop
+						// add computed color stop to the gradient
 						grad.addColorStop( offset, colorStop.color );
 
-						// create additional color stop at the end of first channel to prevent bleeding
+						// create additional color stop at the end of top channel to prevent bleeding
 						if ( isDualVertical && index == maxIndex && offset < .5 )
 							grad.addColorStop( .5, colorStop.color );
 					});
 				} // buildGradient()
 
-				for ( let channelArea = 0; channelArea < 1 + dual; channelArea++ ) {
+				for ( let channelArea = 0; channelArea < 1 + isDualGradient; channelArea++ ) {
 					buildGradient( gradient, colorStops, channelArea );
 					if ( mutedGradient )
 						buildGradient( mutedGradient, mutedColorStops, channelArea );
