@@ -14,6 +14,11 @@ button {
 	padding-right: 2em;
 }
 
+canvas {
+	display: block;
+	margin: 0 auto;
+}
+
 h1 {
 	margin-bottom: -.5em;
 }
@@ -87,6 +92,12 @@ table td {
 	margin-right: 6px;
 	padding: 6px;
 }
+.bullet.half {
+	border-bottom-left-radius: 0;
+	border-top-left-radius: 0;
+	margin-left: -12px;
+	padding-left: 0;
+}
 input:not(:checked) + .bullet {
 	opacity: .2;
 }
@@ -97,6 +108,25 @@ input:not(:checked) + .bullet {
 
 .clamped {
 	color: #e00;
+}
+
+.color-black {
+	background: #000;
+}
+.color-blue {
+	background: #039aff;
+}
+.color-yellow {
+	background: #ffd800;
+}
+.color-red {
+	background: #ff3500;
+}
+.color-green {
+	background: #00aa2e;
+}
+.color-purple {
+	background: #c200ff;
 }
 
 .container {

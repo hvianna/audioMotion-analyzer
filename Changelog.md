@@ -27,7 +27,7 @@ Removed               | Use this instead
 `gradient`            | [`theme`](README.md#theme-string)
 `gradientLeft`        | [`themeLeft`](README.md#themeleft-string)
 `gradientRight`       | [`themeRight`](README.md#themeright-string)
-`gravity`             | [`peakDecayTime`](README.md#peakdecaytime-number)
+`gravity`             | [`peakDecayTime`](README.md#peakdecaytime-number) - use the [peak drop analysis tool](/tools/peak-drop.html) to compare/migrate custom values
 `peakFadeTime`        | [`peakDecayTime`](README.md#peakdecaytime-number)
 `registerGradient()`  | [`registerTheme()`](README.md#registertheme-name-options-) *(check new properties)*
 `setLedParams()`      | `setLeds()` *(check new arguments)*

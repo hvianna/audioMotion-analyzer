@@ -15,21 +15,21 @@
 			<div class="note">Click labels to show / hide the corresponding curves</div>
 			<div class="grid grid-6-cols">
 				<div>Time range (ms):</div><div><input id="time-range" type="number" min="500" max="5000" step="50" value="1000"></div>
-				<div>Frame rate (fps):</div><div><input id="frame-rate" type="number" min="10" max="240" step="1" value="60"></div>
-				<div>peakDecayTime (ms):</div><div class="self-right"><input id="user-peakdecaytime" type="number" min="0" max="5000" step="50" value="1000" placeholder="default: 750"></div>
-				<div>Analyzer height (px):</div><div><input id="canvas-height" type="number" min="270" max="2160" step="1" value="1080"></div>
-				<div>v4.5.0 gravity:</div><div><input id="user-gravity" type="number" min=".1" max="30" step=".1" value="3.8" placeholder="default: 3.8"></div>
+				<div><span class="bullet round color-black"></span><span class="bullet round half color-blue"></span>Frame rate (fps):</div><div><input id="frame-rate" type="number" min="10" max="240" step="1" value="60"></div>
+				<div><span class="bullet round color-purple"></span>peakDecayTime (ms):</div><div class="self-right"><input id="user-peakdecaytime" type="number" min="0" max="5000" step="50" value="1000" placeholder="default: 750"></div>
+				<div><span class="bullet round color-black"></span><span class="bullet round half color-red"></span>Analyzer height (px):</div><div><input id="canvas-height" type="number" min="270" max="2160" step="1" value="1080"></div>
+				<div><span class="bullet round color-red"></span>gravity (kpx/s²):</div><div><input id="user-gravity" type="number" min=".1" max="30" step=".1" value="3.8" placeholder="default: 3.8"></div>
 				<button class="colspan-2">Refresh</button>
 			</div>
 			<p></p>
 			<div class="note margin-top">
 				<table>
-					<tr><th>version</th><th>gravity (peak acceleration)</th><th>decay time from max to zero</th></tr>
-					<tr><td><span class="bullet round" style="background: #000000"></span>v1.0.0</td><td>varies with frame rate (60fps optimal)</td><td>varies with analyzer height</td></tr>
-					<tr><td><span class="bullet round" style="background: #039aff"></span>v3.5.0</td><td>varies with analyzer height</td><td>varies with frame rate</td></tr>
-					<tr><td><span class="bullet round" style="background: #ffd800"></span>v4.2.0</td><td>varies with analyzer height</td><td>constant</td></tr>
-					<tr><td><span class="bullet round" style="background: #ff3500"></span>v4.5.0</td><td>customizable (kpx/s²)</td><td>varies with analyzer height</td></tr>
-					<tr><td><span class="bullet round" style="background: #00aa2e"></span>v5.0.0</td><td>varies with analyzer height</td><td>customizable (ms)</td></tr>
+					<tr><th>version</th><th>peak acceleration</th><th>decay time from max to zero</th></tr>
+					<tr><td><span class="bullet round color-black"></span>v1.0.0</td><td>varies with frame rate</td><td>depends on frame rate and analyzer height</td></tr>
+					<tr><td><span class="bullet round color-blue"></span>v3.5.0</td><td>varies with frame rate</td><td>depends on frame rate</td></tr>
+					<tr><td><span class="bullet round color-yellow"></span>v4.2.0</td><td>adjusts to analyzer height</td><td>constant</td></tr>
+					<tr><td><span class="bullet round color-red"></span>v4.5.0</td><td>customizable</td><td>depends on analyzer height</td></tr>
+					<tr><td><span class="bullet round color-green"></span>v5.0.0</td><td>adjusts to analyzer height</td><td>customizable <span class="bullet round color-purple"></span></td></tr>
 				</table>
 			</div>
 			<p class="credits absolute-center">

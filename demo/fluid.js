@@ -202,7 +202,6 @@ const presets = [
 	},
 	{
 		// gradient sample images for docs are created with a 27.5 Hz square wave (volume: 1) in the oscillator
-		// additional sample images created with a C2 (65.41 Hz) sawtooth wave (volume: 0.64)
 		name: 'Testing config 3',
 		options: {
 			mode: 'bars',
@@ -230,10 +229,12 @@ const presets = [
 	},
 	{
 		// use with 16kHz test tone to compare two gradients side by side
+		// bar-level sample images created with a C2 (65.41 Hz) sawtooth wave (volume: 0.65)
 		name: 'Testing config 4',
 		options: {
-			bandResolution: 2,
-			barSpace: 1,
+			ansiBands: true,
+			bandResolution: 4,
+			barSpace: .25,
 			channelLayout: 'dual-horizontal',
 			colorMode: 'gradient',
 			flipColors: false,
@@ -277,11 +278,6 @@ try {
 			source: audioEl, // main audio source is the HTML <audio> element
 			fsElement: container, // element to be rendered in fullscreen (defaults to the canvas, here we use the container to take the background to fullscreen as well)
 //			height: 300,
-//			minFreq: 0,
-//			maxFreq: 0,
-//			reflexRatio: 'a',
-			theme: 'laulu',
-			themeRight: 'coco',
 			onCanvasDraw: drawCallback, // callback function used to add custom features for this demo
 			onCanvasResize: ( reason, instance ) => {
 				console.log( `onCanvasResize called. Reason: ${reason}\nCanvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
@@ -298,6 +294,8 @@ catch( err ) {
 }
 
 /*
+// tests with invalid options
+
 console.log( 'reflexRatio', audioMotion.reflexRatio );
 
 audioMotion.reflexRatio = 1;
@@ -378,47 +376,37 @@ document.querySelectorAll('[data-custom]').forEach( el => {
 // Display value of ranged input elements
 document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'input', () => updateRangeElement( el, audioMotion ) ) );
 
-// Add custom theme
-audioMotion.registerTheme( 'bluey', {
-	colorStops: [
-		'red',
-		{ color: '#1ea1df', level: .9, pos: .2 }
-	]
-});
-
-audioMotion.registerTheme( 'classic-2', {
-	colorStops: [
-		{ color: 'red' },
-		{ color: 'yellow', pos: .55},
-		{ color: 'lime' }
-	]
-});
-
+// Add custom themes
 audioMotion.registerTheme( 'classic-A', {
-    colorStops: [ 'red', 'yellow', 'lime' ] // fully automatic color distribution
+    colorStops: [ 'red', 'yellow', 'lime' ] // automatic color distribution
 });
 
 audioMotion.registerTheme( 'classic-B', {
-    colorStops: [
-        { color: 'red' },               // (auto) level ≤ 100% (but > 90%)
-        { color: 'yellow', level: .9 }, // level ≤ 90% (but > 60%)
-        { color: 'lime', level: .6 }    // level ≤ 60%
+    colorStops: [                       // custom levels, but auto gradient positions
+        { color: 'red' },               // top color is always assigned level: 1 (amplitude up to 100%)
+        { color: 'yellow', level: .9 }, // use this color for level ≤ 90% (but > 60%)
+        { color: 'lime', level: .6 }    // use this color for level ≤ 60%
     ]
 });
 
 audioMotion.registerTheme( 'bluey-A', {
-    colorStops: [
+    colorStops: [                       // only colors are defined, so automatic distribution is done
         { color: 'red' },
-        { color: '#1ea1df', level: .9 }
+        { color: '#1ea1df' }
     ]
 });
 
 audioMotion.registerTheme( 'bluey-B', {
-    colorStops: [
-        { color: 'red' },
-        { color: '#1ea1df', pos: .2 } // fine-tunes the gradient
+    colorStops: [                                // note that level and pos are inversely proportional
+        { color: 'red' },                        // this will be auto-assigned level: 1, pos: 0
+        { color: '#1ea1df', level: .9, pos: .15 } // sets level and gradient position, for similar look
     ]
 });
+
+
+audioMotion.theme = 'classic-A';
+audioMotion.unregisterTheme('classic');
+
 
 audioMotion.registerTheme( 'prism-new', {
 	colorStops: [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', '#09c', '#36b', '#639', '#817' ]
@@ -447,9 +435,7 @@ audioMotion.setYAxis({
 //	width: 25
 });
 
-console.log( 'tema vazio', audioMotion.getTheme() );
-console.log( 'tema inexistente', audioMotion.getTheme('lala') );
-console.log( 'tema classic', audioMotion.getTheme('classic') );
+console.log( 'tema bluey-A', audioMotion.getTheme('bluey-A') );
 console.log( 'tema mono', audioMotion.getTheme('mono') );
 
 //console.log( 'active themes', audioMotion.getActiveGradients() );
@@ -764,11 +750,6 @@ function drawCallback( instance, { timestamp, themes } ) {
 				ctx.fillText( bar.freq.toFixed(2) + 'Hz', x, mouseY );
 				ctx.fillText( bar.value[0], x, mouseY + fontSize * 1.5 );
 			}
-
-//			for ( const { posX, value } of bars ) {
-//				if ( value[0] > 0 )
-//					ctx.fillText( value[0], posX, canvas.height * ( 1 - value[0] ) + 32 );
-//			}
 		}
 	}
 
@@ -780,6 +761,19 @@ function drawCallback( instance, { timestamp, themes } ) {
 		ctx.fillStyle = '#fff8';
 		ctx.textAlign = 'center';
 		ctx.fillText( 'audioMotion', canvas.width - baseSize * 8, baseSize * 2 );
+
+/*
+		// debug: visualize generated gradients
+		ctx.lineWidth = 50;
+		for ( const ch of [0,1] ) {
+			const x = 75 * ch + 50;
+			ctx.strokeStyle = themes[ ch ].gradient;
+			ctx.beginPath();
+			ctx.moveTo( x, 0 );
+			ctx.lineTo( x, canvas.height );
+			ctx.stroke();
+		}
+*/
 	}
 
 	if ( features.songProgress ) {
