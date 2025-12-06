@@ -262,8 +262,8 @@ const presets = [
 
 // Demo-specific features
 const features = {
-	showLogo: true,
 	energyMeter: false,
+	showLogo: true,
 	songProgress: false
 }
 
@@ -342,8 +342,10 @@ audioMotion.connectInput( gainNode );
 
 document.querySelectorAll('[data-prop]').forEach( el => {
 	el.addEventListener( 'click', () => {
-		if ( el.dataset.func )
-			audioMotion[ el.dataset.func ]();
+		if ( el.dataset.func ) {
+			const [ funcName, args ] = parseDatasetFunction( el.dataset.func, el.value );
+			audioMotion[ funcName ]( ...args );
+		}
 		else
 			audioMotion[ el.dataset.prop ] = ! audioMotion[ el.dataset.prop ];
 		updateUI();
@@ -359,7 +361,12 @@ document.querySelectorAll('[data-feature]').forEach( el => {
 
 document.querySelectorAll('[data-setting]').forEach( el => {
 	el.addEventListener( 'input', () => {
-		audioMotion[ el.dataset.setting ] = el.value;
+		if ( el.dataset.func ) {
+			const [ funcName, args ] = parseDatasetFunction( el.dataset.func, el.value );
+			audioMotion[ funcName ]( ...args );
+		}
+		else
+			audioMotion[ el.dataset.setting ] = el.value;
 		updateUI();
 	});
 });
@@ -434,6 +441,10 @@ audioMotion.setYAxis({
 //	showUnit: false,
 //	width: 25
 });
+
+
+audioMotion.setTheme('rainbow', { spread: true } );    // sets theme and modifiers for both channels
+audioMotion.setThemeModifiers( { reverse: true }, 1 ); // update only the `reverse` modifier on channel 1
 
 console.log( 'tema bluey-A', audioMotion.getTheme('bluey-A') );
 console.log( 'tema mono', audioMotion.getTheme('mono') );
@@ -654,9 +665,26 @@ function updateUI() {
 	if ( audioMotion.isDestroyed )
 		container.innerHTML = '<div class="warn">audioMotion instance has been destroyed. Reload the page to start again.</div>';
 
-	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
+	document.querySelectorAll('[data-setting]').forEach( el => {
+		if ( el.dataset.setting.indexOf('(') >= 0 ) { // it's a function
+			const [ funcName, args ] = parseDatasetFunction( el.dataset.setting );
+			el.value = audioMotion[ funcName ]( ...args );
+		}
+		else
+			el.value = audioMotion[ el.dataset.setting ];
+	});
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el, audioMotion ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', !! audioMotion[ el.dataset.prop ] ) );
+	document.querySelectorAll('button[data-prop]').forEach( el => {
+		let ret;
+		if ( el.dataset.prop.indexOf('(') >= 0 ) { // it's a function
+			const [ funcName, args ] = parseDatasetFunction( el.dataset.prop );
+			ret = audioMotion[ funcName ]( ...args );
+		}
+		else
+			ret = audioMotion[ el.dataset.prop ];
+
+		el.classList.toggle( 'active', !! ret );
+	});
 	document.querySelectorAll('button[data-feature]').forEach( el => el.classList.toggle( 'active', !! features[ el.dataset.feature ] ) );
 	document.querySelectorAll('[data-flag]').forEach( el => el.classList.toggle( 'active', !! audioMotion[ el.dataset.flag ] ) );
 }
@@ -753,6 +781,29 @@ function drawCallback( instance, { timestamp, themes } ) {
 		}
 	}
 
+/*
+	// DEBUG: visualize generated gradients for each channel
+	for ( const ch of [0,1] ) {
+		let x, y, w, h;
+
+		if ( audioMotion.getThemeModifier( 'horizontal', ch ) ) {
+			x = 0;
+			y = 50 * ch + 25;
+			w = canvas.width;
+			h = 25;
+		}
+		else {
+			x = 75 * ch + 50;
+			y = 0;
+			w = 50;
+			h = canvas.height;
+		}
+
+		ctx.fillStyle = themes[ ch ].gradient;
+		ctx.fillRect( x, y, w, h );
+	}
+*/
+
 	if ( features.showLogo ) {
 		// the overall energy provides a simple way to sync a pulsating text/image to the beat
 		// it usually works best than specific frequency ranges, for a wider range of music styles
@@ -761,19 +812,6 @@ function drawCallback( instance, { timestamp, themes } ) {
 		ctx.fillStyle = '#fff8';
 		ctx.textAlign = 'center';
 		ctx.fillText( 'audioMotion', canvas.width - baseSize * 8, baseSize * 2 );
-
-/*
-		// debug: visualize generated gradients
-		ctx.lineWidth = 50;
-		for ( const ch of [0,1] ) {
-			const x = 75 * ch + 50;
-			ctx.strokeStyle = themes[ ch ].gradient;
-			ctx.beginPath();
-			ctx.moveTo( x, 0 );
-			ctx.lineTo( x, canvas.height );
-			ctx.stroke();
-		}
-*/
 	}
 
 	if ( features.songProgress ) {

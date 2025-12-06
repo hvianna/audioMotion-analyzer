@@ -29,9 +29,9 @@ const presets = [
 			radial: false,
 			reflexRatio: 0,
 			showLedMask: true,
-			showPeaks: true,
-			theme: 'classic'
-		}
+			showPeaks: true
+		},
+		theme: 'classic'
 	},
 	{
 		name: 'Mirror wave',
@@ -46,9 +46,9 @@ const presets = [
 			reflexAlpha: 1,
 			reflexBright: 1,
 			reflexRatio: .5,
-			showPeaks: false,
-			theme: 'rainbow'
-		}
+			showPeaks: false
+		},
+		theme: { name: 'rainbow', modifiers: { horizontal: true } }
 	},
 	{
 		name: 'Radial inverse',
@@ -68,9 +68,9 @@ const presets = [
 			showPeaks: true,
 			spinSpeed: 2,
 			outlineBars: true,
-			theme: 'prism',
 			weightingFilter: 'D'
-		}
+		},
+		theme: 'rainbow'
 	},
 	{
 		name: 'Reflex Bars',
@@ -87,9 +87,9 @@ const presets = [
 			reflexAlpha: .5,
 			reflexFit: true,
 			reflexRatio: .3,
-			showPeaks: true,
-			theme: 'prism'
-		}
+			showPeaks: true
+		},
+		theme: 'rainbow'
 	}
 ];
 
@@ -112,8 +112,10 @@ document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 document.querySelectorAll('button[data-prop]').forEach( el => {
 	el.addEventListener( 'click', () => {
-		if ( el.dataset.func )
-			audioMotion[ el.dataset.func ]();
+		if ( el.dataset.func ) {
+			const [ funcName, args ] = parseDatasetFunction( el.dataset.func, el.value );
+			audioMotion[ funcName ]( ...args );
+		}
 		else
 			audioMotion[ el.dataset.prop ] = ! audioMotion[ el.dataset.prop ];
 		el.classList.toggle( 'active', audioMotion[ el.dataset.prop ] );
@@ -121,11 +123,21 @@ document.querySelectorAll('button[data-prop]').forEach( el => {
 });
 
 document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'input', () => audioMotion[ el.dataset.setting ] = el.value );
+	el.addEventListener( 'input', () => {
+		if ( el.dataset.func ) {
+			const [ funcName, args ] = parseDatasetFunction( el.dataset.func, el.value );
+			audioMotion[ funcName ]( ...args );
+		}
+		else
+			audioMotion[ el.dataset.setting ] = el.value;
+		updateUI();
+	});
 });
 
 presetSelection.addEventListener( 'change', () => {
-	audioMotion.setOptions( presets[ presetSelection.value ].options );
+	const { options, theme } = presets[ presetSelection.value ];
+	audioMotion.setOptions( options );
+	audioMotion.setTheme( theme );
 	updateUI();
 });
 
@@ -147,8 +159,25 @@ updateUI();
 
 // Update UI elements to reflect the analyzer's current settings
 function updateUI() {
-	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
+	document.querySelectorAll('[data-setting]').forEach( el => {
+		if ( el.dataset.setting.indexOf('(') >= 0 ) { // it's a function
+			const [ funcName, args ] = parseDatasetFunction( el.dataset.setting );
+			el.value = audioMotion[ funcName ]( ...args );
+		}
+		else
+			el.value = audioMotion[ el.dataset.setting ];
+	});
 
 	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el, audioMotion ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', !! audioMotion[ el.dataset.prop ] ) );
+	document.querySelectorAll('button[data-prop]').forEach( el => {
+		let ret;
+		if ( el.dataset.prop.indexOf('(') >= 0 ) { // it's a function
+			const [ funcName, args ] = parseDatasetFunction( el.dataset.prop );
+			ret = audioMotion[ funcName ]( ...args );
+		}
+		else
+			ret = audioMotion[ el.dataset.prop ];
+
+		el.classList.toggle( 'active', !! ret );
+	});
 }

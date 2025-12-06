@@ -69,16 +69,22 @@
 				</select>
 			</label>
 
-			<label class="label">theme
-				<select data-setting="theme"></select>
+			<label class="label"><a href="https://audiomotion.dev/#/?id=settheme-name-modifiers-channel" target="_blank">setTheme (channel 0)</a>
+				<div class="grid grid-3-cols">
+					<select data-func="setTheme(this,0)" data-setting="getTheme(0)" class="colspan-3"></select>
+					<button class="small-button" title="horizontal modifier" data-func="toggleThemeModifier(horizontal,0)" data-prop="getThemeModifiers(horizontal,0)">HOR</button>
+					<button class="small-button" title="reverse modifier" data-func="toggleThemeModifier(reverse,0)" data-prop="getThemeModifiers(reverse,0)">REV</button>
+					<button class="small-button" title="spread modifier" data-func="toggleThemeModifier(spread,0)" data-prop="getThemeModifiers(spread,0)">SPR</button>
+				</div>
 			</label>
 
-			<label class="label">themeLeft
-				<select data-setting="themeLeft"></select>
-			</label>
-
-			<label class="label">themeRight
-				<select data-setting="themeRight"></select>
+			<label class="label"><a href="https://audiomotion.dev/#/?id=settheme-name-modifiers-channel" target="_blank">setTheme (channel 1)</a>
+				<div class="grid grid-3-cols">
+					<select data-func="setTheme(this,1)" data-setting="getTheme(1)" class="colspan-3"></select>
+					<button class="small-button" title="horizontal modifier" data-func="toggleThemeModifier(horizontal,1)" data-prop="getThemeModifiers(horizontal,1)">HOR</button>
+					<button class="small-button" title="reverse modifier" data-func="toggleThemeModifier(reverse,1)" data-prop="getThemeModifiers(reverse,1)">REV</button>
+					<button class="small-button" title="spread modifier" data-func="toggleThemeModifier(spread,1)" data-prop="getThemeModifiers(spread,1)">SPR</button>
+				</div>
 			</label>
 
 			<label class="label">channelLayout
@@ -288,15 +294,6 @@
 					<button data-prop="showFPS">showFPS</button>
 					<button data-prop="showScaleX">showScaleX</button>
 					<button data-prop="showScaleY">showScaleY</button>
-				</div>
-			</fieldset>
-
-			<fieldset>
-				<legend>Theme / gradient modifiers</legend>
-				<div class="button-grid">
-					<button data-prop="flipColors">flipColors</button>
-					<button data-prop="horizontalGradient">horizontalGradient</button>
-					<button data-prop="splitGradient">splitGradient</button>
 				</div>
 			</fieldset>
 
