@@ -8,23 +8,31 @@ export type CanvasDrawInfo = {
   themes: ActiveTheme[]
 }
 
-export type ActiveTheme = {
-  name: string,
-  colorStops: GradientColorStop[],
-  gradient: CanvasGradient,
+export interface ThemeData {
+  colorStops: GradientColorStop[];
   muted: {
-    colorStops: GradientColorStop[],
-    gradient: CanvasGradient,
-  }
-  peakColor: string
+    colorStops: GradientColorStop[];
+  };
+  peakColor: string;
 }
 
-export type ThemeOptions = {
-  colorStops: GradientColorStop[],
-  muted: {
-    colorStops: GradientColorStop[],
-  }
-  peakColor: string
+export interface ActiveTheme extends ThemeData {
+  name: string;
+  gradient: CanvasGradient;
+  muted: ThemeData["muted"] & {
+    gradient: CanvasGradient;
+  };
+}
+
+export type ThemeModifiers = {
+  horizontal?: boolean,
+  reverse?: boolean,
+  spread?: boolean
+}
+
+export type ThemeNameAndModifiers = {
+  name: string,
+  modifiers: ThemeModifiers
 }
 
 export type OnCanvasResizeFunction = (
@@ -44,10 +52,8 @@ export interface Options {
   fadePeaks?: boolean;
   fftSize?: number;
   fillAlpha?: number;
-  flipColors?: boolean;
   frequencyScale?: FrequencyScale;
   height?: number;
-  horizontalGradient?: boolean;
   ledBars?: boolean;
   linearAmplitude?: boolean;
   linearBoost?: number;
@@ -83,10 +89,6 @@ export interface Options {
   showScaleY?: boolean;
   smoothing?: number;
   spinSpeed?: number;
-  splitGradient?: boolean;
-  theme?: string;
-  themeLeft?: string;
-  themeRight?: string;
   trueLeds?: boolean;
   useCanvas?: boolean;
   volume?: number;
@@ -193,9 +195,6 @@ declare class AudioMotionAnalyzer {
 
   public fillAlpha: number;
 
-  get flipColors(): boolean;
-  set flipColors(value: boolean);
-
   get fps(): number;
 
   get fsHeight(): number;
@@ -206,9 +205,6 @@ declare class AudioMotionAnalyzer {
 
   get height(): number;
   set height(h: number);
-
-  get horizontalGradient(): boolean;
-  set horizontalGradient(value: boolean);
 
   get isAlphaBars(): boolean;
   get isBandsMode(): boolean;
@@ -309,18 +305,6 @@ declare class AudioMotionAnalyzer {
   get spinSpeed(): number;
   set spinSpeed(value: number);
 
-  get splitGradient(): boolean;
-  set splitGradient(value: boolean);
-
-  get theme(): string;
-  set theme(value: string);
-
-  get themeLeft(): string;
-  set themeLeft(value: string);
-
-  get themeRight(): string;
-  set themeRight(value: string);
-
   get trueLeds(): boolean;
   set trueLeds(value: boolean);
 
@@ -356,7 +340,14 @@ declare class AudioMotionAnalyzer {
 
   public getOptions(ignore?: string | string[]): Options;
 
-  public getTheme(name: string): ThemeOptions | null;
+  public getTheme( channel?: number ): string;
+  public getTheme( channel?: number, includeModifiers: true ): ThemeNameAndModifiers;
+
+  public getThemeData( name: string ): ThemeData | null;
+
+  public getThemeModifiers( channel?: number ): ThemeModifiers;
+  public getThemeModifiers( modifier: string, channel?: number ): boolean;
+
   public getThemeList(): string[];
 
   public registerTheme(name: string, options: GradientOptions): boolean;
@@ -367,6 +358,12 @@ declare class AudioMotionAnalyzer {
   public setOptions(options?: Options): void;
   public setSensitivity(minDecibels: number, maxDecibels: number): void;
 
+  public setTheme( name?: string, modifiers?: ThemeModifiers, channel?: number ): void;
+  public setTheme( modifiers?: ThemeNameAndModifiers, channel?: number ): void;
+
+  public setThemeModifiers( modifier: ThemeModifiers, channel?: number ): void;
+  public setThemeModifiers( modifier: string, value: boolean, channel?: number ): void;
+
   public setXAxis(options?: XAxisOptions): void;
   public setYAxis(options?: YAxisOptions): void;
 
@@ -375,6 +372,7 @@ declare class AudioMotionAnalyzer {
 
   public toggleAnalyzer(force?: boolean): boolean;
   public toggleFullscreen(): void;
+  public toggleThemeModifier( modifier: string, channel?: number ): void;
 
   public unregisterTheme(name: string): boolean;
 }
