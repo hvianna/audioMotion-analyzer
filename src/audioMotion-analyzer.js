@@ -2766,13 +2766,11 @@ class AudioMotionAnalyzer {
 
 		const { canvas, _chLayout, _ctx, _horizGrad, _radial, _reflexRatio, _xAxis } = this,
 			  { analyzerWidth, centerX, centerY, channelHeight, initialX, innerRadius, outerRadius, xAxisHeight } = this._aux,
-			  { isLumi }       = this._flg,
-			  isDualVertical   = _chLayout == CHANNEL_VERTICAL,
-			  isDualHorizontal = _chLayout == CHANNEL_HORIZONTAL,
-			  showXAxis        = ! _radial && ! _xAxis.overlay && this._sxshow, // X-axis being displayed and not overlaid?
-  			  xAxisRatio       = showXAxis ? xAxisHeight / channelHeight : 0,   // ratio of the canvas taken by the X-axis bar
-			  // for lumi and dual-vertical we use the full canvas height and handle the exclusion areas (reflex & X-axis) while generating the color stops
-			  gradientHeight   = ( isLumi || isDualVertical ? canvas.height : canvas.height * ( 1 - _reflexRatio ) | 0 ) - ( showXAxis && ! isDualVertical ? xAxisHeight : 0 );
+			  { isLumi }        = this._flg,
+			  isDualVertical    = _chLayout == CHANNEL_VERTICAL,
+			  isDualHorizontal  = _chLayout == CHANNEL_HORIZONTAL,
+			  showXAxis         = this._sxshow && ! _xAxis.overlay, // X-axis being displayed and not overlaid?
+  			  xAxisRatio        = showXAxis ? xAxisHeight / channelHeight : 0; // ratio of the canvas taken by the X-axis bar
 
 		for ( const channel of [0,1] ) {
 			const { name, modifiers }   = this._activeThemes[ channel ],
@@ -2782,9 +2780,23 @@ class AudioMotionAnalyzer {
 				  mutedColorStops       = muted.colorStops,
 				  maxIndex              = colorStops.length - 1;
 
-			let [ startX, endX, startY, endY ] = [0,0,0,0];
+			// compute start and end coordinates for the gradient on each channel
 
-			if ( modifiers.spread && ( isDualHorizontal && modifiers.horizontal || isDualVertical && ! modifiers.horizontal ) ) {
+			let [ startX, endX, startY, endY, outer, inner ] = [ 0, 0, 0, 0, outerRadius, innerRadius ];
+
+			if ( _radial ) {
+				// handle radial
+				if ( isDualVertical ) {
+					// on dual-vertical radial, innerRadius is actually the center radius between both channels
+					// so we need to compute the actual innermost gradient radius
+					if ( modifiers.spread )
+						inner -= outer - inner;
+					else if ( channel == 1 )
+						outer = inner - ( outer - inner ); // top of channel 1 (outer < inner, so inverts gradient)
+				}
+			}
+			else if ( modifiers.spread && ( isDualHorizontal && modifiers.horizontal || isDualVertical && ! modifiers.horizontal ) ) {
+				// handle spread gradient (both horizontal and vertical)
 				if ( modifiers.horizontal ) {
 					// on dual-horizontal layout, both channels only use the *first half* of the gradient, due to flip and translation
 					// for spread on channel 1 we need to start of the gradient halfway off-screen, so as to use the second half of it
@@ -2805,8 +2817,6 @@ class AudioMotionAnalyzer {
 				}
 			}
 
-			console.log( { channel, startX, startY, endX, endY } );
-
 			// helper function
 			const createNewGradient = _ => _ctx.createLinearGradient( startX, startY, endX, endY );
 
@@ -2818,66 +2828,26 @@ class AudioMotionAnalyzer {
 				}
 			}
 
-			let gradient      = _radial	? _ctx.createRadialGradient( centerX, centerY, outerRadius, centerX, centerY, innerRadius - ( outerRadius - innerRadius ) * isDualVertical ) : createNewGradient(),
-				mutedGradient = _radial ? null : createNewGradient() // no LEDs in radial
+			let gradient      = _radial	? _ctx.createRadialGradient( centerX, centerY, outer, centerX, centerY, inner ) : createNewGradient(),
+				mutedGradient = _radial ? null : createNewGradient(); // no LEDs in radial
 
-			if ( colorStops ) {
-				const isSpread = modifiers.spread && ( isDualVertical || isDualHorizontal && ! _radial );
+			colorStops.forEach( ( colorStop, index ) => {
+				let offset = colorStop.pos;
 
-				const buildGradient = ( grad, cs, area ) => {
-					cs.forEach( ( colorStop, index ) => {
-						let offset = colorStop.pos;
+				// additional offset processing to account for spread gradient combined with reflex and/or X-axis display on dual-vertical layout
+				// TO-DO: add support for no scale overlay on radial too? Requires changes to outerRadius and innerRadius computation in calcBars()
+				if ( ! _radial && modifiers.spread && isDualVertical && ! modifiers.horizontal ) {
+					// skip top reflex + X-axis areas, on all offsets below it (>.5)
+					if ( offset > .5 )
+						offset += _reflexRatio / 2 + xAxisRatio / 2;
 
-						// additional offset processing for radial and spread gradient
-						if ( isSpread ) {
-							if ( _radial ) //??
-								offset /= 2; // to fit full gradient into channel when not spreading
+					// "shrink" each offset to fit into the usable analyzer area
+					offset *= analyzerRatio;
+				}
 
-							if ( ! _radial && ! modifiers.horizontal ) {
-								// dual vertical only: skip top reflex + X-axis areas, on all offsets below it (>.5)
-								if ( offset > .5 )
-									offset += _reflexRatio / 2 + xAxisRatio / 2;
-
-								// "shrink" each offset to fit into the usable analyzer area
-								offset *= analyzerRatio;
-							}
-
-							// replicates full gradient in the bottom area of the canvas (for non-split gradient)
-							if ( area == 1 ) {
-								// add colors in reverse order if radial or lumi
-								if ( _radial || isLumi ) {
-									colorStop = cs[ maxIndex - index ];
-									offset = 1 - ( colorStop.pos * analyzerRatio / 2 ) - xAxisRatio / 2; // exclude x-Axis height (lumi only)
-								}
-/*
-								else {
-									// if the first offset is not 0, create an additional color stop to prevent bleeding from top channel
-									if ( index == 0 && offset > 0 )
-										grad.addColorStop( .5, colorStop.color );
-									// bump the offset into the second half of the gradient
-									offset += .5;
-								}
-*/
-							}
-						}
-
-						// add computed color stop to the gradient
-						grad.addColorStop( offset, colorStop.color );
-
-						// create additional color stop at the end of top channel to prevent bleeding
-//						if ( isDualVertical && index == maxIndex && offset < .5 )
-//							grad.addColorStop( .5, colorStop.color );
-					});
-				} // buildGradient()
-
-				buildGradient( gradient, colorStops, 0 );
-
-//				for ( let channelArea = 0; channelArea < 1 + ! isSpread; channelArea++ ) {
-//					buildGradient( gradient, colorStops, channelArea );
-//					if ( mutedGradient )
-//						buildGradient( mutedGradient, mutedColorStops, channelArea );
-//				}
-			}
+				// add computed color stop to the gradient
+				gradient.addColorStop( offset, colorStop.color );
+			});
 
 			this._activeThemes[ channel ] = {
 				name,			// set by setTheme()
