@@ -216,9 +216,15 @@ const isNumeric = val => ! isArray( val ) && val == +val; // note: +[] == []
 // check if given value is an object (not null or array, which are also considered objects)
 const isObject = val => typeof val == 'object' && !! val && ! isArray( val );
 
+// check if given value is a valid channel number
+const isValidChannel = channel => [0,1].includes( +channel );
+
 // validate a given value with an array of strings (by default, all lowercase)
 // returns the validated value, or the first element of `list` if `value` is not found in the array
 const validateFromList = ( value, list, modifier = 'toLowerCase' ) => list[ Math.max( 0, list.indexOf( ( '' + value )[ modifier ]() ) ) ];
+
+// returns an array with the given channel number if valid, or [0,1] otherwise
+const validateChannelArray = channel => isValidChannel( channel ) ? [ +channel ] : [0,1];
 
 // output invalid value warning message on console
 const warnInvalid = ( name, value ) => console.warn( `${name}: ignoring invalid value (${value})` );
@@ -1087,12 +1093,12 @@ class AudioMotionAnalyzer {
 			channel = 0;
 			includeModifiers = true;
 		}
-		else if ( ! [0,1].includes( +channel ) )
+		else if ( ! isValidChannel( channel ) )
 			channel = 0;
 
 		const { name } = this._activeThemes[ channel ];
 
-		return includeModifiers ? { name, modifiers: this.getThemeModifier( channel ) } : name;
+		return includeModifiers ? { name, modifiers: this.getThemeModifiers( channel ) } : name;
 	}
 
 	/**
@@ -1121,13 +1127,13 @@ class AudioMotionAnalyzer {
 	 * @param [{number}] channel - if undefined or invalid, considers channel 0
 	 * @returns {boolean|object} value of requested modifier, or object with all modifiers
 	 */
-	getThemeModifier( modifier, channel ) {
+	getThemeModifiers( modifier, channel ) {
 		if ( isNumeric( modifier ) ) {
 			channel = modifier;
 			modifier = null;
 		}
 
-		if ( ! [0,1].includes( +channel ) )
+		if ( ! isValidChannel( channel ) )
 			channel = 0;
 
 		const { modifiers } = this._activeThemes[ channel ];
@@ -1270,15 +1276,15 @@ class AudioMotionAnalyzer {
 	 * Set color theme
 	 *
 	 * @param [{string}] theme name
-	 * @param [{object}] theme modifiers
+	 * @param [{object}] theme modifiers or { name, modifiers } (as returned by getTheme())
 	 * @param [{number}] desired channel (0 or 1) - if empty or invalid, sets both channels
 	 */
 	setTheme( name, modifiers, channel ) {
 		// check if first argument is an object, as `name` is optional
 		if ( isObject( name ) ) {
 			channel = modifiers;
-			modifiers = name;
-			name = modifiers.name; // `name` may be passed in the modifiers object instead
+			modifiers = name.modifiers || name;
+			name = name.name;
 		}
 
 		if ( isNumeric( modifiers ) ) {
@@ -1289,7 +1295,7 @@ class AudioMotionAnalyzer {
 		const themeNames  = this.getThemeList(),
 			  isNameValid = themeNames.includes( name );
 
-		for ( const ch of [0,1].includes( +channel ) ? [ channel ] : [0,1] ) {
+		for ( const ch of validateChannelArray( channel ) ) {
 			if ( ! this._activeThemes[ ch ] )
 				this._activeThemes[ ch ] = { modifiers: { ...DEFAULT_THEME_MODIFIERS } }; // creates new entry
 
@@ -1297,7 +1303,7 @@ class AudioMotionAnalyzer {
 		}
 
 		if ( modifiers )
-			setThemeModifier( modifiers, channel );
+			this.setThemeModifiers( modifiers, channel );
 		else
 			this._makeGrad();
 	}
@@ -1309,7 +1315,7 @@ class AudioMotionAnalyzer {
 	 * @param [{boolean}] desired value when setting a single modifier
 	 * @param [{number}] channel (0 or 1) - if empty or invalid, sets modifiers on both channels
 	 */
-	setThemeModifier( modifier, value, channel ) {
+	setThemeModifiers( modifier, value, channel ) {
 		const validKeys = Object.keys( DEFAULT_THEME_MODIFIERS );
 
 		if ( isObject( modifier ) ) {
@@ -1327,11 +1333,12 @@ class AudioMotionAnalyzer {
 		else if ( ! validKeys.includes( modifier ) ) // validates single modifier
 			return;
 
-		for ( const ch of [0,1].includes( +channel ) ? [ channel ] : [0,1] ) {
+		for ( const ch of validateChannelArray( channel ) ) {
+			const activeThemeData = this._activeThemes[ ch ];
 			if ( isObject( modifier ) )
-				this._activeThemes[ ch ].modifiers = modifier;
+				activeThemeData.modifiers = { ...activeThemeData.modifiers, ...modifier }; // keep any modifiers not present in the passed object
 			else
-				this._activeThemes[ ch ].modifiers[ modifier ] = !! value;
+				activeThemeData.modifiers[ modifier ] = !! value;
 		}
 
 		this._makeGrad();
@@ -1459,8 +1466,8 @@ class AudioMotionAnalyzer {
 	 * @param [{number}] channel (0 or 1) - if empty or invalid, toggles modifier on both channels
 	 */
 	toggleThemeModifier( modifier, channel ) {
-		for ( const ch of [0,1].includes( +channel ) ? [ channel ] : [0,1] )
-			this.setThemeModifier( modifier, ! this.getThemeModifier( modifier, channel ), channel );
+		for ( const ch of validateChannelArray( channel ) )
+			this.setThemeModifiers( modifier, ! this.getThemeModifiers( modifier, channel ), channel );
 	}
 
 	/**
