@@ -1308,18 +1308,26 @@ class AudioMotionAnalyzer {
 	/**
 	 * Set theme modifiers
 	 *
-	 * @param {string|object} modifier name or modifiers object
+	 * @param [{string|object}] modifier name or modifiers object; if null or undefined resets to defaults
 	 * @param [{boolean}] desired value when setting a single modifier
 	 * @param [{number}] channel (0 or 1) - if empty or invalid, sets modifiers on both channels
 	 */
 	setThemeModifiers( modifier, value, channel ) {
 		const validKeys = Object.keys( DEFAULT_THEME_MODIFIERS );
 
-		if ( isObject( modifier ) ) {
+		if ( modifier === null || modifier === undefined ) {
+			modifier = {};   // will reset to defaults
+			channel = value; // optional
+		}
+		else if ( isNumeric( modifier ) ) {
+			channel = modifier; // only channel passed
+			modifier = {};      // will reset to defaults
+		}
+		else if ( isObject( modifier ) ) {
 			channel = value;
 			modifier = deepCloneObject( modifier ); // make a copy, so we don't change user's original object
 
-			// remove invalid modifiers (including `name`) and ensure all values are boolean
+			// remove invalid modifiers and ensure all values are boolean
 			for ( const key of Object.keys( modifier ) ) {
 				if ( validKeys.includes( key ) )
 					modifier[ key ] = !! modifier[ key ];
@@ -1332,8 +1340,10 @@ class AudioMotionAnalyzer {
 
 		for ( const ch of validateChannelArray( channel ) ) {
 			const activeThemeData = this._activeThemes[ ch ];
-			if ( isObject( modifier ) )
-				activeThemeData.modifiers = { ...activeThemeData.modifiers, ...modifier }; // keep any modifiers not present in the passed object
+			if ( isObject( modifier ) ) {
+				// when passed an object, any modifier not present will be reset to its default value!
+				activeThemeData.modifiers = { ...DEFAULT_THEME_MODIFIERS, ...modifier };
+			}
 			else
 				activeThemeData.modifiers[ modifier ] = !! value;
 		}

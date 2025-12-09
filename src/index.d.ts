@@ -362,8 +362,9 @@ declare class AudioMotionAnalyzer {
   public setTheme( options: ThemeNameAndModifiers, channel?: number ): void;
   public setTheme( options: string[] | ThemeNameAndModifiers[] ): void;
 
-  public setThemeModifiers( modifier: ThemeModifiers, channel?: number ): void;
   public setThemeModifiers( modifier: string, value: boolean, channel?: number ): void;
+  public setThemeModifiers( modifier: ThemeModifiers | null, channel?: number ): void;
+  public setThemeModifiers( channel?: number ): void;
 
   public setXAxis(options?: XAxisOptions): void;
   public setYAxis(options?: YAxisOptions): void;
