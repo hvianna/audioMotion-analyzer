@@ -358,8 +358,9 @@ declare class AudioMotionAnalyzer {
   public setOptions(options?: Options): void;
   public setSensitivity(minDecibels: number, maxDecibels: number): void;
 
-  public setTheme( name?: string, modifiers?: ThemeModifiers, channel?: number ): void;
-  public setTheme( modifiers?: ThemeNameAndModifiers, channel?: number ): void;
+  public setTheme( name: string, modifiers?: ThemeModifiers, channel?: number ): void;
+  public setTheme( options: ThemeNameAndModifiers, channel?: number ): void;
+  public setTheme( options: string[] | ThemeNameAndModifiers[] ): void;
 
   public setThemeModifiers( modifier: ThemeModifiers, channel?: number ): void;
   public setThemeModifiers( modifier: string, value: boolean, channel?: number ): void;

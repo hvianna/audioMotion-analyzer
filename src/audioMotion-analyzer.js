@@ -1275,29 +1275,26 @@ class AudioMotionAnalyzer {
 	/**
 	 * Set color theme
 	 *
-	 * @param [{string}] theme name
-	 * @param [{object}] theme modifiers or { name, modifiers } (as returned by getTheme())
-	 * @param [{number}] desired channel (0 or 1) - if empty or invalid, sets both channels
+	 * @param {string|object|array} theme name, theme object as returned by getTheme(), or array of such types
+	 * @param [{object}] theme modifiers, as returned by getThemeModifiers() (only when first argument is a string)
+	 * @param [{number}] desired channel (0 or 1) - if empty or invalid, sets both channels (ignored when first argument is an array)
 	 */
-	setTheme( name, modifiers, channel ) {
-		// check if first argument is an object, as `name` is optional
-		if ( isObject( name ) ) {
-			channel = modifiers;
-			modifiers = name.modifiers || name;
-			name = name.name;
+	setTheme( ...args ) {
+		// if first argument is an array, make recursive calls for each channel
+		if ( isArray( args[0] ) ) {
+			for ( let ch = 0; ch < Math.max( 2, args[0].length ); ch++ )
+				this.setTheme( args[0][ ch ], ch );
+			return;
 		}
 
-		if ( isNumeric( modifiers ) ) {
-			channel = modifiers;
-			modifiers = null;
-		}
-
-		const themeNames  = this.getThemeList(),
-			  isNameValid = themeNames.includes( name );
+		const { name, modifiers } = isObject( args[0] ) ? args[0] : { name: args[0], modifiers: isObject( args[1] ) ? args[1] : null },
+			  channel             = args[2] ?? args[1],
+			  themeNames          = this.getThemeList(),
+			  isNameValid         = themeNames.includes( name );
 
 		for ( const ch of validateChannelArray( channel ) ) {
 			if ( ! this._activeThemes[ ch ] )
-				this._activeThemes[ ch ] = { modifiers: { ...DEFAULT_THEME_MODIFIERS } }; // creates new entry
+				this._activeThemes[ ch ] = { modifiers: { ...DEFAULT_THEME_MODIFIERS } }; // creates new entry (during constructor initialization)
 
 			this._activeThemes[ ch ].name = isNameValid ? name : this._activeThemes[ ch ].name || themeNames[0];
 		}
