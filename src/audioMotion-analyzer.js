@@ -2778,7 +2778,7 @@ class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const { canvas, _chLayout, _ctx, _horizGrad, _radial, _reflexRatio, _xAxis } = this,
+		const { canvas, _chLayout, _ctx, _horizGrad, _mirror, _radial, _reflexRatio, _xAxis } = this,
 			  { analyzerWidth, centerX, centerY, channelHeight, initialX, innerRadius, outerRadius, xAxisHeight } = this._aux,
 			  { isLumi }        = this._flg,
 			  isDualVertical    = _chLayout == CHANNEL_VERTICAL,
@@ -2822,7 +2822,7 @@ class AudioMotionAnalyzer {
 			}
 			else {
 				if ( modifiers.horizontal ) {
-					startX = isDualHorizontal && channel == 1 ? initialX : 0;
+					startX = ( isDualHorizontal && channel == 1 ) || _mirror == -1 ? initialX : 0;
 					endX   = startX + analyzerWidth;
 				}
 				else {
