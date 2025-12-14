@@ -23,7 +23,8 @@ const bgOptions = [
 const presets = [
 	{
 		name: 'Reset to defaults',
-		options: undefined
+		options: undefined,
+		theme: { name: 'classic', modifiers: {} } // clear modifiers
 	},
 	{
 		name: 'Classic LED bars',
@@ -45,9 +46,9 @@ const presets = [
 			reflexRatio: 0,
 			showLedMask: true,
 			showPeaks: true,
-			theme: 'classic',
 			trueLeds: true
-		}
+		},
+		theme: { name: 'classic', modifiers: {} }
 	},
 	{
 		name: 'Mirror wave',
@@ -65,9 +66,9 @@ const presets = [
 			reflexBright: 1,
 			reflexRatio: .5,
 			showPeaks: false,
-			showScaleX: false,
-			theme: 'rainbow'
-		}
+			showScaleX: false
+		},
+		theme: 'rainbow'
 	},
 	{
 		name: 'Radial spectrum',
@@ -82,9 +83,9 @@ const presets = [
 			mirror: 0,
 			radial: true,
 			showPeaks: true,
-			spinSpeed: 1,
-			theme: 'prism',
-		}
+			spinSpeed: 1
+		},
+		theme: 'rainbow'
 	},
 	{
 		name: 'Bark scale + Linear level',
@@ -105,9 +106,9 @@ const presets = [
 			reflexRatio: .25,
 			showPeaks: true,
 			showScaleX: true,
-			theme: 'rainbow',
 			weightingFilter: 'D'
-		}
+		},
+		theme: { name: 'rainbow', modifiers: { horizontal: true } }
 	},
 	{
 		name: 'Dual channel combined',
@@ -126,10 +127,9 @@ const presets = [
 			radial: false,
 			reflexRatio: 0,
 			showPeaks: false,
-			themeLeft: 'steelblue',
-			themeRight: 'orangered',
 			weightingFilter: 'D'
-		}
+		},
+		theme: [ 'steelblue', 'orangered' ]
 	},
 	{
 		name: 'roundBars + bar-level',
@@ -156,9 +156,9 @@ const presets = [
 			showPeaks: false,
 			showScaleX: false,
 			smoothing: .7,
-			theme: 'prism',
 			weightingFilter: 'D'
-		}
+		},
+		theme: 'rainbow'
 	},
 	{
 		name: 'Testing config 1',
@@ -174,9 +174,9 @@ const presets = [
 			maxFreq: 8000,
 			minFreq: 20,
 			lineWidth: 2,
-			fillAlpha: .2,
-			theme: 'rainbow',
-		}
+			fillAlpha: .2
+		},
+		theme: { name: 'rainbow', modifiers: {} }
 	},
 	{
 		name: 'Testing config 2',
@@ -195,10 +195,9 @@ const presets = [
 			showScaleX: false,
 			mirror: 0,
 			maxFreq: 16000,
-			minFreq: 20,
-			themeLeft: 'steelblue',
-			themeRight: 'orangered'
-		}
+			minFreq: 20
+		},
+		theme: [ { name: 'steelblue', modifiers: {} }, { name: 'orangered', modifiers: {} } ]
 	},
 	{
 		// gradient sample images for docs are created with a 27.5 Hz square wave (volume: 1) in the oscillator
@@ -443,8 +442,8 @@ audioMotion.setYAxis({
 });
 
 
-audioMotion.setTheme('rainbow', { spread: true } );    // sets theme and modifiers for both channels
-audioMotion.setThemeModifiers( { reverse: true }, 1 ); // update only the `reverse` modifier on channel 1
+audioMotion.setTheme('rainbow', { spread: true } ); // sets theme and modifiers for both channels
+audioMotion.setThemeModifiers('reverse', true, 1 ); // update only the `reverse` modifier on channel 1
 
 console.log( 'tema bluey-A', audioMotion.getTheme('bluey-A') );
 console.log( 'tema mono', audioMotion.getTheme('mono') );
@@ -459,7 +458,10 @@ presets.forEach( ( preset, index ) => {
 });
 
 presetSelection.addEventListener( 'change', () => {
-	audioMotion.setOptions( presets[ presetSelection.value ].options );
+	const { options, theme } = presets[ presetSelection.value ];
+	audioMotion.setOptions( options );
+	if ( theme )
+		audioMotion.setTheme( theme );
 	updateUI();
 });
 
@@ -786,7 +788,7 @@ function drawCallback( instance, { timestamp, themes } ) {
 	for ( const ch of [0,1] ) {
 		let x, y, w, h;
 
-		if ( audioMotion.getThemeModifier( 'horizontal', ch ) ) {
+		if ( audioMotion.getThemeModifiers( 'horizontal', ch ) ) {
 			x = 0;
 			y = 50 * ch + 25;
 			w = canvas.width;

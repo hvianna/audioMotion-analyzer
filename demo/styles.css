@@ -323,6 +323,9 @@ input.wide-range {
 .grid {
 	display: grid;
 }
+.grid-2-cols {
+	grid-template-columns: 1fr 1fr;
+}
 .grid-3-cols {
 	grid-template-columns: repeat(3, 1fr);
 }

@@ -14,7 +14,8 @@ const videoEl = document.getElementById('video'),
 const presets = [
 	{
 		name: 'Defaults',
-		options: undefined
+		options: undefined,
+		theme: { name: 'classic', modifiers: {} } // clear modifiers
 	},
 	{
 		name: 'Classic LEDs',
@@ -31,7 +32,7 @@ const presets = [
 			showLedMask: true,
 			showPeaks: true
 		},
-		theme: 'classic'
+		theme: { name: 'classic', modifiers: {} }
 	},
 	{
 		name: 'Mirror wave',
@@ -137,7 +138,8 @@ document.querySelectorAll('[data-setting]').forEach( el => {
 presetSelection.addEventListener( 'change', () => {
 	const { options, theme } = presets[ presetSelection.value ];
 	audioMotion.setOptions( options );
-	audioMotion.setTheme( theme );
+	if ( theme )
+		audioMotion.setTheme( theme );
 	updateUI();
 });
 
