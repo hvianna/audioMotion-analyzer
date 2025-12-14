@@ -2860,7 +2860,7 @@ class AudioMotionAnalyzer {
 				}
 
 				// add computed color stop to the gradient
-				gradient.addColorStop( offset, colorStop.color );
+				gradient.addColorStop( clamp( offset, 0, 1 ), colorStop.color );
 			});
 
 			this._activeThemes[ channel ] = {
