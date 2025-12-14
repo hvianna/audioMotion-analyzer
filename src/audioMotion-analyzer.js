@@ -126,6 +126,7 @@ const DEFAULT_SETTINGS = {
 	showScaleY     : false,
 	smoothing      : 0.5,
 	spinSpeed      : 0,
+	spreadGradient : false,
 	trueLeds       : false,
 	useCanvas      : true,
 	volume         : 1,
@@ -135,8 +136,7 @@ const DEFAULT_SETTINGS = {
 
 const DEFAULT_THEME_MODIFIERS = {
 	horizontal: false,
-	reverse: false,
-	spread: false
+	reverse: false
 };
 
 // custom error messages
@@ -780,6 +780,14 @@ class AudioMotionAnalyzer {
 		if ( this._spinSpeed === undefined || value == 0 )
 			this._spinAngle = -HALF_PI; // initialize or reset the rotation angle
 		this._spinSpeed = value;
+	}
+
+	get spreadGradient() {
+		return this._spread;
+	}
+	set spreadGradient( value ) {
+		this._spread = !! value;
+		this._makeGrad();
 	}
 
 	get trueLeds() {
@@ -2756,8 +2764,7 @@ class AudioMotionAnalyzer {
 	 *			name: <string>,
 	 * 			modifiers: {
 	 *	 			horizontal: <boolean>,
-	 * 				reverse: <boolean>,
-	 * 				spread: <boolean>
+	 * 				reverse: <boolean>
 	 *			},
 	 *
 	 * 			// colorStops and peakColor come from the theme registration
@@ -2778,7 +2785,7 @@ class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const { canvas, _chLayout, _ctx, _horizGrad, _mirror, _radial, _reflexRatio, _xAxis } = this,
+		const { canvas, _chLayout, _ctx, _horizGrad, _mirror, _radial, _reflexRatio, _spread, _xAxis } = this,
 			  { analyzerWidth, centerX, centerY, channelHeight, initialX, innerRadius, outerRadius, xAxisHeight } = this._aux,
 			  { isLumi }        = this._flg,
 			  isDualVertical    = _chLayout == CHANNEL_VERTICAL,
@@ -2803,13 +2810,13 @@ class AudioMotionAnalyzer {
 				if ( isDualVertical ) {
 					// on dual-vertical radial, innerRadius is actually the center radius between both channels
 					// so we need to compute the actual innermost gradient radius
-					if ( modifiers.spread )
+					if ( _spread )
 						inner -= outer - inner;
 					else if ( channel == 1 )
 						outer = inner - ( outer - inner ); // top of channel 1 (outer < inner, so inverts gradient)
 				}
 			}
-			else if ( modifiers.spread && ( isDualHorizontal && modifiers.horizontal || isDualVertical && ! modifiers.horizontal ) ) {
+			else if ( _spread && ( isDualHorizontal && modifiers.horizontal || isDualVertical && ! modifiers.horizontal ) ) {
 				// handle spread gradient (both horizontal and vertical)
 				if ( modifiers.horizontal ) {
 					// on dual-horizontal layout, both channels only use the *first half* of the gradient, due to flip and translation
@@ -2850,7 +2857,7 @@ class AudioMotionAnalyzer {
 
 				// additional offset processing to account for spread gradient combined with reflex and/or X-axis display on dual-vertical layout
 				// TO-DO: add support for no scale overlay on radial too? Requires changes to outerRadius and innerRadius computation in calcBars()
-				if ( ! _radial && modifiers.spread && isDualVertical && ! modifiers.horizontal ) {
+				if ( ! _radial && _spread && isDualVertical && ! modifiers.horizontal ) {
 					// "shrink" each offset to fit into the usable analyzer area
 					offset *= analyzerRatio;
 

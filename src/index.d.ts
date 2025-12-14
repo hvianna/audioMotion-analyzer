@@ -26,8 +26,7 @@ export interface ActiveTheme extends ThemeData {
 
 export type ThemeModifiers = {
   horizontal?: boolean,
-  reverse?: boolean,
-  spread?: boolean
+  reverse?: boolean
 }
 
 export type ThemeNameAndModifiers = {
@@ -89,6 +88,7 @@ export interface Options {
   showScaleY?: boolean;
   smoothing?: number;
   spinSpeed?: number;
+  spreadGradient?: boolean;
   trueLeds?: boolean;
   useCanvas?: boolean;
   volume?: number;
@@ -304,6 +304,9 @@ declare class AudioMotionAnalyzer {
 
   get spinSpeed(): number;
   set spinSpeed(value: number);
+
+  get spreadGradient(): boolean;
+  set spreadGradient(value: boolean);
 
   get trueLeds(): boolean;
   set trueLeds(value: boolean);
