@@ -91,10 +91,8 @@ const DEFAULT_SETTINGS = {
 	fadePeaks      : false,
 	fftSize        : 8192,
 	fillAlpha      : 1,
-	flipColors     : false,
 	frequencyScale : SCALE_LOG,
 	height         : undefined,
-	horizontalGradient: false,
 	ledBars        : false,
 	linearAmplitude: false,
 	linearBoost    : 1,
@@ -128,13 +126,17 @@ const DEFAULT_SETTINGS = {
 	showScaleY     : false,
 	smoothing      : 0.5,
 	spinSpeed      : 0,
-	splitGradient  : false,
-	theme          : THEMES[0][0],
+	spreadGradient : false,
 	trueLeds       : false,
 	useCanvas      : true,
 	volume         : 1,
 	weightingFilter: FILTER_NONE,
 	width          : undefined
+};
+
+const DEFAULT_THEME_MODIFIERS = {
+	horizontal: false,
+	reverse: false
 };
 
 // custom error messages
@@ -208,12 +210,21 @@ const isEmpty = obj => {
 	return true;
 }
 
+// check if given value is numeric
+const isNumeric = val => ! isArray( val ) && val == +val; // note: +[] == []
+
 // check if given value is an object (not null or array, which are also considered objects)
 const isObject = val => typeof val == 'object' && !! val && ! isArray( val );
+
+// check if given value is a valid channel number
+const isValidChannel = channel => [0,1].includes( +channel );
 
 // validate a given value with an array of strings (by default, all lowercase)
 // returns the validated value, or the first element of `list` if `value` is not found in the array
 const validateFromList = ( value, list, modifier = 'toLowerCase' ) => list[ Math.max( 0, list.indexOf( ( '' + value )[ modifier ]() ) ) ];
+
+// returns an array with the given channel number if valid, or [0,1] otherwise
+const validateChannelArray = channel => isValidChannel( channel ) ? [ +channel ] : [0,1];
 
 // output invalid value warning message on console
 const warnInvalid = ( name, value ) => console.warn( `${name}: ignoring invalid value (${value})` );
@@ -431,6 +442,7 @@ class AudioMotionAnalyzer {
 
 		// Set configuration options and use defaults for any missing properties
 		this._setProps( options, true );
+		this.setTheme();
 
 		// Start the analyzer, unless `start` is explicitly set to false in the options
 		this.toggleAnalyzer( options.start !== false );
@@ -526,14 +538,6 @@ class AudioMotionAnalyzer {
 		this._calcBars();
 	}
 
-	get flipColors() {
-		return this._flipColors;
-	}
-	set flipColors( value ) {
-		this._flipColors = !! value;
-		this._makeGrad();
-	}
-
 	get frequencyScale() {
 		return this._frequencyScale;
 	}
@@ -548,14 +552,6 @@ class AudioMotionAnalyzer {
 	set height( h ) {
 		this._height = h;
 		this._setCanvas( REASON_USER );
-	}
-
-	get horizontalGradient() {
-		return this._horizGrad;
-	}
-	set horizontalGradient( value ) {
-		this._horizGrad = !! value;
-		this._makeGrad();
 	}
 
 	get ledBars() {
@@ -786,33 +782,12 @@ class AudioMotionAnalyzer {
 		this._spinSpeed = value;
 	}
 
-	get splitGradient() {
-		return this._splitGradient;
+	get spreadGradient() {
+		return this._spread;
 	}
-	set splitGradient( value ) {
-		this._splitGradient = !! value;
+	set spreadGradient( value ) {
+		this._spread = !! value;
 		this._makeGrad();
-	}
-
-	get theme() {
-		return this.themeLeft;
-	}
-	set theme( value ) {
-		this._setTheme( value );
-	}
-
-	get themeLeft() {
-		return this._activeThemes[0].name;
-	}
-	set themeLeft( value ) {
-		this._setTheme( value, 0 );
-	}
-
-	get themeRight() {
-		return this._activeThemes[1].name;
-	}
-	set themeRight( value ) {
-		this._setTheme( value, 1 );
 	}
 
 	get trueLeds() {
@@ -1108,24 +1083,39 @@ class AudioMotionAnalyzer {
 			ignore = [ ignore ];
 		let options = {};
 		for ( const prop of Object.keys( DEFAULT_SETTINGS ) ) {
-			if ( ! ignore.includes( prop ) ) {
-				if ( prop == 'theme' && this.themeLeft != this.themeRight ) {
-					options.themeLeft = this.themeLeft;
-					options.themeRight = this.themeRight;
-				}
-				else if ( prop != 'start' )
-					options[ prop ] = this[ prop ];
-			}
+			if ( ! ignore.includes( prop ) )
+				options[ prop ] = this[ prop ];
 		}
 		return options;
 	}
 
 	/**
-	 * Returns the theme registered with the give name
+	 * Returns the selected theme for the given channel
 	 *
+	 * @param [{number}] channel - if undefined or invalid, considers channel 0
+	 * @param [{boolean}] `true` to include modifiers
+	 * @returns {string|object} theme name, or object with `name` and `modifiers`
+	 */
+	getTheme( channel, includeModifiers ) {
+		if ( channel === true ) {
+			channel = 0;
+			includeModifiers = true;
+		}
+		else if ( ! isValidChannel( channel ) )
+			channel = 0;
+
+		const { name } = this._activeThemes[ channel ];
+
+		return includeModifiers ? { name, modifiers: this.getThemeModifiers( channel ) } : name;
+	}
+
+	/**
+	 * Returns data for the theme with the given name
+	 *
+	 * @param {string} theme name
 	 * @returns {object|null} theme object or null if name is invalid
 	 */
-	getTheme( name ) {
+	getThemeData( name ) {
 		return this.getThemeList().includes( name ) ? deepCloneObject( this._themes[ name ] ) : null;
 	}
 
@@ -1135,7 +1125,27 @@ class AudioMotionAnalyzer {
 	 * @returns {array}
 	 */
 	getThemeList() {
-		return Object.keys( this._themes ).sort();
+		return Object.keys( this._themes );
+	}
+
+	/**
+	 * Returns the current state of theme modifiers for the given channel
+	 *
+	 * @param [{string}] desired modifier - if undefined, returns all modifiers
+	 * @param [{number}] channel - if undefined or invalid, considers channel 0
+	 * @returns {boolean|object} value of requested modifier, or object with all modifiers
+	 */
+	getThemeModifiers( modifier, channel ) {
+		if ( isNumeric( modifier ) ) {
+			channel = modifier;
+			modifier = null;
+		}
+
+		if ( ! isValidChannel( channel ) )
+			channel = 0;
+
+		const { modifiers } = this._activeThemes[ channel ];
+		return modifier ? modifiers[ modifier ] : { ...modifiers };
 	}
 
 	/**
@@ -1271,6 +1281,85 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Set color theme
+	 *
+	 * @param {string|object|array} theme name, theme object as returned by getTheme(), or array of such types
+	 * @param [{object}] theme modifiers, as returned by getThemeModifiers() (only when first argument is a string)
+	 * @param [{number}] desired channel (0 or 1) - if empty or invalid, sets both channels (ignored when first argument is an array)
+	 */
+	setTheme( ...args ) {
+		// if first argument is an array, make recursive calls for each channel
+		if ( isArray( args[0] ) ) {
+			for ( let ch = 0; ch < Math.max( 2, args[0].length ); ch++ )
+				this.setTheme( args[0][ ch ], ch );
+			return;
+		}
+
+		const { name, modifiers } = isObject( args[0] ) ? args[0] : { name: args[0], modifiers: isObject( args[1] ) ? args[1] : null },
+			  channel             = args[2] ?? args[1],
+			  themeNames          = this.getThemeList(),
+			  isNameValid         = themeNames.includes( name );
+
+		for ( const ch of validateChannelArray( channel ) ) {
+			if ( ! this._activeThemes[ ch ] )
+				this._activeThemes[ ch ] = { modifiers: { ...DEFAULT_THEME_MODIFIERS } }; // creates new entry (during constructor initialization)
+
+			this._activeThemes[ ch ].name = isNameValid ? name : this._activeThemes[ ch ].name || themeNames[0];
+		}
+
+		if ( modifiers )
+			this.setThemeModifiers( modifiers, channel );
+		else
+			this._makeGrad();
+	}
+
+	/**
+	 * Set theme modifiers
+	 *
+	 * @param [{string|object}] modifier name or modifiers object; if null or undefined resets to defaults
+	 * @param [{boolean}] desired value when setting a single modifier
+	 * @param [{number}] channel (0 or 1) - if empty or invalid, sets modifiers on both channels
+	 */
+	setThemeModifiers( modifier, value, channel ) {
+		const validKeys = Object.keys( DEFAULT_THEME_MODIFIERS );
+
+		if ( modifier === null || modifier === undefined ) {
+			modifier = {};   // will reset to defaults
+			channel = value; // optional
+		}
+		else if ( isNumeric( modifier ) ) {
+			channel = modifier; // only channel passed
+			modifier = {};      // will reset to defaults
+		}
+		else if ( isObject( modifier ) ) {
+			channel = value;
+			modifier = deepCloneObject( modifier ); // make a copy, so we don't change user's original object
+
+			// remove invalid modifiers and ensure all values are boolean
+			for ( const key of Object.keys( modifier ) ) {
+				if ( validKeys.includes( key ) )
+					modifier[ key ] = !! modifier[ key ];
+				else
+					delete modifier[ key ];
+			}
+		}
+		else if ( ! validKeys.includes( modifier ) ) // validates single modifier
+			return;
+
+		for ( const ch of validateChannelArray( channel ) ) {
+			const activeThemeData = this._activeThemes[ ch ];
+			if ( isObject( modifier ) ) {
+				// when passed an object, any modifier not present will be reset to its default value!
+				activeThemeData.modifiers = { ...DEFAULT_THEME_MODIFIERS, ...modifier };
+			}
+			else
+				activeThemeData.modifiers[ modifier ] = !! value;
+		}
+
+		this._makeGrad();
+	}
+
+	/**
 	 * Customize X-Axis display
 	 *
 	 * @param {object} options
@@ -1383,6 +1472,17 @@ class AudioMotionAnalyzer {
 			else if ( fsEl.webkitRequestFullscreen )
 				fsEl.webkitRequestFullscreen();
 		}
+	}
+
+	/**
+	 * Toggle a theme modifier
+	 *
+	 * @param {string} modifier name
+	 * @param [{number}] channel (0 or 1) - if empty or invalid, toggles modifier on both channels
+	 */
+	toggleThemeModifier( modifier, channel ) {
+		for ( const ch of validateChannelArray( channel ) )
+			this.setThemeModifiers( modifier, ! this.getThemeModifiers( modifier, channel ), channel );
 	}
 
 	/**
@@ -2658,15 +2758,25 @@ class AudioMotionAnalyzer {
 	 * Generates canvas gradients and updates _activeThemes properties
 	 *
 	 * 	_activeThemes = [
-	 *		{ // per channel
-	 *			name: <string> // theme name - set by _setTheme()
-	 *			colorStops: <array>
-	 *			gradient: <CanvasGradient>
-	 *			muted: { // alternate colors and gradient used for the led mask
-	 *				colorStops: <array>
+	 *		// one object per channel:
+	 *		{
+	 *			// theme name and modifiers are set by setTheme()
+	 *			name: <string>,
+	 * 			modifiers: {
+	 *	 			horizontal: <boolean>,
+	 * 				reverse: <boolean>
+	 *			},
+	 *
+	 * 			// colorStops and peakColor come from the theme registration
+	 *			colorStops: <array>,
+	 *			peakColor: <string>,
+	 *
+	 *			// gradient and muted.gradient are generated here
+	 *			gradient: <CanvasGradient>,
+	 *			muted: {
+	 *				colorStops: <array>,
 	 *				gradient: <CanvasGradient>
 	 *			}
-	 *			peakColor: <string>
 	 *		}
 	 *	]
 	 *
@@ -2675,27 +2785,63 @@ class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const { canvas, _ctx, _flipColors, _horizGrad, _radial, _reflexRatio, _xAxis } = this,
+		const { canvas, _chLayout, _ctx, _horizGrad, _mirror, _radial, _reflexRatio, _spread, _xAxis } = this,
 			  { analyzerWidth, centerX, centerY, channelHeight, initialX, innerRadius, outerRadius, xAxisHeight } = this._aux,
-			  { isLumi }     = this._flg,
-			  isDualVertical = this._chLayout == CHANNEL_VERTICAL,
-			  showXAxis      = ! _radial && ! _xAxis.overlay && this._sxshow, // X-axis being displayed and not overlaid?
-  			  xAxisRatio     = showXAxis ? xAxisHeight / channelHeight : 0,   // ratio of the canvas taken by the X-axis bar
-			  // for lumi and dual-vertical we use the full canvas height and handle the exclusion areas (reflex & X-axis) while generating the color stops
-			  gradientHeight = ( isLumi || isDualVertical ? canvas.height : canvas.height * ( 1 - _reflexRatio ) | 0 ) - ( showXAxis && ! isDualVertical ? xAxisHeight : 0 ),
-			  analyzerRatio  = _radial || _horizGrad ? 1 : 1 - ( isLumi ? 0 : _reflexRatio ) - xAxisRatio;
-
-		// helper function
-		const createNewGradient = () => _ctx.createLinearGradient( ...( _horizGrad ? [ initialX, 0, initialX + analyzerWidth, 0 ] : [ 0, 0, 0, gradientHeight ] ) );
+			  { isLumi }        = this._flg,
+			  isDualVertical    = _chLayout == CHANNEL_VERTICAL,
+			  isDualHorizontal  = _chLayout == CHANNEL_HORIZONTAL,
+			  showXAxis         = this._sxshow && ! _xAxis.overlay, // X-axis being displayed and not overlaid?
+  			  xAxisRatio        = showXAxis ? xAxisHeight / channelHeight : 0; // ratio of the canvas taken by the X-axis bar
 
 		for ( const channel of [0,1] ) {
-			const { name }        = this._activeThemes[ channel ],
-				  sourceTheme     = deepCloneObject( this._themes[ name ] ),
+			const { name, modifiers }   = this._activeThemes[ channel ],
+				  analyzerRatio         = _radial || modifiers.horizontal ? 1 : 1 - ( isLumi ? 0 : _reflexRatio ) - xAxisRatio,
+				  sourceTheme           = deepCloneObject( this._themes[ name ] ),
 				  { colorStops, muted } = sourceTheme,
-				  mutedColorStops = muted.colorStops,
-				  maxIndex        = colorStops.length - 1;
+				  mutedColorStops       = muted.colorStops,
+				  maxIndex              = colorStops.length - 1;
 
-			if ( _flipColors ) {
+			// compute start and end coordinates for the gradient on each channel
+
+			let [ startX, endX, startY, endY, outer, inner ] = [ 0, 0, 0, 0, outerRadius, innerRadius ];
+
+			if ( _radial ) {
+				// handle radial
+				if ( isDualVertical ) {
+					// on dual-vertical radial, innerRadius is actually the center radius between both channels
+					// so we need to compute the actual innermost gradient radius
+					if ( _spread )
+						inner -= outer - inner;
+					else if ( channel == 1 )
+						outer = inner - ( outer - inner ); // top of channel 1 (outer < inner, so inverts gradient)
+				}
+			}
+			else if ( _spread && ( isDualHorizontal && modifiers.horizontal || isDualVertical && ! modifiers.horizontal ) ) {
+				// handle spread gradient (both horizontal and vertical)
+				if ( modifiers.horizontal ) {
+					// on dual-horizontal layout, both channels only use the *first half* of the gradient, due to flip and translation
+					// for spread on channel 1 we need to start of the gradient halfway off-screen, so as to use the second half of it
+					startX = channel == 1 ? -analyzerWidth : 0;
+					endX = startX + analyzerWidth * 2;
+				}
+				else
+					endY = canvas.height;
+			}
+			else {
+				if ( modifiers.horizontal ) {
+					startX = ( isDualHorizontal && channel == 1 ) || _mirror == -1 ? initialX : 0;
+					endX   = startX + analyzerWidth;
+				}
+				else {
+					startY = isDualVertical && channel == 1 ? channelHeight : 0;
+					endY   = startY + ( channelHeight * ( 1 - _reflexRatio ) | 0 ) - ( showXAxis ? xAxisHeight : 0 );
+				}
+			}
+
+			// helper function
+			const createNewGradient = _ => _ctx.createLinearGradient( startX, startY, endX, endY );
+
+			if ( modifiers.reverse ) {
 				// reverse colors only (preserve offsets and level thresholds of each colorstop)
 				for ( let i = 0; i <= maxIndex >> 1; i++ ) {
 					[ colorStops[ i ].color, colorStops[ maxIndex - i ].color ] = [ colorStops[ maxIndex - i ].color, colorStops[ i ].color ];
@@ -2703,65 +2849,30 @@ class AudioMotionAnalyzer {
 				}
 			}
 
-			let gradient      = _radial	? _ctx.createRadialGradient( centerX, centerY, outerRadius, centerX, centerY, innerRadius - ( outerRadius - innerRadius ) * isDualVertical ) : createNewGradient(),
-				mutedGradient = _radial ? null : createNewGradient() // no LEDs in radial
+			let gradient      = _radial	? _ctx.createRadialGradient( centerX, centerY, outer, centerX, centerY, inner ) : createNewGradient(),
+				mutedGradient = _radial ? null : createNewGradient(); // no LEDs in radial
 
-			if ( colorStops ) {
-				const isDualGradient = isDualVertical && ! this._splitGradient && ( ! _horizGrad || _radial );
+			colorStops.forEach( ( colorStop, index ) => {
+				let offset = colorStop.pos;
 
-				const buildGradient = ( grad, cs, area ) => {
-					cs.forEach( ( colorStop, index ) => {
-						let offset = colorStop.pos;
+				// additional offset processing to account for spread gradient combined with reflex and/or X-axis display on dual-vertical layout
+				// TO-DO: add support for no scale overlay on radial too? Requires changes to outerRadius and innerRadius computation in calcBars()
+				if ( ! _radial && _spread && isDualVertical && ! modifiers.horizontal ) {
+					// "shrink" each offset to fit into the usable analyzer area
+					offset *= analyzerRatio;
 
-						// additional offset processing for dual-vertical layout (including radial)
-						if ( isDualVertical ) {
-							if ( isDualGradient )
-								offset /= 2; // to fit full gradient into channel when not splitting
-
-							if ( ! _radial && ! _horizGrad ) {
-								// split (continuous) gradient only: skip top reflex + X-axis areas, on all offsets below it (>.5)
-								if ( ! isDualGradient && offset > .5 )
-									offset += _reflexRatio / 2 + xAxisRatio / 2;
-
-								// "shrink" each offset to fit into the usable analyzer area
-								offset *= analyzerRatio;
-							}
-
-							// replicates full gradient in the bottom area of the canvas (for non-split gradient)
-							if ( area == 1 ) {
-								// add colors in reverse order if radial or lumi
-								if ( _radial || isLumi ) {
-									colorStop = cs[ maxIndex - index ];
-									offset = 1 - ( colorStop.pos * analyzerRatio / 2 ) - xAxisRatio / 2; // exclude x-Axis height (lumi only)
-								}
-								else {
-									// if the first offset is not 0, create an additional color stop to prevent bleeding from top channel
-									if ( index == 0 && offset > 0 )
-										grad.addColorStop( .5, colorStop.color );
-									// bump the offset into the second half of the gradient
-									offset += .5;
-								}
-							}
-						}
-
-						// add computed color stop to the gradient
-						grad.addColorStop( offset, colorStop.color );
-
-						// create additional color stop at the end of top channel to prevent bleeding
-						if ( isDualVertical && index == maxIndex && offset < .5 )
-							grad.addColorStop( .5, colorStop.color );
-					});
-				} // buildGradient()
-
-				for ( let channelArea = 0; channelArea < 1 + isDualGradient; channelArea++ ) {
-					buildGradient( gradient, colorStops, channelArea );
-					if ( mutedGradient )
-						buildGradient( mutedGradient, mutedColorStops, channelArea );
+					// skip top reflex + X-axis areas, on all offsets below it (>.5)
+					if ( offset > .5 * analyzerRatio )
+						offset += ( _reflexRatio + xAxisRatio ) / 2;
 				}
-			}
+
+				// add computed color stop to the gradient
+				gradient.addColorStop( clamp( offset, 0, 1 ), colorStop.color );
+			});
 
 			this._activeThemes[ channel ] = {
-				name,			// set by _setTheme()
+				name,			// set by setTheme()
+				modifiers,
 				...sourceTheme, // preserves properties from the source theme, not changed here, like `peakColor`
 				colorStops,		// from the source theme, but modified by this method if `flipGrad` is on
 				gradient,		// generated by this method
@@ -2872,30 +2983,6 @@ class AudioMotionAnalyzer {
 				this[ prop ] = options[ prop ];
 		}
 	}
-
-	/**
-	 * Select a color theme for one or both channels
-	 *
-	 * @param {string} theme name
-	 * @param [{number}] desired channel (0 or 1) - if empty or invalid, sets both channels
-	 */
-	_setTheme( name, channel ) {
-		const themeNames  = this.getThemeList(),
-			  isNameValid = themeNames.includes( name );
-
-		for ( const ch of [0,1].includes( channel ) ? [ channel ] : [0,1] ) {
-			if ( ! this._activeThemes[ ch ] )
-				this._activeThemes[ ch ] = {}; // creates the entry
-
-			this._activeThemes[ ch ].name = isNameValid ? name : this._activeThemes[ ch ].name || themeNames[0];
-
-			if ( ! isNameValid )
-				warnInvalid( `theme${ ch ? 'Right' : 'Left' }`, name );
-		}
-
-		this._makeGrad();
-	}
-
 }
 
 export { AudioMotionAnalyzer };

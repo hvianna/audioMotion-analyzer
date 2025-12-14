@@ -194,7 +194,7 @@ options = {<br>
 &emsp;&emsp;[smoothing](#smoothing-number): **0.5**,<br>
 &emsp;&emsp;[source](#source-htmlmediaelement-or-audionode-object): *undefined*, // constructor only<br>
 &emsp;&emsp;[spinSpeed](#spinspeed-number): **0**,<br>
-&emsp;&emsp;[splitGradient](#splitgradient-boolean): **false**,<br>
+&emsp;&emsp;[spreadGradient](#spreadgradient-boolean): **false**,<br>
 &emsp;&emsp;[start](#start-boolean): **true**, // constructor only<br>
 &emsp;&emsp;[theme](#theme-string): **'classic'**,<br>
 &emsp;&emsp;[themeLeft](#themeleft-string): *undefined*,<br>
@@ -412,7 +412,7 @@ channelLayout     | Description | Note
 !> When a *dual* layout is selected, any mono (single channel) audio source connected to the analyzer will output sound only from the left speaker,
 unless a stereo source is simultaneously connected to the analyzer, which will force the mono input to be upmixed to stereo.
 
-See also [`themeLeft`](#themeleft-string), [`themeRight`](#themeright-string) and [`splitGradient`](#splitgradient-boolean).
+See also [`themeLeft`](#themeleft-string), [`themeRight`](#themeright-string) and [`spreadGradient`](#spreadgradient-boolean).
 
 ### `colorMode` *string*
 
@@ -1009,19 +1009,19 @@ Positive values will make the analyzer rotate clockwise, while negative values w
 
 Defaults to **0**.
 
-### `splitGradient` *boolean*
+### `spreadGradient` *boolean*
 
-*Available since v3.0.0*
+*Available since v5.0.0; formerly `splitGradient` (since v3.0.0)*
 
-When set to *true* and [`channelLayout`](#channellayout-string) is **_dual-vertical_**, the gradient will be split between channels.
+When set to *true* causes the gradient to spread between both channels.
 
-When *false*, both channels will use the full gradient. The effect is illustrated below, using the *'classic'* gradient.
+Only effective when [`channelLayout`](#channellayout-string) is set to **_dual-vertical_**, or **_dual-horizontal_** and `horizontal` [theme modifier](#setthememodifiers-string-channel) is *true*.
 
-| splitGradient: *false* | splitGradient: *true* |
+The effect is illustrated below, using the *'classic'* [theme](#theme-string) on dual-vertical channel layout.
+
+| spreadGradient: *false* | spreadGradient: *true* |
 |:--:|:--:|
-| ![split-off](img/splitGradient_off.png) | ![split-on](img/splitGradient_on.png) |
-
-This option has no effect on horizontal gradients, except on [`radial`](#radial-boolean) spectrum - see note in [`registerGradient()`](#registergradient-name-options-).
+| ![spread-off](img/spreadGradient_off.png) | ![spread-on](img/spreadGradient_on.png) |
 
 Defaults to **false**.
 
@@ -1031,7 +1031,7 @@ Defaults to **false**.
 
 Name of the color theme used for analyzer graphs.
 
-It must be a valid theme name (see [`getThemes()`](#getthemes)).
+It must be a valid theme name (see [`getThemeList()`](#getthemelist)).
 
 `theme` sets the theme for both analyzer channels, but its read value represents only the theme on the left (or single) channel.
 
@@ -1047,7 +1047,7 @@ theme       | preview
 'rainbow'   | ![rainbow](img/gradient-rainbow.png)
 'steelblue' | ![steelblue](img/gradient-steelblue.png)
 
-See also [`registerTheme()`](#registertheme-name-options) and [`splitGradient`](#splitgradient-boolean).
+See also [`registerTheme()`](#registertheme-name-options) and [`spreadGradient`](#spreadgradient-boolean).
 
 Defaults to **'classic'**.
 
@@ -1060,7 +1060,7 @@ Select color themes for the left and right analyzer channels independently, for 
 
 **_Single_** channel layout will use the theme selected by `themeLeft`.
 
-See also [`theme`](#theme-string) and [`splitGradient`](#splitgradient-boolean).
+See also [`theme`](#theme-string) and [`spreadGradient`](#spreadgradient-boolean).
 
 ### `trueLeds` *boolean*
 
@@ -1072,7 +1072,7 @@ The effect is illustrated below, using the *'classic'* gradient.
 
 | trueLeds: *false* | trueLeds: *true* |
 |:--:|:--:|
-| ![split-off](img/trueleds_off.png) | ![split-on](img/trueleds_on.png) |
+| ![trueleds-off](img/trueleds_off.png) | ![trueleds-on](img/trueleds_on.png) |
 
 The threshold for each color can be adjusted via the `level` property when registering a gradient. See [`registerGradient()`](#registergradient-name-options-).
 
@@ -1382,11 +1382,19 @@ Callbacks and [constructor-specific properties](#constructor-specific-options) a
 
 See also [`setOptions()`](#setoptions-options-).
 
-### `getTheme( name )`
+### `getTheme( channel )`
 
 *Available since v5.0.0*
 
-Returns an object containing the theme's options (`colorStops` and optional `peakColor`), plus an additional `muted` object,
+
+>>> TO-DO
+
+
+### `getThemeData( name )`
+
+*Available since v5.0.0*
+
+Returns an object containing the theme's properties (`colorStops` and optional `peakColor`), plus an additional `muted` object,
 which contains the colorStops generated for the LED mask (see [`showLedMask`](#showledmask-boolean)).
 
 `name` must be a string representing the name of an available theme - see [`getThemeList()`](#getthemelist). If undefined or invalid, returns *null*.

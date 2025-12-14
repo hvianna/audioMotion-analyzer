@@ -41,6 +41,14 @@ button.active {
 button.full-width {
 	width: 100%;
 }
+button.small-button {
+	font-size: .9em;
+	margin: 0;
+	padding: 2px;
+}
+button.small-button.active {
+	padding: 4px;
+}
 
 canvas {
 	display: block;
@@ -312,6 +320,16 @@ input.wide-range {
 	justify-content: space-evenly;
 }
 
+.grid {
+	display: grid;
+}
+.grid-2-cols {
+	grid-template-columns: 1fr 1fr;
+}
+.grid-3-cols {
+	grid-template-columns: repeat(3, 1fr);
+}
+
 .multi-block {
 	display: grid;
 	grid-gap: 20px;
@@ -322,6 +340,9 @@ input.wide-range {
 
 .colspan-2 {
 	grid-column: span 2;
+}
+.colspan-3 {
+	grid-column: span 3;
 }
 .rowspan-2 {
 	grid-row: span 2;

@@ -1,8 +1,19 @@
+// parse function name and arguments from dataset string
+function parseDatasetFunction( dataset, elementValue ) {
+	let [ , funcName, args ] = dataset.match( /([^\(]*)\(?([^\)]*)\)?/ );
+	if ( args ) {
+		args = args.split(',').map( s => {
+			s = s.trim();
+			return s == 'true' ? true : s == 'false' ? false : s == 'this' ? elementValue : s;
+		});
+	}
+	return [ funcName, args ];
+}
 
 function populateThemeSelections( instance ) {
-	for ( const name of instance.getThemeList() ) {
-		for ( const channel of ['', 'Left', 'Right'] ) {
-			const el = document.querySelector(`[data-setting="theme${channel}"]`);
+	for ( const name of instance.getThemeList().sort() ) {
+		for ( const channel of [0,1] ) {
+			const el = document.querySelector(`[data-setting="getTheme(${channel})"]`);
 			if ( el )
 				el.append( new Option( name ) );
 		}

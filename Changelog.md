@@ -24,14 +24,15 @@ Changelog
 Removed               | Use this instead
 ----------------------|-----------------------------------------------
 `bgAlpha`             | *set desired opacity via CSS*
-`gradient`            | [`theme`](README.md#theme-string)
-`gradientLeft`        | [`themeLeft`](README.md#themeleft-string)
-`gradientRight`       | [`themeRight`](README.md#themeright-string)
+`gradient`            | [`setTheme()`](README.md#settheme) / [`getTheme()`](README.md#gettheme)
+`gradientLeft`        | [`setTheme( name, 0 )`](README.md#settheme) / [`getTheme( 0 )`](README.md#gettheme)
+`gradientRight`       | [`setTheme( name, 1 )`](README.md#settheme) / [`getTheme( 1 )`](README.md#gettheme)
 `gravity`             | [`peakDecayTime`](README.md#peakdecaytime-number) - use the [peak drop analysis tool](/tools/peak-drop.html) to compare/migrate custom values
 `peakFadeTime`        | [`peakDecayTime`](README.md#peakdecaytime-number)
 `registerGradient()`  | [`registerTheme()`](README.md#registertheme-name-options-) *(check new properties)*
 `setLedParams()`      | `setLeds()` *(check new arguments)*
 `showBgColor`         | *set desired background color via CSS*
+`splitGradient`       | [`spreadGradient`](README.md#spreadgradient-boolean)
 `stereo`              | `channelLayout`
 `overlay`             | *current default behavior is equivalent to `overlay: true` &mdash; if desired, set an opaque background color via CSS*
 
