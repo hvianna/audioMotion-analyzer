@@ -2851,12 +2851,12 @@ class AudioMotionAnalyzer {
 				// additional offset processing to account for spread gradient combined with reflex and/or X-axis display on dual-vertical layout
 				// TO-DO: add support for no scale overlay on radial too? Requires changes to outerRadius and innerRadius computation in calcBars()
 				if ( ! _radial && modifiers.spread && isDualVertical && ! modifiers.horizontal ) {
-					// skip top reflex + X-axis areas, on all offsets below it (>.5)
-					if ( offset > .5 )
-						offset += _reflexRatio / 2 + xAxisRatio / 2;
-
 					// "shrink" each offset to fit into the usable analyzer area
 					offset *= analyzerRatio;
+
+					// skip top reflex + X-axis areas, on all offsets below it (>.5)
+					if ( offset > .5 * analyzerRatio )
+						offset += ( _reflexRatio + xAxisRatio ) / 2;
 				}
 
 				// add computed color stop to the gradient
