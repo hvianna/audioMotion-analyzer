@@ -2790,16 +2790,14 @@ class AudioMotionAnalyzer {
 			return;
 
 		const { canvas, _chLayout, _ctx, _horizGrad, _mirror, _radial, _reflexRatio, _spread, _xAxis } = this,
-			  { analyzerWidth, centerX, centerY, channelHeight, initialX, innerRadius, outerRadius, xAxisHeight } = this._aux,
+			  { analyzerHeight, analyzerWidth, centerX, centerY, channelHeight, initialX, innerRadius, outerRadius, xAxisHeight } = this._aux,
 			  { isLumi }        = this._flg,
 			  isDualVertical    = _chLayout == CHANNEL_VERTICAL,
-			  isDualHorizontal  = _chLayout == CHANNEL_HORIZONTAL,
-			  showXAxis         = this._sxshow && ! _xAxis.overlay, // X-axis being displayed and not overlaid?
-  			  xAxisRatio        = showXAxis ? xAxisHeight / channelHeight : 0; // ratio of the canvas taken by the X-axis bar
+			  isDualHorizontal  = _chLayout == CHANNEL_HORIZONTAL;
 
 		for ( const channel of [0,1] ) {
 			const { name, modifiers }   = this._activeThemes[ channel ],
-				  analyzerRatio         = _radial || modifiers.horizontal ? 1 : 1 - ( isLumi ? 0 : _reflexRatio ) - xAxisRatio,
+				  analyzerRatio         = _radial || modifiers.horizontal ? 1 : analyzerHeight / channelHeight,
 				  sourceTheme           = deepCloneObject( this._themes[ name ] ),
 				  { colorStops, muted } = sourceTheme,
 				  mutedColorStops       = muted.colorStops,
@@ -2838,7 +2836,7 @@ class AudioMotionAnalyzer {
 				}
 				else {
 					startY = isDualVertical && channel == 1 ? channelHeight : 0;
-					endY   = startY + ( channelHeight * ( 1 - _reflexRatio ) | 0 ) - ( showXAxis ? xAxisHeight : 0 );
+					endY   = startY + analyzerHeight;
 				}
 			}
 
@@ -2867,7 +2865,7 @@ class AudioMotionAnalyzer {
 
 					// skip top reflex + X-axis areas, on all offsets below it (>.5)
 					if ( offset > .5 * analyzerRatio )
-						offset += ( _reflexRatio + xAxisRatio ) / 2;
+						offset += ( 1 - analyzerRatio ) / 2;
 				}
 
 				// add computed color stop to the gradient
