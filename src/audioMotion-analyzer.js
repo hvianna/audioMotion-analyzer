@@ -1548,7 +1548,7 @@ class AudioMotionAnalyzer {
 			  // channelHeight is the total canvas height dedicated to each channel, including the reflex area, if any)
 			  channelHeight  = canvas.height - ( isDualVertical && ! isLeds ? .5 : 0 ) >> isDualVertical,
 			  // analyzerHeight is the effective height used to render the analyzer, excluding the reflex area
-			  analyzerHeight = ( channelHeight * ( isLumi || _radial ? 1 : 1 - _reflexRatio ) | 0 ) - scaleGap,
+			  analyzerHeight = ( ( channelHeight - scaleGap ) * ( isLumi || _radial ? 1 : 1 - _reflexRatio ) ) | 0,
 
 			  analyzerWidth  = canvas.width - centerX * ( isDualHorizontal || _mirror != 0 ),
 
@@ -2043,6 +2043,7 @@ class AudioMotionAnalyzer {
 			    initialX,
 			    innerRadius,
 			    outerRadius,
+			    xAxisHeight,
 			    yAxisWidth }   = this._aux,
 
 			  { _activeThemes,
@@ -2064,8 +2065,10 @@ class AudioMotionAnalyzer {
 			    _radial,
 			    showLedMask,
 			    showPeaks,
+			    _sxshow,
 			    useCanvas,
 			    _weightingFilter,
+			    _xAxis,
 			    _yAxis }       = this,
 
 			  [ ledCount, ledHeight, ledGap ] = this._leds,
@@ -2093,13 +2096,14 @@ class AudioMotionAnalyzer {
 		// create Reflex effect
 		const doReflex = channel => {
 			if ( this._reflexRatio > 0 && ! isLumi && ! _radial ) {
+				const scaleHeight = xAxisHeight * ( ! _xAxis.overlay && _sxshow );
 				let posY, height;
 				if ( this.reflexFit || isDualVertical ) { // always fit reflex in dual-vertical mode
 					posY   = isDualVertical && channel == 0 ? channelHeight + channelGap : 0;
-					height = channelHeight - analyzerHeight;
+					height = channelHeight - analyzerHeight - scaleHeight;
 				}
 				else {
-					posY   = canvas.height - analyzerHeight * 2;
+					posY   = canvas.height - analyzerHeight * 2 - scaleHeight;
 					height = analyzerHeight;
 				}
 
@@ -2111,7 +2115,7 @@ class AudioMotionAnalyzer {
 					_ctx.filter = `brightness(${this.reflexBright})`;
 
 				// create the reflection
-				_ctx.setTransform( 1, 0, 0, -1, 0, canvas.height );
+				_ctx.setTransform( 1, 0, 0, -1, 0, canvas.height - scaleHeight );
 				_ctx.drawImage( canvas, 0, channelCoords[ channel ].channelTop, canvas.width, analyzerHeight, 0, posY, canvas.width, height );
 
 				_ctx.restore();
@@ -2120,7 +2124,7 @@ class AudioMotionAnalyzer {
 
 		// draw scale on X-axis
 		const drawScaleX = () => {
-			if ( this._sxshow ) {
+			if ( _sxshow ) {
 				if ( _radial ) {
 					_ctx.save();
 					_ctx.translate( centerX, centerY );
