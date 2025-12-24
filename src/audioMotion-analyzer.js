@@ -2870,6 +2870,8 @@ class AudioMotionAnalyzer {
 
 				// add computed color stop to the gradient
 				gradient.addColorStop( clamp( offset, 0, 1 ), colorStop.color );
+				if ( mutedGradient )
+					mutedGradient.addColorStop( clamp( offset, 0, 1 ), mutedColorStops[ index ].color );
 			});
 
 			this._activeThemes[ channel ] = {
