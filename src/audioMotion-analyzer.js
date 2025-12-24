@@ -217,7 +217,7 @@ const isNumeric = val => ! isArray( val ) && val == +val; // note: +[] == []
 const isObject = val => typeof val == 'object' && !! val && ! isArray( val );
 
 // check if given value is a valid channel number
-const isValidChannel = channel => [0,1].includes( +channel );
+const isValidChannel = channel => isNumeric( channel ) && [0,1].includes( +channel );
 
 // validate a given value with an array of strings (by default, all lowercase)
 // returns the validated value, or the first element of `list` if `value` is not found in the array
@@ -640,7 +640,7 @@ class AudioMotionAnalyzer {
 		return this._minFreq;
 	}
 	set minFreq( value ) {
-		if ( ! ( value > 0 ) ) {
+		if ( ! ( value > 0 ) ) { // should catch all 'falsy' and negative values (`value <= 0` would fail on NaN or undefined)
 			warnInvalid( 'minFreq', value );
 			value = this._minFreq || DEFAULT_SETTINGS.minFreq;
 		}
