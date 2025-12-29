@@ -1536,8 +1536,8 @@ class AudioMotionAnalyzer {
 
 			  isBands     = _bandRes > 0,
 			  isOctaves   = isBands && this._frequencyScale == SCALE_LOG,
-			  isLeds      = this._showLeds && isBands && ! _radial,
-			  isLumi      = this._lumiBars && isBands && ! _radial,
+			  isLeds      = this._showLeds && isBands && ! _radial && _mode != MODE_GRAPH,
+			  isLumi      = this._lumiBars && isBands && ! _radial && _mode != MODE_GRAPH,
 			  isAlpha     = this._alphaBars && ! isLumi && _mode != MODE_GRAPH,
 			  isOutline   = this._outlineBars && isBands && ! isLumi && ! isLeds,
 			  isRound     = this._roundBars && isBands && ! isLumi && ! isLeds,
