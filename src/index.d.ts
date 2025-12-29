@@ -42,7 +42,7 @@ export type OnCanvasResizeFunction = (
 export type CanvasResizeReason = "create" | "fschange" | "lores" | "resize" | "user";
 
 export interface Options {
-  alphaBars?: boolean;
+  alphaBars?: AlphaBars;
   ansiBands?: boolean;
   bandResolution?: number;
   barSpace?: number;
@@ -58,7 +58,6 @@ export interface Options {
   linearBoost?: number;
   lineWidth?: number;
   loRes?: boolean;
-  lumiBars?: boolean;
   maxDecibels?: number;
   maxFPS?: number;
   maxFreq?: number;
@@ -114,6 +113,8 @@ export interface ConstructorOptions extends Options {
   start?: boolean;
 }
 
+export type AlphaBars = "off" | "on" | "full";
+
 export type ChannelLayout = "single" | "dual-horizontal" | "dual-vertical" | "dual-combined";
 
 export type ColorMode = "gradient" | "bar-index" | "bar-level";
@@ -163,8 +164,8 @@ declare class AudioMotionAnalyzer {
   constructor(container?: HTMLElement, options?: ConstructorOptions);
   constructor(options?: ConstructorOptions);
 
-  get alphaBars(): boolean;
-  set alphaBars(value: boolean);
+  get alphaBars(): AlphaBars;
+  set alphaBars(value: AlphaBars);
 
   get ansiBands(): boolean;
   set ansiBands(value: boolean);
@@ -233,9 +234,6 @@ declare class AudioMotionAnalyzer {
 
   get loRes(): boolean;
   set loRes(value: boolean);
-
-  get lumiBars(): boolean;
-  set lumiBars(value: boolean);
 
   get maxDecibels(): number;
   set maxDecibels(value: number);

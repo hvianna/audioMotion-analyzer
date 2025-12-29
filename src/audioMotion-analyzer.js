@@ -26,10 +26,16 @@ const DEBOUNCE_TIMEOUT         = 60,
 	  LED_MASK_LIGHTNESS       = 20, // TO-DO: use this instead of alpha?? (clean-up)
 	  LED_MASK_SATURATION      = 20, // 40 ?
 	  LED_PARAMETERS           = [ 6, 7 ],
-	  MIN_AXIS_DIMENSION       = 20;
+	  MIN_AXIS_DIMENSION       = 20,
+	  OPTION_EMPTY             = '',
+	  OPTION_OFF               = 'off',
+	  OPTION_ON                = 'on';
 
 // exported constants
-export const BANDS_FFT                 = 0,
+export const ALPHABARS_FULL            = 'full',
+			 ALPHABARS_OFF             = OPTION_OFF,
+			 ALPHABARS_ON              = OPTION_ON,
+			 BANDS_FFT                 = 0,
 			 BANDS_OCTAVE_FULL         = 1,
 			 BANDS_OCTAVE_HALF         = 2,
 			 BANDS_OCTAVE_3RD          = 3,
@@ -50,7 +56,7 @@ export const BANDS_FFT                 = 0,
 			 ERR_AUDIO_CONTEXT_FAIL    = 1,
 			 ERR_INVALID_AUDIO_CONTEXT = 2,
 			 ERR_INVALID_AUDIO_SOURCE  = 3,
-			 FILTER_NONE               = '',
+			 FILTER_NONE               = OPTION_EMPTY,
 			 FILTER_A                  = 'A',
 			 FILTER_B                  = 'B',
 			 FILTER_C                  = 'C',
@@ -61,7 +67,7 @@ export const BANDS_FFT                 = 0,
 			 LAYOUT_SINGLE             = 'single',
 			 LAYOUT_VERTICAL           = 'dual-vertical',
 			 LEDS_MODERN               = 'modern',
-			 LEDS_OFF                  = 'off',
+			 LEDS_OFF                  = OPTION_OFF,
 			 LEDS_VINTAGE              = 'vintage',
 			 MODE_BARS                 = 'bars',
 			 MODE_GRAPH                = 'graph',
@@ -105,7 +111,7 @@ const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', 
 
 // settings defaults
 const DEFAULT_SETTINGS = {
-	alphaBars      : false,
+	alphaBars      : ALPHABARS_OFF,
 	ansiBands      : false,
 	bandResolution : BANDS_FFT,
 	barSpace       : 0.1,
@@ -121,7 +127,6 @@ const DEFAULT_SETTINGS = {
 	linearBoost    : 1,
 	lineWidth      : 0,
 	loRes          : false,
-	lumiBars       : false,
 	maxDecibels    : -25,
 	maxFPS         : 0,
 	maxFreq        : 22000,
@@ -486,8 +491,9 @@ class AudioMotionAnalyzer {
 		return this._alphaBars;
 	}
 	set alphaBars( value ) {
-		this._alphaBars = !! value;
+		this._alphaBars = validateFromList( value, [ ALPHABARS_OFF, ALPHABARS_ON, ALPHABARS_FULL ] );
 		this._calcBars();
+		this._makeGrad();
 	}
 
 	get ansiBands() {
@@ -607,15 +613,6 @@ class AudioMotionAnalyzer {
 	set loRes( value ) {
 		this._loRes = !! value;
 		this._setCanvas( REASON_LORES );
-	}
-
-	get lumiBars() {
-		return this._lumiBars;
-	}
-	set lumiBars( value ) {
-		this._lumiBars = !! value;
-		this._calcBars();
-		this._makeGrad();
 	}
 
 	get maxDecibels() {
@@ -1531,8 +1528,8 @@ class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const { _ansiBands, _bandRes, _barSpace, canvas, _chLayout, _maxFreq, _minFreq, _mirror, _mode,
-			    _pixelRatio, _radial, _radialInvert, _reflexRatio, _xAxis, _yAxis } = this,
+		const { _alphaBars, _ansiBands, _bandRes, _barSpace, canvas, _chLayout, _maxFreq, _minFreq,
+			    _mirror, _mode, _pixelRatio, _radial, _radialInvert, _reflexRatio, _xAxis, _yAxis } = this,
 			  bars               = [],
 			  centerX            = canvas.width >> 1,
 			  centerY            = canvas.height >> 1,
@@ -1545,11 +1542,11 @@ class AudioMotionAnalyzer {
 
 			  // COMPUTE FLAGS
 
+			  isAlpha     = _alphaBars == ALPHABARS_ON && _mode != MODE_GRAPH,
 			  isBands     = _bandRes > 0,
 			  isOctaves   = isBands && this._frequencyScale == SCALE_LOG,
 			  isLeds      = this._ledBars != LEDS_OFF && isBands && ! _radial && _mode != MODE_GRAPH,
-			  isLumi      = this._lumiBars && isBands && ! _radial && _mode != MODE_GRAPH,
-			  isAlpha     = this._alphaBars && ! isLumi && _mode != MODE_GRAPH,
+			  isLumi      = _alphaBars == ALPHABARS_FULL && isBands && ! _radial && _mode != MODE_GRAPH,
 			  isOutline   = this._outlineBars && isBands && ! isLumi && ! isLeds,
 			  isRound     = this._roundBars && isBands && ! isLumi && ! isLeds,
 			  noLedGap    = _chLayout != LAYOUT_VERTICAL || _reflexRatio > 0 && ! isLumi || scaleGap > 0,
