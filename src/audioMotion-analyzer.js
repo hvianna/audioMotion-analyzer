@@ -15,23 +15,10 @@ const PI      = Math.PI,
 	  HALF_PI = PI / 2,
 	  C_1     = 8.17579892;  // frequency for C -1
 
-const CHANNEL_COMBINED         = 'dual-combined',
-	  CHANNEL_HORIZONTAL       = 'dual-horizontal',
-	  CHANNEL_SINGLE           = 'single',
-	  CHANNEL_VERTICAL         = 'dual-vertical',
-	  COLOR_BAR_INDEX          = 'bar-index',
-	  COLOR_BAR_LEVEL          = 'bar-level',
-	  COLOR_GRADIENT           = 'gradient',
-	  DEBOUNCE_TIMEOUT         = 60,
+const DEBOUNCE_TIMEOUT         = 60,
 	  EVENT_CLICK              = 'click',
 	  EVENT_FULLSCREENCHANGE   = 'fullscreenchange',
 	  EVENT_RESIZE             = 'resize',
- 	  FILTER_NONE              = '',
- 	  FILTER_A                 = 'A',
- 	  FILTER_B                 = 'B',
- 	  FILTER_C                 = 'C',
- 	  FILTER_D                 = 'D',
- 	  FILTER_468               = '468',
 	  FONT_FAMILY              = 'sans-serif',
 	  FPS_COLOR                = '#0f0',
 	  LED_MASK_ALPHA           = .2, // .5 ?
@@ -39,18 +26,51 @@ const CHANNEL_COMBINED         = 'dual-combined',
 	  LED_MASK_LIGHTNESS       = 20, // TO-DO: use this instead of alpha?? (clean-up)
 	  LED_MASK_SATURATION      = 20, // 40 ?
 	  LED_PARAMETERS           = [ 6, 7 ],
-	  MIN_AXIS_DIMENSION       = 20,
-	  MODE_BARS                = 'bars',
-	  MODE_GRAPH               = 'graph',
-	  REASON_CREATE            = 'create',
-	  REASON_FSCHANGE          = 'fschange',
-	  REASON_LORES             = 'lores',
-	  REASON_RESIZE            = EVENT_RESIZE,
-	  REASON_USER              = 'user',
-	  SCALE_BARK               = 'bark',
-	  SCALE_LINEAR             = 'linear',
-	  SCALE_LOG                = 'log',
-	  SCALE_MEL                = 'mel';
+	  MIN_AXIS_DIMENSION       = 20;
+
+// exported constants
+export const BANDS_FFT                 = 0,
+			 BANDS_OCTAVE_FULL         = 1,
+			 BANDS_OCTAVE_HALF         = 2,
+			 BANDS_OCTAVE_3RD          = 3,
+			 BANDS_OCTAVE_4TH          = 4,
+			 BANDS_OCTAVE_6TH          = 5,
+			 BANDS_OCTAVE_8TH          = 6,
+			 BANDS_OCTAVE_12TH         = 7,
+			 BANDS_OCTAVE_24TH         = 8,
+			 COLORMODE_GRADIENT        = 'gradient',
+			 COLORMODE_INDEX           = 'bar-index',
+			 COLORMODE_LEVEL           = 'bar-level',
+			 ENERGY_BASS               = 'bass',
+			 ENERGY_HIGHMID            = 'highMid',
+			 ENERGY_LOWMID             = 'lowMid',
+			 ENERGY_MIDRANGE           = 'mid',
+			 ENERGY_PEAK               = 'peak',
+			 ENERGY_TREBLE             = 'treble',
+			 ERR_AUDIO_CONTEXT_FAIL    = 1,
+			 ERR_INVALID_AUDIO_CONTEXT = 2,
+			 ERR_INVALID_AUDIO_SOURCE  = 3,
+			 FILTER_NONE               = '',
+			 FILTER_A                  = 'A',
+			 FILTER_B                  = 'B',
+			 FILTER_C                  = 'C',
+			 FILTER_D                  = 'D',
+			 FILTER_468                = '468',
+			 LAYOUT_COMBINED           = 'dual-combined',
+			 LAYOUT_HORIZONTAL         = 'dual-horizontal',
+			 LAYOUT_SINGLE             = 'single',
+			 LAYOUT_VERTICAL           = 'dual-vertical',
+			 MODE_BARS                 = 'bars',
+			 MODE_GRAPH                = 'graph',
+			 REASON_CREATE             = 'create',
+			 REASON_FULLSCREENCHANGE   = EVENT_FULLSCREENCHANGE,
+			 REASON_LORES              = 'lores',
+			 REASON_RESIZE             = EVENT_RESIZE,
+			 REASON_USER               = 'user',
+			 SCALE_BARK                = 'bark',
+			 SCALE_LINEAR              = 'linear',
+			 SCALE_LOG                 = 'log',
+			 SCALE_MEL                 = 'mel';
 
 // built-in color themes
 const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', '#09c', '#36b' ],
@@ -84,10 +104,10 @@ const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', 
 const DEFAULT_SETTINGS = {
 	alphaBars      : false,
 	ansiBands      : false,
-	bandResolution : 0,
+	bandResolution : BANDS_FFT,
 	barSpace       : 0.1,
-	channelLayout  : CHANNEL_SINGLE,
-	colorMode      : COLOR_GRADIENT,
+	channelLayout  : LAYOUT_SINGLE,
+	colorMode      : COLORMODE_GRADIENT,
 	fadePeaks      : false,
 	fftSize        : 8192,
 	fillAlpha      : 1,
@@ -140,10 +160,6 @@ const DEFAULT_THEME_MODIFIERS = {
 };
 
 // custom error messages
-export const ERR_AUDIO_CONTEXT_FAIL    = 1,
-			 ERR_INVALID_AUDIO_CONTEXT = 2,
-			 ERR_INVALID_AUDIO_SOURCE  = 3;
-
 const ERROR_MESSAGE = {
 	[ ERR_AUDIO_CONTEXT_FAIL ]:    'Could not create audio context. Web Audio API not supported?',
 	[ ERR_INVALID_AUDIO_CONTEXT ]: 'Provided audio context is not valid',
@@ -412,7 +428,7 @@ class AudioMotionAnalyzer {
 				window.clearTimeout( this._fsTimeout );
 
 			// update the canvas
-			this._setCanvas( REASON_FSCHANGE );
+			this._setCanvas( REASON_FULLSCREENCHANGE );
 
 			// delay clearing the flag to prevent any shortly following resize event
 			this._fsTimeout = window.setTimeout( () => {
@@ -500,14 +516,14 @@ class AudioMotionAnalyzer {
 		return this._chLayout;
 	}
 	set channelLayout( value ) {
-		this._chLayout = validateFromList( value, [ CHANNEL_SINGLE, CHANNEL_HORIZONTAL, CHANNEL_VERTICAL, CHANNEL_COMBINED ] );
+		this._chLayout = validateFromList( value, [ LAYOUT_SINGLE, LAYOUT_HORIZONTAL, LAYOUT_VERTICAL, LAYOUT_COMBINED ] );
 
 		// update node connections
 		this._input.disconnect();
-		this._input.connect( this._chLayout != CHANNEL_SINGLE ? this._splitter : this._analyzer[0] );
+		this._input.connect( this._chLayout != LAYOUT_SINGLE ? this._splitter : this._analyzer[0] );
 		this._analyzer[0].disconnect();
 		if ( this._outNodes.length ) // connect analyzer only if the output is connected to other nodes
-			this._analyzer[0].connect( this._chLayout != CHANNEL_SINGLE ? this._merger : this._output );
+			this._analyzer[0].connect( this._chLayout != LAYOUT_SINGLE ? this._merger : this._output );
 
 		this._calcBars();
 		this._makeGrad();
@@ -517,7 +533,7 @@ class AudioMotionAnalyzer {
 		return this._colorMode;
 	}
 	set colorMode( value ) {
-		this._colorMode = validateFromList( value, [ COLOR_GRADIENT, COLOR_BAR_INDEX, COLOR_BAR_LEVEL ] );
+		this._colorMode = validateFromList( value, [ COLORMODE_GRADIENT, COLORMODE_INDEX, COLORMODE_LEVEL ] );
 	}
 
 	get fadePeaks() {
@@ -928,7 +944,7 @@ class AudioMotionAnalyzer {
 		// when connecting the first node, also connect the analyzer nodes to the merger / output nodes
 		if ( this._outNodes.length == 1 ) {
 			for ( const i of [0,1] )
-				this._analyzer[ i ].connect( ( this._chLayout == CHANNEL_SINGLE && ! i ? this._output : this._merger ), 0, i );
+				this._analyzer[ i ].connect( ( this._chLayout == LAYOUT_SINGLE && ! i ? this._output : this._merger ), 0, i );
 		}
 	}
 
@@ -1042,15 +1058,15 @@ class AudioMotionAnalyzer {
 
 		// if startFreq is a string, check for presets
 		if ( startFreq != +startFreq ) {
-			if ( startFreq == 'peak' )
+			if ( startFreq == ENERGY_PEAK )
 				return this._energy.peak;
 
 			const presets = {
-				bass:    [ 20, 250 ],
-				lowMid:  [ 250, 500 ],
-				mid:     [ 500, 2e3 ],
-				highMid: [ 2e3, 4e3 ],
-				treble:  [ 4e3, 16e3 ]
+				[ ENERGY_BASS     ]: [  20,  250 ],
+				[ ENERGY_LOWMID   ]: [ 250,  500 ],
+				[ ENERGY_MIDRANGE ]: [ 500,  2e3 ],
+				[ ENERGY_HIGHMID  ]: [ 2e3,  4e3 ],
+				[ ENERGY_TREBLE   ]: [ 4e3, 16e3 ]
 			}
 
 			if ( ! presets[ startFreq ] )
@@ -1061,7 +1077,7 @@ class AudioMotionAnalyzer {
 
 		const startBin = this._freqToBin( startFreq ),
 		      endBin   = endFreq ? this._freqToBin( endFreq ) : startBin,
-		      chnCount = this._chLayout == CHANNEL_SINGLE ? 1 : 2;
+		      chnCount = this._chLayout == LAYOUT_SINGLE ? 1 : 2;
 
 		let energy = 0;
 		for ( let channel = 0; channel < chnCount; channel++ ) {
@@ -1525,8 +1541,8 @@ class AudioMotionAnalyzer {
 			  bars               = [],
 			  centerX            = canvas.width >> 1,
 			  centerY            = canvas.height >> 1,
-			  isDualVertical     = _chLayout == CHANNEL_VERTICAL && ! _radial,
-			  isDualHorizontal   = _chLayout == CHANNEL_HORIZONTAL,
+			  isDualVertical     = _chLayout == LAYOUT_VERTICAL && ! _radial,
+			  isDualHorizontal   = _chLayout == LAYOUT_HORIZONTAL,
 			  minCanvasDimension = Math.min( canvas.width, canvas.height ),
 			  xAxisHeight        = Math.max( MIN_AXIS_DIMENSION * _pixelRatio, _xAxis.height * ( _xAxis.height > 1 ? _pixelRatio : minCanvasDimension ) | 0 ),
 			  yAxisWidth         = Math.max( MIN_AXIS_DIMENSION * _pixelRatio, _yAxis.width  * ( _yAxis.width  > 1 ? _pixelRatio : minCanvasDimension ) | 0 ),
@@ -1541,7 +1557,7 @@ class AudioMotionAnalyzer {
 			  isAlpha     = this._alphaBars && ! isLumi && _mode != MODE_GRAPH,
 			  isOutline   = this._outlineBars && isBands && ! isLumi && ! isLeds,
 			  isRound     = this._roundBars && isBands && ! isLumi && ! isLeds,
-			  noLedGap    = _chLayout != CHANNEL_VERTICAL || _reflexRatio > 0 && ! isLumi || scaleGap > 0,
+			  noLedGap    = _chLayout != LAYOUT_VERTICAL || _reflexRatio > 0 && ! isLumi || scaleGap > 0,
 
 			  // COMPUTE AUXILIARY VALUES
 
@@ -1558,10 +1574,10 @@ class AudioMotionAnalyzer {
 
 			  initialX       = centerX * ( _mirror == -1 && ! isDualHorizontal && ! _radial );
 
-		let innerRadius = minCanvasDimension * .375 * ( _chLayout == CHANNEL_VERTICAL ? 1 : this._radius ) | 0,
+		let innerRadius = minCanvasDimension * .375 * ( _chLayout == LAYOUT_VERTICAL ? 1 : this._radius ) | 0,
 			outerRadius = Math.min( centerX, centerY );
 
-		if ( _radialInvert && _chLayout != CHANNEL_VERTICAL )
+		if ( _radialInvert && _chLayout != LAYOUT_VERTICAL )
 			[ innerRadius, outerRadius ] = [ outerRadius, innerRadius ];
 
 		/**
@@ -1838,7 +1854,7 @@ class AudioMotionAnalyzer {
 			  [,, ledGap ]  = this._leds;
 
 		for ( const channel of [0,1] ) {
-			const channelTop     = _chLayout == CHANNEL_VERTICAL ? ( channelHeight + channelGap ) * channel : 0,
+			const channelTop     = _chLayout == LAYOUT_VERTICAL ? ( channelHeight + channelGap ) * channel : 0,
 				  channelBottom  = channelTop + channelHeight,
 				  analyzerBottom = channelTop + analyzerHeight - ( ! isLeds || noLedGap ? 0 : ledGap );
 
@@ -1868,8 +1884,8 @@ class AudioMotionAnalyzer {
 			  canvasX            = _scaleX.canvas,
 			  canvasR            = _scaleR.canvas,
 			  freqLabels         = isArray( _xAxis.labels ) && ! _noteLabels ? [ ..._xAxis.labels ] : [],
-			  isDualHorizontal   = this._chLayout == CHANNEL_HORIZONTAL,
-			  isDualVertical     = this._chLayout == CHANNEL_VERTICAL,
+			  isDualHorizontal   = this._chLayout == LAYOUT_HORIZONTAL,
+			  isDualVertical     = this._chLayout == LAYOUT_VERTICAL,
 			  minCanvasDimension = Math.min( canvas.width, canvas.height ),
 			  scale              = [ 'C',, 'D',, 'E', 'F',, 'G',, 'A',, 'B' ], // for note labels (no sharp notes)
 			  radialScaleHeight  = minCanvasDimension / 34 | 0, // circular scale height (radial mode)
@@ -2075,11 +2091,11 @@ class AudioMotionAnalyzer {
 			  canvasX          = this._scaleX.canvas,
 			  canvasR          = this._scaleR.canvas,
 			  holdFrames       = _fps * this._peakHoldTime,
-			  isDualCombined   = _chLayout == CHANNEL_COMBINED,
-			  isDualHorizontal = _chLayout == CHANNEL_HORIZONTAL,
-			  isDualVertical   = _chLayout == CHANNEL_VERTICAL,
-			  isSingle         = _chLayout == CHANNEL_SINGLE,
-			  isTrueLeds       = isLeds && this._trueLeds && _colorMode == COLOR_GRADIENT,
+			  isDualCombined   = _chLayout == LAYOUT_COMBINED,
+			  isDualHorizontal = _chLayout == LAYOUT_HORIZONTAL,
+			  isDualVertical   = _chLayout == LAYOUT_VERTICAL,
+			  isSingle         = _chLayout == LAYOUT_SINGLE,
+			  isTrueLeds       = isLeds && this._trueLeds && _colorMode == COLORMODE_GRADIENT,
 			  analyzerWidth    = _radial ? canvas.width : this._aux.analyzerWidth,
 			  finalX           = initialX + analyzerWidth,
 			  showPeakLine     = showPeaks && this._peakLine && _mode == MODE_GRAPH,
@@ -2379,10 +2395,10 @@ class AudioMotionAnalyzer {
 			const setBarColor = ( colorStops, value = 0, barIndex = 0 ) => {
 				let color;
 				// for graph mode, always use the channel gradient (ignore colorMode)
-				if ( ( _colorMode == COLOR_GRADIENT && ! isTrueLeds ) || _mode == MODE_GRAPH )
+				if ( ( _colorMode == COLORMODE_GRADIENT && ! isTrueLeds ) || _mode == MODE_GRAPH )
 					color = gradient;
 				else {
-					const selectedIndex = _colorMode == COLOR_BAR_INDEX ? barIndex % colorCount : colorStops.findLastIndex( item => isLeds ? ledUnits( value ) <= ledUnits( item.level ) : value <= item.level );
+					const selectedIndex = _colorMode == COLORMODE_INDEX ? barIndex % colorCount : colorStops.findLastIndex( item => isLeds ? ledUnits( value ) <= ledUnits( item.level ) : value <= item.level );
 					color = colorStops[ selectedIndex ].color;
 				}
 				_ctx.fillStyle = _ctx.strokeStyle = color;
@@ -2535,7 +2551,7 @@ class AudioMotionAnalyzer {
 								renderTrueLeds( muted.colorStops, barCenter, maxBarHeight, 1 );
 							else {
 								const savedColor = _ctx.fillStyle;
-								if ( _colorMode == COLOR_GRADIENT )
+								if ( _colorMode == COLORMODE_GRADIENT )
 									_ctx.strokeStyle = muted.gradient;
 								else
 									setBarColor( muted.colorStops, 0, barIndex );
@@ -2591,7 +2607,7 @@ class AudioMotionAnalyzer {
 					if ( theme.peakColor ) {
 						_ctx.fillStyle = _ctx.strokeStyle = theme.peakColor;
 					}
-					else if ( _colorMode == COLOR_BAR_LEVEL || isTrueLeds ) {
+					else if ( _colorMode == COLORMODE_LEVEL || isTrueLeds ) {
 						// select the proper peak color for 'bar-level' colorMode or 'trueLeds'
 						setBarColor( colorStops, peakValue );
 					}
@@ -2792,8 +2808,8 @@ class AudioMotionAnalyzer {
 		const { canvas, _chLayout, _ctx, _horizGrad, _mirror, _radial, _reflexRatio, _spread, _xAxis } = this,
 			  { analyzerHeight, analyzerWidth, centerX, centerY, channelHeight, initialX, innerRadius, outerRadius, xAxisHeight } = this._aux,
 			  { isLumi }        = this._flg,
-			  isDualVertical    = _chLayout == CHANNEL_VERTICAL,
-			  isDualHorizontal  = _chLayout == CHANNEL_HORIZONTAL;
+			  isDualVertical    = _chLayout == LAYOUT_VERTICAL,
+			  isDualHorizontal  = _chLayout == LAYOUT_HORIZONTAL;
 
 		for ( const channel of [0,1] ) {
 			const { name, modifiers }   = this._activeThemes[ channel ],
@@ -2956,7 +2972,7 @@ class AudioMotionAnalyzer {
 
 		// detect fullscreen changes (for Safari)
 		if ( this._fsStatus !== undefined && this._fsStatus !== isFullscreen )
-			reason = REASON_FSCHANGE;
+			reason = REASON_FULLSCREENCHANGE;
 		this._fsStatus = isFullscreen;
 
 		// call the callback function, if defined
