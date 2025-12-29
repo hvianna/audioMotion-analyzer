@@ -60,6 +60,9 @@ export const BANDS_FFT                 = 0,
 			 LAYOUT_HORIZONTAL         = 'dual-horizontal',
 			 LAYOUT_SINGLE             = 'single',
 			 LAYOUT_VERTICAL           = 'dual-vertical',
+			 LEDS_MODERN               = 'modern',
+			 LEDS_OFF                  = 'off',
+			 LEDS_VINTAGE              = 'vintage',
 			 MODE_BARS                 = 'bars',
 			 MODE_GRAPH                = 'graph',
 			 REASON_CREATE             = 'create',
@@ -113,7 +116,7 @@ const DEFAULT_SETTINGS = {
 	fillAlpha      : 1,
 	frequencyScale : SCALE_LOG,
 	height         : undefined,
-	ledBars        : false,
+	ledBars        : LEDS_OFF,
 	linearAmplitude: false,
 	linearBoost    : 1,
 	lineWidth      : 0,
@@ -147,7 +150,6 @@ const DEFAULT_SETTINGS = {
 	smoothing      : 0.5,
 	spinSpeed      : 0,
 	spreadGradient : false,
-	trueLeds       : false,
 	useCanvas      : true,
 	volume         : 1,
 	weightingFilter: FILTER_NONE,
@@ -571,10 +573,10 @@ class AudioMotionAnalyzer {
 	}
 
 	get ledBars() {
-		return this._showLeds;
+		return this._ledBars;
 	}
 	set ledBars( value ) {
-		this._showLeds = !! value;
+		this._ledBars = validateFromList( value, [ LEDS_OFF, LEDS_MODERN, LEDS_VINTAGE ] );
 		this._calcBars();
 	}
 
@@ -804,13 +806,6 @@ class AudioMotionAnalyzer {
 	set spreadGradient( value ) {
 		this._spread = !! value;
 		this._makeGrad();
-	}
-
-	get trueLeds() {
-		return this._trueLeds;
-	}
-	set trueLeds( value ) {
-		this._trueLeds = !! value;
 	}
 
 	get volume() {
@@ -1552,7 +1547,7 @@ class AudioMotionAnalyzer {
 
 			  isBands     = _bandRes > 0,
 			  isOctaves   = isBands && this._frequencyScale == SCALE_LOG,
-			  isLeds      = this._showLeds && isBands && ! _radial && _mode != MODE_GRAPH,
+			  isLeds      = this._ledBars != LEDS_OFF && isBands && ! _radial && _mode != MODE_GRAPH,
 			  isLumi      = this._lumiBars && isBands && ! _radial && _mode != MODE_GRAPH,
 			  isAlpha     = this._alphaBars && ! isLumi && _mode != MODE_GRAPH,
 			  isOutline   = this._outlineBars && isBands && ! isLumi && ! isLeds,
@@ -2095,7 +2090,7 @@ class AudioMotionAnalyzer {
 			  isDualHorizontal = _chLayout == LAYOUT_HORIZONTAL,
 			  isDualVertical   = _chLayout == LAYOUT_VERTICAL,
 			  isSingle         = _chLayout == LAYOUT_SINGLE,
-			  isTrueLeds       = isLeds && this._trueLeds && _colorMode == COLORMODE_GRADIENT,
+			  isVintageLeds    = isLeds && this._ledBars == LEDS_VINTAGE && _colorMode == COLORMODE_GRADIENT,
 			  analyzerWidth    = _radial ? canvas.width : this._aux.analyzerWidth,
 			  finalX           = initialX + analyzerWidth,
 			  showPeakLine     = showPeaks && this._peakLine && _mode == MODE_GRAPH,
@@ -2375,7 +2370,7 @@ class AudioMotionAnalyzer {
 			}
 
 			// render a bar of LEDs where each element has a single color (uses: analyzerBottom, isLumi)
-			const renderTrueLeds = ( colorStops, barCenter, barHeight, barValue ) => {
+			const renderVintageLeds = ( colorStops, barCenter, barHeight, barValue ) => {
 				const colorIndex       = isLumi ? 0 : colorStops.findLastIndex( item => ledUnits( barValue ) <= ledUnits( item.level ) ),
 					  savedStrokeStyle = _ctx.strokeStyle;
 
@@ -2395,7 +2390,7 @@ class AudioMotionAnalyzer {
 			const setBarColor = ( colorStops, value = 0, barIndex = 0 ) => {
 				let color;
 				// for graph mode, always use the channel gradient (ignore colorMode)
-				if ( ( _colorMode == COLORMODE_GRADIENT && ! isTrueLeds ) || _mode == MODE_GRAPH )
+				if ( ( _colorMode == COLORMODE_GRADIENT && ! isVintageLeds ) || _mode == MODE_GRAPH )
 					color = gradient;
 				else {
 					const selectedIndex = _colorMode == COLORMODE_INDEX ? barIndex % colorCount : colorStops.findLastIndex( item => isLeds ? ledUnits( value ) <= ledUnits( item.level ) : value <= item.level );
@@ -2547,8 +2542,8 @@ class AudioMotionAnalyzer {
 						if ( showLedMask && ( ! isDualCombined || channel == 0 ) ) {
 							const savedAlpha = _ctx.globalAlpha;
 							_ctx.globalAlpha = 1; // TO-DO: maybe set the led mask alpha here, instead of doing it in each color?
-							if ( isTrueLeds )
-								renderTrueLeds( muted.colorStops, barCenter, maxBarHeight, 1 );
+							if ( isVintageLeds )
+								renderVintageLeds( muted.colorStops, barCenter, maxBarHeight, 1 );
 							else {
 								const savedColor = _ctx.fillStyle;
 								if ( _colorMode == COLORMODE_GRADIENT )
@@ -2560,8 +2555,8 @@ class AudioMotionAnalyzer {
 							}
 							_ctx.globalAlpha = savedAlpha;
 						}
-						if ( isTrueLeds )
-							renderTrueLeds( colorStops, barCenter, barHeight, barValue );
+						if ( isVintageLeds )
+							renderVintageLeds( colorStops, barCenter, barHeight, barValue );
 						else
 							strokeBar( barCenter, analyzerBottom, analyzerBottom - barHeight );
 					}
@@ -2607,8 +2602,8 @@ class AudioMotionAnalyzer {
 					if ( theme.peakColor ) {
 						_ctx.fillStyle = _ctx.strokeStyle = theme.peakColor;
 					}
-					else if ( _colorMode == COLORMODE_LEVEL || isTrueLeds ) {
-						// select the proper peak color for 'bar-level' colorMode or 'trueLeds'
+					else if ( _colorMode == COLORMODE_LEVEL || isVintageLeds ) {
+						// select the proper peak color for 'bar-level' colorMode or 'vintage' ledBars
 						setBarColor( colorStops, peakValue );
 					}
 

@@ -53,7 +53,7 @@ export interface Options {
   fillAlpha?: number;
   frequencyScale?: FrequencyScale;
   height?: number;
-  ledBars?: boolean;
+  ledBars?: LedBars;
   linearAmplitude?: boolean;
   linearBoost?: number;
   lineWidth?: number;
@@ -89,7 +89,6 @@ export interface Options {
   smoothing?: number;
   spinSpeed?: number;
   spreadGradient?: boolean;
-  trueLeds?: boolean;
   useCanvas?: boolean;
   volume?: number;
   weightingFilter?: WeightingFilter;
@@ -126,6 +125,8 @@ export type FrequencyScale = "bark" | "linear" | "log" | "mel";
 export type FrequencyLabel = number | [ frequency: number; label: string; highlight?: boolean ];
 
 export type GradientColorStop = string | { pos?: number; color: string; level?: number };
+
+export type LedBars = "off" | "modern" | "vintage";
 
 export type VisualizationMode = "bars" | "graph";
 
@@ -218,8 +219,8 @@ declare class AudioMotionAnalyzer {
   get isDestroyed(): boolean;
   get isOn(): boolean;
 
-  get ledBars(): boolean;
-  set ledBars(value: boolean);
+  get ledBars(): LedBars;
+  set ledBars(value: LedBars);
 
   get linearAmplitude(): boolean;
   set linearAmplitude(value: boolean);
@@ -307,9 +308,6 @@ declare class AudioMotionAnalyzer {
 
   get spreadGradient(): boolean;
   set spreadGradient(value: boolean);
-
-  get trueLeds(): boolean;
-  set trueLeds(value: boolean);
 
   public useCanvas: boolean;
 
