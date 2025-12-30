@@ -87,8 +87,8 @@ const PRISM = [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', 
 	  [ 'classic', {
 			colorStops: [
 				'red',
-				{ color: 'yellow', level: .9, pos: .6 },
-				{ color: 'lime', level: .6 }
+				{ color: 'yellow', level: .9 },
+				{ color: 'lime',   level: .6 }
 			]
 	  }],
 	  [ 'mono', {
