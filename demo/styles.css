@@ -107,6 +107,10 @@ select {
 	padding: 6px;
 }
 
+select {
+	min-width: 70px;
+}
+
 ul {
 	line-height: 1.6;
 }
@@ -131,7 +135,8 @@ ul {
 	gap: 10px;
 	margin: 5px 0;
 }
-.button-grid button {
+.button-grid button,
+.button-grid .label {
 	margin: 0;
 }
 
@@ -154,6 +159,9 @@ fieldset .label,
 fieldset button {
 	margin-left: 2px;
 	margin-right: 2px;
+}
+fieldset > button:not(.full-width) {
+	margin-bottom: 0;
 }
 
 .slim {

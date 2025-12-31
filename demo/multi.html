@@ -260,12 +260,12 @@
 
 			<fieldset>
 				<legend>Peak behavior</legend>
-				<label class="label"><a href="https://audiomotion.dev/#/?id=peakdecaytime-number" target="_blank">peakDecayTime</a>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peakdecaytime" target="_blank">peakDecayTime</a>
 					<input type="range" min="0" max="2000" step="50" data-setting="peakDecayTime">
 					<div class="value"></div>
 				</label>
 
-				<label class="label"><a href="https://audiomotion.dev/#/?id=peakhold-number" target="_blank">peakHoldTime</a>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peakhold" target="_blank">peakHoldTime</a>
 					<input type="range" min="0" max="1000" step="50" data-setting="peakHoldTime">
 					<div class="value"></div>
 				</label>
@@ -276,8 +276,21 @@
 			<fieldset>
 				<legend>Bar effects</legend>
 				<div class="button-grid">
-					<button data-prop="alphaBars">alphaBars</button>
-					<button data-prop="lumiBars">lumiBars</button>
+					<label class="label rowspan-2">alphaBars
+						<select data-setting="alphaBars">
+							<option>off</option>
+							<option>on</option>
+							<option>full</option>
+						</select>
+					</label>
+					<label class="label rowspan-2">ledBars
+						<select data-setting="ledBars">
+							<option>off</option>
+							<option>modern</option>
+							<option>vintage</option>
+						</select>
+					</label>
+
 					<button data-prop="outlineBars">outlineBars</button>
 					<button data-prop="roundBars">roundBars</button>
 				</div>
@@ -290,18 +303,10 @@
 					<button data-prop="noteLabels">noteLabels</button>
 					<button data-prop="loRes">loRes</button>
 					<button data-prop="showFPS">showFPS</button>
+					<button data-prop="showLedMask">showLedMask</button>
+					<button data-prop="spreadGradient">spreadGradient</button>
 					<button data-prop="showScaleX">showScaleX</button>
 					<button data-prop="showScaleY">showScaleY</button>
-					<button data-prop="spreadGradient">spreadGradient</button>
-				</div>
-			</fieldset>
-
-			<fieldset>
-				<legend>LEDs</legend>
-				<div class="button-grid">
-					<button data-prop="ledBars">ledBars</button>
-					<button data-prop="showLedMask">showLedMask</button>
-					<button data-prop="trueLeds">trueLeds</button>
 				</div>
 			</fieldset>
 

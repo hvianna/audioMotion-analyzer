@@ -51,8 +51,8 @@
 
 			<label class="label"><a href="https://audiomotion.dev/#/?id=mode-string" target="_blank">mode</a>
 				<select data-setting="mode">
-					<option value="bars">bars</option>
-					<option value="graph">graph</option>
+					<option>bars</option>
+					<option>graph</option>
 				</select>
 			</label>
 
@@ -63,9 +63,9 @@
 
 			<label class="label"><a href="https://audiomotion.dev/#/?id=colormode-string" target="_blank">colorMode</a>
 				<select data-setting="colorMode">
-					<option value="gradient">gradient</option>
-					<option value="bar-index">bar-index</option>
-					<option value="bar-level">bar-level</option>
+					<option>gradient</option>
+					<option>bar-index</option>
+					<option>bar-level</option>
 				</select>
 			</label>
 
@@ -87,10 +87,10 @@
 
 			<label class="label"><a href="https://audiomotion.dev/#/?id=channellayout-string" target="_blank">channelLayout</a>
 				<select data-setting="channelLayout">
-					<option value="single">single</option>
-					<option value="dual-combined">dual-combined</option>
-					<option value="dual-horizontal">dual-horizontal</option>
-					<option value="dual-vertical">dual-vertical</option>
+					<option>single</option>
+					<option>dual-combined</option>
+					<option>dual-horizontal</option>
+					<option>dual-vertical</option>
 				</select>
 			</label>
 
@@ -106,12 +106,12 @@
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=fftsize-number" target="_blank">fftSize</a>
 					<select data-setting="fftSize">
-						<option value="1024">1024</option>
-						<option value="2048">2048</option>
-						<option value="4096">4096</option>
-						<option value="8192">8192</option>
-						<option value="16384">16384</option>
-						<option value="32768">32768</option>
+						<option>1024</option>
+						<option>2048</option>
+						<option>4096</option>
+						<option>8192</option>
+						<option>16384</option>
+						<option>32768</option>
 					</select>
 				</label>
 				<label class="label"><a href="https://audiomotion.dev/#/?id=smoothing-number" target="_blank">smoothing</a>
@@ -125,37 +125,37 @@
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=minfreq-number" target="_blank">minFreq</a>
 					<select data-setting="minFreq">
-						<option value="10">10</option>
-						<option value="16">16</option>
-						<option value="20">20</option>
-						<option value="25">25</option>
-						<option value="30">30</option>
-						<option value="40">40</option>
-						<option value="60">60</option>
-						<option value="100">100</option>
-						<option value="500">500</option>
-						<option value="1000">1000</option>
+						<option>10</option>
+						<option>16</option>
+						<option>20</option>
+						<option>25</option>
+						<option>30</option>
+						<option>40</option>
+						<option>60</option>
+						<option>100</option>
+						<option>500</option>
+						<option>1000</option>
 					</select>
 				</label>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=maxfreq-number" target="_blank">maxFreq</a>
 					<select data-setting="maxFreq">
-						<option value="8000">8000</option>
-						<option value="10000">10000</option>
-						<option value="12000">12000</option>
-						<option value="16000">16000</option>
-						<option value="20000">20000</option>
-						<option value="22000">22000</option>
-						<option value="24000">24000</option>
+						<option>8000</option>
+						<option>10000</option>
+						<option>12000</option>
+						<option>16000</option>
+						<option>20000</option>
+						<option>22000</option>
+						<option>24000</option>
 					</select>
 				</label>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=frequencyscale-string" target="_blank">frequencyScale</a>
 					<select data-setting="frequencyScale">
-						<option value="bark">Bark</option>
-						<option value="linear">Linear</option>
-						<option value="log">Log</option>
-						<option value="mel">Mel</option>
+						<option>bark</option>
+						<option>linear</option>
+						<option>log</option>
+						<option>mel</option>
 					</select>
 				</label>
 			</fieldset>
@@ -166,11 +166,11 @@
 				<label class="label"><a href="https://audiomotion.dev/#/?id=weightingfilter-string" target="_blank">weightingFilter</a>
 					<select data-setting="weightingFilter">
 						<option value="">none</option>
-						<option value="A">A</option>
-						<option value="B">B</option>
-						<option value="C">C</option>
-						<option value="D">D</option>
-						<option value="468">468</option>
+						<option>A</option>
+						<option>B</option>
+						<option>C</option>
+						<option>D</option>
+						<option>468</option>
 					</select>
 				</label>
 
@@ -192,6 +192,21 @@
 				<label class="label"><a href="https://audiomotion.dev/#/?id=linearboost-number" target="_blank">linearBoost</a>
 					<input type="range" min="1" max="4" step=".2" data-setting="linearBoost">
 					<div class="value"></div>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Frame rate</legend>
+				<button data-prop="showFPS">showFPS</button>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=maxfps-number" target="_blank">maxFPS</a>
+					<select data-setting="maxFPS">
+						<option>0</option>
+						<option>10</option>
+						<option>20</option>
+						<option>30</option>
+						<option>60</option>
+						<option>120</option>
+					</select>
 				</label>
 			</fieldset>
 		</div>
@@ -262,6 +277,37 @@
 
 		<div class="box center flex">
 			<fieldset>
+				<legend>Bar modifiers</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=alphabars" target="_blank">alphaBars</a>
+					<select data-setting="alphaBars">
+						<option>off</option>
+						<option>on</option>
+						<option>full</option>
+					</select>
+				</label>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=ledbars" target="_blank">ledBars</a>
+					<select data-setting="ledBars">
+						<option>off</option>
+						<option>modern</option>
+						<option>vintage</option>
+					</select>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Custom LED parameters</legend>
+				<label class="label">Enable
+					<input id="customLeds" type="checkbox" data-custom="ledProps">
+				</label>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=setledprops" target="_blank">ledHeight</a>
+					<input id="ledHeight" type="number" min="1" max="50" value="16" data-custom="ledProps">
+				</label>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=setledprops" target="_blank">ledGap</a>
+					<input id="gapHeight" type="number" min="1" max="50" value="3" data-custom="ledProps">
+				</label>
+			</fieldset>
+
+			<fieldset>
 				<legend>Peak behavior</legend>
 				<button data-prop="fadePeaks">fadePeaks</button>
 				<button data-prop="peakLine">peakLine</button>
@@ -277,54 +323,21 @@
 					<div class="value"></div>
 				</label>
 			</fieldset>
-
-			<fieldset>
-				<legend>Custom LED parameters</legend>
-				<label class="label">Enable
-					<input id="customLeds" type="checkbox" data-custom="ledParams">
-				</label>
-				<label class="label"><a href="https://audiomotion.dev/#/?id=setledparams-params-" target="_blank">ledHeight</a>
-					<input id="ledHeight" type="number" min="1" max="50" value="16" data-custom="ledParams">
-				</label>
-				<label class="label"><a href="https://audiomotion.dev/#/?id=setledparams-params-" target="_blank">ledGap</a>
-					<input id="ledGap" type="number" min="1" max="50" value="3" data-custom="ledParams">
-				</label>
-			</fieldset>
-
-			<fieldset>
-				<legend>Frame rate</legend>
-				<button data-prop="showFPS">showFPS</button>
-				<label class="label"><a href="https://audiomotion.dev/#/?id=maxfps-number" target="_blank">maxFPS</a>
-					<select data-setting="maxFPS">
-						<option value="0">0</option>
-						<option value="10">10</option>
-						<option value="20">20</option>
-						<option value="30">30</option>
-						<option value="60">60</option>
-						<option value="120">120</option>
-					</select>
-				</label>
-			</fieldset>
 		</div>
 
 		<div class="box center flex stretch">
 			<fieldset>
 				<legend>Switches & read-only flags</legend>
 				<div class="button-grid">
-					<button data-prop="alphaBars">alphaBars</button>
 					<button data-prop="ansiBands">ansiBands</button>
-					<button data-prop="ledBars">ledBars</button>
 					<button data-prop="loRes">loRes</button>
-					<button data-prop="lumiBars">lumiBars</button>
 					<button data-prop="noteLabels">noteLabels</button>
-<!--				<br> -->
 					<button data-prop="outlineBars">outlineBars</button>
 					<button data-prop="roundBars">roundBars</button>
 					<button data-prop="showLedMask">showLedMask</button>
 					<button data-prop="showScaleX">showScaleX</button>
 					<button data-prop="showScaleY">showScaleY</button>
 					<button data-prop="spreadGradient">spreadGradient</button>
-					<button data-prop="trueLeds">trueLeds</button>
 				</div>
 				<hr>
 				<span class="flag" data-flag="isAlphaBars">isAlphaBars</span>

@@ -53,7 +53,7 @@ audioMotion[0].setOptions({
 	bandResolution: 3,
 	barSpace: .4,
 	frequencyScale: 'bark',
-	ledBars: true,
+	ledBars: 'modern',
 	linearAmplitude: true,
 	linearBoost: 1.6,
 	maxFreq: 20000,
@@ -61,6 +61,8 @@ audioMotion[0].setOptions({
 	showScaleY: true,
 	weightingFilter: 'D'
 });
+
+audioMotion[0].setLeds( 6, 5 ); // thinner leds look better in a small canvas :)
 
 // top right
 audioMotion[1].setOptions({
@@ -85,9 +87,9 @@ audioMotion[1].setTheme( 'orangered', 1 );
 // bottom right
 audioMotion[2].setOptions({
 	mode: 'bars',
+	alphaBars: 'full',
 	bandResolution: 7,
 	barSpace: .1,
-	lumiBars: true,
 	minDecibels: -60,
 	maxDecibels: -30,
 	maxFreq: 16000,

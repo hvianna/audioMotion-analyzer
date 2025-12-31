@@ -4,7 +4,18 @@
  * https://github.com/hvianna/audioMotion-analyzer
  */
 
-import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
+import {
+	AudioMotionAnalyzer,
+	ENERGY_BASS,
+	ENERGY_HIGHMID,
+	ENERGY_LOWMID,
+	ENERGY_MIDRANGE,
+	ENERGY_PEAK,
+	ENERGY_TREBLE,
+	LEDS_MODERN,
+	LEDS_OFF,
+	LEDS_VINTAGE
+} from '../src/audioMotion-analyzer.js';
 
 const audioEl             = document.getElementById('audio'),
 	  backgroundSelection = document.getElementById('bgColor'),
@@ -37,7 +48,7 @@ const presets = [
 			channelLayout: 'single',
 			colorMode: 'gradient',
 			frequencyScale: 'log',
-			ledBars: true,
+			ledBars: LEDS_VINTAGE,
 			lumiBars: false,
 			maxFreq: 20000,
 			minFreq: 25,
@@ -45,8 +56,7 @@ const presets = [
 			radial: false,
 			reflexRatio: 0,
 			showLedMask: true,
-			showPeaks: true,
-			trueLeds: true
+			showPeaks: true
 		},
 		theme: { name: 'classic', modifiers: {} }
 	},
@@ -77,7 +87,7 @@ const presets = [
 			bandResolution: 4,
 			barSpace: .1,
 			channelLayout: 'single',
-			ledBars: false,
+			ledBars: LEDS_OFF,
 			maxFreq: 20000,
 			minFreq: 20,
 			mirror: 0,
@@ -142,7 +152,7 @@ const presets = [
 			channelLayout: 'single',
 			colorMode: 'bar-level',
 			frequencyScale: 'log',
-			ledBars: false,
+			ledBars: LEDS_OFF,
 			linearAmplitude: true,
 			linearBoost: 1.6,
 			lumiBars: false,
@@ -187,7 +197,7 @@ const presets = [
 			ansiBands: false,
 			barSpace: .1,
 			channelLayout: 'dual-vertical',
-			ledBars: true,
+			ledBars: LEDS_MODERN,
 			lumiBars: false,
 			radial: false,
 			reflexRatio: 0,
@@ -210,7 +220,7 @@ const presets = [
 			barSpace: .4,
 			channelLayout: 'single',
 			frequencyScale: 'log',
-			ledBars: false,
+			ledBars: LEDS_OFF,
 			linearAmplitude: true,
 			linearBoost: 1,
 			lumiBars: false,
@@ -239,7 +249,7 @@ const presets = [
 			flipColors: false,
 			frequencyScale: 'log',
 			horizontalGradient: false,
-			ledBars: false,
+			ledBars: LEDS_VINTAGE,
 			linearAmplitude: true,
 			lumiBars: false,
 			maxFreq: 20000,
@@ -253,8 +263,7 @@ const presets = [
 			showPeaks: true,
 			showScaleX: true,
 			showScaleY: true,
-			splitGradient: false,
-			trueLeds: true
+			splitGradient: false
 		}
 	}
 ];
@@ -276,7 +285,7 @@ try {
 		{
 			source: audioEl, // main audio source is the HTML <audio> element
 			fsElement: container, // element to be rendered in fullscreen (defaults to the canvas, here we use the container to take the background to fullscreen as well)
-//			height: 300,
+//			height: 200,
 			onCanvasDraw: drawCallback, // callback function used to add custom features for this demo
 			onCanvasResize: ( reason, instance ) => {
 				console.log( `onCanvasResize called. Reason: ${reason}\nCanvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
@@ -374,8 +383,8 @@ document.querySelectorAll('[data-custom]').forEach( el => {
 	el.addEventListener( 'input', () => {
 		const active    = document.getElementById('customLeds').checked,
 			  ledHeight = document.getElementById('ledHeight').value,
-			  ledGap    = document.getElementById('ledGap').value;
-		audioMotion.setLeds( ...( active ? [ ledHeight, ledGap ] : [] ) );
+			  gapHeight = document.getElementById('gapHeight').value;
+		audioMotion.setLeds( ...( active ? [ ledHeight, gapHeight ] : [] ) );
 	});
 });
 
@@ -705,7 +714,7 @@ function drawCallback( instance, { timestamp, themes } ) {
 
 	if ( features.energyMeter ) {
 		const energy     = audioMotion.getEnergy(),
-			  peakEnergy = audioMotion.getEnergy('peak');
+			  peakEnergy = audioMotion.getEnergy( ENERGY_PEAK );
 
 		// overall energy peak
 		const width = 50 * pixelRatio;
@@ -750,21 +759,21 @@ function drawCallback( instance, { timestamp, themes } ) {
 		ctx.textAlign = 'center';
 		const growSize = baseSize * 4;
 
-		const bassEnergy = audioMotion.getEnergy('bass');
+		const bassEnergy = audioMotion.getEnergy( ENERGY_BASS );
 		ctx.font = `bold ${ baseSize + growSize * bassEnergy }px sans-serif`;
 		ctx.fillText( 'BASS', canvas.width * .15, centerY );
 		drawLight( canvas.width * .15, '#f00', bassEnergy );
 
-		drawLight( canvas.width * .325, '#f80', audioMotion.getEnergy('lowMid') );
+		drawLight( canvas.width * .325, '#f80', audioMotion.getEnergy( ENERGY_LOWMID ) );
 
-		const midEnergy = audioMotion.getEnergy('mid');
+		const midEnergy = audioMotion.getEnergy( ENERGY_MIDRANGE );
 		ctx.font = `bold ${ baseSize + growSize * midEnergy }px sans-serif`;
 		ctx.fillText( 'MIDRANGE', centerX, centerY );
 		drawLight( centerX, '#ff0', midEnergy );
 
-		drawLight( canvas.width * .675, '#0f0', audioMotion.getEnergy('highMid') );
+		drawLight( canvas.width * .675, '#0f0', audioMotion.getEnergy( ENERGY_HIGHMID ) );
 
-		const trebleEnergy = audioMotion.getEnergy('treble');
+		const trebleEnergy = audioMotion.getEnergy( ENERGY_TREBLE );
 		ctx.font = `bold ${ baseSize + growSize * trebleEnergy }px sans-serif`;
 		ctx.fillText( 'TREBLE', canvas.width * .85, centerY );
 		drawLight( canvas.width * .85, '#0ff', trebleEnergy );
