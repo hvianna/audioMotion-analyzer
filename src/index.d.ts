@@ -353,7 +353,7 @@ declare class AudioMotionAnalyzer {
 
   public setCanvasSize(width: number, height: number): void;
   public setFreqRange(minFreq: number, maxFreq: number): void;
-  public setLedParams(ledHeight: number, ledGap: number): void;
+  public setLeds(ledHeight: number, gapHeight: number): void;
   public setOptions(options?: Options): void;
   public setSensitivity(minDecibels: number, maxDecibels: number): void;
 
