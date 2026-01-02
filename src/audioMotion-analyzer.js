@@ -1119,7 +1119,7 @@ class AudioMotionAnalyzer {
 	 * @returns {object|null} theme object or null if name is invalid
 	 */
 	getThemeData( name ) {
-		return this.getThemeList().includes( name ) ? deepCloneObject( this._themes[ name ] ) : null;
+		return this.getThemeList().includes( name ) ? Object.fromEntries( Object.entries( this._themes[ name ] ).filter( ([key]) => key != 'mask' ) ) : null;
 	}
 
 	/**

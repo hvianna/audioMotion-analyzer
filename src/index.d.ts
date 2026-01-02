@@ -10,16 +10,14 @@ export type CanvasDrawInfo = {
 
 export interface ThemeData {
   colorStops: GradientColorStop[];
-  muted: {
-    colorStops: GradientColorStop[];
-  };
   peakColor: string;
 }
 
 export interface ActiveTheme extends ThemeData {
   name: string;
   gradient: CanvasGradient;
-  muted: ThemeData["muted"] & {
+  mask: {
+    colorStops: GradientColorStop[];
     gradient: CanvasGradient;
   };
 }

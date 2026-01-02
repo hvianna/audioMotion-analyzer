@@ -1438,9 +1438,8 @@ getThemeData(name)
 
 property | type | description
 ---------|------|---------------
-`colorStops` | *array* | colorStops defined in theme registration - all entries are normalized as objects with `color`, `level` and `pos` properties
-`peakColor`  | *string* | optional, only if defined in theme registration
-`mask` | *object* | colorStops generated for the LED mask - see [`showLedMask`](#showledmask)
+`colorStops` | *array*  | all entries are normalized as objects with `color`, `level` and `pos` properties
+`peakColor`  | *string* | `undefined` if not originally defined in [theme registration](#registertheme)
 
 **Example usage:**
 
@@ -1453,13 +1452,7 @@ console.log( audioMotion.getThemeData('classic') );
     { color: "yellow", level: 0.9, pos: 0.5 },
     { color: "lime", level: 0.6, pos: 1 }
   ],
-  mask: {
-    colorStops: [
-        { color: "hsla( 0, 20%, 50%, 0.2 )", level: 1, pos: 0 },
-        { color: "hsla( 60, 20%, 50%, 0.2 )", level: 0.85, pos: 0.6 },
-        { color: "hsla( 120, 20%, 50%, 0.2 )", level: 0.475, pos: 1 }
-    ]
-  }
+  peakColor: undefined
 }
 ```
 
@@ -1472,13 +1465,6 @@ Returns the names of available themes, including built-in and custom registered 
 **Parametes:** none.
 
 **Return value:** an *array* of *string*s.
-
-Built-in themes:
-
-theme       | preview
-------------|---------
-`"classic"` | ![classic](img/gradient-classic.png)
-`"rainbow"` | ![rainbow](img/gradient-rainbow.png)
 
 ### `registerTheme()`
 
