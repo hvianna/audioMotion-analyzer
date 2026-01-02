@@ -212,7 +212,6 @@ declare class AudioMotionAnalyzer {
   get isBandsMode(): boolean;
   get isFullscreen(): boolean;
   get isLedBars(): boolean;
-  get isLumiBars(): boolean;
   get isOctaveBands(): boolean;
   get isOutlineBars(): boolean;
   get isRoundBars(): boolean;

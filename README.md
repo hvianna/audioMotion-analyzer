@@ -33,7 +33,7 @@ What users are saying:
 + Visualization of discrete FFT frequencies or up to 240 frequency bands (supports ANSI and equal-tempered octave bands)
 + Decibel and linear amplitude scales, with customizable sensitivity
 + Optional A, B, C, D and ITU-R 468 weighting filters
-+ Additional effects: LED bars, luminance bars, mirroring and reflection, radial spectrum
++ Additional effects: LED bars, radial spectrum, variable opacity bars, mirroring and reflection
 + Choose from 5 built-in color themes or easily add your own!
 + Fullscreen support, ready for retina / HiDPI displays
 + Zero-dependency native ES6+ module (ESM), \~30kB minified
@@ -344,7 +344,7 @@ value    | [Constant](#constants) | Description
 ---------|------------------------|--------------
 `"off"`  | `ALPHABARS_OFF`  | Disables effect
 `"on"`   | `ALPHABARS_ON`   | Bars with higher amplitude are rendered more opaque while those with lower amplitude are mode transparent
-`"full"` | `ALPHABARS_FULL` | All bars are rendered with full amplitude and only their opacity varies (legacy "Lumi bars" effect)
+`"full"` | `ALPHABARS_FULL` | All bars are rendered with full amplitude and variable opacity only (legacy "Lumi bars" effect).<br>**This setting disables the display of [`reflexRatio`](#reflexratio), [`roundBars`](#roundbars), [`outlineBars`](#outlinebars) and [`showScaleY`](#showscaley).**
 
 For effect priority when combined with other settings, see [`isAlphaBars`](#isalphabars-read-only).
 
@@ -640,15 +640,15 @@ See [`start()`](#start), [`stop()`](#stop) and [`toggleAnalyzer()`](#toggleanaly
 
 *Available since v3.6.0*
 
-Returns `true` when outlined bars are effectively being displayed, i.e., [`outlineBars`](#outlinebars) is set to `true`, [`isBandsMode`](#isbandsmode-read-only) is `true`,
-[`isLedBars`](#isledbars-read-only) is `false` and [`isLumiBars`](#islumibars-read-only) is `false`.
+Returns `true` when outlined bars are effectively being displayed, i.e., [`outlineBars`](#outlinebars) is set to `true`, [`mode`](#mode) is set to `"bars"`,
+[`alphaBars`](#alphabars) is NOT set to `"full"`, [`isBandsMode`](#isbandsmode-read-only) is `true` and [`isLedBars`](#isledbars-read-only) is `false`.
 
 ### `isRoundBars` *(read only)*
 
 *Available since v4.1.0*
 
-Returns `true` when round bars are effectively being displayed, i.e., [`roundBars`](#roundbars) is set to *true*, [`isBandsMode`](#isbandsmode-read-only) is `true`,
-[`isLedBars`](#isledbars-read-only) is `false` and [`isLumiBars`](#islumibars-read-only) is `false`.
+Returns `true` when round bars are effectively being displayed, i.e., [`roundBars`](#roundbars) is set to `true`, [`mode`](#mode) is set to `"bars"`,
+[`alphaBars`](#alphabars) is NOT set to `"full"`, [`isBandsMode`](#isbandsmode-read-only) is `true` and [`isLedBars`](#isledbars-read-only) is `false`.
 
 ### `ledBars`
 
@@ -979,9 +979,9 @@ You can refer to this value to adjust any additional drawings done in the canvas
 
 Whether to render the spectrum analyzer as a circle with radial frequency bars spreading from its center.
 
-In radial view, [`ledBars`](#ledbars) and [`lumiBars`](#lumibars) effects are disabled.
-
 When [`channelLayout`](#channellayout) is set to `"dual-vertical"`, graphs for the right channel are rendered towards the center of the screen.
+
+In radial view, [`ledBars`](#ledbars) effect is disabled.
 
 See also [`radialInvert`](#radialinvert), [`radius`](#radius) and [`spinSpeed`](#spinspeed).
 
@@ -1055,7 +1055,7 @@ It must be a number greater than or equal to `0` (no reflection), but less than 
 
 For a perfect mirrored effect, set `reflexRatio` to `0.5` and both [`reflexAlpha`](#reflexalpha) and [`reflexBright`](#reflexbright) to `1`.
 
-This has no effect when [`lumiBars`](#lumibars) is `true`.
+This has no effect when [`alphaBars`](#alphaBars) is set to `"full"`.
 
 ### `roundBars`
 
@@ -1066,9 +1066,9 @@ This has no effect when [`lumiBars`](#lumibars) is `true`.
 Whether to render analyzer bars with rounded corners at the top. Only effective for Bars [`mode`](#mode) with [`bandResolution`](#bandresolution) > 0.
 
 In [`radial`](#radial) view this makes the top and bottom of bars to follow the curvatures of the outer and inner circles, respectivelly, although the effect
-can be barely noticeable with [`bandResolution`](#bandresolution) > 2 (half-octave bands).
+can be barely noticeable with [`bandResolution`](#bandresolution) > `2` (half-octave bands).
 
-This has no effect when [`ledBars`](#ledbars) or [`lumiBars`](#lumibars) are set to `true`.
+This has no effect when [`ledBars`](#ledbars) is set to `true` or [`alphaBars`](#alphabars) is set to `"full"`.
 
 See also [`isRoundBars`](#isroundbars-read-only).
 
@@ -1116,7 +1116,7 @@ See also [`noteLabels`](#notelabels).
 
 Whether to display the level/amplitude scale on the Y-axis.
 
-This option has no effect when [`radial`](#radial) or [`lumiBars`](#lumibars) are set to `true`.
+This option has no effect when [`radial`](#radial) is set to `true` or [`alphaBars`](#alphabars) is set to `"full"`.
 
 When [`linearAmplitude`](#linearamplitude) is set to *false* (default), labels are shown in decibels (dB);
 otherwise, values represent a percentage (0-100%) of the maximum amplitude.

@@ -852,7 +852,7 @@ class AudioMotionAnalyzer {
 		return this._fsWidth;
 	}
 	get isAlphaBars() {
-		return this._flg.isAlpha;
+		return this._flg.isAlpha || this._flg.isLumi;
 	}
 	get isBandsMode() {
 		return this._flg.isBands;
@@ -865,9 +865,6 @@ class AudioMotionAnalyzer {
 	}
 	get isLedBars() {
 		return this._flg.isLeds;
-	}
-	get isLumiBars() {
-		return this._flg.isLumi;
 	}
 	get isOctaveBands() {
 		return this._flg.isOctaves;
@@ -1543,13 +1540,13 @@ class AudioMotionAnalyzer {
 
 			  // COMPUTE FLAGS
 
-			  isAlpha     = _alphaBars == ALPHABARS_ON && _mode != MODE_GRAPH,
+			  isAlpha     = _alphaBars == ALPHABARS_ON && _mode == MODE_BARS,
 			  isBands     = _bandRes > 0,
 			  isOctaves   = isBands && this._frequencyScale == SCALE_LOG,
-			  isLeds      = this._ledBars != LEDS_OFF && isBands && ! _radial && _mode != MODE_GRAPH,
-			  isLumi      = _alphaBars == ALPHABARS_FULL && _mode != MODE_GRAPH,
-			  isOutline   = this._outlineBars && isBands && ! isLumi && ! isLeds,
-			  isRound     = this._roundBars && isBands && ! isLumi && ! isLeds,
+			  isLeds      = this._ledBars != LEDS_OFF && isBands && ! _radial && _mode == MODE_BARS,
+			  isLumi      = _alphaBars == ALPHABARS_FULL && _mode == MODE_BARS,
+			  isOutline   = this._outlineBars && _mode == MODE_BARS && isBands && ! isLumi && ! isLeds,
+			  isRound     = this._roundBars && _mode == MODE_BARS && isBands && ! isLumi && ! isLeds,
 			  noLedGap    = _chLayout != LAYOUT_VERTICAL || _reflexRatio > 0 && ! isLumi || scaleGap > 0,
 
 			  // COMPUTE AUXILIARY VALUES
