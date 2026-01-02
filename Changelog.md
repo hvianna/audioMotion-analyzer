@@ -3,51 +3,62 @@ Changelog
 
 ## version 5.0.0-alpha.0
 
-### Overview: <!-- {docsify-ignore} -->
+### Version overview: <!-- {docsify-ignore} -->
 
-+ **_Gradients_ are now called "Themes" -** see *breaking changes* below for renamed properties and methods;
++ _Gradients_ are now called **Themes** - new `peakColor` property in [`registerTheme()`](README.md#registertheme) and on-the-fly *theme modifiers* - see [`setThemeModifiers()`](README.md#setthememodifiers);
++ **LED bars look better and are easier to customize** - see [`showLedMask`](README.md#showledmask) and [`setLeds()`](README.md#setleds);
++ X- and Y-axis scales are now customizable - [`setXAxis()`](README.md#setxaxis) and [`setYAxis()`](README.md#setyaxis);
 + The canvas background is now always transparent, so **all background-related properties are gone,** including `bgColor` in the theme definition;
-+ **LED bars look better and are easier to customize:**
-  - the "unlit" LEDs now use muted (desaturated) versions of the theme's colors for improved visuals;
-  - appearance is more consistent among different screen sizes - LED height is now constant and the number of LEDs is adjusted to fit the canvas;
-  - horizontal spacing now follow the value set to [`barSpace`](README.md#barspace-number);
-  - custom LED sizes are much easier to create with new [`setLeds()`](README.md#setleds-ledheight-ledgap-) method and streamlined logic and parameters;
-+ X- and Y-axis scale labels are now customizable;
-+ Non-fatal issues, like invalid options, no longer throw an error;
-+ The [`onCanvasDraw`](README.md#oncanvasdraw-function) callback can now obtain all color information from the currently active themes, via the `themes` property in the passed object (`fillStyle` and `strokeStyle` are no longer explicitly set).
++ No more [errors thrown](README.md#custom-errors) for non-critical issues, like invalid option values;
++ The [`onCanvasDraw`](README.md#oncanvasdraw) callback is now passed all color information from the currently active themes (`fillStyle` and `strokeStyle` are no longer explicitly set).
+
+> **WARNING:** code in **alpha** stage is subject to major, drastic changes! **DO NOT USE THIS IN PRODUCTION!**
 
 ### 🚨 BREAKING CHANGES: <!-- {docsify-ignore} -->
 
-+ [`mode`](README.md#mode-string) is now a string (either `'bars'` or `'graph'`) - [see the documentation](README.md#mode-string) for migration details;
-+ Removed methods and properties:
+Modified properties | Changes made
+--------------------|-------------------
+[`alphaBars`](README.md#alphabars) | type changed to *string*
+[`ledBars`](README.md#ledbars) | type changed to *string*
+[`mode`](README.md#mode) | type changed to *string*
 
-Removed               | Use this instead
+Removed methods and properties | Use this instead
 ----------------------|-----------------------------------------------
 `bgAlpha`             | *set desired opacity via CSS*
 `gradient`            | [`setTheme()`](README.md#settheme) / [`getTheme()`](README.md#gettheme)
-`gradientLeft`        | [`setTheme( name, 0 )`](README.md#settheme) / [`getTheme( 0 )`](README.md#gettheme)
-`gradientRight`       | [`setTheme( name, 1 )`](README.md#settheme) / [`getTheme( 1 )`](README.md#gettheme)
-`gravity`             | [`peakDecayTime`](README.md#peakdecaytime-number) - use the [peak drop analysis tool](/tools/peak-drop.html) to compare/migrate custom values
-`peakFadeTime`        | [`peakDecayTime`](README.md#peakdecaytime-number)
-`registerGradient()`  | [`registerTheme()`](README.md#registertheme-name-options-) *(check new properties)*
-`setLedParams()`      | `setLeds()` *(check new arguments)*
+`gradientLeft`        | [`setTheme(name, 0)`](README.md#settheme) / [`getTheme(0)`](README.md#gettheme)
+`gradientRight`       | [`setTheme(name, 1)`](README.md#settheme) / [`getTheme(1)`](README.md#gettheme)
+`gravity`             | [`peakDecayTime`](README.md#peakdecaytime) &mdash; *use the [peak drop analysis tool](/tools/peak-drop.html) to compare/migrate previous customizations*
+`isLumiBars`          | [`isAlphaBars`](README.md#isalphabars)
+`lumiBars`            | [`alphaBars`](README.md#alphabars) = `"full"`
+`peakFadeTime`        | [`peakDecayTime`](README.md#peakdecaytime)
+`registerGradient()`  | [`registerTheme()`](README.md#registertheme)
+`setLedParams()`      | [`setLeds()`](README.md#setleds)
 `showBgColor`         | *set desired background color via CSS*
-`splitGradient`       | [`spreadGradient`](README.md#spreadgradient-boolean)
-`stereo`              | `channelLayout`
-`overlay`             | *current default behavior is equivalent to `overlay: true` &mdash; if desired, set an opaque background color via CSS*
+`splitGradient`       | [`spreadGradient`](README.md#spreadgradient)
+`stereo`              | [`channelLayout`](README.md#channellayout)
+`trueLeds`            | [`ledBars`](README.md#ledbars) = `"vintage"`
+`overlay`             | *always transparent now (equivalent to `overlay: true`) &mdash; if desired, set an opaque background color via CSS*
 
 ### Added: <!-- {docsify-ignore} -->
 
-+ [`bandResolution`](README.md#bandresolution-number)
-+ [`flipColors`](README.md#flipcolors-boolean)
-+ [`horizontalGradient`](README.md#horizontalgradient-boolean)
-+ `showLedMask`
-+ `peakColor` property in theme definition - see [`registerTheme()`](README.md#registertheme-name-options-)
-+ [`getThemes()`](README.md#getthemes) and [`unregisterTheme()`](README.md#unregistertheme-name) methods
-+ [`setXAxis()`](README.md#setxaxis-options) and [`setYAxis()`](README.md#setyaxis-options) methods for customizable look of scale labels
++ [`bandResolution`](README.md#bandresolution) property;
++ [`showLedMask`](README.md#showledmask) property;
++ `peakColor` property in theme definition - see [`registerTheme()`](README.md#registertheme);
++ [`setTheme()`](README.md#settheme) and [`getTheme()`](README.md#gettheme) methods;
++ [`setThemeModifiers()`](README.md#setthememodifiers) and [`getThemeModifiers()`](README.md#getthememodifiers) methods;
++ [`getThemeData()`](README.md#getthemedata) and [`getThemeList()`](README.md#getthemelist) mehods;
++ [`registerTheme()`](README.md#registertheme) and [`unregisterTheme()`](README.md#unregistertheme) methods;
++ [`setXAxis()`](README.md#setxaxis) and [`setYAxis()`](README.md#setyaxis) methods;
++ [Exported constants](README.md#constants).
+
+### Changed: <!-- {docsify-ignore} -->
+
++ The `"fschange"` value for `reason` in the [`onCanvasResize`](README.md#oncanvasresize) callback has been changed to `"fullscreenchange"`. You can use the new [constants](README.md#constants) exported by the module for future-proof checks.
 
 ### Improved: <!-- {docsify-ignore} -->
 
++ Full-height [`alphaBars`](README.md#alphabars) (former lumiBars) have been extended to work with [`radial`](README.md#radial) and FFT [`bandResolution`](README.md#bandresolution) (former mode 0);
 + Y-axis labels are no longer mirrored when [`mirror`](README.md#mirror-number) is active.
 
 

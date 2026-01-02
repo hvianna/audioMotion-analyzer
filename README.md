@@ -1,6 +1,6 @@
 ## About
 
-> **WARNING:** during alpha stage everything is subject to major changes! **DON'T USE THIS IN PRODUCTION!**
+> **WARNING:** code in **alpha** stage is subject to major, drastic changes! **DO NOT USE THIS IN PRODUCTION!**
 
 **audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer built upon **Web Audio** and **Canvas** JavaScript APIs.
 
@@ -1958,5 +1958,5 @@ And if you're feeling generous, maybe:
 
 ## License
 
-audioMotion-analyzer copyright (c) 2018-2025 [Henrique Avila Vianna](https://henriquevianna.com)<br>
+audioMotion-analyzer copyright (c) 2018-2026 [Henrique Avila Vianna](https://henriquevianna.com)<br>
 Licensed under the [GNU Affero General Public License, version 3 or later](https://www.gnu.org/licenses/agpl.html).

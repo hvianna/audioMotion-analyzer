@@ -34,6 +34,7 @@
 			<button data-prop="isDestroyed" data-func="destroy">destroy()</button>
 			<button id="btn_getBars" title="check browser console for data">getBars()</button>
 			<button id="btn_getOptions" title="copies current settings to clipboard">getOptions()</button>
+			<button id="btn_getThemeData" title="check browser console for data">getThemeData()</button>
 			<button data-prop="isOn" data-func="toggleAnalyzer">toggleAnalyzer()</button>
 			<button data-prop="isFullscreen" data-func="toggleFullscreen">toggleFullscreen()</button>
 		</div>
@@ -72,16 +73,16 @@
 			<label class="label"><a href="https://audiomotion.dev/#/?id=settheme-name-modifiers-channel" target="_blank">setTheme (channel 0)</a>
 				<div class="grid grid-2-cols">
 					<select data-func="setTheme(this,0)" data-setting="getTheme(0)" class="colspan-2"></select>
-					<button class="small-button" title="horizontal modifier" data-func="toggleThemeModifier(horizontal,0)" data-prop="getThemeModifiers(horizontal,0)">HOR</button>
-					<button class="small-button" title="reverse modifier" data-func="toggleThemeModifier(reverse,0)" data-prop="getThemeModifiers(reverse,0)">REV</button>
+					<button class="small-button" data-func="toggleThemeModifier(horizontal,0)" data-prop="getThemeModifiers(horizontal,0)">horizontal</button>
+					<button class="small-button" data-func="toggleThemeModifier(reverse,0)" data-prop="getThemeModifiers(reverse,0)">reverse</button>
 				</div>
 			</label>
 
 			<label class="label"><a href="https://audiomotion.dev/#/?id=settheme-name-modifiers-channel" target="_blank">setTheme (channel 1)</a>
 				<div class="grid grid-2-cols">
 					<select data-func="setTheme(this,1)" data-setting="getTheme(1)" class="colspan-2"></select>
-					<button class="small-button" title="horizontal modifier" data-func="toggleThemeModifier(horizontal,1)" data-prop="getThemeModifiers(horizontal,1)">HOR</button>
-					<button class="small-button" title="reverse modifier" data-func="toggleThemeModifier(reverse,1)" data-prop="getThemeModifiers(reverse,1)">REV</button>
+					<button class="small-button" data-func="toggleThemeModifier(horizontal,1)" data-prop="getThemeModifiers(horizontal,1)">horizontal</button>
+					<button class="small-button" data-func="toggleThemeModifier(reverse,1)" data-prop="getThemeModifiers(reverse,1)">reverse</button>
 				</div>
 			</label>
 
@@ -414,7 +415,7 @@
 	</div>
 
 	<div class="credits">
-		<strong>audioMotion-analyzer v<span id="version"></span></strong> Copyright &copy; 2018-2025 Henrique Avila Vianna. Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
+		<strong>audioMotion-analyzer v<span id="version"></span></strong> Copyright &copy; 2018-2026 Henrique Avila Vianna. Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
 	</div>
 
 	<script src="functions.js"></script>

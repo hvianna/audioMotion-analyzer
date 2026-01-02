@@ -451,14 +451,6 @@ audioMotion.setYAxis({
 });
 
 
-audioMotion.setTheme('rainbow', { spread: true } ); // sets theme and modifiers for both channels
-audioMotion.setThemeModifiers('reverse', true, 1 ); // update only the `reverse` modifier on channel 1
-
-console.log( 'tema bluey-A', audioMotion.getTheme('bluey-A') );
-console.log( 'tema mono', audioMotion.getTheme('mono') );
-
-//console.log( 'active themes', audioMotion.getActiveGradients() );
-
 // Populate UI select elements and add event listeners
 
 presets.forEach( ( preset, index ) => {
@@ -626,7 +618,16 @@ document.getElementById('btn_getOptions').addEventListener( 'click', () => {
 	const options = audioMotion.getOptions();
 	console.log( 'getOptions(): ', options );
 	navigator.clipboard.writeText( JSON.stringify( options, null, 2 ) )
-		.then( () => console.log( 'Options object copied to clipboard.' ) );
+		.then( () => console.warn( 'Options object content copied to clipboard.' ) );
+});
+
+// getThemeData() button
+document.getElementById('btn_getThemeData').addEventListener( 'click', () => {
+	const theme0 = audioMotion.getTheme(0),
+		  theme1 = audioMotion.getTheme(1);
+	console.log( `getThemeData('${theme0}'): `, audioMotion.getThemeData( theme0 ) );
+	if ( theme1 != theme0 )
+		console.log( `getThemeData('${theme1}'): `, audioMotion.getThemeData( theme1 ) );
 });
 
 // Initialize UI elements
