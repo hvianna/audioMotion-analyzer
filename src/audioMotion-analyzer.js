@@ -2406,7 +2406,7 @@ class AudioMotionAnalyzer {
 							if ( _radial && _mirror && ! isDualHorizontal )
 								points.push( [ x, h ] );
 						}
-						else if ( h > 0 )
+						else if ( b.peak[ channel ] > 0 ) // note: `h` is negative in inner radial
 							radialPoly( x, h, 1, -2 ); // standard peaks (also does mirror)
 					});
 					if ( showPeakLine ) {
