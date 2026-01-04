@@ -2656,6 +2656,8 @@ class AudioMotionAnalyzer {
 				// draw peak line (and standard peaks on radial)
 				if ( showPeakLine || ( _radial && showPeaks ) ) {
 					points = []; // for mirror line on radial
+					if ( theme.peakColor )
+						_ctx.fillStyle = _ctx.strokeStyle = theme.peakColor;
 					_ctx.beginPath();
 					_bars.forEach( ( b, i ) => {
 						let x = b.posX,
