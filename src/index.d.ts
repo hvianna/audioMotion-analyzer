@@ -70,8 +70,7 @@ export interface Options {
   peakDecayTime?: number;
   peakHoldTime?: number;
   peakLine?: boolean;
-  radial?: boolean;
-  radialInvert?: boolean;
+  radial?: number;
   radius?: number;
   reflexAlpha?: number;
   reflexBright?: number;
@@ -270,11 +269,8 @@ declare class AudioMotionAnalyzer {
 
   get pixelRatio(): number;
 
-  get radial(): boolean;
-  set radial(value: boolean);
-
-  get radialInvert(): boolean;
-  set radialInvert(value: boolean);
+  get radial(): number;
+  set radial(value: number);
 
   get radius(): number;
   set radius(value: number);

@@ -66,6 +66,9 @@ export const ALPHABARS_FULL            = 'full',
 			 LEDS_VINTAGE              = 'vintage',
 			 MODE_BARS                 = 'bars',
 			 MODE_GRAPH                = 'graph',
+			 RADIAL_INNER              = -1,
+			 RADIAL_OFF                = 0,
+			 RADIAL_OUTER              = 1,
 			 REASON_CREATE             = 'create',
 			 REASON_FULLSCREENCHANGE   = EVENT_FULLSCREENCHANGE,
 			 REASON_LORES              = 'lores',
@@ -134,8 +137,7 @@ const DEFAULT_SETTINGS = {
 	peakDecayTime  : 750,
 	peakHoldTime   : 500,
 	peakLine       : false,
-	radial		   : false,
-	radialInvert   : false,
+	radial		   : RADIAL_OFF,
 	radius         : 0.3,
 	reflexAlpha    : 0.15,
 	reflexBright   : 1,
@@ -723,16 +725,7 @@ class AudioMotionAnalyzer {
 		return this._radial;
 	}
 	set radial( value ) {
-		this._radial = !! value;
-		this._calcBars();
-		this._makeGrad();
-	}
-
-	get radialInvert() {
-		return this._radialInvert;
-	}
-	set radialInvert( value ) {
-		this._radialInvert = !! value;
+		this._radial = [ RADIAL_INNER, RADIAL_OFF, RADIAL_OUTER ].includes( +value ) ? +value : this._radial ?? DEFAULT_SETTINGS.radial;
 		this._calcBars();
 		this._makeGrad();
 	}
@@ -1527,7 +1520,7 @@ class AudioMotionAnalyzer {
 			return;
 
 		const { _alphaBars, _ansiBands, _bandRes, _barSpace, canvas, _chLayout, _maxFreq, _minFreq,
-			    _mirror, _mode, _pixelRatio, _radial, _radialInvert, _reflexRatio, _xAxis, _yAxis } = this,
+			    _mirror, _mode, _pixelRatio, _radial, _reflexRatio, _xAxis, _yAxis } = this,
 			  bars               = [],
 			  centerX            = canvas.width >> 1,
 			  centerY            = canvas.height >> 1,
@@ -1567,7 +1560,7 @@ class AudioMotionAnalyzer {
 		let innerRadius = minCanvasDimension * .375 * ( _chLayout == LAYOUT_VERTICAL ? 1 : this._radius ) | 0,
 			outerRadius = Math.min( centerX, centerY );
 
-		if ( _radialInvert && _chLayout != LAYOUT_VERTICAL )
+		if ( _radial == RADIAL_INNER && _chLayout != LAYOUT_VERTICAL )
 			[ innerRadius, outerRadius ] = [ outerRadius, innerRadius ];
 
 		/**
@@ -2612,7 +2605,7 @@ class AudioMotionAnalyzer {
 						_ctx.fillRect( posX, analyzerBottom - peakValue * maxBarHeight, width, 2 );
 					else if ( _mode != MODE_GRAPH ) { // radial (peaks for graph mode are done by the peakLine code)
 						const y = peakValue * maxBarHeight;
-						radialPoly( posX, y, width, ! this._radialInvert || isDualVertical || y + innerRadius >= 2 ? -2 : 2 );
+						radialPoly( posX, y, width, _radial != RADIAL_INNER || isDualVertical || y + innerRadius >= 2 ? -2 : 2 );
 					}
 				}
 
@@ -2857,7 +2850,7 @@ class AudioMotionAnalyzer {
 				}
 			}
 
-			let gradient     = _radial	? _ctx.createRadialGradient( centerX, centerY, outer, centerX, centerY, inner ) : createNewGradient(),
+			let gradient     = _radial ? _ctx.createRadialGradient( centerX, centerY, outer, centerX, centerY, inner ) : createNewGradient(),
 				maskGradient = _radial ? null : createNewGradient(); // no LEDs in radial
 
 			colorStops.forEach( ( colorStop, index ) => {
