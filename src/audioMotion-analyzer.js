@@ -703,7 +703,7 @@ class AudioMotionAnalyzer {
 	}
 	set peakDecayTime( value ) {
 		// note: time is stored in seconds to reduce the number of operations during rendering
-		this._peakDecayTime = ( value >= 0 ? +value : this._peakDecayTime || DEFAULT_SETTINGS.peakDecayTime ) / 1e3;
+		this._peakDecayTime = ( value >= 0 ? +value : this._peakDecayTime ?? DEFAULT_SETTINGS.peakDecayTime ) / 1e3;
 	}
 
 	get peakHoldTime() {
@@ -745,7 +745,7 @@ class AudioMotionAnalyzer {
 	set reflexRatio( value ) {
 		if ( ! ( value >= 0 && value < 1 ) ) { // also catches undefined and strings that evaluate to NaN
 			warnInvalid( 'reflexRatio', value );
-			value = this._reflexRatio || DEFAULT_SETTINGS.reflexRatio;
+			value = this._reflexRatio ?? DEFAULT_SETTINGS.reflexRatio;
 		}
 
 		this._reflexRatio = +value;
