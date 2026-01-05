@@ -62,6 +62,19 @@ Removed methods and properties | Use this instead
 + Y-axis labels are no longer mirrored when [`mirror`](README.md#mirror-number) is active.
 
 
+## version 4.5.3 (2026-01-05)
+
+### Minor bugfix release <!-- {docsify-ignore} -->
+
++ Fixes peaks not being displayed in radial graph mode with [`radialInvert`](README.md#radialinvert-boolean) enabled.
+
+
+## version 4.5.2 (2025-11-21)
+
+### Minor bugfix release <!-- {docsify-ignore} -->
+
++ Fixes visual glitches in radial mode, when [`radialInvert`](README.md#radialinvert-boolean) and [`showPeaks`](README.md#showpeaks-boolean) are enabled.
+
 
 ## version 4.5.1 (2025-06-02)
 
