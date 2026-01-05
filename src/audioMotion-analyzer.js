@@ -66,6 +66,9 @@ export const ALPHABARS_FULL            = 'full',
 			 LEDS_VINTAGE              = 'vintage',
 			 MODE_BARS                 = 'bars',
 			 MODE_GRAPH                = 'graph',
+			 PEAKS_DROP                = 'drop',
+			 PEAKS_FADE                = 'fade',
+			 PEAKS_OFF                 = OPTION_OFF,
 			 RADIAL_INNER              = -1,
 			 RADIAL_OFF                = 0,
 			 RADIAL_OUTER              = 1,
@@ -115,7 +118,6 @@ const DEFAULT_SETTINGS = {
 	barSpace       : 0.1,
 	channelLayout  : LAYOUT_SINGLE,
 	colorMode      : COLORMODE_GRADIENT,
-	fadePeaks      : false,
 	fftSize        : 8192,
 	fillAlpha      : 1,
 	frequencyScale : SCALE_LOG,
@@ -136,6 +138,7 @@ const DEFAULT_SETTINGS = {
 	outlineBars    : false,
 	peakDecayTime  : 750,
 	peakHoldTime   : 500,
+	peaks          : PEAKS_DROP,
 	peakLine       : false,
 	radial		   : RADIAL_OFF,
 	radius         : 0.3,
@@ -146,7 +149,6 @@ const DEFAULT_SETTINGS = {
 	roundBars      : false,
 	showFPS        : false,
 	showLedMask    : true,
-	showPeaks      : true,
 	showScaleX     : true,
 	showScaleY     : false,
 	smoothing      : 0.5,
@@ -544,13 +546,6 @@ class AudioMotionAnalyzer {
 		this._colorMode = validateFromList( value, [ COLORMODE_GRADIENT, COLORMODE_INDEX, COLORMODE_LEVEL ] );
 	}
 
-	get fadePeaks() {
-		return this._fadePeaks;
-	}
-	set fadePeaks( value ) {
-		this._fadePeaks = !! value;
-	}
-
 	get fftSize() {
 		return this._analyzer[0].fftSize;
 	}
@@ -719,6 +714,13 @@ class AudioMotionAnalyzer {
 	}
 	set peakLine( value ) {
 		this._peakLine = !! value;
+	}
+
+	get peaks() {
+		return this._peaks;
+	}
+	set peaks( value ) {
+		this._peaks = validateFromList( value, [ PEAKS_OFF, PEAKS_DROP, PEAKS_FADE ] );
 	}
 
 	get radial() {
@@ -1592,7 +1594,7 @@ class AudioMotionAnalyzer {
 		//   ratioHi,
 		//   peak,    // peak value
 		//   hold,    // peak hold frames (negative value indicates peak falling / fading)
-		//   alpha,   // peak alpha (used by fadePeaks)
+		//   alpha,   // peak alpha (used to fade peaks)
 		//   value    // current bar value
 		// }
 		const barsPush = args => bars.push( { ...args, peak: [0,0], hold: [0], alpha: [0], value: [0] } );
@@ -2052,7 +2054,6 @@ class AudioMotionAnalyzer {
 			    _colorMode,
 			    _ctx,
 			    _energy,
-			    _fadePeaks,
 			    fillAlpha,
 			    _fps,
 			    _linearAmplitude,
@@ -2061,9 +2062,9 @@ class AudioMotionAnalyzer {
 			    minDecibels,
 			    _mirror,
 			    _mode,
+			    _peaks,
 			    _radial,
 			    showLedMask,
-			    showPeaks,
 			    _sxshow,
 			    useCanvas,
 			    _weightingFilter,
@@ -2081,6 +2082,7 @@ class AudioMotionAnalyzer {
 			  isVintageLeds    = isLeds && this._ledBars == LEDS_VINTAGE && _colorMode == COLORMODE_GRADIENT,
 			  analyzerWidth    = _radial ? canvas.width : this._aux.analyzerWidth,
 			  finalX           = initialX + analyzerWidth,
+			  showPeaks        = _peaks != PEAKS_OFF,
 			  showPeakLine     = showPeaks && this._peakLine && _mode == MODE_GRAPH,
 			  maxBarHeight     = _radial ? outerRadius - innerRadius : analyzerHeight,
 			  dbRange 		   = maxDecibels - minDecibels,
@@ -2457,11 +2459,11 @@ class AudioMotionAnalyzer {
 					// if hold is negative, start peak drop or fade out
 					if ( bar.hold[ channel ] < 0 ) {
 						const acceleration = bar.hold[ channel ] * decayRate;
-						if ( _fadePeaks && ! showPeakLine )
+						if ( _peaks == PEAKS_FADE && ! showPeakLine )
 							bar.alpha[ channel ] += acceleration;
 						else
 							bar.peak[ channel ] += acceleration;
-						// make sure the peak value is reset when using fadePeaks
+						// make sure the peak value is reset when peaks fade out
 						if ( bar.alpha[ channel ] <= 0 )
 							bar.peak[ channel ] = 0;
 					}
@@ -2579,7 +2581,7 @@ class AudioMotionAnalyzer {
 
 				if ( peakValue > 0 && peakAlpha > 0 && showPeaks && ! showPeakLine && ! isLumi && posX >= initialX && posX < finalX ) {
 					// set opacity for peak
-					if ( _fadePeaks )
+					if ( _peaks == PEAKS_FADE )
 						_ctx.globalAlpha = peakAlpha;
 					else if ( isOutline && _lineWidth > 0 ) // when lineWidth == 0 ctx.globalAlpha remains set to `fillAlpha`
 						_ctx.globalAlpha = 1;

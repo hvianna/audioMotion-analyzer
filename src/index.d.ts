@@ -46,7 +46,6 @@ export interface Options {
   barSpace?: number;
   channelLayout?: ChannelLayout;
   colorMode?: ColorMode;
-  fadePeaks?: boolean;
   fftSize?: number;
   fillAlpha?: number;
   frequencyScale?: FrequencyScale;
@@ -70,6 +69,7 @@ export interface Options {
   peakDecayTime?: number;
   peakHoldTime?: number;
   peakLine?: boolean;
+  peaks?: Peaks;
   radial?: number;
   radius?: number;
   reflexAlpha?: number;
@@ -79,7 +79,6 @@ export interface Options {
   roundBars?: boolean;
   showFPS?: boolean;
   showLedMask?: boolean;
-  showPeaks?: boolean;
   showScaleX?: boolean;
   showScaleY?: boolean;
   smoothing?: number;
@@ -125,6 +124,8 @@ export type FrequencyLabel = number | [ frequency: number; label: string; highli
 export type GradientColorStop = string | { pos?: number; color: string; level?: number };
 
 export type LedBars = "off" | "modern" | "vintage";
+
+export type Peaks = "off" | "drop" | "fade";
 
 export type VisualizationMode = "bars" | "graph";
 
@@ -185,9 +186,6 @@ declare class AudioMotionAnalyzer {
 
   get connectedSources(): AudioNode[];
   get connectedTo(): AudioNode[];
-
-  get fadePeaks(): boolean;
-  set fadePeaks(value: boolean);
 
   get fftSize(): number;
   set fftSize(value: number);
@@ -267,6 +265,9 @@ declare class AudioMotionAnalyzer {
   get peakLine(): boolean;
   set peakLine(value: boolean);
 
+  get peaks(): Peaks;
+  set peaks(value: Peaks);
+
   get pixelRatio(): number;
 
   get radial(): number;
@@ -287,7 +288,6 @@ declare class AudioMotionAnalyzer {
 
   public showFPS: boolean;
   public showLedMask: boolean;
-  public showPeaks: boolean;
   public showScaleX: boolean;
   public showScaleY: boolean;
 
