@@ -160,7 +160,7 @@ const DEFAULT_SETTINGS = {
 	width          : undefined
 };
 
-const DEFAULT_LED_PARAMETERS = [ 10, 8 ],      // ledHeight, gapHeight
+const DEFAULT_LED_PARAMETERS = [ 10, 6 ],      // ledHeight, gapHeight
 	  DEFAULT_LEDMASK_PARAMS = [ .2, -1, 20 ]; // alpha, lightness, saturation
 
 const DEFAULT_THEME_MODIFIERS = {
@@ -1255,7 +1255,7 @@ class AudioMotionAnalyzer {
 		ledHeight = +ledHeight;
 		gapHeight = +gapHeight;
 
-		this._ledParams = ledHeight > 0 && gapHeight > 0 ? [ ledHeight, gapHeight ] : undefined;
+		this._ledParams = ledHeight >= 0 && gapHeight > 0 ? [ ledHeight, gapHeight ] : undefined;
 		this._calcBars();
 	}
 
@@ -1769,6 +1769,11 @@ class AudioMotionAnalyzer {
 			}
 		}
 
+		const barSpacePx = Math.min( barWidth - 1, _barSpace * ( _barSpace > 0 && _barSpace < 1 ? barWidth : 1 ) );
+
+		if ( isBands )
+			barWidth -= Math.max( 0, barSpacePx );
+
 		/**
 		 *  COMPUTE ATTRIBUTES FOR THE LED BARS
 		 *
@@ -1785,8 +1790,15 @@ class AudioMotionAnalyzer {
 			// adjustment for high pixel-ratio values on low-resolution screens (Android TV)
 			const dPR = _pixelRatio / ( window.devicePixelRatio > 1 && window.screen.height <= 540 ? 2 : 1 );
 
-			let [ ledHeight, ledGap ] = ( this._ledParams || DEFAULT_LED_PARAMETERS ).map( v => v * dPR ),
-				maxHeight  = analyzerHeight + ( noLedGap ? ledGap : 0 ), // increase maxHeight to avoid extra spacing below last line of LEDs (noLedGap)
+			let [ ledHeight, ledGap ] = ( this._ledParams || DEFAULT_LED_PARAMETERS ).map( v => v * dPR );
+
+			if ( ledHeight == 0 )
+				ledHeight = barWidth; // square LEDs
+
+			if ( ledGap < 1 )
+				ledGap *= ledHeight;  // proportional gap height
+
+			let maxHeight  = analyzerHeight + ( noLedGap ? ledGap : 0 ), // increase maxHeight to avoid extra spacing below last line of LEDs (noLedGap)
 				unitHeight = ledHeight + ledGap,
 				gapRatio   = ledGap / unitHeight,
 				ledCount   = maxHeight / unitHeight | 0; // make sure we have an integer number of led elements
@@ -1801,11 +1813,6 @@ class AudioMotionAnalyzer {
 
 		// COMPUTE ADDITIONAL BAR POSITIONING, ACCORDING TO THE CURRENT SETTINGS
 		// uses: _barSpace, barWidth
-
-		const barSpacePx = Math.min( barWidth - 1, _barSpace * ( _barSpace > 0 && _barSpace < 1 ? barWidth : 1 ) );
-
-		if ( isBands )
-			barWidth -= Math.max( 0, barSpacePx );
 
 		bars.forEach( ( bar, index ) => {
 			let posX  = bar.posX,
