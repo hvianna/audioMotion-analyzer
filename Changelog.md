@@ -1,6 +1,13 @@
 Changelog
 =========
 
+## version 4.5.3 (2026-01-05)
+
+### Minor bugfix release <!-- {docsify-ignore} -->
+
++ Fixes peaks not being displayed in radial graph mode with [`radialInvert`](README.md#radialinvert-boolean) enabled.
+
+
 ## version 4.5.2 (2025-11-21)
 
 ### Minor bugfix release <!-- {docsify-ignore} -->
