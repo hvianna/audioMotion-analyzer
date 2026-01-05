@@ -139,7 +139,7 @@ const DEFAULT_SETTINGS = {
 	peakDecayTime  : 750,
 	peakHoldTime   : 500,
 	peaks          : PEAKS_DROP,
-	peakLine       : false,
+	peakLine       : 0,
 	radial		   : RADIAL_OFF,
 	radius         : 0.3,
 	reflexAlpha    : 0.15,
@@ -713,7 +713,7 @@ class AudioMotionAnalyzer {
 		return this._peakLine;
 	}
 	set peakLine( value ) {
-		this._peakLine = !! value;
+		this._peakLine = +value || 0;
 	}
 
 	get peaks() {
@@ -2062,6 +2062,7 @@ class AudioMotionAnalyzer {
 			    minDecibels,
 			    _mirror,
 			    _mode,
+			    _peakLine,
 			    _peaks,
 			    _radial,
 			    showLedMask,
@@ -2078,12 +2079,13 @@ class AudioMotionAnalyzer {
 			  isDualCombined   = _chLayout == LAYOUT_COMBINED,
 			  isDualHorizontal = _chLayout == LAYOUT_HORIZONTAL,
 			  isDualVertical   = _chLayout == LAYOUT_VERTICAL,
+			  isGraphMode      = _mode == MODE_GRAPH,
 			  isSingle         = _chLayout == LAYOUT_SINGLE,
 			  isVintageLeds    = isLeds && this._ledBars == LEDS_VINTAGE && _colorMode == COLORMODE_GRADIENT,
 			  analyzerWidth    = _radial ? canvas.width : this._aux.analyzerWidth,
 			  finalX           = initialX + analyzerWidth,
 			  showPeaks        = _peaks != PEAKS_OFF,
-			  showPeakLine     = showPeaks && this._peakLine && _mode == MODE_GRAPH,
+			  showPeakLine     = showPeaks && _peakLine > 0 && isGraphMode,
 			  maxBarHeight     = _radial ? outerRadius - innerRadius : analyzerHeight,
 			  dbRange 		   = maxDecibels - minDecibels,
 			  decayRate        = 2 / this._peakDecayTime ** 2 / _fps ** 2,
@@ -2380,7 +2382,7 @@ class AudioMotionAnalyzer {
 			const setBarColor = ( colorStops, value = 0, barIndex = 0 ) => {
 				let color;
 				// for graph mode, always use the channel gradient (ignore colorMode)
-				if ( ( _colorMode == COLORMODE_GRADIENT && ! isVintageLeds ) || _mode == MODE_GRAPH )
+				if ( ( _colorMode == COLORMODE_GRADIENT && ! isVintageLeds ) || isGraphMode )
 					color = gradient;
 				else {
 					const selectedIndex = _colorMode == COLORMODE_INDEX ? barIndex % colorCount : colorStops.findLastIndex( item => isLeds ? ledUnits( value ) <= ledUnits( item.level ) : value <= item.level );
@@ -2492,7 +2494,7 @@ class AudioMotionAnalyzer {
 
 				// Draw current bar or line segment
 
-				if ( _mode == MODE_GRAPH ) {
+				if ( isGraphMode ) {
 					// compute the average between the initial bar (barIndex==0) and the next one
 					// used to smooth the curve when the initial posX is off the screen, in mirror and radial modes
 					const nextBarAvg = barIndex ? 0 : ( this._normalizedB( fftData[ _bars[1].binLo ] ) * maxBarHeight + barHeight ) / 2;
@@ -2505,7 +2507,7 @@ class AudioMotionAnalyzer {
 						}
 						// draw line to the current point, avoiding overlapping wrap-around frequencies
 						if ( posX >= 0 ) {
-							const point = [ posX, barHeight ];
+							const point = [ barCenter, barHeight ];
 							_ctx.lineTo( ...radialXY( ...point ) );
 							points.push( point );
 						}
@@ -2604,8 +2606,8 @@ class AudioMotionAnalyzer {
 							_ctx.fillRect( posX, analyzerBottom - ledPeak, width, ledHeight );
 					}
 					else if ( ! _radial )
-						_ctx.fillRect( posX, analyzerBottom - peakValue * maxBarHeight, width, 2 );
-					else if ( _mode != MODE_GRAPH ) { // radial (peaks for graph mode are done by the peakLine code)
+						_ctx.fillRect( isGraphMode ? barCenter : posX, analyzerBottom - peakValue * maxBarHeight, isGraphMode ? 1 : width, 2 );
+					else if ( ! isGraphMode ) { // radial (peaks for graph mode are done by the peakLine code)
 						const y = peakValue * maxBarHeight;
 						radialPoly( posX, y, width, _radial != RADIAL_INNER || isDualVertical || y + innerRadius >= 2 ? -2 : 2 );
 					}
@@ -2621,7 +2623,7 @@ class AudioMotionAnalyzer {
 			_ctx.globalAlpha = 1;
 
 			// Fill/stroke drawing path for graph mode
-			if ( _mode == MODE_GRAPH ) {
+			if ( isGraphMode ) {
 				setBarColor(); // select channel gradient
 
 				if ( _radial && ! isDualHorizontal ) {
@@ -2662,12 +2664,12 @@ class AudioMotionAnalyzer {
 						_ctx.fillStyle = _ctx.strokeStyle = theme.peakColor;
 					_ctx.beginPath();
 					_bars.forEach( ( b, i ) => {
-						let x = b.posX,
+						let x = b.barCenter,
 							h = b.peak[ channel ],
 							m = i ? 'lineTo' : 'moveTo';
 						if ( _radial && x < 0 ) {
 							const nextBar = _bars[ i + 1 ];
-							h = findY( x, h, nextBar.posX, nextBar.peak[ channel ], 0 );
+							h = findY( x, h, nextBar.barCenter, nextBar.peak[ channel ], 0 );
 							x = 0;
 						}
 						h *= maxBarHeight;
@@ -2683,7 +2685,7 @@ class AudioMotionAnalyzer {
 						let p;
 						while ( p = points.pop() )
 							_ctx.lineTo( ...radialXY( ...p, -1 ) ); // mirror line points
-						_ctx.lineWidth = 1;
+						_ctx.lineWidth = _peakLine;
 						_ctx.stroke(); // stroke peak line
 					}
 				}

@@ -68,7 +68,7 @@ export interface Options {
   outlineBars?: boolean;
   peakDecayTime?: number;
   peakHoldTime?: number;
-  peakLine?: boolean;
+  peakLine?: number;
   peaks?: Peaks;
   radial?: number;
   radius?: number;
@@ -262,8 +262,8 @@ declare class AudioMotionAnalyzer {
   get peakHoldTime(): number;
   set peakHoldTime(value: number);
 
-  get peakLine(): boolean;
-  set peakLine(value: boolean);
+  get peakLine(): number;
+  set peakLine(value: number);
 
   get peaks(): Peaks;
   set peaks(value: Peaks);
