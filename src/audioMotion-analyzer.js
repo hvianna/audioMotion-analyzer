@@ -2,12 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 4.5.2
+ * @version 4.5.3
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const VERSION = '4.5.2';
+const VERSION = '4.5.3';
 
 // internal constants
 const PI      = Math.PI,
@@ -2406,7 +2406,7 @@ class AudioMotionAnalyzer {
 							if ( _radial && _mirror && ! isDualHorizontal )
 								points.push( [ x, h ] );
 						}
-						else if ( h > 0 )
+						else if ( b.peak[ channel ] > 0 ) // note: `h` is negative in inner radial
 							radialPoly( x, h, 1, -2 ); // standard peaks (also does mirror)
 					});
 					if ( showPeakLine ) {
