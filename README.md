@@ -84,7 +84,7 @@ Load from Skypack CDN:
 
 ```html
 <script type="module">
-  import AudioMotionAnalyzer from 'https://cdn.skypack.dev/audiomotion-analyzer?min';
+  import AudioMotionAnalyzer from 'https://cdn.skypack.dev/audiomotion-analyzer@alpha?min';
   // your code here
 </script>
 ```
@@ -96,7 +96,7 @@ Or download the [latest version](https://github.com/hvianna/audioMotion-analyzer
 Load from Unpkg CDN:
 
 ```html
-<script src="https://unpkg.com/audiomotion-analyzer/dist"></script>
+<script src="https://unpkg.com/audiomotion-analyzer@alpha/dist"></script>
 <script>
   // available as AudioMotionAnalyzer global
 </script>
@@ -147,16 +147,15 @@ property                              | type      | default | notes
 [`channelLayout`](#channellayout)     | *string*  | `"single"` |
 [`colorMode`](#colormode)             | *string*  | `"gradient"` |
 [`connectSpeakers`](#connectspeakers) | *boolean* | `true` | constructor only
-[`fadePeaks`](#fadepeaks)             | *boolean* | `false` |
 [`fftSize`](#fftsize)                 | *number*  | `8192` |
-[`fillAlpha`](#fillalpha)             | *number*  | `1` |
+[`fillAlpha`](#fillalpha)             | *number*  | `0.5` |
 [`frequencyScale`](#frequencyscale)   | *string*  | `"log"` |
 [`fsElement`](#fselement)             | *HTMLElement object* | [`canvas`](#canvas) | constructor only
 [`height`](#height)                   | *number* or *undefined* | `undefined` |
 [`ledBars`](#ledbars)                 | *string*  | `"off"` |
 [`linearAmplitude`](#linearamplitude) | *boolean* | `false` |
 [`linearBoost`](#linearboost)         | *number*  | `1` |
-[`lineWidth`](#linewidth)             | *number*  | `0` |
+[`lineWidth`](#linewidth)             | *number*  | `1` |
 [`loRes`](#lores)                     | *boolean* | `false` |
 [`maxDecibels`](#maxdecibels)         | *number*  | `-25` |
 [`maxFPS`](#maxfps)                   | *number*  | `0` |
@@ -172,9 +171,9 @@ property                              | type      | default | notes
 [`peakDecayTime`](#peakdecaytime)     | *number*  | `750` |
 [`peakHoldTime`](#peakholdtime)       | *number*  | `500` |
 [`peakLine`](#peakline)               | *boolean* | `false` |
-[`radial`](#radial)                   | *boolean* | `false` |
-[`radialInvert`](#radialinvert)       | *boolean* | `false` |
-[`radius`](#radius)                   | *number*  | `0.3` |
+[`peaks`](#peaks)                     | *string*  | `"drop"` |
+[`radial`](#radial)                   | *number*  | `0` |
+[`radius`](#radius)                   | *number*  | `0.5` |
 [`reflexAlpha`](#reflexalpha)         | *number*  | `0.15` |
 [`reflexBright`](#reflexbright)       | *number*  | `1` |
 [`reflexFit`](#reflexfit)             | *boolean* | `true` |
@@ -182,7 +181,6 @@ property                              | type      | default | notes
 [`roundBars`](#roundbars)             | *boolean* | `false` |
 [`showFPS`](#showfps)                 | *boolean* | `false` |
 [`showLedMask`](#showledmask)         | *boolean* | `true` |
-[`showPeaks`](#showpeaks)             | *boolean* | `true` |
 [`showScaleX`](#showscalex)           | *boolean* | `true` |
 [`showScaleY`](#showscaley)           | *boolean* | `false` |
 [`smoothing`](#smoothing)             | *number*  | `0.5` |
@@ -317,6 +315,12 @@ import {
 	LEDS_VINTAGE,
 	MODE_BARS,
 	MODE_GRAPH,
+	PEAKS_DROP,
+	PEAKS_FADE,
+	PEAKS_OFF,
+	RADIAL_INNER,
+	RADIAL_OFF,
+	RADIAL_OUTER,
 	REASON_CREATE,
 	REASON_FULLSCREENCHANGE,
 	REASON_LORES,
@@ -501,18 +505,6 @@ By default, **audioMotion-analyzer** is connected to the *AudioContext* `destina
 
 See also [`connectOutput()`](#connectoutput).
 
-### `fadePeaks`
-
-*Available since v4.5.0*
-
-**Value:** a *boolean* value. The default value is `false`.
-
-Determines whether peaks fade out instead of falling down. Has no effect when [`peakLine`](#peakline) is active.
-
-The fade-out duration can be customized via [`peakDecayTime`](#peakdecaytime).
-
-See also [`peakHoldTime`](#peakholdtime) and [`showPeaks`](#showpeaks).
-
 ### `fftSize`
 
 **Value:** a *number*. The default value is `8192`.
@@ -526,12 +518,12 @@ Higher values provide more detail in the frequency domain, but less detail in th
 
 *Available since v2.0.0*
 
-**Value:** a *number* between `0.0` and `1.0`. The default value is `1`.
+**Value:** a *number* between `0.0` and `1.0`. The default value is `0.5`.
 
 Determines the opacity of the area fill in [Graph mode](#mode), or inner fill of bars in [frequency bands modes](#mode) when [`outlineBars`](#outlinebars) is *true*.
 A value of `0` means completely transparent, while `1` is completely opaque.
 
-Please note that the line stroke (when [`lineWidth`](#linewidth) > 0) is always drawn at full opacity, regardless of the `fillAlpha` value.
+Please note that the line stroke (when [`lineWidth`](#linewidth) > `0`) is always drawn at full opacity, regardless of the `fillAlpha` value.
 
 Also, for [frequency bands modes](#mode), [`alphaBars`](#alphabars) set to *true* takes precedence over `fillAlpha`.
 
@@ -622,7 +614,7 @@ See [`toggleFullscreen()`](#togglefullscreen).
 
 *Available since v3.6.0; formerly `isLedDisplay` (since v3.0.0)*
 
-Returns `true` when LED bars are effectively being displayed, i.e., [`isBandsMode`](#isbandsmode-read-only) is `true`, [`ledBars`](#ledBars) is set to `"modern"` or `"vintage"` and [`radial`](#radial) is set to `false`.
+Returns `true` when LED bars are effectively being displayed, i.e., [`isBandsMode`](#isbandsmode-read-only) is `true`, [`ledBars`](#ledBars) is set to `"modern"` or `"vintage"` and [`radial`](#radial) is set to `0`.
 
 ### `isOctaveBands` *(read only)*
 
@@ -656,7 +648,7 @@ Returns `true` when round bars are effectively being displayed, i.e., [`roundBar
 
 **Value:** a *string*. The default value is `"off"`.
 
-Determines the appearance of the LED bars. Only effective in **Bars** [`mode`](#mode), when [`bandResolution`](#bandresolution) > `0` and [`radial`](#radial) set to `false`.
+Determines the appearance of the LED bars. Only effective in **Bars** [`mode`](#mode), when [`bandResolution`](#bandresolution) > `0` and [`radial`](#radial) set to `0`.
 
 value       | [Constant](#constants) | Description | Preview
 ------------|------------------------|-------------|----------
@@ -696,7 +688,7 @@ It should be a number >= 1, while 1 means no boosting. Only effective when [`lin
 
 *Available since v2.0.0*
 
-**Value:** a *number*. The default value is `0`.
+**Value:** a *number*. The default value is `1`.
 
 Line width for [Graph mode](#mode), or outline stroke in [frequency bands modes](#mode) when [`outlineBars`](#outlinebars) is *true*.
 
@@ -954,11 +946,29 @@ See also [`fadePeaks`](#fadepeaks), [`peakDecayTime`](#peakdecaytime) and [`show
 
 *Available since v4.2.0*
 
-**Value:** a *boolean* value. The default value is `false`.
+**Value:** a *number*. The default value is `0`.
 
-Whether to display peak amplitudes as a continuous line, in Graph [`mode`](#mode).
+Determines the line width used to connect the amplitude peaks, when [`mode`](#mode) is set to `"graph"`. Has no effect in Bars mode.
 
-It has no effect in Bars [`mode`](#mode).
+A value of `0` means no line.
+
+Please note that [`peaks`](#peaks) must be set to either `"drop"` or `"fade"`, although peak lines will always display the *"drop"* behavior.
+
+### `peaks`
+
+*Available since v5.0.0; formerly `showPeaks` (since v1.0.0)*
+
+**Value:** a *string*. The default value is `"drop"`.
+
+Determines the display and behavior of amplitude peaks.
+
+value    | [Constant](#constants) | Description
+---------|------------------------|--------------
+`"off"`  | `PEAKS_OFF`  | Disable display of amplitude peaks (including [`peakLine`](#peakline))
+`"drop"` | `PEAKS_DROP` | Display peaks that fall down over time
+`"fade"` | `PEAKS_FADE` | Display peaks that fade out over time
+
+See also [`peakDecayTime`](#peakdecaytime) and [`peakHoldTime`](#peakholdtime).
 
 ### `pixelRatio` *(read only)*
 
@@ -975,41 +985,35 @@ You can refer to this value to adjust any additional drawings done in the canvas
 
 *Available since v2.4.0*
 
-**Value:** a *boolean* value. The default value is `false`.
+**Value:** a *number*. The default value is `0`.
 
-Whether to render the spectrum analyzer as a circle with radial frequency bars spreading from its center.
+Whether to render the spectrum analyzer as a circle with radial bars.
 
-When [`channelLayout`](#channellayout) is set to `"dual-vertical"`, graphs for the right channel are rendered towards the center of the screen.
+value | [Constant](#constants) | Description
+------|------------------------|----------------
+`0`   | `RADIAL_OFF`   | Disables radial
+`1`   | `RADIAL_OUTER` | Bars grow towards the edges of the screen
+`-1`  | `RADIAL_INNER` | Bars grow towards the center of the screen
+
+When [`channelLayout`](#channellayout) is set to `"dual-vertical"`, left channel bars grow outwards and right channel bars grow inwards, so both `1` and `-1` values have the same effect.
 
 In radial view, [`ledBars`](#ledbars) effect is disabled.
 
-See also [`radialInvert`](#radialinvert), [`radius`](#radius) and [`spinSpeed`](#spinspeed).
+See also [`radius`](#radius) and [`spinSpeed`](#spinspeed).
 
 !> [See related known issue](#alphabars-and-fillalpha-wont-work-with-radial-on-firefox)
-
-### `radialInvert`
-
-*Available since v4.4.0*
-
-**Value:** a *boolean* value. The default value is `false`.
-
-Whether to render the [`radial`](#radial) spectrum with bars growing inwards.
-
-This property has no effect when [`channelLayout`](#channellayout-string) is set to `"dual-vertical"`.
-
-See also [`radius`](#radius).
 
 ### `radius`
 
 *Available since v4.4.0*
 
-**Value:** a *number*. The default value is `0.3`.
+**Value:** a *number*. The default value is `0.5`.
 
-Determines the internal radius of [`radial`](#radial) spectrum. It should be a number between `0.0` and `1.0`.
+Determines the inner radius of [`radial`](#radial) spectrum. It should be a number between `0.0` and `1.0`.
 
 This property has no effect when [`channelLayout`](#channellayout-string) is set to `"dual-vertical"`.
 
-When [`radialInvert`](#radialinvert) is `true`, this property controls how close to the center of the screen the bars can get.
+When [`radial`](#radial) is set to `-1`, this property controls how close to the center of the screen the bars can get.
 
 ### `reflexAlpha`
 
@@ -1088,14 +1092,6 @@ Whether to display the "unlit" LED elements. Has no effect when [`ledBars`](#led
 :----------------------:|:-----------------------:
 ![ledmask-off](img/ledmask_off.png) | ![ledmask-on](img/ledmask_on.png)
 
-### `showPeaks`
-
-**Value:** a *boolean* value. The default value is `true`.
-
-Whether to show amplitude peaks.
-
-See also [`peakDecayTime`](#peakdecaytime), [`peakHoldTime`](#peakholdtime) and [`peakLine`](#peakline).
-
 ### `showScaleX`
 
 *Available since v3.0.0; formerly `showScale` (since v1.0.0)*
@@ -1116,7 +1112,7 @@ See also [`noteLabels`](#notelabels).
 
 Whether to display the level/amplitude scale on the Y-axis.
 
-This option has no effect when [`radial`](#radial) is set to `true` or [`alphaBars`](#alphabars) is set to `"full"`.
+This option has no effect when [`radial`](#radial) is active or [`alphaBars`](#alphabars) is set to `"full"`.
 
 When [`linearAmplitude`](#linearamplitude) is set to *false* (default), labels are shown in decibels (dB);
 otherwise, values represent a percentage (0-100%) of the maximum amplitude.
@@ -1583,12 +1579,12 @@ Customizes the appearance of LED elements used to create the [`ledBars`](#ledbar
 setLeds(ledHeight, gapHeight)
 ```
 
-parameter   | type     | description     | default
-------------|----------|-----------------|-----------
-`ledHeight` | *number* | Height, in pixels, of each LED element | `10`
-`gapHeight` | *number* | Vertical gap, in pixels, between two consecutive LED elements | `8`
+parameter   | type     | rule  | description     | default
+------------|----------|-------|-----------------|----------:
+`ledHeight` | *number* | ≥&nbsp;`0` | Height, in pixels, of each LED element. **A value of `0` will generate square LEDs** | `10`
+`gapHeight` | *number* | >&nbsp;`0` | Vertical gap, in pixels, between two consecutive LED elements. A value between `0.0` and `1.0` (exclusive) will be considered a fraction of the LED height (useful for auto adjust when using square LEDs) | `6`
 
-**If called with no argument, or if any of the arguments is ≤ 0, both parameters are reset to their default values.**
+**If called with no argument, or if ANY of the values is invalid, BOTH parameters are reset to their default values.**
 
 **Return value:** none (`undefined`).
 
@@ -1672,7 +1668,7 @@ Parameter     | type   | description
 
 Modifier | description
 ---------|----------------
-`"horizontal"` | Renders the color gradient horizontally across the screen, instead of vertically - has no effect when [`radial`](#radial) or [`trueLeds`](#trueleds) are `true`
+`"horizontal"` | Renders the color gradient horizontally across the screen, instead of vertically - has no effect in [`radial`](#radial) spectrum or when [`ledBars`](#ledbars) is set to `"vintage"`
 `"revert"`     | Reverts the order of the theme colors
 
 **Return value:** none (`undefined`).
@@ -1869,7 +1865,7 @@ The `import` statement must be inside a `script` which has the `type="module"` p
 
 ```html
   <script type="module">
-    import AudioMotionAnalyzer from 'https://cdn.skypack.dev/audiomotion-analyzer?min';
+    import AudioMotionAnalyzer from 'https://cdn.skypack.dev/audiomotion-analyzer@alpha?min';
 
     // your code here
   </script>

@@ -5,10 +5,11 @@ Changelog
 
 ### Version overview: <!-- {docsify-ignore} -->
 
-+ _Gradients_ are now called **Themes** - new `peakColor` property in [`registerTheme()`](README.md#registertheme) and on-the-fly *theme modifiers* - see [`setThemeModifiers()`](README.md#setthememodifiers);
++ Expect LOTS of breaking changes 😅 - I'm taking this opportunity to consolidate related properties and make some long-overdue changes;
++ Gradients are now called **Themes** - new `peakColor` property in [`registerTheme()`](README.md#registertheme) and [**on-the-fly horizontal and reverse gradient generation**](README.md#setthememodifiers);
 + **LED bars look better and are easier to customize** - see [`showLedMask`](README.md#showledmask) and [`setLeds()`](README.md#setleds);
 + X- and Y-axis scales are now customizable - [`setXAxis()`](README.md#setxaxis) and [`setYAxis()`](README.md#setyaxis);
-+ The canvas background is now always transparent, so **all background-related properties are gone,** including `bgColor` in the theme definition;
++ The analyzer canvas is now always transparent, so **all background-related properties are gone,** including `bgColor` in the theme definition;
 + No more [errors thrown](README.md#custom-errors) for non-critical issues, like invalid option values;
 + The [`onCanvasDraw`](README.md#oncanvasdraw) callback is now passed all color information from the currently active themes (`fillStyle` and `strokeStyle` are no longer explicitly set).
 
@@ -16,15 +17,18 @@ Changelog
 
 ### 🚨 BREAKING CHANGES: <!-- {docsify-ignore} -->
 
-Modified properties | Changes made
---------------------|-------------------
+Modified properties                | Changes made
+-----------------------------------|-------------------
 [`alphaBars`](README.md#alphabars) | type changed to *string*
-[`ledBars`](README.md#ledbars) | type changed to *string*
-[`mode`](README.md#mode) | type changed to *string*
+[`ledBars`](README.md#ledbars)     | type changed to *string*
+[`mode`](README.md#mode)           | type changed to *string*
+[`peakLine`](README.md#peakline)   | type changed to *number*
+[`radial`](README.md#radial)       | type changed to *number*
 
 Removed methods and properties | Use this instead
 ----------------------|-----------------------------------------------
 `bgAlpha`             | *set desired opacity via CSS*
+`fadePeaks`           | [`peaks`](README.md#peaks) = `"fade"`
 `gradient`            | [`setTheme()`](README.md#settheme) / [`getTheme()`](README.md#gettheme)
 `gradientLeft`        | [`setTheme(name, 0)`](README.md#settheme) / [`getTheme(0)`](README.md#gettheme)
 `gradientRight`       | [`setTheme(name, 1)`](README.md#settheme) / [`getTheme(1)`](README.md#gettheme)
@@ -32,9 +36,11 @@ Removed methods and properties | Use this instead
 `isLumiBars`          | [`isAlphaBars`](README.md#isalphabars)
 `lumiBars`            | [`alphaBars`](README.md#alphabars) = `"full"`
 `peakFadeTime`        | [`peakDecayTime`](README.md#peakdecaytime)
+`radialInvert`        | [`radial`](README.md#radial) = `-1`
 `registerGradient()`  | [`registerTheme()`](README.md#registertheme)
 `setLedParams()`      | [`setLeds()`](README.md#setleds)
 `showBgColor`         | *set desired background color via CSS*
+`showPeaks`           | [`peaks`](README.md#peaks)
 `splitGradient`       | [`spreadGradient`](README.md#spreadgradient)
 `stereo`              | [`channelLayout`](README.md#channellayout)
 `trueLeds`            | [`ledBars`](README.md#ledbars) = `"vintage"`
@@ -43,17 +49,22 @@ Removed methods and properties | Use this instead
 ### Added: <!-- {docsify-ignore} -->
 
 + [`bandResolution`](README.md#bandresolution) property;
-+ [`showLedMask`](README.md#showledmask) property;
++ [`getThemeData()`](README.md#getthemedata) and [`getThemeList()`](README.md#getthemelist) mehods;
 + `peakColor` property in theme definition - see [`registerTheme()`](README.md#registertheme);
++ [`peaks`](README.md#peaks) property;
++ [`registerTheme()`](README.md#registertheme) and [`unregisterTheme()`](README.md#unregistertheme) methods;
 + [`setTheme()`](README.md#settheme) and [`getTheme()`](README.md#gettheme) methods;
 + [`setThemeModifiers()`](README.md#setthememodifiers) and [`getThemeModifiers()`](README.md#getthememodifiers) methods;
-+ [`getThemeData()`](README.md#getthemedata) and [`getThemeList()`](README.md#getthemelist) mehods;
-+ [`registerTheme()`](README.md#registertheme) and [`unregisterTheme()`](README.md#unregistertheme) methods;
 + [`setXAxis()`](README.md#setxaxis) and [`setYAxis()`](README.md#setyaxis) methods;
++ [`showLedMask`](README.md#showledmask) property;
 + [Exported constants](README.md#constants).
 
 ### Changed: <!-- {docsify-ignore} -->
 
++ New default value for [`fillAlpha`](README.md#fillalpha): `0.5` (was `1`);
++ New default value for [`lineWidth`](README.md#linewidth): `1` (was `0`);
++ New default value for [`radius`](README.md#radius): `0.5` (was `0.3`);
++ Minor color offset adjustments in the *"classic"* theme - the old values can be found in [this Discussions post](https://github.com/hvianna/audioMotion-analyzer/discussions/44);
 + The `"fschange"` value for `reason` in the [`onCanvasResize`](README.md#oncanvasresize) callback has been changed to `"fullscreenchange"`. You can use the new [constants](README.md#constants) exported by the module for future-proof checks.
 
 ### Improved: <!-- {docsify-ignore} -->
