@@ -219,8 +219,10 @@
 
 			<fieldset>
 				<legend>Radial spectrum</legend>
-				<button data-prop="radial">radial</button>
-				<button data-prop="radialInvert">radialInvert</button>
+				<label class="label">radial
+					<input type="range" min="-1" max="1" step="1" data-setting="radial">
+					<div class="value"></div>
+				</label>
 
 				<label class="label">radius
 					<input type="range" min="0" max="1" step=".05" data-setting="radius">
@@ -260,6 +262,19 @@
 
 			<fieldset>
 				<legend>Peak behavior</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peaks" target="_blank">peaks</a>
+					<select data-setting="peaks">
+						<option>off</option>
+						<option>drop</option>
+						<option>fade</option>
+					</select>
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peakline" target="_blank">peakLine</a>
+					<input type="range" min="0" max="5" step=".5" data-setting="peakLine">
+					<div class="value"></div>
+				</label>
+
 				<label class="label"><a href="https://audiomotion.dev/#/?id=peakdecaytime" target="_blank">peakDecayTime</a>
 					<input type="range" min="0" max="2000" step="50" data-setting="peakDecayTime">
 					<div class="value"></div>
@@ -307,15 +322,6 @@
 					<button data-prop="spreadGradient">spreadGradient</button>
 					<button data-prop="showScaleX">showScaleX</button>
 					<button data-prop="showScaleY">showScaleY</button>
-				</div>
-			</fieldset>
-
-			<fieldset>
-				<legend>Peaks</legend>
-				<div class="button-grid">
-					<button data-prop="fadePeaks">fadePeaks</button>
-					<button data-prop="peakLine">peakLine</button>
-					<button data-prop="showPeaks">showPeaks</button>
 				</div>
 			</fieldset>
 		</div>

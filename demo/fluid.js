@@ -301,28 +301,6 @@ catch( err ) {
 	throw new Error( err ); // stop script
 }
 
-/*
-// tests with invalid options
-
-console.log( 'reflexRatio', audioMotion.reflexRatio );
-
-audioMotion.reflexRatio = 1;
-
-audioMotion.theme = 'mono';
-audioMotion.themeRight = 'prism';
-
-audioMotion.themeLeft = 'xoxo';
-audioMotion.themeRight = 'hauhahua';
-
-audioMotion.maxFreq = 20000;
-
-audioMotion.setFreqRange( 60, -1 );
-audioMotion.setFreqRange( 'a', 'b' );
-audioMotion.setFreqRange( '16000', '60' );
-
-audioMotion.registerTheme('a', {});
-*/
-
 // Display package version at the footer
 document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
@@ -391,6 +369,7 @@ document.querySelectorAll('[data-custom]').forEach( el => {
 // Display value of ranged input elements
 document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'input', () => updateRangeElement( el, audioMotion ) ) );
 
+/*
 // Add custom themes
 audioMotion.registerTheme( 'classic-A', {
     colorStops: [ 'red', 'yellow', 'lime' ] // automatic color distribution
@@ -426,7 +405,9 @@ audioMotion.unregisterTheme('classic');
 audioMotion.registerTheme( 'prism-new', {
 	colorStops: [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', '#09c', '#36b', '#639', '#817' ]
 });
+*/
 
+/*
 audioMotion.setXAxis({
 	addLabels: true,
 	labels: [
@@ -437,6 +418,7 @@ audioMotion.setXAxis({
 //	overlay: true,
 //	height: 40
 });
+*/
 
 audioMotion.setYAxis({
 	linearInterval: 10,
@@ -778,19 +760,6 @@ function drawCallback( instance, { timestamp, themes } ) {
 		ctx.font = `bold ${ baseSize + growSize * trebleEnergy }px sans-serif`;
 		ctx.fillText( 'TREBLE', canvas.width * .85, centerY );
 		drawLight( canvas.width * .85, '#0ff', trebleEnergy );
-
-		if ( mouseX != null ) {
-			const bar = instance.getBars().findLast( b => mouseX >= b.posX );
-			if ( bar ) {
-				ctx.fillStyle = '#fff';
-				ctx.font = `${ fontSize }px sans-serif`;
-				ctx.textAlign = mouseX < 100 ? 'left' : 'right';
-				const x = mouseX + ( mouseX < 100 ? fontSize : -fontSize );
-
-				ctx.fillText( bar.freq.toFixed(2) + 'Hz', x, mouseY );
-				ctx.fillText( bar.value[0], x, mouseY + fontSize * 1.5 );
-			}
-		}
 	}
 
 /*
@@ -840,4 +809,22 @@ function drawCallback( instance, { timestamp, themes } ) {
 		ctx.stroke();
 	}
 
+	// show band data on mouse hover - TO-DO: handle dual-horizontal properly!
+	if ( mouseX != null ) {
+		const bar = instance.getBars().findLast( b => mouseX >= b.posX );
+		if ( bar ) {
+			ctx.font = `${ fontSize }px monospace`;
+			ctx.textAlign = mouseX < 150 ? 'left' : 'right';
+			const x = mouseX + ( mouseX < 150 ? fontSize : -fontSize ),
+				  left = x - fontSize * ( mouseX < 150 ? 1.25 : 7.25 );
+
+			ctx.fillStyle = '#0008';
+			ctx.fillRect( left, mouseY - fontSize * 1.75, fontSize * 8.5, fontSize * 6 );
+
+			ctx.fillStyle = '#fff';
+			ctx.fillText( bar.freq.toFixed(2) + 'Hz', x, mouseY );
+			ctx.fillText( 'p: ' + bar.peak[0].toFixed(6), x, mouseY + fontSize * 1.5 );
+			ctx.fillText( 'v: ' + bar.value[0].toFixed(6), x, mouseY + fontSize * 3 );
+		}
+	}
 }
