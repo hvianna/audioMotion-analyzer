@@ -83,7 +83,7 @@ Load from Skypack CDN:
 
 ```html
 <script type="module">
-  import AudioMotionAnalyzer from 'https://cdn.skypack.dev/audiomotion-analyzer?min';
+  import AudioMotionAnalyzer from 'https://cdn.skypack.dev/audiomotion-analyzer@4?min';
   // your code here
 </script>
 ```
@@ -95,7 +95,7 @@ Or download the [latest version](https://github.com/hvianna/audioMotion-analyzer
 Load from Unpkg CDN:
 
 ```html
-<script src="https://unpkg.com/audiomotion-analyzer/dist"></script>
+<script src="https://unpkg.com/audiomotion-analyzer@4/dist"></script>
 <script>
   // available as AudioMotionAnalyzer global
 </script>
@@ -1525,7 +1525,7 @@ The `import` statement must be inside a `script` which has the `type="module"` p
 
 ```html
   <script type="module">
-    import AudioMotionAnalyzer from 'https://cdn.skypack.dev/audiomotion-analyzer?min';
+    import AudioMotionAnalyzer from 'https://cdn.skypack.dev/audiomotion-analyzer@4?min';
 
     // your code here
   </script>
