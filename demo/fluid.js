@@ -6,6 +6,7 @@
 
 import {
 	AudioMotionAnalyzer,
+	LAYOUT_SINGLE,
 	ENERGY_BASS,
 	ENERGY_HIGHMID,
 	ENERGY_LOWMID,
@@ -809,8 +810,8 @@ function drawCallback( instance, { timestamp, themes } ) {
 		ctx.stroke();
 	}
 
-	// show band data on mouse hover - TO-DO: handle dual-horizontal properly!
-	if ( mouseX != null ) {
+	// show band data on mouse hover - TO-DO: handle dual channel layouts!
+	if ( mouseX != null && audioMotion.channelLayout == LAYOUT_SINGLE && ! audioMotion.radial ) {
 		const bar = instance.getBars().findLast( b => mouseX >= b.posX );
 		if ( bar ) {
 			ctx.font = `${ fontSize }px monospace`;
