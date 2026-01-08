@@ -40,9 +40,9 @@ What users are saying:
 
 ## Online demos
 
-[![demo-animation](img/demo.webp)](https://audiomotion.dev/demo/)
+[![demo-animation](img/demo.webp)](https://audiomotion.dev/demo/alpha/)
 
-?> https://audiomotion.dev/demo/
+?> https://audiomotion.dev/demo/alpha/
 
 ## Live code examples
 
@@ -63,7 +63,7 @@ What users are saying:
 Install via npm:
 
 ```console
-npm i audiomotion-analyzer
+npm i audiomotion-analyzer@alpha
 ```
 
 Use ES6 import:
@@ -431,9 +431,9 @@ See also [`ansiBands`](#ansibands).
 
 **Value:** a *number*. The default value is `0.1`.
 
-Customize the spacing between bars in frequency bands modes (see [`mode`](#mode)).
+Customize the spacing between analyzer bars. Has no effect when [`bandResolution`](#bandresolution) is `0` or [`mode`](#mode) is set to `"graph"`.
 
-A value equal or greater than `0.0` but less than `1.0` represents spacing proportional to the band width. Values >= 1 will be considered as a literal number of pixels.
+A value equal or greater than `0.0` but less than `1.0` represents spacing proportional to the band width. Values >= `1` will be considered as a literal number of pixels.
 
 For example, `barSpace = 0.5` will use half the width available to each band for spacing and half for the bar itself.
 On the other hand, `barSpace = 2` will set a fixed spacing of 2 pixels, independent of the width of bars.
@@ -1531,7 +1531,7 @@ audioMotion.registerTheme( 'bluey-B', {
 });
 ```
 
-Theme | gradient | [`ledBars`](#ledbars) = *"vintage"* | [`colorMode`](#colormode-string) = *"bar-level"*
+Theme | [`ledBars`](#ledbars) = `"off"` | [`ledBars`](#ledbars) = `"vintage"` | [`colorMode`](#colormode-string) = `"bar-level"`
 ------|:--------:|:-----------------------------------:|:------------------------------------------------:
 **classic-A**<br>(auto `pos` / auto `level`)     | ![classic-a-gradient](img/levels-classic-a-gradient.png) | ![classic-a-trueleds](img/levels-classic-a-trueleds.png) | ![classic-a-barlevel](img/levels-classic-a-barlevel.png)
 **classic-B**<br>(auto `pos` / custom `level`)   | ![classic-b-gradient](img/levels-classic-b-gradient.png) | ![classic-b-trueleds](img/levels-classic-b-trueleds.png) | ![classic-b-barlevel](img/levels-classic-b-barlevel.png)
@@ -1579,10 +1579,10 @@ Customizes the appearance of LED elements used to create the [`ledBars`](#ledbar
 setLeds(ledHeight, gapHeight)
 ```
 
-parameter   | type     | rule  | description     | default
-------------|----------|-------|-----------------|----------:
-`ledHeight` | *number* | ≥&nbsp;`0` | Height, in pixels, of each LED element. **A value of `0` will generate square LEDs** | `10`
-`gapHeight` | *number* | >&nbsp;`0` | Vertical gap, in pixels, between two consecutive LED elements. A value between `0.0` and `1.0` (exclusive) will be considered a fraction of the LED height (useful for auto adjust when using square LEDs) | `6`
+parameter   | type     | description     | default
+------------|----------|-----------------|----------:
+`ledHeight` | *number* | Height, in pixels, of each LED element. **A value of `0` will match the bar width (generates square LEDs).** | `8`
+`gapHeight` | *number* | Vertical gap, in pixels, between two consecutive LED elements. **A value of `0` will match the current [bar spacing](#barSpace).** | `8`
 
 **If called with no argument, or if ANY of the values is invalid, BOTH parameters are reset to their default values.**
 

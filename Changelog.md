@@ -1,7 +1,13 @@
 Changelog
 =========
 
-## version 5.0.0-alpha.0
+## version 5.0.0-alpha.0 (2026-01-08)
+
+> **WARNING:** code in **alpha** stage is subject to major, drastic changes! **DO NOT USE THIS VERSION IN PRODUCTION!**
+
+> Source code is in the [`version5`](https://github.com/hvianna/audioMotion-analyzer/tree/version5) branch.
+>
+> Demo is available at https://audiomotion.dev/demo/alpha/
 
 ### Version overview: <!-- {docsify-ignore} -->
 
@@ -13,17 +19,15 @@ Changelog
 + No more [errors thrown](README.md#custom-errors) for non-critical issues, like invalid option values;
 + The [`onCanvasDraw`](README.md#oncanvasdraw) callback is now passed all color information from the currently active themes (`fillStyle` and `strokeStyle` are no longer explicitly set).
 
-> **WARNING:** code in **alpha** stage is subject to major, drastic changes! **DO NOT USE THIS IN PRODUCTION!**
-
 ### 🚨 BREAKING CHANGES: <!-- {docsify-ignore} -->
 
 Modified properties                | Changes made
 -----------------------------------|-------------------
-[`alphaBars`](README.md#alphabars) | type changed to *string*
-[`ledBars`](README.md#ledbars)     | type changed to *string*
-[`mode`](README.md#mode)           | type changed to *string*
-[`peakLine`](README.md#peakline)   | type changed to *number*
-[`radial`](README.md#radial)       | type changed to *number*
+[`alphaBars`](README.md#alphabars) | value type changed to *string*
+[`ledBars`](README.md#ledbars)     | value type changed to *string*
+[`mode`](README.md#mode)           | value type changed to *string*
+[`peakLine`](README.md#peakline)   | value type changed to *number*
+[`radial`](README.md#radial)       | value type changed to *number*
 
 Removed methods and properties | Use this instead
 ----------------------|-----------------------------------------------
@@ -61,10 +65,10 @@ Removed methods and properties | Use this instead
 
 ### Changed: <!-- {docsify-ignore} -->
 
-+ New default value for [`fillAlpha`](README.md#fillalpha): `0.5` (was `1`);
-+ New default value for [`lineWidth`](README.md#linewidth): `1` (was `0`);
-+ New default value for [`radius`](README.md#radius): `0.5` (was `0.3`);
-+ Minor color offset adjustments in the *"classic"* theme - the old values can be found in [this Discussions post](https://github.com/hvianna/audioMotion-analyzer/discussions/44);
++ New default value for [`fillAlpha`](README.md#fillalpha): `0.5` (previously `1`);
++ New default value for [`lineWidth`](README.md#linewidth): `1` (previously `0`);
++ New default value for [`radius`](README.md#radius): `0.5` (previously `0.3`);
++ Minor color offset adjustments in the `"classic"` theme - the old values can be found in [this Discussions post](https://github.com/hvianna/audioMotion-analyzer/discussions/44);
 + The `"fschange"` value for `reason` in the [`onCanvasResize`](README.md#oncanvasresize) callback has been changed to `"fullscreenchange"`. You can use the new [constants](README.md#constants) exported by the module for future-proof checks.
 
 ### Improved: <!-- {docsify-ignore} -->
