@@ -160,7 +160,7 @@ const DEFAULT_SETTINGS = {
 	width          : undefined
 };
 
-const DEFAULT_LED_PARAMETERS = [ 10, 6 ],      // ledHeight, gapHeight
+const DEFAULT_LED_PARAMETERS = [ 8, 8 ],      // ledHeight, gapHeight
 	  DEFAULT_LEDMASK_PARAMS = [ .2, -1, 20 ]; // alpha, lightness, saturation
 
 const DEFAULT_THEME_MODIFIERS = {
@@ -1255,7 +1255,7 @@ class AudioMotionAnalyzer {
 		ledHeight = +ledHeight;
 		gapHeight = +gapHeight;
 
-		this._ledParams = ledHeight >= 0 && gapHeight > 0 ? [ ledHeight, gapHeight ] : undefined;
+		this._ledParams = ledHeight >= 0 && gapHeight >= 0 ? [ ledHeight, gapHeight ] : undefined;
 		this._calcBars();
 	}
 
@@ -1787,26 +1787,36 @@ class AudioMotionAnalyzer {
 		 */
 
 		if ( isLeds ) {
-			// adjustment for high pixel-ratio values on low-resolution screens (Android TV)
+			// adjustment for high pixel-ratio values reported on low-resolution screens (Android TV)
 			const dPR = _pixelRatio / ( window.devicePixelRatio > 1 && window.screen.height <= 540 ? 2 : 1 );
 
-			let [ ledHeight, ledGap ] = ( this._ledParams || DEFAULT_LED_PARAMETERS ).map( v => v * dPR );
+			let [ ledHeight, ledGap ] = ( this._ledParams || DEFAULT_LED_PARAMETERS ).map( v => v * dPR ),
+				isSquareLeds          = ledHeight == 0;
 
-			if ( ledHeight == 0 )
-				ledHeight = barWidth; // square LEDs
+			if ( isSquareLeds )
+				ledHeight = barWidth;
 
-			if ( ledGap < 1 )
-				ledGap *= ledHeight;  // proportional gap height
+			if ( ledGap == 0 )
+				ledGap = barSpacePx;  // matches gapHeight to bar spacing
 
-			let maxHeight  = analyzerHeight + ( noLedGap ? ledGap : 0 ), // increase maxHeight to avoid extra spacing below last line of LEDs (noLedGap)
-				unitHeight = ledHeight + ledGap,
-				gapRatio   = ledGap / unitHeight,
-				ledCount   = maxHeight / unitHeight | 0; // make sure we have an integer number of led elements
+			let maxHeight  = analyzerHeight + ( noLedGap ? ledGap : 0 ), // if noLedGap is true, add one extra gap height so the last gap is off-screen
+				elemHeight = ledHeight + ledGap,                         // height of one LED element + gap (defined by user)
+				ledCount   = maxHeight / elemHeight | 0,                 // how many LED elements fit in the available canvas height
+				unitHeight = maxHeight / ledCount;                       // height of one LED element + gap (adjusted to fit canvas height)
 
-			// recalculate ledHeight and ledGap to fit channel height exactly
-			unitHeight = maxHeight / ledCount;
-			ledGap     = unitHeight * gapRatio;
-			ledHeight  = unitHeight * ( 1 - gapRatio );
+			if ( isSquareLeds || ledGap > ledHeight ) {               // for square LEDs, or when ledGap is higher than ledHeight
+				ledGap = unitHeight * ( 1 - ledHeight / unitHeight ); // adjust ledGap, preserve user-defined ledHeight (only needs minor adjustment when noLedGap is true)
+				if ( noLedGap ) {
+					// when ledGap changes, more adjustments are necessary for noLedGap
+					const ledBarHeight = ( ledHeight + ledGap ) * ledCount, // height of full LED bar
+						  newMaxHeight = analyzerHeight + ledGap;           // height it needs to be
+					ledGap += ( newMaxHeight - ledBarHeight ) / ledCount;   // distribute the difference across all gaps
+					unitHeight = ( analyzerHeight + ledGap ) / ledCount;    // update unitHeight with new ledGap, for ledHeight adjustment below
+				}
+			}
+
+			// adjust ledHeight (user-defined ledGap is preserved when less than or equal to ledHeight)
+			ledHeight = unitHeight * ( 1 - ledGap / unitHeight );
 
 			this._leds = [ ledCount, ledHeight, ledGap ];
 		}
