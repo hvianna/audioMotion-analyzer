@@ -2378,18 +2378,25 @@ class AudioMotionAnalyzer {
 				_ctx.fill();
 			}
 
-			// render a bar of LEDs where each element has a single color (uses: analyzerBottom, isLumi)
+			// render a bar of LEDs where each element has a single color (uses: analyzerBottom, isLumi, ledGap)
 			const renderVintageLeds = ( colorStops, barCenter, barHeight, barValue ) => {
 				const colorIndex       = isLumi ? 0 : colorStops.findLastIndex( item => ledUnits( barValue ) <= ledUnits( item.level ) ),
 					  savedStrokeStyle = _ctx.strokeStyle;
 
-				let last = analyzerBottom;
+				let last = [ analyzerBottom, 0 ]; // lastBottom, lastLedTop
 
 				for ( let i = colorCount - 1; i >= colorIndex; i-- ) {
+					let [ lastBottom, lastLedTop ] = last,
+					 	ledTop = ledPosY( colorStops[ i ].level ),
+						topY   = analyzerBottom - ( i == colorIndex ? barHeight : ledTop );
+
+					if ( ledTop == lastLedTop )
+						continue; // no room for this color, skip it (big leds and/or too many colorStops)
+
 					_ctx.strokeStyle = colorStops[ i ].color;
-					let y = analyzerBottom - ( i == colorIndex ? barHeight : ledPosY( colorStops[ i ].level ) );
-					strokeBar( barCenter, last, y );
-					last = y - ledGap;
+					strokeBar( barCenter, lastBottom, topY );
+
+					last = [ topY - ledGap, ledTop ]; // update last used values
 				}
 
 				_ctx.strokeStyle = savedStrokeStyle;
