@@ -1,7 +1,7 @@
 {
   "name": "audiomotion-analyzer",
   "description": "High-resolution real-time graphic audio spectrum analyzer JavaScript module with no dependencies.",
-  "version": "4.5.3",
+  "version": "4.5.4",
   "main": "./dist/index.js",
   "module": "./src/audioMotion-analyzer.js",
   "types": "./src/index.d.ts",
@@ -43,8 +43,8 @@
   },
   "homepage": "https://audiomotion.dev",
   "devDependencies": {
-    "@babel/cli": "^7.27.2",
-    "@babel/core": "^7.27.4",
+    "@babel/cli": "^7.28.3",
+    "@babel/core": "^7.28.5",
     "@babel/plugin-transform-modules-umd": "^7.27.1"
   }
 }
