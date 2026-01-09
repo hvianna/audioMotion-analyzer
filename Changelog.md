@@ -77,6 +77,17 @@ Removed methods and properties | Use this instead
 + Y-axis labels are no longer mirrored when [`mirror`](README.md#mirror-number) is active.
 
 
+## version 4.5.4 (2026-01-09)
+
+### Minor bugfix release <!-- {docsify-ignore} -->
+
++ Fixes peaks not fading out in radial graph mode when [`fadePeaks`](README.md#fadepeaks-boolean) enabled;
++ Updated dev npm packages to address vulnerability reports;
++ Updated the suggested CDN in the [Usage section](README.md#in-the-browser-using-native-es6-module-esm) to jsDelivr, which can provide minified versions of both the ESM and UMD modules.
+
+> **NOTE:** If you're using this package from a CDN, make sure to pin the version to v4 (by adding `@4` after the package name) to prevent [breaking changes](https://github.com/hvianna/audioMotion-analyzer/discussions/101) when stable v5 is released!
+
+
 ## version 4.5.3 (2026-01-05)
 
 ### Minor bugfix release <!-- {docsify-ignore} -->
