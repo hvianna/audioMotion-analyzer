@@ -80,11 +80,11 @@ const { AudioMotionAnalyzer } = require('audioMotion-analyzer');
 
 ### In the browser using native ES6 module (ESM) <!-- {docsify-ignore} -->
 
-Load from Skypack CDN:
+Load from jsDelivr CDN:
 
 ```html
 <script type="module">
-  import AudioMotionAnalyzer from 'https://cdn.skypack.dev/audiomotion-analyzer@alpha?min';
+  import AudioMotionAnalyzer from 'https://cdn.jsdelivr.net/npm/audiomotion-analyzer@alpha/+esm';
   // your code here
 </script>
 ```
@@ -93,10 +93,10 @@ Or download the [latest version](https://github.com/hvianna/audioMotion-analyzer
 
 ### In the browser using global variable <!-- {docsify-ignore} -->
 
-Load from Unpkg CDN:
+Load from jsDelivr CDN:
 
 ```html
-<script src="https://unpkg.com/audiomotion-analyzer@alpha/dist"></script>
+<script src="https://cdn.jsdelivr.net/npm/audiomotion-analyzer@alpha"></script>
 <script>
   // available as AudioMotionAnalyzer global
 </script>
@@ -1865,7 +1865,7 @@ The `import` statement must be inside a `script` which has the `type="module"` p
 
 ```html
   <script type="module">
-    import AudioMotionAnalyzer from 'https://cdn.skypack.dev/audiomotion-analyzer@alpha?min';
+    import AudioMotionAnalyzer from 'https://cdn.jsdelivr.net/npm/audiomotion-analyzer@alpha/+esm';
 
     // your code here
   </script>
