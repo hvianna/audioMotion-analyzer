@@ -16,12 +16,18 @@
         </ul>
     </header>
 
-    <h1>version 5 (alpha)</h1>
+    <h1>version <span id="version"></span></h1>
 
-    <div style="margin: 100px auto; width: 300px;">
+    <div style="margin: 150px auto; width: 300px;">
         <h2><a href="fluid.html">▶ Fluid layout demo</a></h2>
+        <p>&nbsp;</p>
+        <h2><a href="https://github.com/hvianna/audioMotion-analyzer/releases/tag/5.0.0-alpha.1" target="_blank">▶ Release notes</a></h2>
         <h2><a href="peak-decay-tool.html">▶ Peak decay analysis tool</a></h2>
     </div>
 
+    <script type="module">
+        import AudioMotionAnalyzer from './audioMotion-analyzer.js';
+        document.getElementById('version').innerText = AudioMotionAnalyzer.version;
+    </script>
 </body>
 </html>

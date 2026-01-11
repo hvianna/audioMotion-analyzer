@@ -2,12 +2,12 @@
  * audioMotion-analyzer
  * High-resolution real-time graphic audio spectrum analyzer JS module
  *
- * @version 5.0.0-alpha.0
+ * @version 5.0.0-alpha.1
  * @author  Henrique Avila Vianna <hvianna@gmail.com> <https://henriquevianna.com>
  * @license AGPL-3.0-or-later
  */
 
-const VERSION = '5.0.0-alpha.0';
+const VERSION = '5.0.0-alpha.1';
 
 // internal constants
 const PI      = Math.PI,
@@ -2378,18 +2378,25 @@ class AudioMotionAnalyzer {
 				_ctx.fill();
 			}
 
-			// render a bar of LEDs where each element has a single color (uses: analyzerBottom, isLumi)
+			// render a bar of LEDs where each element has a single color (uses: analyzerBottom, isLumi, ledGap)
 			const renderVintageLeds = ( colorStops, barCenter, barHeight, barValue ) => {
 				const colorIndex       = isLumi ? 0 : colorStops.findLastIndex( item => ledUnits( barValue ) <= ledUnits( item.level ) ),
 					  savedStrokeStyle = _ctx.strokeStyle;
 
-				let last = analyzerBottom;
+				let last = [ analyzerBottom, 0 ]; // lastBottom, lastLedTop
 
 				for ( let i = colorCount - 1; i >= colorIndex; i-- ) {
+					let [ lastBottom, lastLedTop ] = last,
+					 	ledTop = ledPosY( colorStops[ i ].level ),
+						topY   = analyzerBottom - ( i == colorIndex ? barHeight : ledTop );
+
+					if ( ledTop == lastLedTop )
+						continue; // no room for this color, skip it (big leds and/or too many colorStops)
+
 					_ctx.strokeStyle = colorStops[ i ].color;
-					let y = analyzerBottom - ( i == colorIndex ? barHeight : ledPosY( colorStops[ i ].level ) );
-					strokeBar( barCenter, last, y );
-					last = y - ledGap;
+					strokeBar( barCenter, lastBottom, topY );
+
+					last = [ topY - ledGap, ledTop ]; // update last used values
 				}
 
 				_ctx.strokeStyle = savedStrokeStyle;
@@ -2695,8 +2702,12 @@ class AudioMotionAnalyzer {
 							if ( _radial && _mirror && ! isDualHorizontal )
 								points.push( [ x, h ] );
 						}
-						else if ( b.peak[ channel ] > 0 ) // note: `h` is negative in inner radial
+						else if ( b.peak[ channel ] > 0 ) { // note: `h` is negative in inner radial
+							if ( _peaks == PEAKS_FADE )
+								_ctx.globalAlpha = b.alpha[ channel ];
+
 							radialPoly( x, h, 1, -2 ); // standard peaks (also does mirror)
+						}
 					});
 					if ( showPeakLine ) {
 						let p;

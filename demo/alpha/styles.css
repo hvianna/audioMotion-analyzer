@@ -84,6 +84,9 @@ h1 {
 h2 {
 	margin: 1.5em 0 .5em;
 }
+h2 a {
+	text-decoration: none;
+}
 
 hr {
 	border-color: #8888;
@@ -231,6 +234,7 @@ input.wide-range {
 	margin: 10px 0;
 	text-align: center;
 }
+#version,
 .credits strong {
 	color: #f00;
 }
