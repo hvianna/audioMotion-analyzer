@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## version 5.0.0-alpha.1 (2026-01-11)
+
++ Fixed: rendering of vintage LEDs for big LED elements and/or themes with several colorStops;
++ Incorporates fixes from stable version [4.5.4](https://github.com/hvianna/audioMotion-analyzer/discussions/102).
+
 ## version 5.0.0-alpha.0 (2026-01-08)
 
 > **WARNING:** code in **alpha** stage is subject to major, drastic changes! **DO NOT USE THIS VERSION IN PRODUCTION!**
