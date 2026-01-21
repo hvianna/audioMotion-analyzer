@@ -125,30 +125,11 @@
 				<legend>Frequency range & scaling</legend>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=minfreq" target="_blank">minFreq</a>
-					<select data-setting="minFreq">
-						<option>10</option>
-						<option>16</option>
-						<option>20</option>
-						<option>25</option>
-						<option>30</option>
-						<option>40</option>
-						<option>60</option>
-						<option>100</option>
-						<option>500</option>
-						<option>1000</option>
-					</select>
+					<input type="number" min="1" max="24000" data-setting="minFreq">
 				</label>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=maxfreq" target="_blank">maxFreq</a>
-					<select data-setting="maxFreq">
-						<option>8000</option>
-						<option>10000</option>
-						<option>12000</option>
-						<option>16000</option>
-						<option>20000</option>
-						<option>22000</option>
-						<option>24000</option>
-					</select>
+					<input type="number" min="1" max="24000" data-setting="maxFreq">
 				</label>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=frequencyscale" target="_blank">frequencyScale</a>
@@ -176,13 +157,11 @@
 				</label>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=mindecibels" target="_blank">minDecibels</a>
-					<input type="range" min="-120" max="-60" step="5" data-setting="minDecibels">
-					<div class="value"></div>
+					<input type="number" min="-200" max="0" data-setting="minDecibels">
 				</label>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=maxdecibels" target="_blank">maxDecibels</a>
-					<input type="range" min="-40" max="0" step="5" data-setting="maxDecibels">
-					<div class="value"></div>
+					<input type="number" min="-200" max="0" data-setting="maxDecibels">
 				</label>
 			</fieldset>
 
@@ -280,7 +259,7 @@
 
 		<div class="box center flex">
 			<fieldset>
-				<legend>Bar modifiers</legend>
+				<legend>Bar effects</legend>
 				<label class="label"><a href="https://audiomotion.dev/#/?id=alphabars" target="_blank">alphaBars</a>
 					<select data-setting="alphaBars">
 						<option>off</option>

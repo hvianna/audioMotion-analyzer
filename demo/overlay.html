@@ -106,29 +106,11 @@
 				<legend>Frequency range & scaling</legend>
 
 				<label class="label">minFreq
-					<select data-setting="minFreq">
-						<option value="10">10</option>
-						<option value="16">16</option>
-						<option value="20">20</option>
-						<option value="30">30</option>
-						<option value="40">40</option>
-						<option value="60">60</option>
-						<option value="100">100</option>
-						<option value="500">500</option>
-						<option value="1000">1000</option>
-					</select>
+					<input type="number" min="1" max="24000" data-setting="minFreq">
 				</label>
 
 				<label class="label">maxFreq
-					<select data-setting="maxFreq">
-						<option value="8000">8000</option>
-						<option value="10000">10000</option>
-						<option value="12000">12000</option>
-						<option value="16000">16000</option>
-						<option value="20000">20000</option>
-						<option value="22000">22000</option>
-						<option value="24000">24000</option>
-					</select>
+					<input type="number" min="1" max="24000" data-setting="maxFreq">
 				</label>
 
 				<label class="label">frequencyScale
@@ -156,13 +138,11 @@
 				</label>
 
 				<label class="label">minDecibels
-					<input type="range" min="-120" max="-60" step="5" data-setting="minDecibels">
-					<div class="value"></div>
+					<input type="number" min="-200" max="0" data-setting="minDecibels">
 				</label>
 
 				<label class="label">maxDecibels
-					<input type="range" min="-40" max="0" step="5" data-setting="maxDecibels">
-					<div class="value"></div>
+					<input type="number" min="-200" max="0" data-setting="maxDecibels">
 				</label>
 			</fieldset>
 

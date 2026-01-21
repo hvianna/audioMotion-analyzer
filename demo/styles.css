@@ -94,7 +94,9 @@ img {
 	max-width: 100%;
 }
 
-input[type="number"],
+input[type="number"] {
+	width: 60px;
+}
 input[type="range"] {
 	width: 70px;
 }
