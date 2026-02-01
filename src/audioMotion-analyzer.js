@@ -832,10 +832,10 @@ class AudioMotionAnalyzer {
 		return this._ctx;
 	}
 	get connectedSources() {
-		return this._sources;
+		return [ ...this._sources ];
 	}
 	get connectedTo() {
-		return this._outNodes;
+		return [ ...this._outNodes ];
 	}
 	get fps() {
 		return this._fps;
@@ -976,25 +976,26 @@ class AudioMotionAnalyzer {
 	/**
 	 * Disconnects audio sources from the analyzer
 	 *
-	 * @param [{object|array}] a connected AudioNode object or an array of such objects; if falsy, all connected nodes are disconnected
-	 * @param [{boolean}] if true, stops/releases audio tracks from disconnected media streams (e.g. microphone)
+	 * @param [{object|array}] a connected AudioNode, HTMLMediaElement or MediaStream, or an array of such objects; if falsy, all connected sources are disconnected
+	 * @param [{boolean}] when `true`, permanently stops all audio tracks from any disconnected media streams
 	 */
 	disconnectInput( sources, stopTracks ) {
 		if ( ! sources )
-			sources = Array.from( this._sources );
+			sources = [ ...this._sources ];
 		else if ( ! isArray( sources ) )
 			sources = [ sources ];
 
-		for ( const node of sources ) {
-			const idx = this._sources.indexOf( node );
-			if ( stopTracks && node.mediaStream ) {
-				for ( const track of node.mediaStream.getAudioTracks() ) {
-					track.stop();
-				}
-			}
+		for ( const source of sources ) {
+			const idx = this._sources.findIndex( el => source === el || source === el.mediaElement || source === el.mediaStream );
 			if ( idx >= 0 ) {
+				const node = this._sources[ idx ];
+				if ( stopTracks && node.mediaStream ) {
+					for ( const track of node.mediaStream.getAudioTracks() ) {
+						track.stop();
+					}
+				}
 				node.disconnect( this._input );
-				this._sources.splice( idx, 1 );
+				this._sources.splice( idx, 1 ); // remove element from connected sources array
 			}
 		}
 	}

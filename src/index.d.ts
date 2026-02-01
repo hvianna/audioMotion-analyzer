@@ -323,7 +323,7 @@ declare class AudioMotionAnalyzer {
 
   public destroy(): void;
 
-  public disconnectInput(node?: AudioNode | AudioNode[] | null, stopTracks?: boolean): void;
+  public disconnectInput(sources?: AudioSource | AudioSource[] | null, stopTracks?: boolean): void;
   public disconnectOutput(node?: AudioNode): void;
 
   public getBars(): AnalyzerBarData[];

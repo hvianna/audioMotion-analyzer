@@ -574,7 +574,7 @@ let micStream,
 
 micButton.addEventListener( 'click', () => {
 	if ( micStream ) {
-		audioMotion.disconnectInput( micStream, true ); // disconnect mic stream and release audio track
+		audioMotion.disconnectInput( micStream, true ); // disconnect mic stream (also stops it)
 		toggleMute( false );
 		micButton.className = '';
 		micStream = null;
@@ -582,11 +582,12 @@ micButton.addEventListener( 'click', () => {
 	else {
 		navigator.mediaDevices.getUserMedia( { audio: true } )
 		.then( stream => {
-			micStream = audioMotion.connectInput( stream );
+			audioMotion.connectInput( stream );
 			toggleMute( true ); // mute the speakers to avoid feedback loop from the microphone
 			micButton.className = 'active';
+			micStream = stream; // save stream reference for disconnection
 		})
-		.catch( err => console.log('Error accessing user microphone.') );
+		.catch( err => console.log( 'Error accessing user microphone.', err ) );
 	}
 });
 
