@@ -172,7 +172,7 @@ const DEFAULT_THEME_MODIFIERS = {
 const ERROR_MESSAGE = {
 	[ ERR_AUDIO_CONTEXT_FAIL ]:    'Could not create audio context. Web Audio API not supported?',
 	[ ERR_INVALID_AUDIO_CONTEXT ]: 'Provided audio context is not valid',
-	[ ERR_INVALID_AUDIO_SOURCE ]:  'Audio source must be an instance of HTMLMediaElement or AudioNode'
+	[ ERR_INVALID_AUDIO_SOURCE ]:  'Audio source must be an instance of AudioNode, HTMLMediaElement or MediaStream'
 };
 
 class AudioMotionError extends Error {
@@ -891,17 +891,18 @@ class AudioMotionAnalyzer {
 	/**
 	 * Connects an HTML media element or audio node to the analyzer
 	 *
-	 * @param {object} an instance of HTMLMediaElement or AudioNode
-	 * @returns {object} a MediaElementAudioSourceNode object if created from HTML element, or the same input object otherwise
+	 * @param {object} an instance of HTMLMediaElement, MediaStream or AudioNode
+	 * @returns {object} an AudioNode (MediaElementAudioSourceNode or MediaStreamAudioSourceNode when created from HTML element or stream)
 	 */
 	connectInput( source ) {
-		const isHTML = source instanceof HTMLMediaElement;
+		const isHTML   = source instanceof HTMLMediaElement,
+			  isStream = source instanceof MediaStream;
 
-		if ( ! ( isHTML || source.connect ) )
+		if ( ! ( isHTML || isStream || source.connect ) )
 			throw new AudioMotionError( ERR_INVALID_AUDIO_SOURCE );
 
-		// if source is an HTML element, create an audio node for it; otherwise, use the provided audio node
-		const node = isHTML ? this.audioCtx.createMediaElementSource( source ) : source;
+		// if source is an HTML element or media stream, create an audio node for it; otherwise, use the provided audio node
+		const node = isHTML ? this.audioCtx.createMediaElementSource( source ) : isStream ? this.audioCtx.createMediaStreamSource( source ) : source;
 
 		if ( ! this._sources.includes( node ) ) {
 			node.connect( this._input );

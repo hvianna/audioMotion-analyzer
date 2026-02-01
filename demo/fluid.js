@@ -582,9 +582,8 @@ micButton.addEventListener( 'click', () => {
 	else {
 		navigator.mediaDevices.getUserMedia( { audio: true } )
 		.then( stream => {
-			micStream = audioMotion.audioCtx.createMediaStreamSource( stream );
+			micStream = audioMotion.connectInput( stream );
 			toggleMute( true ); // mute the speakers to avoid feedback loop from the microphone
-			audioMotion.connectInput( micStream );
 			micButton.className = 'active';
 		})
 		.catch( err => console.log('Error accessing user microphone.') );

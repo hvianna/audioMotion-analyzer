@@ -105,11 +105,13 @@ export interface ConstructorOptions extends Options {
   canvas?: HTMLCanvasElement;
   connectSpeakers?: boolean;
   fsElement?: HTMLElement;
-  source?: HTMLMediaElement | AudioNode;
+  source?: AudioSource;
   start?: boolean;
 }
 
 export type AlphaBars = "off" | "on" | "full";
+
+export type AudioSource = AudioNode | HTMLMediaElement | MediaStream;
 
 export type ChannelLayout = "single" | "dual-horizontal" | "dual-vertical" | "dual-combined";
 
@@ -316,8 +318,7 @@ declare class AudioMotionAnalyzer {
   public onCanvasDraw: OnCanvasDrawFunction | undefined;
   public onCanvasResize: OnCanvasResizeFunction | undefined;
 
-  public connectInput(source: HTMLMediaElement): MediaElementAudioSourceNode;
-  public connectInput(source: AudioNode): AudioNode;
+  public connectInput(source: AudioSource): AudioNode;
   public connectOutput(node?: AudioNode): void;
 
   public destroy(): void;
