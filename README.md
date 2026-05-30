@@ -141,16 +141,16 @@ property                              | type      | default | notes
 --------------------------------------|-----------|---------|-------------------------------
 [`alphaBars`](#alphabars)             | *string*  | `"off"` |
 [`ansiBands`](#ansibands)             | *boolean* | `false` |
-[`audioCtx`](#audioctx)               | *AudioContext object* | *creates new object* | constructor only
+[`audioCtx`](#audioctx)               | *AudioContext* | *creates new object* | constructor only
 [`barSpace`](#barspace)               | *number*  | `0.1` |
-[`canvas`](#canvas)                   | *HTMLCanvasElement object* | *creates new object* | constructor only
+[`canvas`](#canvas)                   | *HTMLCanvasElement* | *creates new object* | constructor only
 [`channelLayout`](#channellayout)     | *string*  | `"single"` |
 [`colorMode`](#colormode)             | *string*  | `"gradient"` |
 [`connectSpeakers`](#connectspeakers) | *boolean* | `true` | constructor only
 [`fftSize`](#fftsize)                 | *number*  | `8192` |
 [`fillAlpha`](#fillalpha)             | *number*  | `0.5` |
 [`frequencyScale`](#frequencyscale)   | *string*  | `"log"` |
-[`fsElement`](#fselement)             | *HTMLElement object* | [`canvas`](#canvas) | constructor only
+[`fsElement`](#fselement)             | *HTMLElement* | [`canvas`](#canvas) | constructor only
 [`height`](#height)                   | *number* or *undefined* | `undefined` |
 [`ledBars`](#ledbars)                 | *string*  | `"off"` |
 [`linearAmplitude`](#linearamplitude) | *boolean* | `false` |
@@ -184,7 +184,7 @@ property                              | type      | default | notes
 [`showScaleX`](#showscalex)           | *boolean* | `true` |
 [`showScaleY`](#showscaley)           | *boolean* | `false` |
 [`smoothing`](#smoothing)             | *number*  | `0.5` |
-[`source`](#source)                   | *AudioNode* or *HTMLMediaElement object* | *none* | constructor only
+[`source`](#source)                   | *AudioNode*, *HTMLMediaElement* or *MediaStream* | *none* | constructor only
 [`spinSpeed`](#spinspeed)             | *number*  | `0` |
 [`spreadGradient`](#spreadgradient)   | *boolean* | `false` |
 [`start`](#start)                     | *boolean* | `true` | constructor only
@@ -225,7 +225,7 @@ If not defined, a new Canvas will be created. After instantiation, you can obtai
 
 **Value:** a *boolean* value. The default value is `true`.
 
-Whether or not to connect the analyzer output to the speakers (technically, the *AudioContext* `destination` node).
+Whether or not to connect the analyzer output to the speakers (technically, the *AudioContext* [`destination`](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/destination) node).
 
 Some scenarios where you may want to set this to `false`:
 
@@ -255,9 +255,9 @@ After instantiation, [`fsElement`](#fselement-read-only) is available as a read-
 
 #### `source`
 
-**Value:** an [*AudioNode*](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) or [*HTMLMediaElement*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) object.
+**Value:** an [*AudioNode*](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode), [*HTMLMediaElement*](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) or [MediaStream](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream) object.
 
-If `source` is specified, connects an AudioNode or an `<audio>` or `<video>` HTML element to the analyzer.
+If `source` is specified, connects the provided *AudioNode*, HTML media element (`<audio>` or `<video>` elements) or *MediaStream* object to the analyzer.
 
 At least one audio source is required for the analyzer to work. You can also connect audio sources after instantiation, using the [`connectInput()`](#connectinput) method.
 
@@ -1232,77 +1232,121 @@ Since this is a static property, you should always access it as `AudioMotionAnal
 
 ## Methods
 
-### `connectInput( source )`
+### `connectInput()`
 
 *Available since v3.0.0*
 
-Connects an [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) or an [AudioNode](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode)
-(or any of its descendants) to the analyzer.
+Connects an audio source to the analyzer.
 
-If `source` is an *HTMLMediaElement*, the method returns a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode) created
-for that element; if `source` is an *AudioNode* instance, it returns the `source` object itself; if it's neither an [ERR_INVALID_AUDIO_SOURCE](#custom-errors) error is thrown.
+**Syntax:**
 
-See also [`disconnectInput()`](#disconnectinput-node-stoptracks-) and [`connectedSources`](#connectedsources-array-read-only).
+```js
+connectInput(source)
+```
 
-### `connectOutput( [node] )`
+Parameter | type | description
+----------|------|---------------
+`source`  | *object* | an [AudioNode](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) (or any of its descendants), [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) or [MediaStream](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream) object
+
+When `source` is an *HTMLMediaElement* or *MediaStream*, a [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode)
+or [MediaStreamAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamAudioSourceNode) object will be created, respectivelly.
+
+If `source` is not a valid object, an [`ERR_INVALID_AUDIO_SOURCE`](#custom-errors) error is thrown.
+
+**Return value:** an *AudioNode* object, representing the actual audio node connected.
+
+See also [`disconnectInput()`](#disconnectinput) and [`connectedSources`](#connectedsources-read-only).
+
+### `connectOutput()`
 
 *Available since v3.0.0*
 
 This method allows connecting the analyzer **output** to other audio processing modules that use the Web Audio API.
 
-`node` must be an [*AudioNode*](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) instance.
+**Syntax:**
 
-By default, the analyzer is connected to the speakers upon instantiation, unless you set [`connectSpeakers: false`](#connectspeakers) in the constructor options.
+```js
+connectOutput()
+connectOutput(node)
+```
 
-See also [`disconnectOutput()`](#disconnectoutput-node-) and [`connectedTo`](#connectedto-array-read-only).
+Parameter | type | description
+----------|------|---------------
+`node`    | [*AudioNode*](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) | If not specified, output is connected to the speakers (the *AudioContext* `destination` node).
 
-?> If called with no argument, analyzer output is connected to the speakers (the *AudioContext* `destination` node).
+By default, the analyzer is already connected to the speakers upon instantiation, unless you set [`connectSpeakers: false`](#connectspeakers) in the constructor options.
+
+**Return value:** none (`undefined`).
+
+See also [`disconnectOutput()`](#disconnectoutput) and [`connectedTo`](#connectedto-read-only).
 
 ### `destroy()`
 
 *Available since v4.2.0*
 
-Destroys the **audioMotion-analyzer** instance and release resources. A destroyed analyzer cannot be started again.
+Destroys the **audioMotion-analyzer** instance and releases resources. A destroyed analyzer cannot be started again.
+
+**Syntax:**
+
+```js
+destroy()
+```
 
 This method:
 
 + Stops the analyzer data processing and animation;
 + Disconnects all input and output nodes;
 + Clears event listeners and callback functions;
-+ Stops the *AudioContext* created by this instance (won't affect context provided to the [constructor](#constructor) via [`audioCtx`](#audioctx-audiocontext-object) property or an *AudioNode* [`source`](#source-htmlmediaelement-or-audionode-object));
++ Stops the *AudioContext* created by this instance (won't affect context provided to the [constructor](#constructor) via [`audioCtx`](#audioctx) property or an *AudioNode* [`source`](#source));
 + Removes the [`canvas`](#canvas-htmlcanvaselement-object-read-only) from the DOM.
 
 See usage example in the [minimal demo](/demo/minimal.html).
 
+**Return value:** none (`undefined`).
+
 See also [`isDestroyed`](#isdestroyed-read-only).
 
-### `disconnectInput( [node], [stopTracks] )`
+### `disconnectInput()`
 
 *Available since v3.0.0; `stopTracks` parameter since v4.2.0*
 
 Disconnects audio source nodes previously connected to the analyzer.
 
-`node` may be an *AudioNode* instance or an **array** of such objects. If it's **undefined** (or any [*falsy*](https://developer.mozilla.org/en-US/docs/Glossary/Falsy) value),
-**all connected sources are disconnected.**
+**Syntax:**
 
-`stopTracks` is a boolean value; if **true**, permanently stops all audio tracks from any [*MediaStream*](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream)s being
-disconnected, e.g. a microphone. Use it to effectively release the stream if it's no longer needed.
+```js
+disconnectInput()
+disconnectInput(sources)
+disconnectInput(sources, stopTracks)
+```
 
-Please note that when you have connected an `<audio>` or `<video>` element, you need to disconnect the respective [MediaElementAudioSourceNode](https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode)
-created for it. The node reference is returned by [`connectInput()`](#connectinput-source-), or can be obtained from [`connectedSources`](#connectedsources-array-read-only)
-if the element was connected via [`source`](#source-htmlmediaelement-or-audionode-object) constructor option.
+Parameter    | type | description
+-------------|------|---------------
+`sources`    | *object* or *array* | a previously connected [AudioNode](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode), [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) or [MediaStream](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream), or an array of such objects. **When [*falsy*](https://developer.mozilla.org/en-US/docs/Glossary/Falsy), all connected sources are disconnected.**
+`stopTracks` | *boolean* | if `true`, permanently stops all audio tracks from any [*MediaStream*](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream)s being disconnected.
 
-### `disconnectOutput( [node] )`
+**Return value:** none (`undefined`).
+
+### `disconnectOutput()`
 
 *Available since v3.0.0*
 
 Disconnects the analyzer output from previously connected audio nodes.
 
-`node` must be a connected *AudioNode*.
+**Syntax:**
 
-See also [`connectOutput()`](#connectoutput-node-).
+```js
+disconnectOutput()
+disconnectOutput(node)
+```
 
-?> If called with no argument, analyzer output is disconnected from all nodes, **including the speakers!**
+Parameter | type | description
+----------|------|---------------
+`node`    | *AudioNode* | must be a connected *AudioNode*. If not specified, analyzer output is disconnected from all nodes, **including the speakers!**
+
+**Return value:** none (`undefined`).
+
+See also [`connectOutput()`](#connectoutput).
 
 ### `getBars()`
 
@@ -1462,6 +1506,35 @@ Returns the names of available themes, including built-in and custom registered 
 
 **Return value:** an *array* of *string*s.
 
+### `getThemeModifiers()`
+
+*Available since v5.0.0*
+
+Returns the state of theme modifiers for the given channel.
+
+**Syntax:**
+
+```js
+getThemeModifiers()
+getThemeModifiers(channel)
+getThemeModifiers(modifier, channel)
+```
+
+Parameter  | type     | description
+-----------|----------|-----------------
+`modifier` | *string* | *(optional)* desired modifier - if undefined, returns an object with all modifiers
+`channel`  | *number* | *(optional)* channel to set (`0` = left, `1` = right) - if not specified, considers channel 0
+
+**Return value:** a *boolean* representing the state of the selected modifier, when `modifier` is specified;
+otherwise, an *object* with the structure below:
+
+property     | type      | description
+-------------|-----------|---------------
+`horizontal` | *boolean* | If `true`, the color gradient is rendered horizontally, instead of vertically
+`revert`     | *boolean* | If `true`, reverses the order in which theme colors are applied
+
+See also [`getTheme()`](#gettheme) and [`setThemeModifiers()`](#setthememodifiers).
+
 ### `registerTheme()`
 
 *Available since v5.0.0; formerly `registerGradient()` (since v1.0.0)*
@@ -1486,7 +1559,7 @@ property     | type   | description
 `colorStops` | *array*  | **At least one array element is required.** Each one must be either a *string* (color in CSS format), or an *object* (see below).
 `peakColor`  | *string* | Optional; if defined, **all peaks** will be painted this color, regardless of their levels.
 
-**`colorStops` color object structure:**
+**`colorStops` entry object structure:**
 
 property | type   | description
 ---------|--------|-------------
@@ -1673,6 +1746,8 @@ Modifier | description
 
 **Return value:** none (`undefined`).
 
+See also [`toggleThemeModifier()`](#togglethememodifier) and [`setTheme()`](#settheme).
+
 ### `setXAxis()`
 
 *Available since v5.0.0*
@@ -1823,6 +1898,27 @@ You can set the [`fsElement`](#fselement-htmlelement-object) constructor option 
 
 ?> Fullscreen requests must be triggered by user action, like a key press or mouse click, so you must call this method from within a user-generated event handler.
 
+### `toggleThemeModifier()`
+
+*Available since v5.0.0*
+
+Toggles the state of a theme modifier for the given channel.
+
+**Syntax:**
+
+```js
+toggleThemeModifier(modifier, channel)
+```
+
+Parameter  | type     | description
+-----------|----------|-----------------
+`modifier` | *string* | desired modifier
+`channel`  | *number* | *(optional)* desired channel (`0` = left, `1` = right) - **if not specified, toggles modifier on both channels**
+
+**Return value:** none (`undefined`).
+
+See also [`setThemeModifiers()`](#setthememodifiers) and [`setTheme()`](#settheme).
+
 
 ## Custom Errors
 
@@ -1894,7 +1990,7 @@ myAudio.crossOrigin = 'anonymous';
 ### Sound only plays after the user clicks somewhere on the page. <!-- {docsify-ignore} -->
 
 Browser autoplay policy dictates that audio output can only be initiated by a user gesture, and this policy is enforced by Web Audio API
-by putting [*AudioContext*](#audioctx-audiocontext-object-read-only) objects into *suspended* mode if they're not created on user action.
+by putting [*AudioContext*](#audioctx-read-only) objects into *suspended* mode if they're not created on user action.
 
 **audioMotion-analyzer** tries to automatically start its *AudioContext* on the first click on the page. However, if you're using an `audio`
 or `video` element with the `controls` property, clicks on those native media controls cannot be detected by JavaScript, so the audio will

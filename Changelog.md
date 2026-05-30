@@ -1,6 +1,13 @@
 Changelog
 =========
 
+## version NEXT
+
+### Improved: <!-- {docsify-ignore} -->
+
++ *MediaStream* objects can now be passed directly to the [`connectInput()`](README.md#connectinput) method and the constructor's [`source`](README.md#source) property;
++ [`disconnectInput()`](README.md#disconnectinput) method now also accepts *HTMLMediaElement* and *MediaStream* objects.
+
 ## version 5.0.0-alpha.1 (2026-01-11)
 
 + Fixed: rendering of vintage LEDs for big LED elements and/or themes with several colorStops;
