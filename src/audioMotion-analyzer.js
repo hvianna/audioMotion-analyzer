@@ -1377,7 +1377,7 @@ class AudioMotionAnalyzer {
 		const defaultOptions = {
 			backgroundColor: '#0008',
 			color          : '#fff',
-			height         : .03,
+			fontSize       : .015,
 			highlightColor : '#4f4',
 			labels         : [],
 			overlay        : false
@@ -1401,15 +1401,15 @@ class AudioMotionAnalyzer {
 	setYAxis( options ) {
 		const defaultOptions = {
 			color           : '#888',
-			dbInterval      : 10,
-			percentInterval : 20,
+			dbInterval      : 6,
+			fontSize        : .015,
 			lineDash        : [2,4],
 			operation       : 'destination-over',
+			percentInterval : 20,
 			showSubdivisions: true,
 			showUnit        : true,
 			subLineColor    : '#555',
-			subLineDash     : [2,8],
-			width           : .03
+			subLineDash     : [2,8]
 		};
 
 		this._yAxis = {
@@ -1530,14 +1530,15 @@ class AudioMotionAnalyzer {
 
 		const { _alphaBars, _ansiBands, _bandRes, _barSpace, canvas, _chLayout, _maxFreq, _minFreq,
 			    _mirror, _mode, _pixelRatio, _radial, _reflexRatio, _xAxis, _yAxis } = this,
+			  minCanvasDimension = Math.min( canvas.width, canvas.height ),
+			  computeScaleSize   = fontSize => Math.max( MIN_AXIS_DIMENSION * _pixelRatio, 2 * fontSize * ( fontSize > 1 ? _pixelRatio : minCanvasDimension ) | 0 ),
 			  bars               = [],
 			  centerX            = canvas.width >> 1,
 			  centerY            = canvas.height >> 1,
 			  isDualVertical     = _chLayout == LAYOUT_VERTICAL && ! _radial,
 			  isDualHorizontal   = _chLayout == LAYOUT_HORIZONTAL,
-			  minCanvasDimension = Math.min( canvas.width, canvas.height ),
-			  xAxisHeight        = Math.max( MIN_AXIS_DIMENSION * _pixelRatio, _xAxis.height * ( _xAxis.height > 1 ? _pixelRatio : minCanvasDimension ) | 0 ),
-			  yAxisWidth         = Math.max( MIN_AXIS_DIMENSION * _pixelRatio, _yAxis.width  * ( _yAxis.width  > 1 ? _pixelRatio : minCanvasDimension ) | 0 ),
+			  xAxisHeight        = computeScaleSize( _xAxis.fontSize ),
+			  yAxisWidth         = computeScaleSize( _yAxis.fontSize ),
 			  scaleGap           = xAxisHeight * ( ! _xAxis.overlay && this._xLabels != LABELS_X_OFF ),
 
 			  // COMPUTE FLAGS

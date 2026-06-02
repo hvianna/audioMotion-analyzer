@@ -143,7 +143,7 @@ export interface GradientOptions {
 export interface XAxisOptions {
   backgroundColor?: string;
   color?: string;
-  height?: number;
+  fontSize?: number;
   highlightColor?: string;
   labels?: FrequencyLabel[];
   overlay?: boolean;
@@ -152,13 +152,13 @@ export interface XAxisOptions {
 export interface YAxisOptions {
   color?: string;
   dbInterval?: number;
+  fontSize?: number;
   lineDash?: number[];
   operation?: string;
   percentInterval?: number;
   showSubdivisions?: boolean;
   subLineColor?: string;
   subLineDash?: number[];
-  width?: number;
 }
 
 declare class AudioMotionAnalyzer {
