@@ -62,6 +62,9 @@ export const ALPHABARS_FULL            = 'full',
 			 LABELS_X_FREQS_CUSTOM     = 'freqs-custom',
 			 LABELS_X_NOTES            = 'notes',
 			 LABELS_X_OFF              = OPTION_OFF,
+			 LABELS_Y_DB               = 'db',
+			 LABELS_Y_PERCENT          = 'percent',
+			 LABELS_Y_OFF              = OPTION_OFF,
 			 LAYOUT_COMBINED           = 'dual-combined',
 			 LAYOUT_HORIZONTAL         = 'dual-horizontal',
 			 LAYOUT_SINGLE             = 'single',
@@ -154,7 +157,7 @@ const DEFAULT_SETTINGS = {
 	showFPS        : false,
 	showLedMask    : true,
 	showScaleX     : LABELS_X_FREQS,
-	showScaleY     : false,
+	showScaleY     : LABELS_Y_OFF,
 	smoothing      : 0.5,
 	spinSpeed      : 0,
 	spreadGradient : false,
@@ -766,6 +769,13 @@ class AudioMotionAnalyzer {
 		this._xLabels = validateFromList( value, [ LABELS_X_OFF, LABELS_X_CUSTOM, LABELS_X_FREQS, LABELS_X_FREQS_CUSTOM, LABELS_X_NOTES ] );
 		this._calcBars();
 		this._makeGrad();
+	}
+
+	get showScaleY() {
+		return this._yLabels;
+	}
+	set showScaleY( value ) {
+		this._yLabels = validateFromList( value, [ LABELS_Y_OFF, LABELS_Y_DB, LABELS_Y_PERCENT ] );
 	}
 
 	get smoothing() {
@@ -1392,7 +1402,7 @@ class AudioMotionAnalyzer {
 		const defaultOptions = {
 			color           : '#888',
 			dbInterval      : 10,
-			linearInterval  : 20,
+			percentInterval : 20,
 			lineDash        : [2,4],
 			operation       : 'destination-over',
 			showSubdivisions: true,
@@ -2088,7 +2098,8 @@ class AudioMotionAnalyzer {
 			    useCanvas,
 			    _weightingFilter,
 			    _xAxis,
-			    _yAxis }       = this,
+			    _yAxis,
+			    _yLabels }     = this,
 
 			  [ ledCount, ledHeight, ledGap ] = this._leds,
 			  canvasX          = this._scaleX.canvas,
@@ -2103,6 +2114,7 @@ class AudioMotionAnalyzer {
 			  analyzerWidth    = _radial ? canvas.width : this._aux.analyzerWidth,
 			  finalX           = initialX + analyzerWidth,
 			  showScaleX       = this._xLabels != LABELS_X_OFF,
+			  showScaleY       = _yLabels != LABELS_Y_OFF,
 			  showPeaks        = _peaks != PEAKS_OFF,
 			  showPeakLine     = showPeaks && _peakLine > 0 && isGraphMode,
 			  maxBarHeight     = _radial ? outerRadius - innerRadius : analyzerHeight,
@@ -2165,17 +2177,18 @@ class AudioMotionAnalyzer {
 
 		// draw scale on Y-axis - TO-DO: handle reflex!
 		const drawScaleY = () => {
-			if ( ! this.showScaleY || isLumi || _radial )
+			if ( ! showScaleY || isLumi || _radial )
 				return;
 
-			const { color, dbInterval, linearInterval, lineDash, operation, showSubdivisions, showUnit, subLineColor, subLineDash } = _yAxis,
+			const { color, dbInterval, percentInterval, lineDash, operation, showSubdivisions, showUnit, subLineColor, subLineDash } = _yAxis,
 				  fontSize   = yAxisWidth >> 1,
-				  increment  = ( _linearAmplitude ? linearInterval : dbInterval ) / ( showSubdivisions ? 2 : 1 ),
+				  isDbLabels = _yLabels == LABELS_Y_DB,
+				  increment  = ( isDbLabels ? dbInterval : percentInterval ) / ( showSubdivisions ? 2 : 1 ),
 				  left       = yAxisWidth * .85,
-				  max        = _linearAmplitude ? 100 : maxDecibels,
-				  min        = _linearAmplitude ? 0 : minDecibels,
+				  max        = isDbLabels ? maxDecibels : 100,
+				  min        = isDbLabels ? minDecibels : 0,
 				  right      = canvas.width - yAxisWidth * .1,
-				  unit       = _linearAmplitude ? '%' : 'dB',
+				  unit       = isDbLabels ? 'dB' : '%',
 				  unitHeight = analyzerHeight / ( max - min );
 
 			_ctx.save();
@@ -2188,7 +2201,7 @@ class AudioMotionAnalyzer {
 			for ( let channel = 0; channel < 1 + isDualVertical; channel++ ) {
 				const { channelTop } = channelCoords[ channel ];
 				for ( let val = max, minor = false; val > min; val -= increment ) {
-					const posY = channelTop + ( max - val ) * unitHeight;
+					const posY = channelTop + ( isDbLabels && _linearAmplitude ? ( 1 - this._normalizedB( val ) ) * analyzerHeight : ( max - val ) * unitHeight );
 
 					if ( minor && showSubdivisions ) {
 						_ctx.strokeStyle = subLineColor;

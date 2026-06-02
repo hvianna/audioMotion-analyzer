@@ -152,9 +152,9 @@ export interface XAxisOptions {
 export interface YAxisOptions {
   color?: string;
   dbInterval?: number;
-  linearInterval?: number;
   lineDash?: number[];
   operation?: string;
+  percentInterval?: number;
   showSubdivisions?: boolean;
   subLineColor?: string;
   subLineDash?: number[];
