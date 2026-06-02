@@ -1365,7 +1365,6 @@ class AudioMotionAnalyzer {
 	 */
 	setXAxis( options ) {
 		const defaultOptions = {
-			addLabels      : false,
 			backgroundColor: '#0008',
 			color          : '#fff',
 			height         : .03,

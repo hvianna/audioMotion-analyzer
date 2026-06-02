@@ -79,7 +79,7 @@ export interface Options {
   roundBars?: boolean;
   showFPS?: boolean;
   showLedMask?: boolean;
-  showScaleX?: boolean;
+  showScaleX?: ShowScaleX;
   showScaleY?: boolean;
   smoothing?: number;
   spinSpeed?: number;
@@ -129,6 +129,8 @@ export type LedBars = "off" | "modern" | "vintage";
 
 export type Peaks = "off" | "drop" | "fade";
 
+export type ShowScaleX = "off" | "custom" | "freqs" | "freqs-custom" | "notes";
+
 export type VisualizationMode = "bars" | "graph";
 
 export type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
@@ -139,7 +141,6 @@ export interface GradientOptions {
 }
 
 export interface XAxisOptions {
-  addLabels?: boolean;
   backgroundColor?: string;
   color?: string;
   height?: number;
@@ -290,7 +291,10 @@ declare class AudioMotionAnalyzer {
 
   public showFPS: boolean;
   public showLedMask: boolean;
-  public showScaleX: boolean;
+
+  get showScaleX(): ShowScaleX;
+  set showScaleX(value: ShowScaleX);
+
   public showScaleY: boolean;
 
   get smoothing(): number;
