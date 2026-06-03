@@ -2201,39 +2201,45 @@ class AudioMotionAnalyzer {
 
 			for ( let channel = 0; channel < 1 + isDualVertical; channel++ ) {
 				const { channelTop } = channelCoords[ channel ];
-				for ( let val = max, minor = false; val > min; val -= increment ) {
-					const posY = channelTop + ( isDbLabels && _linearAmplitude ? ( 1 - this._normalizedB( val ) ) * analyzerHeight : ( max - val ) * unitHeight );
+				for ( let val = max, isSub = false, prevPosY = channelTop - fontSize; val > min; val -= increment ) {
+					const posY     = channelTop + ( isDbLabels && _linearAmplitude ? ( 1 - this._normalizedB( val ) ) * analyzerHeight : ( max - val ) * unitHeight ),
+						  labelY   = posY + fontSize * ( posY == channelTop ? .8 : .35 ),
+						  skipThis = posY - prevPosY < fontSize;
 
-					if ( minor && showSubdivisions ) {
+					// display unit (dB or %) at the top (below first label)
+					if ( showUnit && val == max ) {
+						const unitY = labelY + fontSize * 1.5;
+						_ctx.fillText( unit, left, unitY );
+						_ctx.fillText( unit, right, unitY );
+					}
+
+					// skip overlapping labels when using logarithmic scale (dB labels on linear amplitude scale)
+					if ( skipThis )
+						continue;
+
+					if ( isSub && showSubdivisions ) {
 						_ctx.strokeStyle = subLineColor;
 						_ctx.setLineDash( subLineDash );
 						_ctx.lineDashOffset = 1;
 					}
 					else {
-						let labelY = posY + fontSize * ( posY == channelTop ? .8 : .35 );
-
-						_ctx.fillText( val, left, labelY );
-						_ctx.fillText( val, right, labelY );
-
-						if ( showUnit && val - increment * ( showSubdivisions ? 2 : 1 ) <= min ) {
-							// display unit (dB or %) below the bottom label on both sides
-							labelY += fontSize * 1.5;
-							_ctx.fillText( unit, left, labelY );
-							_ctx.fillText( unit, right, labelY );
-						}
-
 						_ctx.strokeStyle = color;
 						_ctx.setLineDash( lineDash );
 						_ctx.lineDashOffset = 0;
+
+						// print labels
+						_ctx.fillText( val, left, labelY );
+						_ctx.fillText( val, right, labelY );
 					}
 
 					_ctx.beginPath();
-					_ctx.moveTo( yAxisWidth * ! minor, ~~posY + .5 ); // for sharp 1px line (https://stackoverflow.com/a/13879402/2370385)
-					_ctx.lineTo( canvas.width - yAxisWidth * ! minor, ~~posY + .5 );
+					_ctx.moveTo( yAxisWidth * ! isSub, ~~posY + .5 ); // for sharp 1px line (https://stackoverflow.com/a/13879402/2370385)
+					_ctx.lineTo( canvas.width - yAxisWidth * ! isSub, ~~posY + .5 );
 					_ctx.stroke();
 
+					prevPosY = posY;
 					if ( showSubdivisions )
-						minor = ! minor;
+						isSub = ! isSub;
 				}
 			}
 			_ctx.restore();
