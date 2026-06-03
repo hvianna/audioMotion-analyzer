@@ -2221,7 +2221,7 @@ class AudioMotionAnalyzer {
 				const { channelTop } = channelCoords[ channel ];
 				for ( let val = max, isSub = false, prevPosY = channelTop - fontSize; val > min; val -= increment ) {
 					const posY     = channelTop + ( isDbLabels && _linearAmplitude ? ( 1 - this._normalizedB( val ) ) * analyzerHeight : ( max - val ) * unitHeight ),
-						  labelY   = posY + fontSize * ( posY == channelTop ? .8 : .35 ),
+						  labelY   = posY + fontSize * ( val == max ? .8 : .35 ),
 						  skipThis = posY - prevPosY < fontSize;
 
 					// display unit (dB or %) at the top (below first label)
