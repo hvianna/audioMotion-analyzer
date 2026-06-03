@@ -80,7 +80,7 @@ export interface Options {
   showFPS?: boolean;
   showLedMask?: boolean;
   showScaleX?: ShowScaleX;
-  showScaleY?: boolean;
+  showScaleY?: ShowScaleY;
   smoothing?: number;
   spinSpeed?: number;
   spreadGradient?: boolean;
@@ -131,6 +131,8 @@ export type Peaks = "off" | "drop" | "fade";
 
 export type ShowScaleX = "off" | "custom" | "freqs" | "freqs-custom" | "notes";
 
+export type ShowScaleY = "off" | "db" | "percent";
+
 export type VisualizationMode = "bars" | "graph";
 
 export type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
@@ -140,7 +142,7 @@ export interface GradientOptions {
   peakColor?: string;
 }
 
-export interface XAxisOptions {
+export interface ScaleXProperties {
   backgroundColor?: string;
   color?: string;
   fontSize?: number;
@@ -149,7 +151,7 @@ export interface XAxisOptions {
   overlay?: boolean;
 }
 
-export interface YAxisOptions {
+export interface ScaleYProperties {
   color?: string;
   dbInterval?: number;
   fontSize?: number;
@@ -295,7 +297,8 @@ declare class AudioMotionAnalyzer {
   get showScaleX(): ShowScaleX;
   set showScaleX(value: ShowScaleX);
 
-  public showScaleY: boolean;
+  get showScaleY(): ShowScaleY;
+  set showScaleY(value: ShowScaleY);
 
   get smoothing(): number;
   set smoothing(value: number);
@@ -337,6 +340,9 @@ declare class AudioMotionAnalyzer {
 
   public getOptions(ignore?: string | string[]): Options;
 
+  public getScaleX(): ScaleXProperties;
+  public getScaleY(): ScaleYProperties;
+
   public getTheme( channel?: number ): string;
   public getTheme( channel?: number, includeModifiers: true ): ThemeNameAndModifiers;
 
@@ -353,6 +359,10 @@ declare class AudioMotionAnalyzer {
   public setFreqRange(minFreq: number, maxFreq: number): void;
   public setLeds(ledHeight: number, gapHeight: number): void;
   public setOptions(options?: Options): void;
+
+  public setScaleX( options?: ScaleXProperties ): void;
+  public setScaleY( options?: ScaleYProperties ): void;
+
   public setSensitivity(minDecibels: number, maxDecibels: number): void;
 
   public setTheme( name: string, modifiers?: ThemeModifiers, channel?: number ): void;
@@ -362,9 +372,6 @@ declare class AudioMotionAnalyzer {
   public setThemeModifiers( modifier: string, value: boolean, channel?: number ): void;
   public setThemeModifiers( modifier: ThemeModifiers | null, channel?: number ): void;
   public setThemeModifiers( channel?: number ): void;
-
-  public setXAxis(options?: XAxisOptions): void;
-  public setYAxis(options?: YAxisOptions): void;
 
   public start(): void;
   public stop(): void;
