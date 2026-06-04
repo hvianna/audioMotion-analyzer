@@ -131,7 +131,7 @@ export type Peaks = "off" | "drop" | "fade";
 
 export type VisualizationMode = "bars" | "graph";
 
-export type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
+export type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468" | "TILT3" | "TILT45";
 
 export interface GradientOptions {
   colorStops: GradientColorStop[];
