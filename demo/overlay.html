@@ -88,12 +88,12 @@
 
 				<label class="label">fftSize
 					<select data-setting="fftSize">
-						<option value="1024">1024</option>
-						<option value="2048">2048</option>
-						<option value="4096">4096</option>
-						<option value="8192">8192</option>
-						<option value="16384">16384</option>
-						<option value="32768">32768</option>
+						<option>1024</option>
+						<option>2048</option>
+						<option>4096</option>
+						<option>8192</option>
+						<option>16384</option>
+						<option>32768</option>
 					</select>
 				</label>
 				<label class="label">smoothing
@@ -113,12 +113,12 @@
 					<input type="number" min="1" max="24000" data-setting="maxFreq">
 				</label>
 
-				<label class="label">frequencyScale
+				<label class="label small"><span>frequencyScale</span>
 					<select data-setting="frequencyScale">
-						<option value="bark">Bark</option>
-						<option value="linear">Linear</option>
-						<option value="log">Log</option>
-						<option value="mel">Mel</option>
+						<option>bark</option>
+						<option>linear</option>
+						<option>log</option>
+						<option>mel</option>
 					</select>
 				</label>
 			</fieldset>
@@ -126,23 +126,23 @@
 			<fieldset>
 				<legend>Sensitivity</legend>
 
-				<label class="label">weightingFilter
-					<select data-setting="weightingFilter">
-						<option value="">none</option>
-						<option value="A">A</option>
-						<option value="B">B</option>
-						<option value="C">C</option>
-						<option value="D">D</option>
-						<option value="468">468</option>
-					</select>
-				</label>
-
 				<label class="label">minDecibels
 					<input type="number" min="-200" max="0" data-setting="minDecibels">
 				</label>
 
 				<label class="label">maxDecibels
 					<input type="number" min="-200" max="0" data-setting="maxDecibels">
+				</label>
+
+				<label class="label small"><span>weightingFilter</span>
+					<select data-setting="weightingFilter">
+						<option value="">none</option>
+						<option>A</option>
+						<option>B</option>
+						<option>C</option>
+						<option>D</option>
+						<option>468</option>
+					</select>
 				</label>
 			</fieldset>
 
@@ -153,6 +153,26 @@
 				<label class="label">linearBoost
 					<input type="range" min="1" max="4" step=".2" data-setting="linearBoost">
 					<div class="value"></div>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Scale Labels</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=showscalex" target="_blank">showScaleX</a>
+					<select data-setting="showScaleX">
+						<option>off</option>
+						<option>custom</option>
+						<option>freqs</option>
+						<option>freqs-custom</option>
+						<option>notes</option>
+					</select>
+				</label>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=showscaley" target="_blank">showScaleY</a>
+					<select data-setting="showScaleY">
+						<option>off</option>
+						<option>db</option>
+						<option>percent</option>
+					</select>
 				</label>
 			</fieldset>
 		</div>
@@ -251,13 +271,10 @@
 				<legend>Display</legend>
 				<div class="button-grid">
 					<button data-prop="ansiBands">ansiBands</button>
-					<button data-prop="noteLabels">noteLabels</button>
 					<button data-prop="loRes">loRes</button>
 					<button data-prop="showFPS">showFPS</button>
 					<button data-prop="showLedMask">showLedMask</button>
 					<button data-prop="spreadGradient">spreadGradient</button>
-					<button data-prop="showScaleX">showScaleX</button>
-					<button data-prop="showScaleY">showScaleY</button>
 				</div>
 			</fieldset>
 

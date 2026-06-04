@@ -15,7 +15,11 @@ import {
 	ENERGY_TREBLE,
 	LEDS_MODERN,
 	LEDS_OFF,
-	LEDS_VINTAGE
+	LEDS_VINTAGE,
+	LABELS_X_FREQS,
+	LABELS_X_OFF,
+	LABELS_Y_DB,
+	LABELS_Y_OFF
 } from '../src/audioMotion-analyzer.js';
 
 const audioEl             = document.getElementById('audio'),
@@ -77,7 +81,7 @@ const presets = [
 			reflexBright: 1,
 			reflexRatio: .5,
 			showPeaks: false,
-			showScaleX: false
+			showScaleX: LABELS_X_OFF
 		},
 		theme: 'rainbow'
 	},
@@ -116,7 +120,7 @@ const presets = [
 			reflexFit: true,
 			reflexRatio: .25,
 			showPeaks: true,
-			showScaleX: true,
+			showScaleX: LABELS_X_FREQS,
 			weightingFilter: 'D'
 		},
 		theme: { name: 'rainbow', modifiers: { horizontal: true } }
@@ -165,7 +169,7 @@ const presets = [
 			reflexAlpha: 1,
 			roundBars: true,
 			showPeaks: false,
-			showScaleX: false,
+			showScaleX: LABELS_X_OFF,
 			smoothing: .7,
 			weightingFilter: 'D'
 		},
@@ -180,7 +184,7 @@ const presets = [
 			linearAmplitude: false,
 			reflexRatio: .4,
 			showPeaks: true,
-			showScaleX: false,
+			showScaleX: LABELS_X_OFF,
 			mirror: -1,
 			maxFreq: 8000,
 			minFreq: 20,
@@ -203,7 +207,7 @@ const presets = [
 			radial: false,
 			reflexRatio: 0,
 			showPeaks: true,
-			showScaleX: false,
+			showScaleX: LABELS_X_OFF,
 			mirror: 0,
 			maxFreq: 16000,
 			minFreq: 20
@@ -233,7 +237,7 @@ const presets = [
 			radial: false,
 			reflexRatio: 0,
 			showPeaks: false,
-			showScaleX: false,
+			showScaleX: LABELS_X_OFF,
 			weightingFilter: 'D'
 		}
 	},
@@ -262,8 +266,8 @@ const presets = [
 			reflexRatio: 0,
 			showLedMask: true,
 			showPeaks: true,
-			showScaleX: true,
-			showScaleY: true,
+			showScaleX: LABELS_X_FREQS,
+			showScaleY: LABELS_Y_DB,
 			splitGradient: false
 		}
 	}
@@ -408,31 +412,35 @@ audioMotion.registerTheme( 'prism-new', {
 });
 */
 
-/*
-audioMotion.setXAxis({
-	addLabels: true,
+audioMotion.setScaleX({
+//	backgroundColor: '#0008',
+//	color: '#fff',
+//	fontSize: .15,
+//	highlightColor: '#4f4',
 	labels: [
 		800,
-		[ 3000, '|' ],
+		[ 3000, '|', true ],
 		[ 440, 'A4', true ],
 	],
-//	overlay: true,
-//	height: 40
-});
-*/
-
-audioMotion.setYAxis({
-	linearInterval: 10,
-//	color: '#8888',
-//	lineDash: [2,4],
-//	midLineColor: '#5558',
-//	midLineDash: [2,8],
-//	showSubdivisions: false,
-//	operation: 'screen',
-//	showUnit: false,
-//	width: 25
+//	overlay: false
 });
 
+audioMotion.setScaleY({
+//	color           : '#888',
+//	dbInterval      : 6,
+//	fontSize        : .15,
+//	lineDash        : [2,4],
+//	operation       : 'destination-over',
+//	percentInterval : 20,
+//	showSubdivisions: true,
+//	showUnit        : true,
+//	subLineColor    : '#555',
+//	subLineDash     : [2,8]
+});
+
+
+//console.log( 'getScaleX', audioMotion.getScaleX() );
+//console.log( 'getScaleY', audioMotion.getScaleY() );
 
 // Populate UI select elements and add event listeners
 

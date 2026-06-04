@@ -58,7 +58,7 @@ audioMotion[0].setOptions({
 	linearBoost: 1.6,
 	maxFreq: 20000,
 	minFreq: 30,
-	showScaleY: true,
+	showScaleY: 'db',
 	weightingFilter: 'D'
 });
 
@@ -76,7 +76,7 @@ audioMotion[1].setOptions({
 	maxFreq: 16000,
 	minFreq: 30,
 	peakLine: true,
-	showScaleX: false,
+	showScaleX: 'off',
 	showPeaks: true,
 	weightingFilter: 'D'
 });
@@ -95,7 +95,7 @@ audioMotion[2].setOptions({
 	maxFreq: 16000,
 	minFreq: 30,
 	showPeaks: false,
-	showScaleX: false,
+	showScaleX: 'off',
 	weightingFilter: 'D'
 });
 
