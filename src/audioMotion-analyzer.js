@@ -57,6 +57,8 @@ export const ALPHABARS_FULL            = 'full',
 			 FILTER_C                  = 'C',
 			 FILTER_D                  = 'D',
 			 FILTER_468                = '468',
+			 FILTER_TILT3              = 'TILT3',
+			 FILTER_TILT45             = 'TILT45',
 			 LABELS_X_CUSTOM           = 'custom',
 			 LABELS_X_FREQS            = 'freqs',
 			 LABELS_X_FREQS_CUSTOM     = 'freqs-custom',
@@ -815,7 +817,7 @@ class AudioMotionAnalyzer {
 		return this._weightingFilter;
 	}
 	set weightingFilter( value ) {
-		this._weightingFilter = validateFromList( value, [ FILTER_NONE, FILTER_A, FILTER_B, FILTER_C, FILTER_D, FILTER_468 ], 'toUpperCase' );
+		this._weightingFilter = validateFromList( value, [ FILTER_NONE, FILTER_A, FILTER_B, FILTER_C, FILTER_D, FILTER_468, FILTER_TILT3, FILTER_TILT45 ], 'toUpperCase' );
 	}
 
 	get width() {
@@ -2296,6 +2298,12 @@ class AudioMotionAnalyzer {
 						  h2 = 1.306612257412824e-19 * freq ** 5 - 2.118150887518656e-11 * freq ** 3 + 5.559488023498642e-4 * freq,
 						  rI = 1.246332637532143e-4 * freq / Math.hypot( h1, h2 );
 					return 18.2 + linearTodB( rI );
+
+				case FILTER_TILT3: // 3dB/octave tilt, centered on 1kHz
+					return 3 * Math.log2( freq / 1000 );
+
+				case FILTER_TILT45: // 4.5dB/octave tilt, centered on 1kHz
+					return 4.5 * Math.log2( freq / 1000 );
 			}
 
 			return 0; // unknown filter
