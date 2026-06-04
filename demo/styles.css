@@ -157,6 +157,9 @@ ul {
 .label select {
 	display: block;
 }
+.label.small > *:first-child {
+	font-size: .9em;
+}
 fieldset .label,
 fieldset button {
 	margin-left: 2px;
