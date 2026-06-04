@@ -1303,7 +1303,7 @@ class AudioMotionAnalyzer {
 		const defaultOptions = {
 			backgroundColor: '#0008',
 			color          : '#fff',
-			fontSize       : .015,
+			fontSize       : .15,
 			highlightColor : '#4f4',
 			labels         : [],
 			overlay        : false
@@ -1315,7 +1315,7 @@ class AudioMotionAnalyzer {
 			...( isObject( options ) ? { ...this._xScale, ...options } : [] )
 		};
 
-		this._calcBars(); // note that changes to `height` and `overlay` affect usable canvas height
+		this._calcBars(); // note that changes to `fontSize` and `overlay` affect usable canvas height
 		this._makeGrad();
 	}
 
@@ -1328,7 +1328,7 @@ class AudioMotionAnalyzer {
 		const defaultOptions = {
 			color           : '#888',
 			dbInterval      : 6,
-			fontSize        : .015,
+			fontSize        : .15,
 			lineDash        : [2,4],
 			operation       : 'destination-over',
 			percentInterval : 20,
@@ -1549,7 +1549,7 @@ class AudioMotionAnalyzer {
 		const { _alphaBars, _ansiBands, _bandRes, _barSpace, canvas, _chLayout, _maxFreq, _minFreq,
 			    _mirror, _mode, _pixelRatio, _radial, _reflexRatio, _xScale, _yScale } = this,
 			  minCanvasDimension = Math.min( canvas.width, canvas.height ),
-			  computeScaleSize   = fontSize => Math.max( MIN_AXIS_DIMENSION * _pixelRatio, 2 * fontSize * ( fontSize > 1 ? _pixelRatio : minCanvasDimension ) | 0 ),
+			  computeScaleSize   = fontSize => fontSize > 1 ? fontSize * _pixelRatio : Math.max( MIN_AXIS_DIMENSION * _pixelRatio, 2 * fontSize * minCanvasDimension / 10 | 0 ),
 			  bars               = [],
 			  centerX            = canvas.width >> 1,
 			  centerY            = canvas.height >> 1,
