@@ -164,7 +164,6 @@ property                              | type      | default | notes
 [`minFreq`](#minfreq)                 | *number*  | `20` |
 [`mirror`](#mirror)                   | *number*  | `0` |
 [`mode`](#mode)                       | *string*  | `"bars"` |
-[`noteLabels`](#notelabels)           | *boolean* | `false` |
 [`onCanvasDraw`](#oncanvasdraw)       | *function* or *undefined* | `undefined` |
 [`onCanvasResize`](#oncanvasresize)   | *function* or *undefined* | `undefined` |
 [`outlineBars`](#outlinebars)         | *boolean* | `false` |
@@ -181,8 +180,8 @@ property                              | type      | default | notes
 [`roundBars`](#roundbars)             | *boolean* | `false` |
 [`showFPS`](#showfps)                 | *boolean* | `false` |
 [`showLedMask`](#showledmask)         | *boolean* | `true` |
-[`showScaleX`](#showscalex)           | *boolean* | `true` |
-[`showScaleY`](#showscaley)           | *boolean* | `false` |
+[`showScaleX`](#showscalex)           | *string*  | `"freqs"` |
+[`showScaleY`](#showscaley)           | *string*  | `"off"` |
 [`smoothing`](#smoothing)             | *number*  | `0.5` |
 [`source`](#source)                   | *AudioNode*, *HTMLMediaElement* or *MediaStream* | *none* | constructor only
 [`spinSpeed`](#spinspeed)             | *number*  | `0` |
@@ -306,6 +305,14 @@ import {
 	FILTER_C,
 	FILTER_D,
 	FILTER_468,
+	LABELS_X_CUSTOM,
+	LABELS_X_FREQS,
+	LABELS_X_FREQS_CUSTOM,
+	LABELS_X_NOTES,
+	LABELS_X_OFF,
+	LABELS_Y_DB,
+	LABELS_Y_PERCENT,
+	LABELS_Y_OFF,
 	LAYOUT_COMBINED,
 	LAYOUT_HORIZONTAL,
 	LAYOUT_SINGLE,
@@ -370,8 +377,6 @@ value   | Reference | Octaves' center frequencies
 Only effective when [`frequencyScale`](#frequencyScale) is set to `"log"` and [`bandResolution`](#bandresolution) > `0`.
 
 When using the equal-tempered scale, the center frequency of each band is tuned to a standard musical note.
-
-See also [`noteLabels`](#notelabels).
 
 ### `audioCtx` *(read only)*
 
@@ -550,7 +555,7 @@ value      | [Constant](#constants) | Description | Scale preview (10Hz - 24kHz 
 `"log"`    | `SCALE_LOG`    | Logarithmic scale | ![scale-log-ansi](img/scale-log-ansi.png)
 `"mel"`    | `SCALE_MEL`    | Mel scale | ![scale-mel](img/scale-mel.png)
 
-Logarithmic scale allows visualization of proper **octave bands** (see [`bandResolution`](#bandresolution)) and it's also recommended when using [`noteLabels`](#notelabels).
+Logarithmic scale allows visualization of proper **octave bands** (see [`bandResolution`](#bandresolution)) and it's also recommended when using [`showScaleX`](#showscalex) set to `"notes"`.
 
 [*Bark*](https://en.wikipedia.org/wiki/Bark_scale) and [*Mel*](https://en.wikipedia.org/wiki/Mel_scale) are perceptual pitch scales, which may provide better visualization of mid-range frequencies, when compared to log or linear scales.
 
@@ -803,17 +808,6 @@ See also [`bandResolution`](#bandresolution).
 > 0             | "bars"  | 0
 > 1 through 8   | "bars"  | 9 *minus* legacy mode
 > 10            | "graph" | 0
-
-### `noteLabels`
-
-*Available since v4.0.0*
-
-**Value:** a *boolean* value. The default value is `false`.
-
-Whether to displays musical note labels instead of frequency values, in the X-axis (when [`showScaleX`](#showscalex) is `true`).
-
-For best visualization in [octave bands modes](#mode), make sure [`frequencyScale`](#frequencyscale) is set to `"log"`
-and [`ansiBands`](#ansibands) is set to `false`, so bands are tuned to the equal temperament musical scale.
 
 ### `onCanvasDraw`
 
@@ -1096,28 +1090,39 @@ Whether to display the "unlit" LED elements. Has no effect when [`ledBars`](#led
 
 *Available since v3.0.0; formerly `showScale` (since v1.0.0)*
 
-**Value:** a *boolean* value. The default value is `true`.
+**Value:** a *string*. The default value is `"freqs"`.
 
 Whether to display scale labels on the X-axis.
 
-Several properties of the scale can be customized via [`setXAxis()`](#setxaxis) method.
+Value            | [Constant](#constants)  | Description
+-----------------|-------------------------|---------------
+`"off"`          | `LABELS_X_OFF`          | Do not display the X-axis scale.
+`"custom"`       | `LABELS_X_CUSTOM`       | Display custom `labels` defined via [`setScaleX()`](#setscalex).
+`"freqs"`        | `LABELS_X_FREQS`        | Display octaves center frequencies - see also [`ansiBands`](#ansibands).
+`"freqs-custom"` | `LABELS_X_FREQS_CUSTOM` | Display center frequencies and any additional custom labels.
+`"notes"`        | `LABELS_X_NOTES`        | Display musical note labels.
 
-See also [`noteLabels`](#notelabels).
+Several display properties of the scale can be customized via [`setScaleX()`](#setscalex) method.
+
+!> For best results of `"notes"` setting in [octave bands modes](#bandresolution), make sure [`frequencyScale`](#frequencyscale) is set to `"log"` and [`ansiBands`](#ansibands) is set to `false`, so bands are tuned to the equal temperament musical scale.
 
 ### `showScaleY`
 
 *Available since v2.4.0*
 
-**Value:** a *boolean* value. The default value is `false`.
+**Value:** a *string*. The default value is `"off"`.
 
 Whether to display the level/amplitude scale on the Y-axis.
 
+Value       | [Constant](#constants) | Description
+------------|------------------------|---------------
+`"off"`     | `LABELS_Y_OFF`         | Do not display the Y-axis scale.
+`"db"`      | `LABELS_Y_DB`          | Display labels in decibels.
+`"percent"` | `LABELS_Y_PERCENT`     | Display labels in percent values.
+
 This option has no effect when [`radial`](#radial) is active or [`alphaBars`](#alphabars) is set to `"full"`.
 
-When [`linearAmplitude`](#linearamplitude) is set to *false* (default), labels are shown in decibels (dB);
-otherwise, values represent a percentage (0-100%) of the maximum amplitude.
-
-Several properties of the scale can be customized via [`setYAxis()`](#setyaxis) method.
+Several display properties of the scale can be customized via [`setScaleY()`](#setscaley) method.
 
 See also [`minDecibels`](#mindecibels) and [`maxDecibels`](#maxdecibels).
 
@@ -1437,11 +1442,39 @@ Callbacks and [constructor-specific properties](#constructor-specific-options) a
 
 See also [`setOptions()`](#setoptions).
 
+### `getScaleX()`
+
+*Available since v5.0.0*
+
+Returns the display properties of the X-axis scale.
+
+**Syntax:**
+
+```js
+getScaleX()
+```
+
+**Return value:** an *object* - see [`setScaleX()`](#setscalex) for object structure.
+
+### `getScaleY()`
+
+*Available since v5.0.0*
+
+Returns the display properties of the Y-axis scale.
+
+**Syntax:**
+
+```js
+getScaleY()
+```
+
+**Return value:** an *object* - see [`setScaleY()`](#setscaley) for object structure.
+
 ### `getTheme()`
 
 *Available since v5.0.0*
 
-Returns the name of the theme set for the given channel.
+Returns the name of the active theme, and optionally the state of theme modifiers, for the given channel.
 
 **Syntax:**
 
@@ -1692,6 +1725,93 @@ setSensitivity(minDecibels, maxDecibels)
 
 **Return value:** none (`undefined`).
 
+### `setScaleX()`
+
+*Available since v5.0.0*
+
+Customize the appearance of the X-axis scale and labels.
+
+**Syntax:**
+
+```js
+setScaleX()
+setScaleX(options)
+```
+
+**If called with no argument, all properties will be reset to their default values.**
+
+If `options` is defined, it should be an object with the structure below (all properties are optional).
+
+property           | type      | description | default
+-------------------|-----------|-------------|---------
+`backgroundColor`  | *string*  | Background color of the X-axis. Any valid CSS color format is acceptable. Use a blank string or `"transparent"` for fully transparent background | `"#0008"`
+`color`            | *string*  | Color of labels | `"#fff"`
+`fontSize`         | *number*  | Font size for labels. Values between `0.0` and `1.0` (recommended for responsivity) represent a fraction of one tenth of the smallest canvas dimension (width or height). A minimum of 10px is enforced for the computed size. Values greater than `1` are interpreted as fixed pixel sizes. | `0.15`
+`highlightColor`   | *string*  | Color used to highlight *C* notes when [`showScaleX`](#showscalex) is set to `"notes"`, and for labels highlighted via `labels` property (see below) | `"#4f4"`
+`labels`           | *array*   | Custom labels displayed when [`showScaleX`](#showscalex) is set to `"custom"` or `"freqs-custom"`. Each element of the array must be either a number, representing the frequency in Hz, or an array of **[ &lt;frequency&gt; *(number)*, &lt;label&gt; *(string)*, &lt;highlight&gt; *(boolean, optional)* ]** (see example below) | octaves center frequencies
+`overlay`          | *boolean* | Whether the X-axis should overlay the bottom of the analyzer area | `false`
+
+**Return value:** none (`undefined`).
+
+**Example usage:**
+
+```js
+audioMotion.setScaleX({
+    backgroundColor: '',   // transparent background on the axis bar
+    labels: [
+      [ 440, 'A4', true ], // highlight "A4" label at 440 Hz
+      800,                 // additional label at 800 Hz
+      [ 3000, '|' ],       // just a tick mark at 3 kHz
+    ],
+});
+```
+
+See also [`showScaleX`](#showscalex).
+
+### `setScaleY()`
+
+*Available since v5.0.0*
+
+Customize the appearance of the Y-axis scale and labels.
+
+**Syntax:**
+
+```js
+setScaleY()
+setScaleY(options)
+```
+
+ **If called with no argument, all properties will be reset to their default values.**
+
+If `options` is defined, it should be an object with the structure below (all properties are optional).
+
+property           | type      | description | default
+-------------------|-----------|-------------|---------
+`color`            | *string*  | Color of labels and lines | `"#888"`
+`dbInterval`       | *number*  | Interval between labels, in decibels. Applied when [`showScaleY`](#showscaley) is set to `"db"`. | `6`
+`fontSize`         | *number*  | Font size for labels. Values between `0.0` and `1.0` (recommended for responsivity) represent a fraction of one tenth of the smallest canvas dimension (width or height). A minimum of 10px is enforced for the computed size. Values greater than `1` are interpreted as fixed pixel sizes. | `0.15`
+`lineDash`         | *array*   | Line style. See [format reference](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/setLineDash) | `[2,4]`
+`operation`        | *string*  | Compositing operation used to draw labels and lines. See [Reference](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation). **Note: some operations may hinder or prevent the proper visualization of analyzer graphs.** | `"destination-over"`
+`percentInterval`  | *number*  | Interval between labels, in percentage values. Applied when [`showScaleY`](#showscaley) is set to `"percent"` | `20`
+`showSubdivisions` | *boolean* | Whether to show subdivision lines between two labels | `true`
+`showUnit`         | *boolean* | Whether to display the scale unit ("dB" or "%") at the top of the axis | `true`
+`subLineColor`     | *string*  | Line color used for subdivisions | `"#555"`
+`subLineDash`      | *array*   | Line style for subdivisions (see `lineDash` above) | `[2,8]`
+
+**Return value:** none (`undefined`).
+
+**Example usage:**
+
+```js
+audioMotion.setScaleY({
+  percentInterval: 10,
+  operation: 'screen',
+  showSubdivisions: false,
+});
+```
+
+See also [`showScaleY`](#showscaley).
+
 ### `setTheme()`
 
 *Available since v5.0.0*
@@ -1747,100 +1867,6 @@ Modifier | description
 **Return value:** none (`undefined`).
 
 See also [`toggleThemeModifier()`](#togglethememodifier) and [`setTheme()`](#settheme).
-
-### `setXAxis()`
-
-*Available since v5.0.0*
-
-Customize the appearance of the X-axis labels.
-
-**Syntax:**
-
-```js
-setXAxis()
-setXAxis(options)
-```
-
-**If called with no argument, all properties will be reset to their default values.**
-
-If `options` is defined, it should be an object with the structure below (all properties are optional).
-
-property           | type      | description | default
--------------------|-----------|-------------|---------
-`addLabels`        | *boolean* | Contents of `labels` will be *added* to the default labels, instead of replacing them | `false`
-`backgroundColor`  | *string*  | Background color of the X-axis; any valid CSS color format is acceptable; use a blank string or 'transparent' for fully transparent background | `"#0008"`
-`color`            | *string*  | Color of labels | `"#fff"`
-`height`           | *number*  | Height of the X-axis; a number between `0.0` and `1.0` (recommended for responsivity) represents a fraction of the canvas width or height, whichever is smaller; numbers greater than 1 represent a fixed value in pixels | `0.03`
-`highlightColor`   | *string*  | Color used to highlight *C* notes when [`noteLabels`](#notelabels) is *true*, or those highlighted via `labels` definition (see below) | `"#4f4"`
-`labels`           | *array*   | Custom labels; each element of the array must be either a number, representing the frequency, or an array of [frequency&lt;number&gt;, label&lt;string&gt;, highlight?&lt;boolean&gt;] | octaves center frequencies
-`overlay`          | *boolean* | Whether the X-axis should overlay the bottom of the analyzer area | `false`
-
-**Return value:** none (`undefined`).
-
-**Example usage:**
-
-```js
-audioMotion.setXAxis({
-    addLabels: true,       // add custom labels on top of default ones
-    backgroundColor: '',   // transparent background on the axis bar
-    labels: [
-      [ 440, 'A4', true ], // highlight A4 label at 440 Hz
-      800,                 // additional label at 800 Hz
-      [ 3000, '|' ],       // just a tick mark at 3 kHz
-    ],
-});
-```
-
-> **Notes:**
->
-> - The axis height also defines the labels font size (half its value). A minimum of 20 pixels is enforced for the computed `height` value;
-> - Custom labels are not displayed when [`noteLabels`](#notelabels) is *true*.
-
-### `setYAxis()`
-
-*Available since v5.0.0*
-
-Customize the appearance of the Y-axis labels.
-
-**Syntax:**
-
-```js
-setYAxis()
-setYAxis(options)
-```
-
- **If called with no argument, all properties will be reset to their default values.**
-
-If `options` is defined, it should be an object with the structure below (all properties are optional).
-
-property         | type    | description | default
------------------|---------|-------------|---------
-color            | string  | Color of labels and lines | `"#888"`
-dbInterval       | number  | Interval between labels, in decibels - used when [`linearAmplitude`](#linearamplitude) is *false* | `10`
-linearInterval   | number  | Interval between labels, in percentage values - used when [`linearAmplitude`](#linearamplitude) is *true* | `20`
-lineDash         | array   | Line style - [format reference](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/setLineDash) | `[2,4]`
-operation        | array   | Compositing operation used to draw labels and lines - [Reference](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation) | `"destination-over"`
-showSubdivisions | array   | Whether to show subdivision lines between two labels | `true`
-subLineColor     | string  | Line color used for subdivisions | `"#555"`
-subLineDash      | array   | Line style for subdivisions (see `lineDash` above) | `[2,8]``
-width            | number  | Width of the Y-axis; a number between `0.0` and `1.0` represents a fraction of the canvas width or height, whichever is smaller; numbers greater than `1` represent a fixed value in pixels | `0.03`
-
-**Return value:** none (`undefined`).
-
-**Example usage:**
-
-```js
-audioMotion.setYAxis({
-  linearInterval: 10,
-  operation: 'screen',
-  showSubdivisions: false,
-});
-```
-
-> **Notes:**
->
-> - The axis width also affects the labels font size (half its value). A minimum of 20 pixels is enforced for the computed `width` value;
-> - Some values of `operation` may make the visualization of analyzer graphs impossible.
 
 ### `start()`
 

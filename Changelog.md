@@ -3,15 +3,22 @@ Changelog
 
 ## version NEXT
 
-### Improved: <!-- {docsify-ignore} -->
-
 + *MediaStream* objects can now be passed directly to the [`connectInput()`](README.md#connectinput) method and the constructor's [`source`](README.md#source) property;
 + [`disconnectInput()`](README.md#disconnectinput) method now also accepts *HTMLMediaElement* and *MediaStream* objects.
+
++ [`showScaleX`](README.md#showscalex) value type has been changed to *string*;
++ [`showScaleY`](README.md#showscaley) value type has been changed to *string* and now allows choosing dB or percentage labels;
++ `noteLabels` has been removed and its functionality has been consolidated into [`showScaleX`](README.md#showscalex);
++ `setXAxis()` has been renamed to [`setScaleX()`](README.md#setscalex) - removed `addLabels` and `height` properties, added `fontSize`;
++ `setYAxis()` has been renamed to [`setScaleY()`](README.md#setscaley) - removed `linearInterval` and `width` properties, added `percentInterval` and `fontSize`, new default value for `dbInterval`;
++ added [`getScaleX()`](README.md#getscalex) and [`getScaleY()`](README.md#getscaley) methods.
+
 
 ## version 5.0.0-alpha.1 (2026-01-11)
 
 + Fixed: rendering of vintage LEDs for big LED elements and/or themes with several colorStops;
 + Incorporates fixes from stable version [4.5.4](https://github.com/hvianna/audioMotion-analyzer/discussions/102).
+
 
 ## version 5.0.0-alpha.0 (2026-01-08)
 
