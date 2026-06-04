@@ -22,7 +22,6 @@ const DEBOUNCE_TIMEOUT         = 60,
 	  FONT_FAMILY              = 'sans-serif',
 	  FPS_COLOR                = '#0f0',
 	  MIN_AXIS_DIMENSION       = 20,
-	  OPTION_EMPTY             = '',
 	  OPTION_OFF               = 'off',
 	  OPTION_ON                = 'on';
 
@@ -51,14 +50,14 @@ export const ALPHABARS_FULL            = 'full',
 			 ERR_AUDIO_CONTEXT_FAIL    = 1,
 			 ERR_INVALID_AUDIO_CONTEXT = 2,
 			 ERR_INVALID_AUDIO_SOURCE  = 3,
-			 FILTER_NONE               = OPTION_EMPTY,
-			 FILTER_A                  = 'A',
-			 FILTER_B                  = 'B',
-			 FILTER_C                  = 'C',
-			 FILTER_D                  = 'D',
+			 FILTER_NONE               = 'none',
+			 FILTER_A                  = 'a',
+			 FILTER_B                  = 'b',
+			 FILTER_C                  = 'c',
+			 FILTER_D                  = 'd',
 			 FILTER_468                = '468',
-			 FILTER_TILT3              = 'TILT3',
-			 FILTER_TILT45             = 'TILT45',
+			 FILTER_TILT3              = 'tilt3',
+			 FILTER_TILT45             = 'tilt4.5',
 			 LABELS_X_CUSTOM           = 'custom',
 			 LABELS_X_FREQS            = 'freqs',
 			 LABELS_X_FREQS_CUSTOM     = 'freqs-custom',
@@ -253,9 +252,9 @@ const isObject = val => typeof val == 'object' && !! val && ! isArray( val );
 // check if given value is a valid channel number
 const isValidChannel = channel => isNumeric( channel ) && [0,1].includes( +channel );
 
-// validate a given value with an array of strings (by default, all lowercase)
+// validate a given value with an array of strings (all lowercase)
 // returns the validated value, or the first element of `list` if `value` is not found in the array
-const validateFromList = ( value, list, modifier = 'toLowerCase' ) => list[ Math.max( 0, list.indexOf( ( '' + value )[ modifier ]() ) ) ];
+const validateFromList = ( value, list ) => list[ Math.max( 0, list.indexOf( ( '' + value ).toLowerCase() ) ) ];
 
 // returns an array with the given channel number if valid, or [0,1] otherwise
 const validateChannelArray = channel => isValidChannel( channel ) ? [ +channel ] : [0,1];
@@ -817,7 +816,7 @@ class AudioMotionAnalyzer {
 		return this._weightingFilter;
 	}
 	set weightingFilter( value ) {
-		this._weightingFilter = validateFromList( value, [ FILTER_NONE, FILTER_A, FILTER_B, FILTER_C, FILTER_D, FILTER_468, FILTER_TILT3, FILTER_TILT45 ], 'toUpperCase' );
+		this._weightingFilter = validateFromList( value, [ FILTER_NONE, FILTER_A, FILTER_B, FILTER_C, FILTER_D, FILTER_468, FILTER_TILT3, FILTER_TILT45 ] );
 	}
 
 	get width() {

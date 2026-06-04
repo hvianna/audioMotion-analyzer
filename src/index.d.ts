@@ -135,7 +135,7 @@ export type ShowScaleY = "off" | "db" | "percent";
 
 export type VisualizationMode = "bars" | "graph";
 
-export type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468" | "TILT3" | "TILT45";
+export type WeightingFilter = "none" | "a" | "b" | "c" | "d" | "468" | "tilt3" | "tilt4.5";
 
 export interface GradientOptions {
   colorStops: GradientColorStop[];
