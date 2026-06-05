@@ -32,7 +32,7 @@ What users are saying:
 + Logarithmic, linear and perceptual (Bark and Mel) frequency scales, with customizable range
 + Visualization of discrete FFT frequencies or up to 240 frequency bands (supports ANSI and equal-tempered octave bands)
 + Decibel and linear amplitude scales, with customizable sensitivity
-+ Optional A, B, C, D and ITU-R 468 weighting filters
++ Optional weighting filters (A, B, C and D-weighting, ITU-R 468, 3dB and 4.5dB per octave tilt)
 + Additional effects: LED bars, radial spectrum, variable opacity bars, mirroring and reflection
 + Choose from 5 built-in color themes or easily add your own!
 + Fullscreen support, ready for retina / HiDPI displays
@@ -157,10 +157,10 @@ property                              | type      | default | notes
 [`linearBoost`](#linearboost)         | *number*  | `1` |
 [`lineWidth`](#linewidth)             | *number*  | `1` |
 [`loRes`](#lores)                     | *boolean* | `false` |
-[`maxDecibels`](#maxdecibels)         | *number*  | `-25` |
+[`maxDecibels`](#maxdecibels)         | *number*  | `-30` |
 [`maxFPS`](#maxfps)                   | *number*  | `0` |
 [`maxFreq`](#maxfreq)                 | *number*  | `22000` |
-[`minDecibels`](#mindecibels)         | *number*  | `-85` |
+[`minDecibels`](#mindecibels)         | *number*  | `-90` |
 [`minFreq`](#minfreq)                 | *number*  | `20` |
 [`mirror`](#mirror)                   | *number*  | `0` |
 [`mode`](#mode)                       | *string*  | `"bars"` |
@@ -182,14 +182,14 @@ property                              | type      | default | notes
 [`showLedMask`](#showledmask)         | *boolean* | `true` |
 [`showScaleX`](#showscalex)           | *string*  | `"freqs"` |
 [`showScaleY`](#showscaley)           | *string*  | `"off"` |
-[`smoothing`](#smoothing)             | *number*  | `0.5` |
+[`smoothing`](#smoothing)             | *number*  | `0.7` |
 [`source`](#source)                   | *AudioNode*, *HTMLMediaElement* or *MediaStream* | *none* | constructor only
 [`spinSpeed`](#spinspeed)             | *number*  | `0` |
 [`spreadGradient`](#spreadgradient)   | *boolean* | `false` |
 [`start`](#start)                     | *boolean* | `true` | constructor only
 [`useCanvas`](#usecanvas)             | *boolean* | `true` |
 [`volume`](#volume)                   | *number*  | `1` |
-[`weightingFilter`](#weightingFilter) | *string*  | `""` |
+[`weightingFilter`](#weightingFilter) | *string*  | `"none"` |
 [`width`](#width)                     | *number* or *undefined* | `undefined` |
 
 ### Constructor-specific options
@@ -1193,27 +1193,28 @@ Please note that changing the volume on the audio element will affect the amplit
 
 *Available since v4.0.0*
 
-[Weighting filter](https://en.wikipedia.org/wiki/Weighting_filter) applied to analyzer data, for spectrum visualization only.
-
-<img src="img/weigthing-filters-curves.png" class="align-right">
-
-**Value:** a *string*. The default value is `""`.
-
-Value   | [Constant](#constants) | Description
---------|------------------------|---------------
-`""`    | `FILTER_NONE` | No weighting applied (default)
-`"A"`   | `FILTER_A`    | A-weighting
-`"B"`   | `FILTER_B`    | B-weighting
-`"C"`   | `FILTER_C`    | C-weighting
-`"D"`   | `FILTER_D`    | D-weighting
-`"468"` | `FILTER_468`  | ITU-R 468 weighting
-
-?> Weighting filters only affect the visualization, **NOT** the audio output.
-
+[Weighting filter](https://en.wikipedia.org/wiki/Weighting_filter) applied to analyzer data, for spectrum visualization.
 Each filter applies a different curve of gain/attenuation to specific frequency ranges, but the general idea is to adjust the
 visualization of frequencies to the sensitivity of the human ear.
 
-Refer to the [weighting filters viewer tool](/tools/weighting-filters.html) for response tables and an interactive version of the curves graph seen below.
+**Value:** a *string*. The default value is `"none"`.
+
+<img src="img/weigthing-filters-curves.png" class="align-right">
+
+Value       | [Constant](#constants) | Description
+------------|------------------------|---------------
+`"none"`    | `FILTER_NONE`   | No weighting applied (default)
+`"a"`       | `FILTER_A`      | A-weighting
+`"b"`       | `FILTER_B`      | B-weighting
+`"c"`       | `FILTER_C`      | C-weighting
+`"d"`       | `FILTER_D`      | D-weighting
+`"468"`     | `FILTER_468`    | ITU-R 468 weighting
+`"tilt3"`   | `FILTER_TILT3`  | 3dB per octave tilt
+`"tilt4.5"` | `FILTER_TILT45` | 4.5dB per octave tilt
+
+?> Refer to the [**weighting filters viewer tool**](/tools/weighting-filters.html) for filter response tables and an interactive version of the graph seen above.
+
+!> Weighting filters only affect the spectrum visualization, **NOT** the audio output.
 
 ### `width`
 
