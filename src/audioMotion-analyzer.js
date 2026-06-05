@@ -81,9 +81,9 @@ export const ALPHABARS_FULL            = 'full',
 			 PEAKS_DROP                = 'drop',
 			 PEAKS_FADE                = 'fade',
 			 PEAKS_OFF                 = OPTION_OFF,
-			 RADIAL_INNER              = -1,
+			 RADIAL_INWARD             = -1,
 			 RADIAL_OFF                = 0,
-			 RADIAL_OUTER              = 1,
+			 RADIAL_OUTWARD            = 1,
 			 REASON_CREATE             = 'create',
 			 REASON_FULLSCREENCHANGE   = EVENT_FULLSCREENCHANGE,
 			 REASON_LORES              = 'lores',
@@ -1557,7 +1557,8 @@ class AudioMotionAnalyzer {
 			  bars               = [],
 			  centerX            = canvas.width >> 1,
 			  centerY            = canvas.height >> 1,
-			  isDualVertical     = _chLayout == LAYOUT_VERTICAL && ! _radial,
+			  isRadial           = _radial != RADIAL_OFF,
+			  isDualVertical     = _chLayout == LAYOUT_VERTICAL && ! isRadial,
 			  isDualHorizontal   = _chLayout == LAYOUT_HORIZONTAL,
 			  xAxisHeight        = computeScaleSize( _xScale.fontSize ),
 			  yAxisWidth         = computeScaleSize( _yScale.fontSize ),
@@ -1568,7 +1569,7 @@ class AudioMotionAnalyzer {
 			  isAlpha     = _alphaBars == ALPHABARS_ON && _mode == MODE_BARS,
 			  isBands     = _bandRes > 0,
 			  isOctaves   = isBands && this._frequencyScale == SCALE_LOG,
-			  isLeds      = this._ledBars != LEDS_OFF && isBands && ! _radial && _mode == MODE_BARS,
+			  isLeds      = this._ledBars != LEDS_OFF && isBands && ! isRadial && _mode == MODE_BARS,
 			  isLumi      = _alphaBars == ALPHABARS_FULL && _mode == MODE_BARS,
 			  isOutline   = this._outlineBars && _mode == MODE_BARS && isBands && ! isLumi && ! isLeds,
 			  isRound     = this._roundBars && _mode == MODE_BARS && isBands && ! isLumi && ! isLeds,
@@ -1579,7 +1580,7 @@ class AudioMotionAnalyzer {
 			  // channelHeight is the total canvas height dedicated to each channel, including the reflex area, if any)
 			  channelHeight  = canvas.height - ( isDualVertical && ! isLeds ? .5 : 0 ) >> isDualVertical,
 			  // analyzerHeight is the effective height used to render the analyzer, excluding the reflex area
-			  analyzerHeight = ( ( channelHeight - scaleGap ) * ( isLumi || _radial ? 1 : 1 - _reflexRatio ) ) | 0,
+			  analyzerHeight = ( ( channelHeight - scaleGap ) * ( isLumi || isRadial ? 1 : 1 - _reflexRatio ) ) | 0,
 
 			  analyzerWidth  = canvas.width - centerX * ( isDualHorizontal || _mirror != MIRROR_OFF ),
 
@@ -1587,12 +1588,12 @@ class AudioMotionAnalyzer {
 			  // TO-DO: improve this, make it configurable?
 			  channelGap     = isDualVertical ? canvas.height - channelHeight * 2 : 0,
 
-			  initialX       = centerX * ( _mirror == MIRROR_LEFT && ! isDualHorizontal && ! _radial );
+			  initialX       = centerX * ( _mirror == MIRROR_LEFT && ! isDualHorizontal && ! isRadial );
 
 		let innerRadius = minCanvasDimension * .375 * ( _chLayout == LAYOUT_VERTICAL ? 1 : this._radius ) | 0,
 			outerRadius = Math.min( centerX, centerY );
 
-		if ( _radial == RADIAL_INNER && _chLayout != LAYOUT_VERTICAL )
+		if ( _radial == RADIAL_INWARD && _chLayout != LAYOUT_VERTICAL )
 			[ innerRadius, outerRadius ] = [ outerRadius, innerRadius ];
 
 		/**
@@ -1912,7 +1913,7 @@ class AudioMotionAnalyzer {
 			return;
 
 		const { analyzerWidth, initialX, innerRadius, scaleMin, unitWidth, xAxisHeight } = this._aux,
-			  { canvas, _ctxX, _ctxR, _frequencyScale, _mirror, _radial, _xScale, _xShow } = this,
+			  { canvas, _ctxX, _ctxR, _frequencyScale, _mirror, _xScale, _xShow } = this,
 			  canvasX            = _ctxX.canvas,
 			  canvasR            = _ctxR.canvas,
 			  isFrequencyLabels  = _xShow == LABELS_X_FREQS  || _xShow == LABELS_X_FREQS_CUSTOM,
@@ -1922,6 +1923,7 @@ class AudioMotionAnalyzer {
 			  isDualHorizontal   = this._chLayout == LAYOUT_HORIZONTAL,
 			  isDualVertical     = this._chLayout == LAYOUT_VERTICAL,
 			  isMirror           = _mirror != MIRROR_OFF,
+			  isRadial           = this._radial != RADIAL_OFF,
 			  minCanvasDimension = Math.min( canvas.width, canvas.height ),
 			  scale              = [ 'C',, 'D',, 'E', 'F',, 'G',, 'A',, 'B' ], // for note labels (no sharp notes)
 			  radialScaleHeight  = minCanvasDimension / 34 | 0, // circular scale height (radial mode)
@@ -2025,13 +2027,13 @@ class AudioMotionAnalyzer {
 				let allowedLabels = ['C'];
 
 				if ( isLog || freq > 2e3 || ( ! isLinear && freq > 250 ) ||
-					 ( ( ! _radial || isDualVertical ) && ( ! isLinear && freq > 125 || freq > 1e3 ) ) )
+					 ( ( ! isRadial || isDualVertical ) && ( ! isLinear && freq > 125 || freq > 1e3 ) ) )
 					allowedLabels.push('G');
 				if ( isLog || freq > 4e3 || ( ! isLinear && freq > 500 ) ||
-					 ( ( ! _radial || isDualVertical ) && ( ! isLinear && freq > 250 || freq > 2e3 ) ) )
+					 ( ( ! isRadial || isDualVertical ) && ( ! isLinear && freq > 250 || freq > 2e3 ) ) )
 					allowedLabels.push('E');
 				if ( isLinear && freq > 4e3 ||
-					 ( ( ! _radial || isDualVertical ) && ( isLog || freq > 2e3 || ( ! isLinear && freq > 500 ) ) ) )
+					 ( ( ! isRadial || isDualVertical ) && ( isLog || freq > 2e3 || ( ! isLinear && freq > 500 ) ) ) )
 					allowedLabels.push('D','F','A','B');
 				if ( ! allowedLabels.includes( label[0] ) )
 					continue; // skip this label
@@ -2134,15 +2136,16 @@ class AudioMotionAnalyzer {
 			  isDualVertical   = _chLayout == LAYOUT_VERTICAL,
 			  isGraphMode      = _mode == MODE_GRAPH,
 			  isMirror         = _mirror != MIRROR_OFF,
+			  isRadial         = _radial != RADIAL_OFF,
 			  isSingle         = _chLayout == LAYOUT_SINGLE,
 			  isVintageLeds    = isLeds && this._ledBars == LEDS_VINTAGE && _colorMode == COLORMODE_GRADIENT,
-			  analyzerWidth    = _radial ? canvas.width : this._aux.analyzerWidth,
+			  analyzerWidth    = isRadial ? canvas.width : this._aux.analyzerWidth,
 			  finalX           = initialX + analyzerWidth,
 			  showScaleX       = this._xShow != LABELS_X_OFF,
 			  showScaleY       = _yShow != LABELS_Y_OFF,
 			  showPeaks        = _peaks != PEAKS_OFF,
 			  showPeakLine     = showPeaks && _peakLine > 0 && isGraphMode,
-			  maxBarHeight     = _radial ? outerRadius - innerRadius : analyzerHeight,
+			  maxBarHeight     = isRadial ? outerRadius - innerRadius : analyzerHeight,
 			  dbRange 		   = maxDecibels - minDecibels,
 			  decayRate        = 2 / this._peakDecayTime ** 2 / _fps ** 2,
 			  ledUnitHeight    = ledHeight + ledGap;
@@ -2154,7 +2157,7 @@ class AudioMotionAnalyzer {
 
 		// create Reflex effect
 		const doReflex = channel => {
-			if ( this._reflexRatio > 0 && ! isLumi && ! _radial ) {
+			if ( this._reflexRatio > 0 && ! isLumi && ! isRadial ) {
 				const scaleHeight = xAxisHeight * ( ! _xScale.overlay && showScaleX );
 				let posY, height;
 				if ( this.reflexFit || isDualVertical ) { // always fit reflex in dual-vertical mode
@@ -2184,7 +2187,7 @@ class AudioMotionAnalyzer {
 		// draw scale on X-axis
 		const drawScaleX = () => {
 			if ( showScaleX ) {
-				if ( _radial ) {
+				if ( isRadial ) {
 					_ctx.save();
 					_ctx.translate( centerX, centerY );
 					if ( this._spinSpeed )
@@ -2202,7 +2205,7 @@ class AudioMotionAnalyzer {
 
 		// draw scale on Y-axis - TO-DO: handle reflex!
 		const drawScaleY = () => {
-			if ( ! showScaleY || isLumi || _radial )
+			if ( ! showScaleY || isLumi || isRadial )
 				return;
 
 			const { color, dbInterval, percentInterval, lineDash, operation, showSubdivisions, showUnit, subLineColor, subLineDash } = _yScale,
@@ -2367,7 +2370,7 @@ class AudioMotionAnalyzer {
 				  { colorStops, gradient, mask } = theme,
 				  { channelTop, channelBottom, analyzerBottom } = channelCoords[ channel ],
 				  colorCount       = colorStops.length,
-				  radialDirection  = isDualVertical && _radial && channel ? -1 : 1, // 1 = outwards, -1 = inwards
+				  radialDirection  = isDualVertical && isRadial && channel ? -1 : 1, // 1 = outwards, -1 = inwards
 				  invertedChannel  = ( ! channel && _mirror == MIRROR_LEFT ) || ( channel && _mirror == MIRROR_RIGHT ),
 				  radialOffsetX    = ! isDualHorizontal || ( channel && _mirror != MIRROR_RIGHT ) ? 0 : analyzerWidth >> ( channel || ! invertedChannel ),
 				  angularDirection = isDualHorizontal && invertedChannel ? -1 : 1;  // 1 = clockwise, -1 = counterclockwise
@@ -2471,7 +2474,7 @@ class AudioMotionAnalyzer {
 
 			if ( useCanvas ) {
 				// set transform (horizontal flip and translation) for dual-horizontal layout
-				if ( isDualHorizontal && ! _radial ) {
+				if ( isDualHorizontal && ! isRadial ) {
 				  	const translateX = analyzerWidth * ( channel + invertedChannel ),
 				  		  flipX      = invertedChannel ? -1 : 1;
 
@@ -2488,7 +2491,7 @@ class AudioMotionAnalyzer {
 
 				// set clipping region
 				_ctx.save();
-				if ( ! _radial ) {
+				if ( ! isRadial ) {
 					const region = new Path2D();
 					region.rect( 0, channelTop, canvas.width, analyzerHeight );
 					_ctx.clip( region );
@@ -2575,7 +2578,7 @@ class AudioMotionAnalyzer {
 					// used to smooth the curve when the initial posX is off the screen, in mirror and radial modes
 					const nextBarAvg = barIndex ? 0 : ( this._normalizedB( fftData[ _bars[1].binLo ] ) * maxBarHeight + barHeight ) / 2;
 
-					if ( _radial ) {
+					if ( isRadial ) {
 						if ( barIndex == 0 ) {
 							if ( isDualHorizontal )
 								_ctx.moveTo( ...radialXY( 0, 0 ) );
@@ -2629,7 +2632,7 @@ class AudioMotionAnalyzer {
 							strokeBar( barCenter, analyzerBottom, analyzerBottom - barHeight );
 					}
 					else if ( posX >= initialX ) {
-						if ( _radial )
+						if ( isRadial )
 							radialPoly( posX, 0, width, barHeight, isOutline );
 						else if ( isRound ) {
 							const halfWidth = width / 2,
@@ -2681,11 +2684,11 @@ class AudioMotionAnalyzer {
 						if ( ledPeak >= ledGap ) // avoid peak below first led
 							_ctx.fillRect( posX, analyzerBottom - ledPeak, width, ledHeight );
 					}
-					else if ( ! _radial )
+					else if ( ! isRadial )
 						_ctx.fillRect( isGraphMode ? barCenter : posX, analyzerBottom - peakValue * maxBarHeight, isGraphMode ? 1 : width, 2 );
 					else if ( ! isGraphMode ) { // radial (peaks for graph mode are done by the peakLine code)
 						const y = peakValue * maxBarHeight;
-						radialPoly( posX, y, width, _radial != RADIAL_INNER || isDualVertical || y + innerRadius >= 2 ? -2 : 2 );
+						radialPoly( posX, y, width, _radial != RADIAL_INWARD || isDualVertical || y + innerRadius >= 2 ? -2 : 2 );
 					}
 				}
 
@@ -2702,7 +2705,7 @@ class AudioMotionAnalyzer {
 			if ( isGraphMode ) {
 				setBarColor(); // select channel gradient
 
-				if ( _radial && ! isDualHorizontal ) {
+				if ( isRadial && ! isDualHorizontal ) {
 					if ( isMirror ) {
 						let p;
 						while ( p = points.pop() )
@@ -2715,7 +2718,7 @@ class AudioMotionAnalyzer {
 					_ctx.stroke();
 
 				if ( fillAlpha > 0 ) {
-					if ( _radial ) {
+					if ( isRadial ) {
 						// exclude the center circle from the fill area
 						const start = isDualHorizontal ? getAngle( analyzerWidth >> 1 ) : 0,
 							  end   = isDualHorizontal ? getAngle( analyzerWidth ) : TAU;
@@ -2734,7 +2737,7 @@ class AudioMotionAnalyzer {
 				}
 
 				// draw peak line (and standard peaks on radial)
-				if ( showPeakLine || ( _radial && showPeaks ) ) {
+				if ( showPeakLine || ( isRadial && showPeaks ) ) {
 					points = []; // for mirror line on radial
 					if ( theme.peakColor )
 						_ctx.fillStyle = _ctx.strokeStyle = theme.peakColor;
@@ -2743,15 +2746,15 @@ class AudioMotionAnalyzer {
 						let x = b.barCenter,
 							h = b.peak[ channel ],
 							m = i ? 'lineTo' : 'moveTo';
-						if ( _radial && x < 0 ) {
+						if ( isRadial && x < 0 ) {
 							const nextBar = _bars[ i + 1 ];
 							h = findY( x, h, nextBar.barCenter, nextBar.peak[ channel ], 0 );
 							x = 0;
 						}
 						h *= maxBarHeight;
 						if ( showPeakLine ) {
-							_ctx[ m ]( ...( _radial ? radialXY( x, h ) : [ x, analyzerBottom - h ] ) );
-							if ( _radial && isMirror && ! isDualHorizontal )
+							_ctx[ m ]( ...( isRadial ? radialXY( x, h ) : [ x, analyzerBottom - h ] ) );
+							if ( isRadial && isMirror && ! isDualHorizontal )
 								points.push( [ x, h ] );
 						}
 						else if ( b.peak[ channel ] > 0 ) { // note: `h` is negative in inner radial
@@ -2773,7 +2776,7 @@ class AudioMotionAnalyzer {
 
 			_ctx.restore(); // restore clip region
 
-			if ( isDualHorizontal && ! _radial )
+			if ( isDualHorizontal && ! isRadial )
 				_ctx.setTransform( 1, 0, 0, 1, 0, 0 );
 
 			// create Reflex effect - for dual-combined and dual-horizontal do it only once, after channel 1
@@ -2786,7 +2789,7 @@ class AudioMotionAnalyzer {
 
 		if ( useCanvas ) {
 			// Mirror effect
-			if ( isMirror && ! _radial && ! isDualHorizontal ) {
+			if ( isMirror && ! isRadial && ! isDualHorizontal ) {
 				_ctx.setTransform( -1, 0, 0, 1, canvas.width - initialX, 0 );
 				_ctx.drawImage( canvas, initialX, 0, centerX, canvas.height, 0, 0, centerX, canvas.height );
 				_ctx.setTransform( 1, 0, 0, 1, 0, 0 );
@@ -2874,7 +2877,7 @@ class AudioMotionAnalyzer {
 		if ( ! this._ready )
 			return;
 
-		const { canvas, _chLayout, _ctx, _horizGrad, _mirror, _radial, _reflexRatio, _spread, _xScale } = this,
+		const { canvas, _chLayout, _ctx, _horizGrad, _mirror, _reflexRatio, _spread, _xScale } = this,
 			  { analyzerHeight, analyzerWidth, centerX, centerY, channelHeight, initialX, innerRadius, outerRadius, xAxisHeight } = this._aux,
 			  { isLumi }        = this._flg,
 			  isDualVertical    = _chLayout == LAYOUT_VERTICAL,
@@ -2882,7 +2885,8 @@ class AudioMotionAnalyzer {
 
 		for ( const channel of [0,1] ) {
 			const { name, modifiers }  = this._activeThemes[ channel ],
-				  analyzerRatio        = _radial || modifiers.horizontal ? 1 : analyzerHeight / channelHeight,
+				  isRadial             = this._radial != RADIAL_OFF,
+				  analyzerRatio        = isRadial || modifiers.horizontal ? 1 : analyzerHeight / channelHeight,
 				  sourceTheme          = deepCloneObject( this._themes[ name ] ),
 				  { colorStops, mask } = sourceTheme,
 				  maskColorStops       = mask.colorStops,
@@ -2892,7 +2896,7 @@ class AudioMotionAnalyzer {
 
 			let [ startX, endX, startY, endY, outer, inner ] = [ 0, 0, 0, 0, outerRadius, innerRadius ];
 
-			if ( _radial ) {
+			if ( isRadial ) {
 				// handle radial
 				if ( isDualVertical ) {
 					// on dual-vertical radial, innerRadius is actually the center radius between both channels
@@ -2936,15 +2940,15 @@ class AudioMotionAnalyzer {
 				}
 			}
 
-			let gradient     = _radial ? _ctx.createRadialGradient( centerX, centerY, outer, centerX, centerY, inner ) : createNewGradient(),
-				maskGradient = _radial ? null : createNewGradient(); // no LEDs in radial
+			let gradient     = isRadial ? _ctx.createRadialGradient( centerX, centerY, outer, centerX, centerY, inner ) : createNewGradient(),
+				maskGradient = isRadial ? null : createNewGradient(); // no LEDs in radial
 
 			colorStops.forEach( ( colorStop, index ) => {
 				let offset = colorStop.pos;
 
 				// additional offset processing to account for spread gradient combined with reflex and/or X-axis display on dual-vertical layout
 				// TO-DO: add support for no scale overlay on radial too? Requires changes to outerRadius and innerRadius computation in calcBars()
-				if ( ! _radial && _spread && isDualVertical && ! modifiers.horizontal ) {
+				if ( ! isRadial && _spread && isDualVertical && ! modifiers.horizontal ) {
 					// "shrink" each offset to fit into the usable analyzer area
 					offset *= analyzerRatio;
 
