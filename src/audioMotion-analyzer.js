@@ -73,6 +73,9 @@ export const ALPHABARS_FULL            = 'full',
 			 LEDS_MODERN               = 'modern',
 			 LEDS_OFF                  = OPTION_OFF,
 			 LEDS_VINTAGE              = 'vintage',
+			 MIRROR_LEFT               = -1,
+			 MIRROR_OFF                = 0,
+			 MIRROR_RIGHT              = 1,
 			 MODE_BARS                 = 'bars',
 			 MODE_GRAPH                = 'graph',
 			 PEAKS_DROP                = 'drop',
@@ -141,7 +144,7 @@ const DEFAULT_SETTINGS = {
 	maxFreq        : 22000,
 	minDecibels    : -90,
 	minFreq        : 20,
-	mirror         : 0,
+	mirror         : MIRROR_OFF,
 	mode           : MODE_BARS,
 	outlineBars    : false,
 	peakDecayTime  : 750,
@@ -252,9 +255,9 @@ const isObject = val => typeof val == 'object' && !! val && ! isArray( val );
 // check if given value is a valid channel number
 const isValidChannel = channel => isNumeric( channel ) && [0,1].includes( +channel );
 
-// validate a given value with an array of strings (all lowercase)
+// validate a given value with an array (string should be all lowercase)
 // returns the validated value, or the first element of `list` if `value` is not found in the array
-const validateFromList = ( value, list ) => list[ Math.max( 0, list.indexOf( ( '' + value ).toLowerCase() ) ) ];
+const validateFromList = ( value, list ) => list.find( el => '' + el == ( '' + value ).toLowerCase() ) || list[0];
 
 // returns an array with the given channel number if valid, or [0,1] otherwise
 const validateChannelArray = channel => isValidChannel( channel ) ? [ +channel ] : [0,1];
@@ -671,7 +674,7 @@ class AudioMotionAnalyzer {
 		return this._mirror;
 	}
 	set mirror( value ) {
-		this._mirror = Math.sign( value ) | 0; // ensure only -1, 0 or 1
+		this._mirror = validateFromList( value, [ MIRROR_OFF, MIRROR_LEFT, MIRROR_RIGHT ] );
 		this._calcBars();
 		this._makeGrad();
 	}
@@ -1578,13 +1581,13 @@ class AudioMotionAnalyzer {
 			  // analyzerHeight is the effective height used to render the analyzer, excluding the reflex area
 			  analyzerHeight = ( ( channelHeight - scaleGap ) * ( isLumi || _radial ? 1 : 1 - _reflexRatio ) ) | 0,
 
-			  analyzerWidth  = canvas.width - centerX * ( isDualHorizontal || _mirror != 0 ),
+			  analyzerWidth  = canvas.width - centerX * ( isDualHorizontal || _mirror != MIRROR_OFF ),
 
 			  // channelGap is **0** if isLedDisplay == true (LEDs already have spacing); **1** if canvas height is odd (windowed); **2** if it's even
 			  // TO-DO: improve this, make it configurable?
 			  channelGap     = isDualVertical ? canvas.height - channelHeight * 2 : 0,
 
-			  initialX       = centerX * ( _mirror == -1 && ! isDualHorizontal && ! _radial );
+			  initialX       = centerX * ( _mirror == MIRROR_LEFT && ! isDualHorizontal && ! _radial );
 
 		let innerRadius = minCanvasDimension * .375 * ( _chLayout == LAYOUT_VERTICAL ? 1 : this._radius ) | 0,
 			outerRadius = Math.min( centerX, centerY );
@@ -1918,6 +1921,7 @@ class AudioMotionAnalyzer {
 			  freqLabels         = isCustomLabels && isArray( _xScale.labels ) ? [ ..._xScale.labels ] : [],
 			  isDualHorizontal   = this._chLayout == LAYOUT_HORIZONTAL,
 			  isDualVertical     = this._chLayout == LAYOUT_VERTICAL,
+			  isMirror           = _mirror != MIRROR_OFF,
 			  minCanvasDimension = Math.min( canvas.width, canvas.height ),
 			  scale              = [ 'C',, 'D',, 'E', 'F',, 'G',, 'A',, 'B' ], // for note labels (no sharp notes)
 			  radialScaleHeight  = minCanvasDimension / 34 | 0, // circular scale height (radial mode)
@@ -1948,8 +1952,8 @@ class AudioMotionAnalyzer {
 						if ( freq >= this._minFreq && freq <= this._maxFreq ) {
 							const pitch = scale[ note ],
 								  isC   = pitch == 'C';
-							if ( ( pitch && isNoteLabels && ! _mirror && ! isDualHorizontal ) || isC ) {
-								const highlight = isC && ! _mirror && ! isDualHorizontal;
+							if ( ( pitch && isNoteLabels && ! isMirror && ! isDualHorizontal ) || isC ) {
+								const highlight = isC && ! isMirror && ! isDualHorizontal;
 								freqLabels.push( isNoteLabels ? [ freq, pitch + ( isC ? octave : '' ), highlight ] : freq );
 							}
 						}
@@ -2008,7 +2012,7 @@ class AudioMotionAnalyzer {
 				  x    = unitWidth * ( this._freqScaling( freq ) - scaleMin ),
 				  y    = canvasX.height * .75,
 				  isC  = label[0] == 'C',
-	  			  maxW = fontSizeX * ( isNoteLabels && ! _mirror && ! isDualHorizontal ? ( isC ? 1.2 : .6 ) : 3 );
+	  			  maxW = fontSizeX * ( isNoteLabels && ! isMirror && ! isDualHorizontal ? ( isC ? 1.2 : .6 ) : 3 );
 
 	  		// set label color - no highlight when mirror effect is active (only Cs displayed)
 			_ctxX.fillStyle = _ctxR.fillStyle = highlight ? _xScale.highlightColor : _xScale.color;
@@ -2035,17 +2039,17 @@ class AudioMotionAnalyzer {
 
 			// linear scale
 			if ( x >= prevX + labelWidthX / 2 && x <= analyzerWidth ) {
-				_ctxX.fillText( label, isDualHorizontal && _mirror == -1 ? analyzerWidth - x : initialX + x, y, maxW );
-				if ( isDualHorizontal || ( _mirror && ( x > labelWidthX || _mirror == 1 ) ) )
-					_ctxX.fillText( label, isDualHorizontal && _mirror != 1 ? analyzerWidth + x : ( initialX || canvas.width ) - x, y, maxW );
+				_ctxX.fillText( label, isDualHorizontal && _mirror == MIRROR_LEFT ? analyzerWidth - x : initialX + x, y, maxW );
+				if ( isDualHorizontal || ( isMirror && ( x > labelWidthX || _mirror == MIRROR_RIGHT ) ) )
+					_ctxX.fillText( label, isDualHorizontal && _mirror != MIRROR_RIGHT ? analyzerWidth + x : ( initialX || canvas.width ) - x, y, maxW );
 				prevX = x + Math.min( maxW, _ctxX.measureText( label ).width ) / 2;
 			}
 
 			// radial scale
 			if ( x >= prevR + labelWidthR && x < analyzerWidth - labelWidthR ) { // avoid overlapping the last label over the first one
-				radialLabel( isDualHorizontal && _mirror == 1 ? analyzerWidth - x : x, label );
-				if ( isDualHorizontal || ( _mirror && ( x > labelWidthR || _mirror == 1 ) ) ) // avoid overlapping of first labels on mirror mode
-					radialLabel( isDualHorizontal && _mirror != -1 ? analyzerWidth + x : -x, label );
+				radialLabel( isDualHorizontal && _mirror == MIRROR_RIGHT ? analyzerWidth - x : x, label );
+				if ( isDualHorizontal || ( isMirror && ( x > labelWidthR || _mirror == MIRROR_RIGHT ) ) ) // avoid overlapping of first labels on mirror mode
+					radialLabel( isDualHorizontal && _mirror != MIRROR_LEFT ? analyzerWidth + x : -x, label );
 				prevR = x;
 			}
 		}
@@ -2129,6 +2133,7 @@ class AudioMotionAnalyzer {
 			  isDualHorizontal = _chLayout == LAYOUT_HORIZONTAL,
 			  isDualVertical   = _chLayout == LAYOUT_VERTICAL,
 			  isGraphMode      = _mode == MODE_GRAPH,
+			  isMirror         = _mirror != MIRROR_OFF,
 			  isSingle         = _chLayout == LAYOUT_SINGLE,
 			  isVintageLeds    = isLeds && this._ledBars == LEDS_VINTAGE && _colorMode == COLORMODE_GRADIENT,
 			  analyzerWidth    = _radial ? canvas.width : this._aux.analyzerWidth,
@@ -2363,8 +2368,8 @@ class AudioMotionAnalyzer {
 				  { channelTop, channelBottom, analyzerBottom } = channelCoords[ channel ],
 				  colorCount       = colorStops.length,
 				  radialDirection  = isDualVertical && _radial && channel ? -1 : 1, // 1 = outwards, -1 = inwards
-				  invertedChannel  = ( ! channel && _mirror == -1 ) || ( channel && _mirror == 1 ),
-				  radialOffsetX    = ! isDualHorizontal || ( channel && _mirror != 1 ) ? 0 : analyzerWidth >> ( channel || ! invertedChannel ),
+				  invertedChannel  = ( ! channel && _mirror == MIRROR_LEFT ) || ( channel && _mirror == MIRROR_RIGHT ),
+				  radialOffsetX    = ! isDualHorizontal || ( channel && _mirror != MIRROR_RIGHT ) ? 0 : analyzerWidth >> ( channel || ! invertedChannel ),
 				  angularDirection = isDualHorizontal && invertedChannel ? -1 : 1;  // 1 = clockwise, -1 = counterclockwise
 /*
 			Expanded logic for radialOffsetX and angularDirection:
@@ -2409,7 +2414,7 @@ class AudioMotionAnalyzer {
 			// draws a polygon of width `w` and height `h` at (x,y) in radial mode (uses: angularDirection, radialDirection)
 			const radialPoly = ( x, y, w, h, stroke ) => {
 				_ctx.beginPath();
-				for ( const dir of ( _mirror && ! isDualHorizontal ? [1,-1] : [ angularDirection ] ) ) {
+				for ( const dir of ( isMirror && ! isDualHorizontal ? [1,-1] : [ angularDirection ] ) ) {
 					const [ startAngle, endAngle ] = isRound ? [ getAngle( x, dir ), getAngle( x + w, dir ) ] : [];
 					_ctx.moveTo( ...radialXY( x, y, dir ) );
 					_ctx.lineTo( ...radialXY( x, y + h, dir ) );
@@ -2586,7 +2591,7 @@ class AudioMotionAnalyzer {
 					else { // Linear
 						if ( barIndex == 0 ) {
 							// start the line off-screen using the previous FFT bin value as the initial amplitude
-							if ( _mirror == -1 && ! isDualHorizontal )
+							if ( _mirror == MIRROR_LEFT && ! isDualHorizontal )
 								_ctx.moveTo( initialX, analyzerBottom - ( posX < initialX ? nextBarAvg : barHeight ) );
 							else {
 								const prevFFTData = binLo ? this._normalizedB( fftData[ binLo - 1 ] ) * maxBarHeight : barHeight; // use previous FFT bin value, when available
@@ -2595,7 +2600,7 @@ class AudioMotionAnalyzer {
 						}
 						// draw line to the current point
 						// avoid X values lower than the origin when mirroring left, otherwise draw them for best graph accuracy
-						if ( isDualHorizontal || _mirror != -1 || posX >= initialX )
+						if ( isDualHorizontal || _mirror != MIRROR_LEFT || posX >= initialX )
 							_ctx.lineTo( barCenter, analyzerBottom - barHeight );
 					}
 				}
@@ -2698,7 +2703,7 @@ class AudioMotionAnalyzer {
 				setBarColor(); // select channel gradient
 
 				if ( _radial && ! isDualHorizontal ) {
-					if ( _mirror ) {
+					if ( isMirror ) {
 						let p;
 						while ( p = points.pop() )
 							_ctx.lineTo( ...radialXY( ...p, -1 ) );
@@ -2746,7 +2751,7 @@ class AudioMotionAnalyzer {
 						h *= maxBarHeight;
 						if ( showPeakLine ) {
 							_ctx[ m ]( ...( _radial ? radialXY( x, h ) : [ x, analyzerBottom - h ] ) );
-							if ( _radial && _mirror && ! isDualHorizontal )
+							if ( _radial && isMirror && ! isDualHorizontal )
 								points.push( [ x, h ] );
 						}
 						else if ( b.peak[ channel ] > 0 ) { // note: `h` is negative in inner radial
@@ -2781,7 +2786,7 @@ class AudioMotionAnalyzer {
 
 		if ( useCanvas ) {
 			// Mirror effect
-			if ( _mirror && ! _radial && ! isDualHorizontal ) {
+			if ( isMirror && ! _radial && ! isDualHorizontal ) {
 				_ctx.setTransform( -1, 0, 0, 1, canvas.width - initialX, 0 );
 				_ctx.drawImage( canvas, initialX, 0, centerX, canvas.height, 0, 0, centerX, canvas.height );
 				_ctx.setTransform( 1, 0, 0, 1, 0, 0 );
@@ -2911,7 +2916,7 @@ class AudioMotionAnalyzer {
 			}
 			else {
 				if ( modifiers.horizontal ) {
-					startX = ( isDualHorizontal && channel == 1 ) || _mirror == -1 ? initialX : 0;
+					startX = ( isDualHorizontal && channel == 1 ) || _mirror == MIRROR_LEFT ? initialX : 0;
 					endX   = startX + analyzerWidth;
 				}
 				else {
