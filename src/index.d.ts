@@ -69,7 +69,6 @@ export interface Options {
   peakDecayTime?: number;
   peakHoldTime?: number;
   peakLine?: number;
-  peaks?: Peaks;
   radial?: number;
   radius?: number;
   reflexAlpha?: number;
@@ -79,6 +78,7 @@ export interface Options {
   roundBars?: boolean;
   showFPS?: boolean;
   showLedMask?: boolean;
+  showPeaks?: ShowPeaks;
   showScaleX?: ShowScaleX;
   showScaleY?: ShowScaleY;
   smoothing?: number;
@@ -127,7 +127,7 @@ export type GradientColorStop = string | { pos?: number; color: string; level?: 
 
 export type LedBars = "off" | "modern" | "vintage";
 
-export type Peaks = "off" | "drop" | "fade";
+export type ShowPeaks = "off" | "drop" | "fade";
 
 export type ShowScaleX = "off" | "custom" | "freqs" | "freqs-custom" | "notes";
 
@@ -270,9 +270,6 @@ declare class AudioMotionAnalyzer {
   get peakLine(): number;
   set peakLine(value: number);
 
-  get peaks(): Peaks;
-  set peaks(value: Peaks);
-
   get pixelRatio(): number;
 
   get radial(): number;
@@ -293,6 +290,9 @@ declare class AudioMotionAnalyzer {
 
   public showFPS: boolean;
   public showLedMask: boolean;
+
+  get showPeaks(): ShowPeaks;
+  set showPeaks(value: ShowPeaks);
 
   get showScaleX(): ShowScaleX;
   set showScaleX(value: ShowScaleX);

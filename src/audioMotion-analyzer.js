@@ -146,7 +146,6 @@ const DEFAULT_SETTINGS = {
 	outlineBars    : false,
 	peakDecayTime  : 750,
 	peakHoldTime   : 500,
-	peaks          : PEAKS_DROP,
 	peakLine       : 0,
 	radial		   : RADIAL_OFF,
 	radius         : 0.5,
@@ -157,6 +156,7 @@ const DEFAULT_SETTINGS = {
 	roundBars      : false,
 	showFPS        : false,
 	showLedMask    : true,
+	showPeaks      : PEAKS_DROP,
 	showScaleX     : LABELS_X_FREQS,
 	showScaleY     : LABELS_Y_OFF,
 	smoothing      : 0.7,
@@ -716,18 +716,11 @@ class AudioMotionAnalyzer {
 		this._peakLine = +value || 0;
 	}
 
-	get peaks() {
-		return this._peaks;
-	}
-	set peaks( value ) {
-		this._peaks = validateFromList( value, [ PEAKS_OFF, PEAKS_DROP, PEAKS_FADE ] );
-	}
-
 	get radial() {
 		return this._radial;
 	}
 	set radial( value ) {
-		this._radial = [ RADIAL_INNER, RADIAL_OFF, RADIAL_OUTER ].includes( +value ) ? +value : this._radial ?? DEFAULT_SETTINGS.radial;
+		this._radial = [ RADIAL_INWARD, RADIAL_OFF, RADIAL_OUTWARD ].includes( +value ) ? +value : this._radial ?? DEFAULT_SETTINGS.radial;
 		this._calcBars();
 		this._makeGrad();
 	}
@@ -761,6 +754,13 @@ class AudioMotionAnalyzer {
 	set roundBars( value ) {
 		this._roundBars = !! value;
 		this._calcBars();
+	}
+
+	get showPeaks() {
+		return this._peaks;
+	}
+	set showPeaks( value ) {
+		this._peaks = validateFromList( value, [ PEAKS_OFF, PEAKS_DROP, PEAKS_FADE ] );
 	}
 
 	get showScaleX() {
