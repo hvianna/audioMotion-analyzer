@@ -10,7 +10,10 @@
 		<div>
 			<h1>audioMotion-analyzer</h1>
 			<h2>weighting filters response curves</h2>
-			<canvas id="canvas" width="400" height="400"></canvas>
+			<div class="canvas-container">
+				<canvas id="canvas"></canvas>
+				<canvas id="tooltip-canvas"></canvas>
+			</div>
 			<div id="legend"></div>
 			<div class="note">Click a label to toggle display of the corresponding curve</div>
 			<p>References:</p>
@@ -49,29 +52,31 @@
 <script>
 const table   = document.getElementById('tableFilters').tBodies[0],
 	  canvas  = document.getElementById('canvas'),
+	  tooltip = document.getElementById('tooltip-canvas'),
 	  legend  = document.getElementById('legend'),
 	  ctx     = canvas.getContext('2d'),
 	  colors  = [ '#039aff', '#ffd800', '#ff3500', '#000000', '#00aa2e', '#4100ff', '#ff00d2' ],
 	  filters = [ 'a', 'b', 'c', 'd', '468', 'tilt3', 'tilt4.5' ];
 
+const GRAPH_BORDER = 50,
+	  GRAPH_HEIGHT = 400,
+	  GRAPH_WIDTH  = 700;
+
+const maxX    = GRAPH_WIDTH - GRAPH_BORDER,
+	  minX    = GRAPH_BORDER,
+	  maxY    = GRAPH_HEIGHT - GRAPH_BORDER,
+	  minY    = GRAPH_BORDER,
+	  maxdB   = 20,
+	  mindB   = -50,
+	  dbRange = maxdB - mindB;
+
 function buildGraph() {
 
-	const GRAPH_BORDER = 50,
-		  GRAPH_HEIGHT = 400,
-		  GRAPH_WIDTH  = 700;
-
-	const maxX    = GRAPH_WIDTH - GRAPH_BORDER,
-		  minX    = GRAPH_BORDER,
-		  maxY    = GRAPH_HEIGHT - GRAPH_BORDER,
-		  minY    = GRAPH_BORDER,
-		  maxdB   = 20,
-		  mindB   = -50,
-		  dbRange = maxdB - mindB,
-		  graphX  = val => minX + ( maxX - minX ) / 4 * ( Math.log10( val ) - 1 ),
+	const graphX  = val => minX + ( maxX - minX ) / 4 * ( Math.log10( val ) - 1 ),
 		  graphY  = val => minY + ( maxY - minY ) / dbRange * ( maxdB - val );
 
-	canvas.width  = GRAPH_WIDTH;
-	canvas.height = GRAPH_HEIGHT;
+	canvas.width  = tooltip.width  = GRAPH_WIDTH;
+	canvas.height = tooltip.height = GRAPH_HEIGHT;
 
 	ctx.lineWidth = 2;
 	ctx.moveTo( minX - 1, minY - 1 );
@@ -146,11 +151,11 @@ function buildGraph() {
 
 for ( const freq of [ 16, 31.5, 63, 100, 125, 200, 250, 400, 500, 800, 1e3, 2e3, 3150, 4e3, 5e3, 6300, 7100, 8e3, 9e3, 10e3, 12500, 14e3, 16e3, 20e3, 31500 ] ) {
 	let html = `<tr${ freq == 1e3 ? ' class="onekhz"' : '' }><td>${ freq }`;
-	for ( const filter of filters ) {
-		let response = Number( weightingdB( freq, filter ).toFixed(1) ).toFixed(1); // workaround to avoid '-0.0'
+	for ( let i = 0; i < filters.length; i++ ) {
+		let response = Number( weightingdB( freq, filters[ i ] ).toFixed(1) ).toFixed(1); // workaround to avoid '-0.0'
 		if ( response > 0 )
 			response = '+' + response;
-		html += `<td>${ response }`;
+		html += `<td style="background: ${ colors[ i ] }22">${ response }`;
 	}
 	table.innerHTML += html;
 }
@@ -160,6 +165,32 @@ for ( let i = 0; i < filters.length; i++ )
 
 for ( const el of document.querySelectorAll('input[id^="filter-"]') )
 	el.addEventListener( 'click', () => buildGraph() );
+
+tooltip.addEventListener( 'mousemove', ev => {
+	const xToFreq = x => Math.round( 10 ** ( ( x - minX ) / ( maxX - minX ) * 4 + 1 ) ),
+		  yToGain = y => ( 20 - ( ( y - minY ) / ( maxY - minY ) * dbRange ) ).toFixed(1);
+
+	const x = ev.offsetX,
+	      y = ev.offsetY;
+
+	tooltip.width |= 0;
+
+	if ( x >= minX && x <= maxX && y >= minY && y <= maxY ) {
+		const posX = ( x > maxX * .85 ) ? x - 100 : x + 20,
+			  posY = ( y > maxY * .75 ) ? y - 50 : y + 20,
+      	  	  ctx  = tooltip.getContext('2d');
+
+      	ctx.fillStyle = '#fffd';
+      	ctx.fillRect( posX, posY, 80, 50 );
+      	ctx.fillStyle = ctx.strokeStyle = '#000';
+      	ctx.font = '14px sans-serif';
+      	ctx.lineWidth = 2;
+      	ctx.strokeRect( posX, posY, 80, 50 );
+      	ctx.textAlign = 'right';
+      	ctx.fillText( yToGain( y ) + ' dB', posX + 70, posY + 20 );
+      	ctx.fillText( xToFreq( x ) + ' Hz', posX + 70, posY + 40 );
+	}
+});
 
 buildGraph();
 

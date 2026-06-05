@@ -67,7 +67,7 @@ table td {
 	text-align: right;
 }
 #tableFilters tbody tr:hover {
-	background: #e0ffe0;
+	background: #f0f0f0;
 }
 
 .absolute-center {
@@ -100,6 +100,15 @@ table td {
 }
 input:not(:checked) + .bullet {
 	opacity: .2;
+}
+
+.canvas-container {
+	position: relative;
+}
+#tooltip-canvas {
+	left: 0;
+	position: absolute;
+	top: 0;
 }
 
 .center {
@@ -227,7 +236,7 @@ th .info:hover::before {
 }
 
 .onekhz {
-	background: #f0f0f0;
+	font-weight: bold;
 }
 
 .note {
