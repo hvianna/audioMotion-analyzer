@@ -154,12 +154,14 @@
 
 				<label class="label small"><span>weightingFilter</span>
 					<select data-setting="weightingFilter">
-						<option value="">none</option>
-						<option>A</option>
-						<option>B</option>
-						<option>C</option>
-						<option>D</option>
+						<option>none</option>
+						<option>a</option>
+						<option>b</option>
+						<option>c</option>
+						<option>d</option>
 						<option>468</option>
+						<option>tilt3</option>
+						<option>tilt4.5</option>
 					</select>
 				</label>
 			</fieldset>
@@ -270,40 +272,33 @@
 		<div class="box">
 			<fieldset>
 				<legend>Bar effects</legend>
-				<div class="button-grid">
-					<label class="label rowspan-2">alphaBars
-						<select data-setting="alphaBars">
-							<option>off</option>
-							<option>on</option>
-							<option>full</option>
-						</select>
-					</label>
-					<label class="label rowspan-2">ledBars
-						<select data-setting="ledBars">
-							<option>off</option>
-							<option>modern</option>
-							<option>vintage</option>
-						</select>
-					</label>
+				<label class="label">alphaBars
+					<select data-setting="alphaBars">
+						<option>off</option>
+						<option>on</option>
+						<option>full</option>
+					</select>
+				</label>
+				<label class="label">ledBars
+					<select data-setting="ledBars">
+						<option>off</option>
+						<option>modern</option>
+						<option>vintage</option>
+					</select>
+				</label>
 
-					<button data-prop="outlineBars">outlineBars</button>
-					<button data-prop="roundBars">roundBars</button>
-				</div>
+				<button data-prop="outlineBars">outlineBars</button>
+				<button data-prop="roundBars">roundBars</button>
 			</fieldset>
 
 			<fieldset>
 				<legend>Display</legend>
-				<div class="button-grid">
-					<button data-prop="ansiBands">ansiBands</button>
-					<button data-prop="loRes">loRes</button>
-					<button data-prop="showFPS">showFPS</button>
-					<button data-prop="showLedMask">showLedMask</button>
-					<button data-prop="spreadGradient">spreadGradient</button>
-				</div>
-			</fieldset>
+				<button data-prop="ansiBands">ansiBands</button>
+				<button data-prop="loRes">loRes</button>
+				<button data-prop="showFPS">showFPS</button>
+				<button data-prop="showLedMask">showLedMask</button>
+				<button data-prop="spreadGradient">spreadGradient</button>
 
-			<fieldset>
-				<legend>Scale Labels</legend>
 				<label class="label"><a href="https://audiomotion.dev/#/?id=showscalex" target="_blank">showScaleX</a>
 					<select data-setting="showScaleX">
 						<option>off</option>

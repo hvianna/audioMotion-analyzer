@@ -131,10 +131,10 @@ ul {
 }
 
 .button-grid {
-	display: grid;
+/*	display: grid;
 	grid-auto-flow: column;
-	grid-template-rows: 1fr 1fr;
-	gap: 10px;
+	grid-template-rows: 1fr 1fr; */
+	gap: 8px;
 	margin: 5px 0;
 }
 .button-grid button,
@@ -288,6 +288,11 @@ input.wide-range {
 	display: none;
 }
 
+/* multi-instance demo */
+.container {
+	background: #111;
+}
+
 /* fluid full-width analyzer (single instance demo) */
 #container.fluid {
 	height: 45vh;
@@ -341,6 +346,15 @@ input.wide-range {
 }
 .grid-3-cols {
 	grid-template-columns: repeat(3, 1fr);
+}
+.grid-4-cols {
+	grid-template-columns: repeat(4, 1fr);
+}
+.grid-5-cols {
+	grid-template-columns: repeat(5, 1fr);
+}
+.grid-6-cols {
+	grid-template-columns: repeat(6, 1fr);
 }
 
 .multi-block {

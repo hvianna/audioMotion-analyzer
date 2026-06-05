@@ -18,19 +18,19 @@ function weightingdB( freq, filter ) {
 		  linearTodB = value => 20 * Math.log10( value );
 
 	switch ( filter ) {
-		case 'A' : // A-weighting https://en.wikipedia.org/wiki/A-weighting
+		case 'a' : // A-weighting https://en.wikipedia.org/wiki/A-weighting
 			const rA = ( SQ12194 * f2 ** 2 ) / ( ( f2 + SQ20_6 ) * Math.sqrt( ( f2 + SQ107_7 ) * ( f2 + SQ737_9 ) ) * ( f2 + SQ12194 ) );
 			return 2 + linearTodB( rA );
 
-		case 'B' :
+		case 'b' :
 			const rB = ( SQ12194 * f2 * freq ) / ( ( f2 + SQ20_6 ) * Math.sqrt( f2 + SQ158_5 ) * ( f2 + SQ12194 ) );
 			return .17 + linearTodB( rB );
 
-		case 'C' :
+		case 'c' :
 			const rC = ( SQ12194 * f2 ) / ( ( f2 + SQ20_6 ) * ( f2 + SQ12194 ) );
 			return .06 + linearTodB( rC );
 
-		case 'D' :
+		case 'd' :
 			const h = ( ( 1037918.48 - f2 ) ** 2 + 1080768.16 * f2 ) / ( ( 9837328 - f2 ) ** 2 + 11723776 * f2 ),
 				  rD = ( freq / 6.8966888496476e-5 ) * Math.sqrt( h / ( ( f2 + 79919.29 ) * ( f2 + 1345600 ) ) );
 			return linearTodB( rD );
@@ -40,6 +40,12 @@ function weightingdB( freq, filter ) {
 				  h2 = 1.306612257412824e-19 * freq ** 5 - 2.118150887518656e-11 * freq ** 3 + 5.559488023498642e-4 * freq,
 				  rI = 1.246332637532143e-4 * freq / Math.hypot( h1, h2 );
 			return 18.2 + linearTodB( rI );
+
+		case 'tilt3': // 3dB/octave tilt, centered on 1kHz
+			return 3 * Math.log2( freq / 1000 );
+
+		case 'tilt4.5': // 4.5dB/octave tilt, centered on 1kHz
+			return 4.5 * Math.log2( freq / 1000 );
 	}
 
 	return 0; // unknown filter

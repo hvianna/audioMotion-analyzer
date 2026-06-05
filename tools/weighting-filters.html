@@ -12,12 +12,13 @@
 			<h2>weighting filters response curves</h2>
 			<canvas id="canvas" width="400" height="400"></canvas>
 			<div id="legend"></div>
-			<div class="note">Click labels to show / hide the corresponding curves</div>
+			<div class="note">Click a label to toggle display of the corresponding curve</div>
 			<p>References:</p>
 			<ul>
-				<li><a href="https://en.wikipedia.org/wiki/Weighting_filter" target="_blank">https://en.wikipedia.org/wiki/Weighting_filter</a></li>
-				<li><a href="https://en.wikipedia.org/wiki/A-weighting" target="_blank">https://en.wikipedia.org/wiki/A-weighting</a></li>
-				<li><a href="https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting" target="_blank">https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting</a></li>
+				<li><a href="https://en.wikipedia.org/wiki/Weighting_filter" target="_blank">Weighting filter (on Wikipedia)</a></li>
+				<li><a href="https://en.wikipedia.org/wiki/A-weighting" target="_blank">A-weighting (on Wikipedia)</a></li>
+				<li><a href="https://en.wikipedia.org/wiki/ITU-R_468_noise_weighting" target="_blank">ITU-R 468 noise weighting (on Wikipedia)</a></li>
+				<li><a href="https://github.com/hvianna/audioMotion-analyzer/pull/107" target="_blank">3dB/oct and 4.5dB/oct tilt filters</a></li>
 			</ul>
 
 			<p class="credits">
@@ -28,7 +29,7 @@
 		<table id="tableFilters">
 				<tr>
 					<th rowspan="2">Frequency<br>(Hz)</th>
-					<th colspan="5">Response (dB)</th>
+					<th colspan="7">Gain (dB)</th>
 				</tr>
 				<tr>
 					<th>A</th>
@@ -36,6 +37,8 @@
 					<th>C</th>
 					<th>D</th>
 					<th>ITU-R 468</th>
+					<th>3dB tilt</th>
+					<th>4.5dB tilt</th>
 				</tr>
 		</table>
 	</div>
@@ -48,8 +51,8 @@ const table   = document.getElementById('tableFilters').tBodies[0],
 	  canvas  = document.getElementById('canvas'),
 	  legend  = document.getElementById('legend'),
 	  ctx     = canvas.getContext('2d'),
-	  colors  = [ '#039aff', '#ffd800', '#ff3500', '#000000', '#00aa2e' ],
-	  filters = [ 'A', 'B', 'C', 'D', '468' ];
+	  colors  = [ '#039aff', '#ffd800', '#ff3500', '#000000', '#00aa2e', '#4100ff', '#ff00d2' ],
+	  filters = [ 'a', 'b', 'c', 'd', '468', 'tilt3', 'tilt4.5' ];
 
 function buildGraph() {
 
@@ -115,17 +118,24 @@ function buildGraph() {
 	// plot curves
 
 	ctx.lineWidth = 2.5;
-	for ( let i = 0; i < filters.length; i ++ ) {
+	for ( let i = 0; i < filters.length; i++ ) {
 		const filter = filters[ i ];
 		if ( document.getElementById(`filter-${ filter }`).checked ) {
 			ctx.beginPath();
 			ctx.strokeStyle = colors[ i ] + 'cc';
+			ctx.setLineDash([]);
 			for ( let p = 1; p < 5; p += .05 ) {
 				const freq   = 10 ** p,
 					  gain   = weightingdB( freq, filter ),
-					  method = p == 1 || gain < -50 ? 'moveTo' : 'lineTo';
+					  method = p == 1 || gain < -50 || gain > 20 ? 'moveTo' : 'lineTo';
 				ctx[ method ]( graphX( freq ), graphY( gain ) );
+				if ( p.toFixed(2) == 4.3 ) { // at ~20kHz change to dashed lines
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.moveTo( graphX( freq ), graphY( gain ) );
+				}
 			}
+			ctx.setLineDash([4,4]);
 			ctx.stroke();
 		}
 	}

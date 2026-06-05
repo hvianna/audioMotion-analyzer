@@ -25,10 +25,15 @@ import {
 const audioEl             = document.getElementById('audio'),
 	  backgroundSelection = document.getElementById('bgColor'),
 	  container           = document.getElementById('container'),
-	  presetSelection     = document.getElementById('presets');
+	  presetSelection     = document.getElementById('presets'),
+	  customLeds          = document.getElementById('customLeds'),
+	  ledHeight           = document.getElementById('ledHeight'),
+	  gapHeight           = document.getElementById('gapHeight');
+
 
 // container background options
 const bgOptions = [
+	[ 'Black', '#000' ],
 	[ 'Dark',  'transparent' ],
 	[ 'Light', '#ccc' ],
 	[ 'Gray',  'dimgray' ],
@@ -54,6 +59,8 @@ const presets = [
 			colorMode: 'gradient',
 			frequencyScale: 'log',
 			ledBars: LEDS_VINTAGE,
+			linearAmplitude: true,
+			linearBoost: 1.8,
 			lumiBars: false,
 			maxFreq: 20000,
 			minFreq: 25,
@@ -61,9 +68,37 @@ const presets = [
 			radial: false,
 			reflexRatio: 0,
 			showLedMask: true,
-			showPeaks: true
+			showPeaks: true,
+			weightingFilter: 'tilt3'
 		},
-		theme: { name: 'classic', modifiers: {} }
+		theme: { name: 'classic', modifiers: {} },
+		ledParams: []
+	},
+	{
+		name: 'Square LEDs',
+		options: {
+			mode: 'bars',
+			alphaBars: false,
+			ansiBands: true,
+			bandResolution: 7,
+			barSpace: .25,
+			channelLayout: 'single',
+			colorMode: 'gradient',
+			frequencyScale: 'log',
+			ledBars: LEDS_VINTAGE,
+			linearAmplitude: false,
+			lumiBars: false,
+			maxFreq: 20000,
+			minFreq: 25,
+			mirror: 0,
+			radial: false,
+			reflexRatio: 0,
+			showLedMask: false,
+			showPeaks: true,
+			weightingFilter: 'tilt3'
+		},
+		theme: 'rainbow',
+		ledParams: [0,0]
 	},
 	{
 		name: 'Mirror wave',
@@ -103,7 +138,7 @@ const presets = [
 		theme: 'rainbow'
 	},
 	{
-		name: 'Bark scale + Linear level',
+		name: 'Bark scale + Reflex',
 		options: {
 			mode: 'bars',
 			bandResolution: 0,
@@ -132,7 +167,7 @@ const presets = [
 			bandResolution: 0,
 			channelLayout: 'dual-combined',
 			fillAlpha: .25,
-			frequencyScale: 'bark',
+			frequencyScale: 'log',
 			linearAmplitude: true,
 			linearBoost: 1.8,
 			lineWidth: 1.5,
@@ -212,7 +247,8 @@ const presets = [
 			maxFreq: 16000,
 			minFreq: 20
 		},
-		theme: [ { name: 'steelblue', modifiers: {} }, { name: 'orangered', modifiers: {} } ]
+		theme: [ { name: 'steelblue', modifiers: {} }, { name: 'orangered', modifiers: {} } ],
+		ledParams: []
 	},
 	{
 		// gradient sample images for docs are created with a 27.5 Hz square wave (volume: 1) in the oscillator
@@ -269,12 +305,14 @@ const presets = [
 			showScaleX: LABELS_X_FREQS,
 			showScaleY: LABELS_Y_DB,
 			splitGradient: false
-		}
+		},
+		ledParams: []
 	}
 ];
 
 // Demo-specific features
 const features = {
+	canvasHover: true,
 	energyMeter: false,
 	showLogo: true,
 	songProgress: false
@@ -364,10 +402,7 @@ document.querySelectorAll('[data-setting]').forEach( el => {
 
 document.querySelectorAll('[data-custom]').forEach( el => {
 	el.addEventListener( 'input', () => {
-		const active    = document.getElementById('customLeds').checked,
-			  ledHeight = document.getElementById('ledHeight').value,
-			  gapHeight = document.getElementById('gapHeight').value;
-		audioMotion.setLeds( ...( active ? [ ledHeight, gapHeight ] : [] ) );
+		audioMotion.setLeds( ...( customLeds.checked ? [ ledHeight.value, gapHeight.value ] : [] ) );
 	});
 });
 
@@ -450,10 +485,18 @@ presets.forEach( ( preset, index ) => {
 });
 
 presetSelection.addEventListener( 'change', () => {
-	const { options, theme } = presets[ presetSelection.value ];
+	const { options, theme, ledParams } = presets[ presetSelection.value ];
 	audioMotion.setOptions( options );
 	if ( theme )
 		audioMotion.setTheme( theme );
+	if ( ledParams ) {
+		customLeds.checked = !! ledParams.length;
+		if ( ledParams.length ) {
+			ledHeight.value = ledParams[0];
+			gapHeight.value = ledParams[1];
+		}
+		audioMotion.setLeds( ...ledParams );
+	}
 	updateUI();
 });
 
@@ -813,27 +856,29 @@ function drawCallback( instance, { timestamp, themes } ) {
 		ctx.lineTo( canvas.width * audioEl.currentTime / audioEl.duration, posY );
 		ctx.lineCap = 'round';
 		ctx.lineWidth = lineWidth;
-		ctx.globalAlpha = audioMotion.getEnergy(); // use song energy to control the bar opacity
+		ctx.globalAlpha = .5;
 		ctx.strokeStyle = themes[0].gradient;      // use left channel color gradient to draw the progress bar
 		ctx.stroke();
 	}
 
-	// show band data on mouse hover - TO-DO: handle dual channel layouts!
-	if ( mouseX != null && audioMotion.channelLayout == LAYOUT_SINGLE && ! audioMotion.radial ) {
-		const bar = instance.getBars().findLast( b => mouseX >= b.posX );
-		if ( bar ) {
-			ctx.font = `${ fontSize }px monospace`;
-			ctx.textAlign = mouseX < 150 ? 'left' : 'right';
-			const x = mouseX + ( mouseX < 150 ? fontSize : -fontSize ),
-				  left = x - fontSize * ( mouseX < 150 ? 1.25 : 7.25 );
+	if ( features.canvasHover ) {
+		// show band data on mouse hover - TO-DO: handle dual channel layouts!
+		if ( mouseX != null && audioMotion.channelLayout == LAYOUT_SINGLE && ! audioMotion.radial ) {
+			const bar = instance.getBars().findLast( b => mouseX >= b.posX );
+			if ( bar ) {
+				ctx.font = `${ fontSize }px monospace`;
+				ctx.textAlign = mouseX < 150 ? 'left' : 'right';
+				const x = mouseX + ( mouseX < 150 ? fontSize : -fontSize ),
+					  left = x - fontSize * ( mouseX < 150 ? 1.25 : 7.25 );
 
-			ctx.fillStyle = '#0008';
-			ctx.fillRect( left, mouseY - fontSize * 1.75, fontSize * 8.5, fontSize * 6 );
+				ctx.fillStyle = '#0008';
+				ctx.fillRect( left, mouseY - fontSize * 1.75, fontSize * 8.5, fontSize * 6 );
 
-			ctx.fillStyle = '#fff';
-			ctx.fillText( bar.freq.toFixed(2) + 'Hz', x, mouseY );
-			ctx.fillText( 'p: ' + bar.peak[0].toFixed(6), x, mouseY + fontSize * 1.5 );
-			ctx.fillText( 'v: ' + bar.value[0].toFixed(6), x, mouseY + fontSize * 3 );
+				ctx.fillStyle = '#fff';
+				ctx.fillText( bar.freq.toFixed(2) + 'Hz', x, mouseY );
+				ctx.fillText( 'p: ' + bar.peak[0].toFixed(6), x, mouseY + fontSize * 1.5 );
+				ctx.fillText( 'v: ' + bar.value[0].toFixed(6), x, mouseY + fontSize * 3 );
+			}
 		}
 	}
 }

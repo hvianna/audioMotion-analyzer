@@ -136,12 +136,14 @@
 
 				<label class="label small"><span>weightingFilter</span>
 					<select data-setting="weightingFilter">
-						<option value="">none</option>
-						<option>A</option>
-						<option>B</option>
-						<option>C</option>
-						<option>D</option>
+						<option>none</option>
+						<option>a</option>
+						<option>b</option>
+						<option>c</option>
+						<option>d</option>
 						<option>468</option>
+						<option>tilt3</option>
+						<option>tilt4.5</option>
 					</select>
 				</label>
 			</fieldset>
@@ -157,22 +159,18 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>Scale Labels</legend>
-				<label class="label"><a href="https://audiomotion.dev/#/?id=showscalex" target="_blank">showScaleX</a>
-					<select data-setting="showScaleX">
+				<legend>Peaks</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peaks" target="_blank">peaks</a>
+					<select data-setting="peaks">
 						<option>off</option>
-						<option>custom</option>
-						<option>freqs</option>
-						<option>freqs-custom</option>
-						<option>notes</option>
+						<option>drop</option>
+						<option>fade</option>
 					</select>
 				</label>
-				<label class="label"><a href="https://audiomotion.dev/#/?id=showscaley" target="_blank">showScaleY</a>
-					<select data-setting="showScaleY">
-						<option>off</option>
-						<option>db</option>
-						<option>percent</option>
-					</select>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peakline" target="_blank">peakLine</a>
+					<input type="range" min="0" max="5" step=".5" data-setting="peakLine">
+					<div class="value"></div>
 				</label>
 			</fieldset>
 		</div>
@@ -246,53 +244,51 @@
 		<div class="box center">
 			<fieldset>
 				<legend>Bar effects</legend>
-				<div class="button-grid">
-					<label class="label rowspan-2">alphaBars
-						<select data-setting="alphaBars">
-							<option>off</option>
-							<option>on</option>
-							<option>full</option>
-						</select>
-					</label>
-					<label class="label rowspan-2">ledBars
-						<select data-setting="ledBars">
-							<option>off</option>
-							<option>modern</option>
-							<option>vintage</option>
-						</select>
-					</label>
+				<label class="label rowspan-2">alphaBars
+					<select data-setting="alphaBars">
+						<option>off</option>
+						<option>on</option>
+						<option>full</option>
+					</select>
+				</label>
+				<label class="label rowspan-2">ledBars
+					<select data-setting="ledBars">
+						<option>off</option>
+						<option>modern</option>
+						<option>vintage</option>
+					</select>
+				</label>
 
-					<button data-prop="outlineBars">outlineBars</button>
-					<button data-prop="roundBars">roundBars</button>
-				</div>
+				<button data-prop="outlineBars">outlineBars</button>
+				<button data-prop="roundBars">roundBars</button>
 			</fieldset>
 
 			<fieldset>
 				<legend>Display</legend>
-				<div class="button-grid">
-					<button data-prop="ansiBands">ansiBands</button>
-					<button data-prop="loRes">loRes</button>
-					<button data-prop="showFPS">showFPS</button>
-					<button data-prop="showLedMask">showLedMask</button>
-					<button data-prop="spreadGradient">spreadGradient</button>
-				</div>
-			</fieldset>
+				<button data-prop="ansiBands">ansiBands</button>
+				<button data-prop="loRes">loRes</button>
+				<button data-prop="showFPS">showFPS</button>
+				<button data-prop="showLedMask">showLedMask</button>
+				<button data-prop="spreadGradient">spreadGradient</button>
 
-			<fieldset>
-				<legend>Peaks</legend>
-				<label class="label"><a href="https://audiomotion.dev/#/?id=peaks" target="_blank">peaks</a>
-					<select data-setting="peaks">
+				<label class="label"><a href="https://audiomotion.dev/#/?id=showscalex" target="_blank">showScaleX</a>
+					<select data-setting="showScaleX">
 						<option>off</option>
-						<option>drop</option>
-						<option>fade</option>
+						<option>custom</option>
+						<option>freqs</option>
+						<option>freqs-custom</option>
+						<option>notes</option>
 					</select>
 				</label>
-
-				<label class="label"><a href="https://audiomotion.dev/#/?id=peakline" target="_blank">peakLine</a>
-					<input type="range" min="0" max="5" step=".5" data-setting="peakLine">
-					<div class="value"></div>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=showscaley" target="_blank">showScaleY</a>
+					<select data-setting="showScaleY">
+						<option>off</option>
+						<option>db</option>
+						<option>percent</option>
+					</select>
 				</label>
 			</fieldset>
+
 		</div>
 	</div>
 
