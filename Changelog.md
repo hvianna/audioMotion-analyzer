@@ -1,39 +1,34 @@
 Changelog
 =========
 
-## version NEXT
+## version 5.0.0-alpha.2 (2026-06-06)
 
-+ *MediaStream* objects can now be passed directly to the [`connectInput()`](README.md#connectinput) method and the constructor's [`source`](README.md#source) property;
-+ [`disconnectInput()`](README.md#disconnectinput) method now also accepts *HTMLMediaElement* and *MediaStream* objects.
+> **WARNING:** code in **alpha** stage is subject to major, drastic changes! **DO NOT USE THIS VERSION IN PRODUCTION!**<br>
+> Source code is in the [`version5`](https://github.com/hvianna/audioMotion-analyzer/tree/version5) branch. **Demo is available at https://audiomotion.dev/demo/alpha/**
 
-+ [`showScaleX`](README.md#showscalex) value type has been changed to *string*;
-+ [`showScaleY`](README.md#showscaley) value type has been changed to *string* and now allows choosing dB or percentage labels;
-+ `noteLabels` has been removed and its functionality has been consolidated into [`showScaleX`](README.md#showscalex);
-+ `setXAxis()` has been renamed to [`setScaleX()`](README.md#setscalex) - removed `addLabels` and `height` properties, added `fontSize`;
-+ `setYAxis()` has been renamed to [`setScaleY()`](README.md#setscaley) - removed `linearInterval` and `width` properties, added `percentInterval` and `fontSize`, new default value for `dbInterval`;
-+ added [`getScaleX()`](README.md#getscalex) and [`getScaleY()`](README.md#getscaley) methods.
+**New/changed in this release:**
 
++ [`connectInput()`](README.md#connectinput) and the constructor's [`source`](README.md#source) property now accept *MediaStream* objects ([#96](https://github.com/hvianna/audioMotion-analyzer/issues/96));
++ [`disconnectInput()`](README.md#disconnectinput) now also accepts *HTMLMediaElement* and *MediaStream* objects.
++ `noteLabels` property has been removed and its functionality has been consolidated into [`showScaleX`](README.md#showscalex);
++ [`showScaleX`](README.md#showscalex) value type has changed to *string*;
++ [`showScaleY`](README.md#showscaley) value type has changed to *string* and now allows choosing dB or percentage labels;
++ `peaks` property name changed back to [`showPeaks`](README.md#showpeaks);
++ `setXAxis()` renamed to [`setScaleX()`](README.md#setscalex) - removed `addLabels` and `height` properties, added `fontSize`;
++ `setYAxis()` renamed to [`setScaleY()`](README.md#setscaley) - removed `linearInterval` and `width` properties, added `percentInterval` and `fontSize`, new default value of 6dB for `dbInterval`;
++ Added [`getScaleX()`](README.md#getscalex) and [`getScaleY()`](README.md#getscaley) methods;
++ Added 3dB/oct and 4.5db/oct tilt filters to [`weightingFilter`](README.md#weightingfilter) - props to [@will-hut](https://github.com/will-hut) ([#107](https://github.com/hvianna/audioMotion-analyzer/pull/107)).
++ [`weightingFilter`](README.md#weightingfilter) values are now normalized to lowercase. The value for no-filter has changed from `""` (empty string) to `"none"`.
++ Changed `RADIAL_INNER` and `RADIAL_OUTER` constant names to `RADIAL_INWARD` and `RADIAL_OUTWARD`.
 
-## version 5.0.0-alpha.1 (2026-01-11)
+**The full list of changes for v5 are provided below.**
 
-+ Fixed: rendering of vintage LEDs for big LED elements and/or themes with several colorStops;
-+ Incorporates fixes from stable version [4.5.4](https://github.com/hvianna/audioMotion-analyzer/discussions/102).
-
-
-## version 5.0.0-alpha.0 (2026-01-08)
-
-> **WARNING:** code in **alpha** stage is subject to major, drastic changes! **DO NOT USE THIS VERSION IN PRODUCTION!**
-
-> Source code is in the [`version5`](https://github.com/hvianna/audioMotion-analyzer/tree/version5) branch.
->
-> Demo is available at https://audiomotion.dev/demo/alpha/
-
-### Version overview: <!-- {docsify-ignore} -->
+### Version 5 overview: <!-- {docsify-ignore} -->
 
 + Expect LOTS of breaking changes 😅 - I'm taking this opportunity to consolidate related properties and make some long-overdue changes;
 + Gradients are now called **Themes** - new `peakColor` property in [`registerTheme()`](README.md#registertheme) and [**on-the-fly horizontal and reverse gradient generation**](README.md#setthememodifiers);
 + **LED bars look better and are easier to customize** - see [`showLedMask`](README.md#showledmask) and [`setLeds()`](README.md#setleds);
-+ X- and Y-axis scales are now customizable - [`setXAxis()`](README.md#setxaxis) and [`setYAxis()`](README.md#setyaxis);
++ X- and Y-axis scales are now customizable - [`setScaleX()`](README.md#setscalex) and [`setScaleY()`](README.md#setscaley);
 + The analyzer canvas is now always transparent, so **all background-related properties are gone,** including `bgColor` in the theme definition;
 + No more [errors thrown](README.md#custom-errors) for non-critical issues, like invalid option values;
 + The [`onCanvasDraw`](README.md#oncanvasdraw) callback is now passed all color information from the currently active themes (`fillStyle` and `strokeStyle` are no longer explicitly set).
@@ -42,28 +37,33 @@ Changelog
 
 Modified properties                | Changes made
 -----------------------------------|-------------------
-[`alphaBars`](README.md#alphabars) | value type changed to *string*
-[`ledBars`](README.md#ledbars)     | value type changed to *string*
-[`mode`](README.md#mode)           | value type changed to *string*
-[`peakLine`](README.md#peakline)   | value type changed to *number*
-[`radial`](README.md#radial)       | value type changed to *number*
+[`alphaBars`](README.md#alphabars) | type changed from *boolean* to **_string_**
+[`ledBars`](README.md#ledbars)     | type changed from *boolean* to **_string_**
+[`mode`](README.md#mode)           | type changed from *number* to **_string_**
+[`peakLine`](README.md#peakline)   | type changed from *boolean* to **_number_**
+[`radial`](README.md#radial)       | type changed from *boolean* to **_number_**
+[`showPeaks`](README.md#showpeaks) | type changed from *boolean* to **_string_**
+[`showScaleX`](README.md#showscalex) | type changed from *boolean* to **_string_**
+[`showScaleY`](README.md#showscaley) | type changed from *boolean* to **_string_**
+[`weightingFilter`](README.md#weightingfilter) | values are now normalized to lowercase. The value for no-filter has changed from `""` (empty string) to `"none"`.
+
 
 Removed methods and properties | Use this instead
 ----------------------|-----------------------------------------------
-`bgAlpha`             | *set desired opacity via CSS*
-`fadePeaks`           | [`peaks`](README.md#peaks) = `"fade"`
-`gradient`            | [`setTheme()`](README.md#settheme) / [`getTheme()`](README.md#gettheme)
+`bgAlpha`             | *set desired background color/opacity via CSS on [`canvas`](README.md#canvas-read-only) element*
+`fadePeaks`           | [`showPeaks`](README.md#showpeaks) = `"fade"`
+`gradient`            | [`setTheme(name)`](README.md#settheme) / [`getTheme()`](README.md#gettheme)
 `gradientLeft`        | [`setTheme(name, 0)`](README.md#settheme) / [`getTheme(0)`](README.md#gettheme)
 `gradientRight`       | [`setTheme(name, 1)`](README.md#settheme) / [`getTheme(1)`](README.md#gettheme)
 `gravity`             | [`peakDecayTime`](README.md#peakdecaytime) &mdash; *use the [peak drop analysis tool](/tools/peak-drop.html) to compare/migrate previous customizations*
 `isLumiBars`          | [`isAlphaBars`](README.md#isalphabars)
 `lumiBars`            | [`alphaBars`](README.md#alphabars) = `"full"`
+`noteLabels`          | [`showScaleX`](README.md#showscalex) = `"notes"`
 `peakFadeTime`        | [`peakDecayTime`](README.md#peakdecaytime)
 `radialInvert`        | [`radial`](README.md#radial) = `-1`
 `registerGradient()`  | [`registerTheme()`](README.md#registertheme)
 `setLedParams()`      | [`setLeds()`](README.md#setleds)
-`showBgColor`         | *set desired background color via CSS*
-`showPeaks`           | [`peaks`](README.md#peaks)
+`showBgColor`         | *set desired background color via CSS on container element*
 `splitGradient`       | [`spreadGradient`](README.md#spreadgradient)
 `stereo`              | [`channelLayout`](README.md#channellayout)
 `trueLeds`            | [`ledBars`](README.md#ledbars) = `"vintage"`
@@ -74,24 +74,34 @@ Removed methods and properties | Use this instead
 + [`bandResolution`](README.md#bandresolution) property;
 + [`getThemeData()`](README.md#getthemedata) and [`getThemeList()`](README.md#getthemelist) mehods;
 + `peakColor` property in theme definition - see [`registerTheme()`](README.md#registertheme);
-+ [`peaks`](README.md#peaks) property;
 + [`registerTheme()`](README.md#registertheme) and [`unregisterTheme()`](README.md#unregistertheme) methods;
 + [`setTheme()`](README.md#settheme) and [`getTheme()`](README.md#gettheme) methods;
 + [`setThemeModifiers()`](README.md#setthememodifiers) and [`getThemeModifiers()`](README.md#getthememodifiers) methods;
-+ [`setXAxis()`](README.md#setxaxis) and [`setYAxis()`](README.md#setyaxis) methods;
++ [`toggleThemeModifier()`](README.md#togglethememodifier) method;
++ [`setScaleX()`](README.md#setscalex) / [`setScaleY()`](README.md#setscaley) and [`getScaleX()`](README.md#getscalex) / [`getScaleY()`](README.md#getscaley) methods;
 + [`showLedMask`](README.md#showledmask) property;
++ New 3dB/oct and 4.5db/oct tilt filters added to [`weightingFilter`](README.md#weightingfilter) - props to [@will-hut](https://github.com/will-hut) ([#107](https://github.com/hvianna/audioMotion-analyzer/pull/107));
 + [Exported constants](README.md#constants).
 
 ### Changed: <!-- {docsify-ignore} -->
 
-+ New default value for [`fillAlpha`](README.md#fillalpha): `0.5` (previously `1`);
-+ New default value for [`lineWidth`](README.md#linewidth): `1` (previously `0`);
-+ New default value for [`radius`](README.md#radius): `0.5` (previously `0.3`);
 + Minor color offset adjustments in the `"classic"` theme - the old values can be found in [this Discussions post](https://github.com/hvianna/audioMotion-analyzer/discussions/44);
 + The `"fschange"` value for `reason` in the [`onCanvasResize`](README.md#oncanvasresize) callback has been changed to `"fullscreenchange"`. You can use the new [constants](README.md#constants) exported by the module for future-proof checks.
++ New default values:
+
+Property | New default value | Previous default value
+---------|-------------------|------------------------
+[`fillAlpha`](README.md#fillalpha) | `0.5` | `1`
+[`lineWidth`](README.md#linewidth) | `1`   | `0`
+[`maxDecibels`](README.md#maxdecibels) | `-30` | `25`
+[`minDecibels`](README.md#mindecibels) | `-90` | `-85`
+[`radius`](README.md#radius)           | `0.5` | `0.3`
+[`smoothing`](README.md#smoothing)     | `0.7` | `0.5`
 
 ### Improved: <!-- {docsify-ignore} -->
 
++ [`connectInput()`](README.md#connectinput) and the constructor's [`source`](README.md#source) property now accept *MediaStream* objects ([#96](https://github.com/hvianna/audioMotion-analyzer/issues/96));
++ [`disconnectInput()`](README.md#disconnectinput) now also accepts *HTMLMediaElement* and *MediaStream* objects;
 + Full-height [`alphaBars`](README.md#alphabars) (former lumiBars) have been extended to work with [`radial`](README.md#radial) and FFT [`bandResolution`](README.md#bandresolution) (former mode 0);
 + Y-axis labels are no longer mirrored when [`mirror`](README.md#mirror-number) is active.
 
