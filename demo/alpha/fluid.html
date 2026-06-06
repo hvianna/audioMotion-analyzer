@@ -14,7 +14,7 @@
 		<ul class="header-nav">
 			<li><a href="index.html">Demos</a></li>
             <li><a href="https://audiomotion.dev">Home</a></li>
-			<li><a href="https://github.com/hvianna/audioMotion-analyzer/blob/master/demo/fluid.js">View on GitHub</a></li>
+			<li><a href="https://github.com/hvianna/audioMotion-analyzer/tree/version5">View on GitHub</a></li>
 		</ul>
 	</header>
 
@@ -125,33 +125,14 @@
 				<legend>Frequency range & scaling</legend>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=minfreq" target="_blank">minFreq</a>
-					<select data-setting="minFreq">
-						<option>10</option>
-						<option>16</option>
-						<option>20</option>
-						<option>25</option>
-						<option>30</option>
-						<option>40</option>
-						<option>60</option>
-						<option>100</option>
-						<option>500</option>
-						<option>1000</option>
-					</select>
+					<input type="number" min="1" max="24000" data-setting="minFreq">
 				</label>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=maxfreq" target="_blank">maxFreq</a>
-					<select data-setting="maxFreq">
-						<option>8000</option>
-						<option>10000</option>
-						<option>12000</option>
-						<option>16000</option>
-						<option>20000</option>
-						<option>22000</option>
-						<option>24000</option>
-					</select>
+					<input type="number" min="1" max="24000" data-setting="maxFreq">
 				</label>
 
-				<label class="label"><a href="https://audiomotion.dev/#/?id=frequencyscale" target="_blank">frequencyScale</a>
+				<label class="label small"><a href="https://audiomotion.dev/#/?id=frequencyscale" target="_blank">frequencyScale</a>
 					<select data-setting="frequencyScale">
 						<option>bark</option>
 						<option>linear</option>
@@ -164,25 +145,25 @@
 			<fieldset>
 				<legend>Sensitivity</legend>
 
-				<label class="label"><a href="https://audiomotion.dev/#/?id=weightingfilter" target="_blank">weightingFilter</a>
-					<select data-setting="weightingFilter">
-						<option value="">none</option>
-						<option>A</option>
-						<option>B</option>
-						<option>C</option>
-						<option>D</option>
-						<option>468</option>
-					</select>
-				</label>
-
 				<label class="label"><a href="https://audiomotion.dev/#/?id=mindecibels" target="_blank">minDecibels</a>
-					<input type="range" min="-120" max="-60" step="5" data-setting="minDecibels">
-					<div class="value"></div>
+					<input type="number" min="-200" max="0" data-setting="minDecibels">
 				</label>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=maxdecibels" target="_blank">maxDecibels</a>
-					<input type="range" min="-40" max="0" step="5" data-setting="maxDecibels">
-					<div class="value"></div>
+					<input type="number" min="-200" max="0" data-setting="maxDecibels">
+				</label>
+
+				<label class="label small"><a href="https://audiomotion.dev/#/?id=weightingfilter" target="_blank">weightingFilter</a>
+					<select data-setting="weightingFilter">
+						<option>none</option>
+						<option>a</option>
+						<option>b</option>
+						<option>c</option>
+						<option>d</option>
+						<option>468</option>
+						<option>tilt3</option>
+						<option>tilt4.5</option>
+					</select>
 				</label>
 			</fieldset>
 
@@ -197,16 +178,21 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>Frame rate</legend>
-				<button data-prop="showFPS">showFPS</button>
-				<label class="label"><a href="https://audiomotion.dev/#/?id=maxfps" target="_blank">maxFPS</a>
-					<select data-setting="maxFPS">
-						<option>0</option>
-						<option>10</option>
-						<option>20</option>
-						<option>30</option>
-						<option>60</option>
-						<option>120</option>
+				<legend>Scale labels</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=showscalex" target="_blank">showScaleX</a>
+					<select data-setting="showScaleX">
+						<option>off</option>
+						<option>custom</option>
+						<option>freqs</option>
+						<option>freqs-custom</option>
+						<option>notes</option>
+					</select>
+				</label>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=showscaley" target="_blank">showScaleY</a>
+					<select data-setting="showScaleY">
+						<option>off</option>
+						<option>db</option>
+						<option>percent</option>
 					</select>
 				</label>
 			</fieldset>
@@ -280,7 +266,7 @@
 
 		<div class="box center flex">
 			<fieldset>
-				<legend>Bar modifiers</legend>
+				<legend>Bar effects</legend>
 				<label class="label"><a href="https://audiomotion.dev/#/?id=alphabars" target="_blank">alphaBars</a>
 					<select data-setting="alphaBars">
 						<option>off</option>
@@ -312,8 +298,8 @@
 
 			<fieldset>
 				<legend>Peak behavior</legend>
-				<label class="label"><a href="https://audiomotion.dev/#/?id=peaks" target="_blank">peaks</a>
-					<select data-setting="peaks">
+				<label class="label"><a href="https://audiomotion.dev/#/?id=showpeaks" target="_blank">showPeaks</a>
+					<select data-setting="showPeaks">
 						<option>off</option>
 						<option>drop</option>
 						<option>fade</option>
@@ -335,20 +321,32 @@
 					<div class="value"></div>
 				</label>
 			</fieldset>
+
+			<fieldset>
+				<legend>Frame rate</legend>
+				<button data-prop="showFPS">showFPS</button>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=maxfps" target="_blank">maxFPS</a>
+					<select data-setting="maxFPS">
+						<option>0</option>
+						<option>10</option>
+						<option>20</option>
+						<option>30</option>
+						<option>60</option>
+						<option>120</option>
+					</select>
+				</label>
+			</fieldset>
 		</div>
 
 		<div class="box center flex stretch">
 			<fieldset>
 				<legend>Switches & read-only flags</legend>
-				<div class="button-grid">
+				<div class="grid grid-6-cols button-grid">
 					<button data-prop="ansiBands">ansiBands</button>
 					<button data-prop="loRes">loRes</button>
-					<button data-prop="noteLabels">noteLabels</button>
 					<button data-prop="outlineBars">outlineBars</button>
 					<button data-prop="roundBars">roundBars</button>
 					<button data-prop="showLedMask">showLedMask</button>
-					<button data-prop="showScaleX">showScaleX</button>
-					<button data-prop="showScaleY">showScaleY</button>
 					<button data-prop="spreadGradient">spreadGradient</button>
 				</div>
 				<hr>
@@ -364,9 +362,12 @@
 
 			<fieldset>
 				<legend>Demo features added via callback</legend>
-				<button data-feature="showLogo" class="full-width">Pulsating Logo</button><br>
-				<button data-feature="energyMeter" class="full-width">Energy meters</button><br>
-				<button data-feature="songProgress" class="full-width">Song progress bar</button>
+				<div class="grid grid-2-cols button-grid">
+					<button data-feature="canvasHover">Band data on hover</button>
+					<button data-feature="energyMeter">Energy meters</button>
+					<button data-feature="showLogo">Pulsating Logo</button>
+					<button data-feature="songProgress">Song progress bar</button>
+				</div>
 			</fieldset>
 		</div>
 

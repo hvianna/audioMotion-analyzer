@@ -6,25 +6,53 @@
 
 import {
 	AudioMotionAnalyzer,
-	LAYOUT_SINGLE,
+	COLORMODE_GRADIENT,
+	COLORMODE_LEVEL,
 	ENERGY_BASS,
 	ENERGY_HIGHMID,
 	ENERGY_LOWMID,
 	ENERGY_MIDRANGE,
 	ENERGY_PEAK,
 	ENERGY_TREBLE,
+	FILTER_D,
+	FILTER_TILT3,
 	LEDS_MODERN,
 	LEDS_OFF,
-	LEDS_VINTAGE
-} from './audioMotion-analyzer.js';
+	LEDS_VINTAGE,
+	LABELS_X_FREQS,
+	LABELS_X_OFF,
+	LABELS_Y_DB,
+	LABELS_Y_OFF,
+	LAYOUT_COMBINED,
+	LAYOUT_HORIZONTAL,
+	LAYOUT_SINGLE,
+	LAYOUT_VERTICAL,
+	MIRROR_LEFT,
+	MIRROR_OFF,
+	MIRROR_RIGHT,
+	MODE_BARS,
+	MODE_GRAPH,
+	PEAKS_DROP,
+	PEAKS_FADE,
+	PEAKS_OFF,
+	RADIAL_OFF,
+	RADIAL_OUTWARD,
+	SCALE_BARK,
+	SCALE_LOG
+} from '../src/audioMotion-analyzer.js';
 
 const audioEl             = document.getElementById('audio'),
 	  backgroundSelection = document.getElementById('bgColor'),
 	  container           = document.getElementById('container'),
-	  presetSelection     = document.getElementById('presets');
+	  presetSelection     = document.getElementById('presets'),
+	  customLeds          = document.getElementById('customLeds'),
+	  ledHeight           = document.getElementById('ledHeight'),
+	  gapHeight           = document.getElementById('gapHeight');
+
 
 // container background options
 const bgOptions = [
+	[ 'Black', '#000' ],
 	[ 'Dark',  'transparent' ],
 	[ 'Light', '#ccc' ],
 	[ 'Gray',  'dimgray' ],
@@ -41,186 +69,220 @@ const presets = [
 	{
 		name: 'Classic LED bars',
 		options: {
-			mode: 'bars',
+			mode: MODE_BARS,
 			alphaBars: false,
 			ansiBands: true,
 			bandResolution: 3,
 			barSpace: .5,
-			channelLayout: 'single',
-			colorMode: 'gradient',
-			frequencyScale: 'log',
+			channelLayout: LAYOUT_SINGLE,
+			colorMode: COLORMODE_GRADIENT,
+			frequencyScale: SCALE_LOG,
 			ledBars: LEDS_VINTAGE,
+			linearAmplitude: true,
+			linearBoost: 1.8,
 			lumiBars: false,
 			maxFreq: 20000,
 			minFreq: 25,
-			mirror: 0,
-			radial: false,
+			mirror: MIRROR_OFF,
+			radial: RADIAL_OFF,
 			reflexRatio: 0,
 			showLedMask: true,
-			showPeaks: true
+			showPeaks: PEAKS_DROP,
+			weightingFilter: FILTER_TILT3
 		},
-		theme: { name: 'classic', modifiers: {} }
+		theme: { name: 'classic', modifiers: {} },
+		ledParams: []
+	},
+	{
+		name: 'Square LEDs',
+		options: {
+			mode: MODE_BARS,
+			alphaBars: false,
+			ansiBands: true,
+			bandResolution: 7,
+			barSpace: .25,
+			channelLayout: LAYOUT_SINGLE,
+			colorMode: COLORMODE_GRADIENT,
+			frequencyScale: SCALE_LOG,
+			ledBars: LEDS_VINTAGE,
+			linearAmplitude: false,
+			lumiBars: false,
+			maxFreq: 20000,
+			minFreq: 25,
+			mirror: MIRROR_OFF,
+			radial: RADIAL_OFF,
+			reflexRatio: 0,
+			showLedMask: false,
+			showPeaks: PEAKS_FADE,
+			weightingFilter: FILTER_TILT3
+		},
+		theme: 'rainbow',
+		ledParams: [0,0]
 	},
 	{
 		name: 'Mirror wave',
 		options: {
-			mode: 'graph',
+			mode: MODE_GRAPH,
 			bandResolution: 0,
-			channelLayout: 'single',
+			channelLayout: LAYOUT_SINGLE,
 			fillAlpha: .6,
 			lineWidth: 1.5,
 			maxFreq: 20000,
 			minFreq: 30,
-			mirror: -1,
-			radial: false,
+			mirror: MIRROR_LEFT,
+			peakLine: 0,
+			radial: RADIAL_OFF,
 			reflexAlpha: 1,
 			reflexBright: 1,
 			reflexRatio: .5,
-			showPeaks: false,
-			showScaleX: false
+			showPeaks: PEAKS_OFF,
+			showScaleX: LABELS_X_OFF
 		},
 		theme: 'rainbow'
 	},
 	{
 		name: 'Radial spectrum',
 		options: {
-			mode: 'bars',
+			mode: MODE_BARS,
 			bandResolution: 4,
 			barSpace: .1,
-			channelLayout: 'single',
+			channelLayout: LAYOUT_SINGLE,
 			ledBars: LEDS_OFF,
 			maxFreq: 20000,
 			minFreq: 20,
-			mirror: 0,
-			radial: true,
-			showPeaks: true,
+			mirror: MIRROR_OFF,
+			radial: RADIAL_OUTWARD,
+			showPeaks: PEAKS_DROP,
 			spinSpeed: 1
 		},
 		theme: 'rainbow'
 	},
 	{
-		name: 'Bark scale + Linear level',
+		name: 'Bark scale + Reflex',
 		options: {
-			mode: 'bars',
+			mode: MODE_BARS,
 			bandResolution: 0,
-			channelLayout: 'single',
-			frequencyScale: 'bark',
+			channelLayout: LAYOUT_SINGLE,
+			frequencyScale: SCALE_BARK,
 			linearAmplitude: true,
 			linearBoost: 1.8,
 			maxFreq: 20000,
 			minFreq: 20,
-			mirror: 0,
-			radial: false,
+			mirror: MIRROR_OFF,
+			radial: RADIAL_OFF,
 			reflexAlpha: .25,
 			reflexBright: 1,
 			reflexFit: true,
 			reflexRatio: .25,
-			showPeaks: true,
-			showScaleX: true,
-			weightingFilter: 'D'
+			showPeaks: PEAKS_DROP,
+			showScaleX: LABELS_X_FREQS,
+			weightingFilter: FILTER_D
 		},
 		theme: { name: 'rainbow', modifiers: { horizontal: true } }
 	},
 	{
 		name: 'Dual channel combined',
 		options: {
-			mode: 'graph',
+			mode: MODE_GRAPH,
 			bandResolution: 0,
-			channelLayout: 'dual-combined',
+			channelLayout: LAYOUT_COMBINED,
 			fillAlpha: .25,
-			frequencyScale: 'bark',
+			frequencyScale: SCALE_LOG,
 			linearAmplitude: true,
 			linearBoost: 1.8,
 			lineWidth: 1.5,
 			maxFreq: 20000,
 			minFreq: 20,
-			mirror: 0,
-			radial: false,
+			mirror: MIRROR_OFF,
+			peakLine: .5,
+			radial: RADIAL_OFF,
 			reflexRatio: 0,
-			showPeaks: false,
-			weightingFilter: 'D'
+			showPeaks: PEAKS_DROP,
+			weightingFilter: FILTER_D
 		},
 		theme: [ 'steelblue', 'orangered' ]
 	},
 	{
 		name: 'roundBars + bar-level',
 		options: {
-			mode: 'bars',
+			mode: MODE_BARS,
 			bandResolution: 7,
 			alphaBars: false,
 			ansiBands: false,
 			barSpace: .25,
-			channelLayout: 'single',
-			colorMode: 'bar-level',
-			frequencyScale: 'log',
+			channelLayout: LAYOUT_SINGLE,
+			colorMode: COLORMODE_LEVEL,
+			frequencyScale: SCALE_LOG,
 			ledBars: LEDS_OFF,
 			linearAmplitude: true,
 			linearBoost: 1.6,
 			lumiBars: false,
 			maxFreq: 16000,
 			minFreq: 30,
-			mirror: 0,
-			radial: false,
+			mirror: MIRROR_OFF,
+			radial: RADIAL_OFF,
 			reflexRatio: .5,
 			reflexAlpha: 1,
 			roundBars: true,
-			showPeaks: false,
-			showScaleX: false,
+			showPeaks: PEAKS_OFF,
+			showScaleX: LABELS_X_OFF,
 			smoothing: .7,
-			weightingFilter: 'D'
+			weightingFilter: FILTER_D
 		},
 		theme: 'rainbow'
 	},
 	{
 		name: 'Testing config 1',
 		options: {
-			mode: 'graph',
+			mode: MODE_GRAPH,
 			bandResolution: 0,
-			channelLayout: 'single',
+			channelLayout: LAYOUT_SINGLE,
 			linearAmplitude: false,
 			reflexRatio: .4,
-			showPeaks: true,
-			showScaleX: false,
-			mirror: -1,
+			showPeaks: PEAKS_DROP,
+			showScaleX: LABELS_X_OFF,
+			mirror: MIRROR_LEFT,
 			maxFreq: 8000,
 			minFreq: 20,
 			lineWidth: 2,
-			fillAlpha: .2
+			fillAlpha: .2,
+			peakLine: 0
 		},
 		theme: { name: 'rainbow', modifiers: {} }
 	},
 	{
 		name: 'Testing config 2',
 		options: {
-			mode: 'bars',
+			mode: MODE_BARS,
 			bandResolution: 7,
 			alphaBars: false,
 			ansiBands: false,
 			barSpace: .1,
-			channelLayout: 'dual-vertical',
+			channelLayout: LAYOUT_VERTICAL,
 			ledBars: LEDS_MODERN,
 			lumiBars: false,
-			radial: false,
+			radial: RADIAL_OFF,
 			reflexRatio: 0,
-			showPeaks: true,
-			showScaleX: false,
-			mirror: 0,
+			showPeaks: PEAKS_DROP,
+			showScaleX: LABELS_X_OFF,
+			mirror: MIRROR_OFF,
 			maxFreq: 16000,
 			minFreq: 20
 		},
-		theme: [ { name: 'steelblue', modifiers: {} }, { name: 'orangered', modifiers: {} } ]
+		theme: [ { name: 'steelblue', modifiers: {} }, { name: 'orangered', modifiers: {} } ],
+		ledParams: []
 	},
 	{
 		// gradient sample images for docs are created with a 27.5 Hz square wave (volume: 1) in the oscillator
 		name: 'Testing config 3',
 		options: {
-			mode: 'bars',
+			mode: MODE_BARS,
 			bandResolution: 3,
 			alphaBars: false,
 			ansiBands: false,
 			barSpace: .4,
-			channelLayout: 'single',
-			frequencyScale: 'log',
+			channelLayout: LAYOUT_SINGLE,
+			frequencyScale: SCALE_LOG,
 			ledBars: LEDS_OFF,
 			linearAmplitude: true,
 			linearBoost: 1,
@@ -229,12 +291,12 @@ const presets = [
 			minDecibels: -85,
 			maxFreq: 12000,
 			minFreq: 60,
-			mirror: 0,
-			radial: false,
+			mirror: MIRROR_OFF,
+			radial: RADIAL_OFF,
 			reflexRatio: 0,
-			showPeaks: false,
-			showScaleX: false,
-			weightingFilter: 'D'
+			showPeaks: PEAKS_OFF,
+			showScaleX: LABELS_X_OFF,
+			weightingFilter: FILTER_D
 		}
 	},
 	{
@@ -245,32 +307,34 @@ const presets = [
 			ansiBands: true,
 			bandResolution: 4,
 			barSpace: .25,
-			channelLayout: 'dual-horizontal',
-			colorMode: 'gradient',
+			channelLayout: LAYOUT_HORIZONTAL,
+			colorMode: COLORMODE_GRADIENT,
 			flipColors: false,
-			frequencyScale: 'log',
+			frequencyScale: SCALE_LOG,
 			horizontalGradient: false,
 			ledBars: LEDS_VINTAGE,
 			linearAmplitude: true,
 			lumiBars: false,
 			maxFreq: 20000,
 			minFreq: 20,
-			mirror: 1,
-			mode: 'bars',
+			mirror: MIRROR_RIGHT,
+			mode: MODE_BARS,
 			outlineBars: false,
-			radial: false,
+			radial: RADIAL_OFF,
 			reflexRatio: 0,
 			showLedMask: true,
-			showPeaks: true,
-			showScaleX: true,
-			showScaleY: true,
+			showPeaks: PEAKS_DROP,
+			showScaleX: LABELS_X_FREQS,
+			showScaleY: LABELS_Y_DB,
 			splitGradient: false
-		}
+		},
+		ledParams: []
 	}
 ];
 
 // Demo-specific features
 const features = {
+	canvasHover: true,
 	energyMeter: false,
 	showLogo: true,
 	songProgress: false
@@ -360,10 +424,7 @@ document.querySelectorAll('[data-setting]').forEach( el => {
 
 document.querySelectorAll('[data-custom]').forEach( el => {
 	el.addEventListener( 'input', () => {
-		const active    = document.getElementById('customLeds').checked,
-			  ledHeight = document.getElementById('ledHeight').value,
-			  gapHeight = document.getElementById('gapHeight').value;
-		audioMotion.setLeds( ...( active ? [ ledHeight, gapHeight ] : [] ) );
+		audioMotion.setLeds( ...( customLeds.checked ? [ ledHeight.value, gapHeight.value ] : [] ) );
 	});
 });
 
@@ -408,31 +469,35 @@ audioMotion.registerTheme( 'prism-new', {
 });
 */
 
-/*
-audioMotion.setXAxis({
-	addLabels: true,
+audioMotion.setScaleX({
+//	backgroundColor: '#0008',
+//	color: '#fff',
+//	fontSize: .15,
+//	highlightColor: '#4f4',
 	labels: [
 		800,
-		[ 3000, '|' ],
+		[ 3000, '|', true ],
 		[ 440, 'A4', true ],
 	],
-//	overlay: true,
-//	height: 40
-});
-*/
-
-audioMotion.setYAxis({
-	linearInterval: 10,
-//	color: '#8888',
-//	lineDash: [2,4],
-//	midLineColor: '#5558',
-//	midLineDash: [2,8],
-//	showSubdivisions: false,
-//	operation: 'screen',
-//	showUnit: false,
-//	width: 25
+//	overlay: false
 });
 
+audioMotion.setScaleY({
+//	color           : '#888',
+//	dbInterval      : 6,
+//	fontSize        : .15,
+//	lineDash        : [2,4],
+//	operation       : 'destination-over',
+//	percentInterval : 20,
+//	showSubdivisions: true,
+//	showUnit        : true,
+//	subLineColor    : '#555',
+//	subLineDash     : [2,8]
+});
+
+
+//console.log( 'getScaleX', audioMotion.getScaleX() );
+//console.log( 'getScaleY', audioMotion.getScaleY() );
 
 // Populate UI select elements and add event listeners
 
@@ -442,10 +507,18 @@ presets.forEach( ( preset, index ) => {
 });
 
 presetSelection.addEventListener( 'change', () => {
-	const { options, theme } = presets[ presetSelection.value ];
+	const { options, theme, ledParams } = presets[ presetSelection.value ];
 	audioMotion.setOptions( options );
 	if ( theme )
 		audioMotion.setTheme( theme );
+	if ( ledParams ) {
+		customLeds.checked = !! ledParams.length;
+		if ( ledParams.length ) {
+			ledHeight.value = ledParams[0];
+			gapHeight.value = ledParams[1];
+		}
+		audioMotion.setLeds( ...ledParams );
+	}
 	updateUI();
 });
 
@@ -574,7 +647,7 @@ let micStream,
 
 micButton.addEventListener( 'click', () => {
 	if ( micStream ) {
-		audioMotion.disconnectInput( micStream, true ); // disconnect mic stream and release audio track
+		audioMotion.disconnectInput( micStream, true ); // disconnect mic stream (also stops it)
 		toggleMute( false );
 		micButton.className = '';
 		micStream = null;
@@ -582,12 +655,12 @@ micButton.addEventListener( 'click', () => {
 	else {
 		navigator.mediaDevices.getUserMedia( { audio: true } )
 		.then( stream => {
-			micStream = audioMotion.audioCtx.createMediaStreamSource( stream );
+			audioMotion.connectInput( stream );
 			toggleMute( true ); // mute the speakers to avoid feedback loop from the microphone
-			audioMotion.connectInput( micStream );
 			micButton.className = 'active';
+			micStream = stream; // save stream reference for disconnection
 		})
-		.catch( err => console.log('Error accessing user microphone.') );
+		.catch( err => console.log( 'Error accessing user microphone.', err ) );
 	}
 });
 
@@ -805,27 +878,29 @@ function drawCallback( instance, { timestamp, themes } ) {
 		ctx.lineTo( canvas.width * audioEl.currentTime / audioEl.duration, posY );
 		ctx.lineCap = 'round';
 		ctx.lineWidth = lineWidth;
-		ctx.globalAlpha = audioMotion.getEnergy(); // use song energy to control the bar opacity
+		ctx.globalAlpha = .5;
 		ctx.strokeStyle = themes[0].gradient;      // use left channel color gradient to draw the progress bar
 		ctx.stroke();
 	}
 
-	// show band data on mouse hover - TO-DO: handle dual channel layouts!
-	if ( mouseX != null && audioMotion.channelLayout == LAYOUT_SINGLE && ! audioMotion.radial ) {
-		const bar = instance.getBars().findLast( b => mouseX >= b.posX );
-		if ( bar ) {
-			ctx.font = `${ fontSize }px monospace`;
-			ctx.textAlign = mouseX < 150 ? 'left' : 'right';
-			const x = mouseX + ( mouseX < 150 ? fontSize : -fontSize ),
-				  left = x - fontSize * ( mouseX < 150 ? 1.25 : 7.25 );
+	if ( features.canvasHover ) {
+		// show band data on mouse hover - TO-DO: handle dual channel layouts!
+		if ( mouseX != null && audioMotion.channelLayout == LAYOUT_SINGLE && ! audioMotion.radial ) {
+			const bar = instance.getBars().findLast( b => mouseX >= b.posX );
+			if ( bar ) {
+				ctx.font = `${ fontSize }px monospace`;
+				ctx.textAlign = mouseX < 150 ? 'left' : 'right';
+				const x = mouseX + ( mouseX < 150 ? fontSize : -fontSize ),
+					  left = x - fontSize * ( mouseX < 150 ? 1.25 : 7.25 );
 
-			ctx.fillStyle = '#0008';
-			ctx.fillRect( left, mouseY - fontSize * 1.75, fontSize * 8.5, fontSize * 6 );
+				ctx.fillStyle = '#0008';
+				ctx.fillRect( left, mouseY - fontSize * 1.75, fontSize * 8.5, fontSize * 6 );
 
-			ctx.fillStyle = '#fff';
-			ctx.fillText( bar.freq.toFixed(2) + 'Hz', x, mouseY );
-			ctx.fillText( 'p: ' + bar.peak[0].toFixed(6), x, mouseY + fontSize * 1.5 );
-			ctx.fillText( 'v: ' + bar.value[0].toFixed(6), x, mouseY + fontSize * 3 );
+				ctx.fillStyle = '#fff';
+				ctx.fillText( bar.freq.toFixed(2) + 'Hz', x, mouseY );
+				ctx.fillText( 'p: ' + bar.peak[0].toFixed(6), x, mouseY + fontSize * 1.5 );
+				ctx.fillText( 'v: ' + bar.value[0].toFixed(6), x, mouseY + fontSize * 3 );
+			}
 		}
 	}
 }
