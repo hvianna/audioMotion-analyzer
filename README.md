@@ -1,6 +1,6 @@
 ## About
 
-> **WARNING:** code in **alpha** stage is subject to major, drastic changes! **DO NOT USE THIS IN PRODUCTION!**
+> **WARNING:** code in **alpha** stage is subject to major, drastic changes! **DO NOT USE THIS VERSION IN PRODUCTION!**
 
 **audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer built upon **Web Audio** and **Canvas** JavaScript APIs.
 
@@ -170,7 +170,6 @@ property                              | type      | default | notes
 [`peakDecayTime`](#peakdecaytime)     | *number*  | `750` |
 [`peakHoldTime`](#peakholdtime)       | *number*  | `500` |
 [`peakLine`](#peakline)               | *boolean* | `false` |
-[`peaks`](#peaks)                     | *string*  | `"drop"` |
 [`radial`](#radial)                   | *number*  | `0` |
 [`radius`](#radius)                   | *number*  | `0.5` |
 [`reflexAlpha`](#reflexalpha)         | *number*  | `0.15` |
@@ -180,6 +179,7 @@ property                              | type      | default | notes
 [`roundBars`](#roundbars)             | *boolean* | `false` |
 [`showFPS`](#showfps)                 | *boolean* | `false` |
 [`showLedMask`](#showledmask)         | *boolean* | `true` |
+[`showPeaks`](#showpeaks)             | *string*  | `"drop"` |
 [`showScaleX`](#showscalex)           | *string*  | `"freqs"` |
 [`showScaleY`](#showscaley)           | *string*  | `"off"` |
 [`smoothing`](#smoothing)             | *number*  | `0.7` |
@@ -325,9 +325,9 @@ import {
 	PEAKS_DROP,
 	PEAKS_FADE,
 	PEAKS_OFF,
-	RADIAL_INNER,
+	RADIAL_INWARD,
 	RADIAL_OFF,
-	RADIAL_OUTER,
+	RADIAL_OUTWARD,
 	REASON_CREATE,
 	REASON_FULLSCREENCHANGE,
 	REASON_LORES,
@@ -720,7 +720,7 @@ This will prevent the canvas size from changing, when switching the low resoluti
 
 ### `maxDecibels`
 
-**Value:** a *number*. The default value is `-25`.
+**Value:** a *number*. The default value is `-30`.
 
 Maximum amplitude value, in decibels, represented in the Y-axis of the analyzer.
 
@@ -754,7 +754,7 @@ See also [`minFreq`](#minfreq) and [`setFreqRange()`](#setfreqrange).
 
 ### `minDecibels`
 
-**Value:** a *number*. The default value is `-85`.
+**Value:** a *number*. The default value is `-90`.
 
 Minimum amplitude value, in decibels, represented in the Y-axis of the analyzer.
 
@@ -918,7 +918,7 @@ For effect priority when combined with other settings, see [`isOutlineBars`](#is
 
 **Value:** a *number*. The default value is `750`.
 
-Time in milliseconds for peaks to fall down from maximum amplitude to zero, or to completely fade out (when [`fadePeaks`](#fadepeaks) is `true`).
+Time in milliseconds for peaks to fall down from maximum amplitude to zero, or to completely fade out (when [`showPeaks`](#showpeaks) is set to `"fade"`).
 
 It must be a number greater than or equal to zero. Invalid values are ignored.
 
@@ -934,7 +934,7 @@ Time in milliseconds for peaks to hold their value before they begin to fall or 
 
 It must be a number greater than or equal to zero. Invalid values are ignored.
 
-See also [`fadePeaks`](#fadepeaks), [`peakDecayTime`](#peakdecaytime) and [`showPeaks`](#showpeaks).
+See also [`peakDecayTime`](#peakdecaytime) and [`showPeaks`](#showpeaks).
 
 ### `peakLine`
 
@@ -946,23 +946,7 @@ Determines the line width used to connect the amplitude peaks, when [`mode`](#mo
 
 A value of `0` means no line.
 
-Please note that [`peaks`](#peaks) must be set to either `"drop"` or `"fade"`, although peak lines will always display the *"drop"* behavior.
-
-### `peaks`
-
-*Available since v5.0.0; formerly `showPeaks` (since v1.0.0)*
-
-**Value:** a *string*. The default value is `"drop"`.
-
-Determines the display and behavior of amplitude peaks.
-
-value    | [Constant](#constants) | Description
----------|------------------------|--------------
-`"off"`  | `PEAKS_OFF`  | Disable display of amplitude peaks (including [`peakLine`](#peakline))
-`"drop"` | `PEAKS_DROP` | Display peaks that fall down over time
-`"fade"` | `PEAKS_FADE` | Display peaks that fade out over time
-
-See also [`peakDecayTime`](#peakdecaytime) and [`peakHoldTime`](#peakholdtime).
+Please note that [`showPeaks`](#showpeaks) must be set to either `"drop"` or `"fade"`, although peak lines will always display the *"drop"* behavior.
 
 ### `pixelRatio` *(read only)*
 
@@ -985,9 +969,9 @@ Whether to render the spectrum analyzer as a circle with radial bars.
 
 value | [Constant](#constants) | Description
 ------|------------------------|----------------
-`0`   | `RADIAL_OFF`   | Disables radial
-`1`   | `RADIAL_OUTER` | Bars grow towards the edges of the screen
-`-1`  | `RADIAL_INNER` | Bars grow towards the center of the screen
+`0`   | `RADIAL_OFF`     | Disables radial
+`1`   | `RADIAL_OUTWARD` | Bars grow towards the edges of the screen
+`-1`  | `RADIAL_INWARD`  | Bars grow towards the center of the screen
 
 When [`channelLayout`](#channellayout) is set to `"dual-vertical"`, left channel bars grow outwards and right channel bars grow inwards, so both `1` and `-1` values have the same effect.
 
@@ -1086,6 +1070,20 @@ Whether to display the "unlit" LED elements. Has no effect when [`ledBars`](#led
 :----------------------:|:-----------------------:
 ![ledmask-off](img/ledmask_off.png) | ![ledmask-on](img/ledmask_on.png)
 
+### `showPeaks`
+
+**Value:** a *string*. The default value is `"drop"`.
+
+Determines the display and behavior of amplitude peaks.
+
+value    | [Constant](#constants) | Description
+---------|------------------------|--------------
+`"off"`  | `PEAKS_OFF`  | Disable display of amplitude peaks and [`peakLine`](#peakline)
+`"drop"` | `PEAKS_DROP` | Display peaks that fall down over time
+`"fade"` | `PEAKS_FADE` | Display peaks that fade out over time
+
+See also [`peakDecayTime`](#peakdecaytime) and [`peakHoldTime`](#peakholdtime).
+
 ### `showScaleX`
 
 *Available since v3.0.0; formerly `showScale` (since v1.0.0)*
@@ -1096,7 +1094,7 @@ Whether to display scale labels on the X-axis.
 
 Value            | [Constant](#constants)  | Description
 -----------------|-------------------------|---------------
-`"off"`          | `LABELS_X_OFF`          | Do not display the X-axis scale.
+`"off"`          | `LABELS_X_OFF`          | Do not display scale labels on the X-axis.
 `"custom"`       | `LABELS_X_CUSTOM`       | Display custom `labels` defined via [`setScaleX()`](#setscalex).
 `"freqs"`        | `LABELS_X_FREQS`        | Display octaves center frequencies - see also [`ansiBands`](#ansibands).
 `"freqs-custom"` | `LABELS_X_FREQS_CUSTOM` | Display center frequencies and any additional custom labels.
@@ -1104,7 +1102,7 @@ Value            | [Constant](#constants)  | Description
 
 Several display properties of the scale can be customized via [`setScaleX()`](#setscalex) method.
 
-!> For best results of `"notes"` setting in [octave bands modes](#bandresolution), make sure [`frequencyScale`](#frequencyscale) is set to `"log"` and [`ansiBands`](#ansibands) is set to `false`, so bands are tuned to the equal temperament musical scale.
+?> For best results of `"notes"` setting in [octave bands modes](#bandresolution), make sure [`frequencyScale`](#frequencyscale) is set to `"log"` and [`ansiBands`](#ansibands) is set to `false`, so bands are tuned to the equal temperament musical scale.
 
 ### `showScaleY`
 
@@ -1116,7 +1114,7 @@ Whether to display the level/amplitude scale on the Y-axis.
 
 Value       | [Constant](#constants) | Description
 ------------|------------------------|---------------
-`"off"`     | `LABELS_Y_OFF`         | Do not display the Y-axis scale.
+`"off"`     | `LABELS_Y_OFF`         | Do not display scale labels on the Y-axis.
 `"db"`      | `LABELS_Y_DB`          | Display labels in decibels.
 `"percent"` | `LABELS_Y_PERCENT`     | Display labels in percent values.
 
@@ -1128,7 +1126,7 @@ See also [`minDecibels`](#mindecibels) and [`maxDecibels`](#maxdecibels).
 
 ### `smoothing`
 
-**Value:** a *number*. The default value is `0.5`.
+**Value:** a *number*. The default value is `0.7`.
 
 Determines the analyzer's [smoothingTimeConstant](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/smoothingTimeConstant).
 
@@ -1375,7 +1373,7 @@ Returns an array with current data for each analyzer bar. Each array element is 
 `peak` and `value` elements are floats between 0 and 1, relative to the lowest and highest volume levels defined by [`minDecibels`](#mindecibels) and [`maxDecibels`](#maxdecibels).
 
 `hold` values are integers and indicate the hold time (in frames) for the current peak.
-Negative values mean the peak is currently fading or falling down, depending on the value of [`fadePeaks`](#fadepeaks).
+Negative values mean the peak is currently falling down or fading out.
 
 Please note that `hold` and `value` will have only one element when [`channelLayout`](#channellayout-string) is set to *'single'*, but `peak` is always a two-element array.
 

@@ -4,7 +4,32 @@
  * https://github.com/hvianna/audioMotion-analyzer
  */
 
-import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
+import {
+	AudioMotionAnalyzer,
+	ALPHABARS_FULL,
+	ALPHABARS_OFF,
+	BANDS_FFT,
+	BANDS_OCTAVE_FULL,
+	BANDS_OCTAVE_HALF,
+	BANDS_OCTAVE_3RD,
+	BANDS_OCTAVE_4TH,
+	BANDS_OCTAVE_6TH,
+	BANDS_OCTAVE_8TH,
+	BANDS_OCTAVE_12TH,
+	BANDS_OCTAVE_24TH,
+	COLORMODE_GRADIENT,
+	COLORMODE_LEVEL,
+	FILTER_D,
+	FILTER_TILT3,
+	LEDS_MODERN,
+	LEDS_OFF,
+	MODE_BARS,
+	MODE_GRAPH,
+	PEAKS_DROP,
+	PEAKS_OFF,
+	RADIAL_INWARD,
+	RADIAL_OFF
+} from '../src/audioMotion-analyzer.js';
 
 const videoEl = document.getElementById('video'),
 	  container = document.getElementById('container'),
@@ -20,75 +45,75 @@ const presets = [
 	{
 		name: 'Classic LEDs',
 		options: {
-			mode: 'bars',
-			alphaBars: 'off',
-			bandResolution: 6,
-			barSpace: .4,
-			colorMode: 'gradient',
-			ledBars: 'modern',
+			mode: MODE_BARS,
+			alphaBars: ALPHABARS_OFF,
+			bandResolution: BANDS_OCTAVE_3RD,
+			barSpace: .25,
+			colorMode: COLORMODE_GRADIENT,
+			ledBars: LEDS_MODERN,
 			maxFreq: 16000,
-			radial: false,
+			radial: RADIAL_OFF,
 			reflexRatio: 0,
 			showLedMask: true,
-			showPeaks: true
+			showPeaks: PEAKS_DROP,
+			weightingFilter: FILTER_TILT3
 		},
 		theme: { name: 'classic', modifiers: {} }
 	},
 	{
 		name: 'Mirror wave',
 		options: {
-			mode: 'graph',
-			alphaBars: 'off',
-			bandResolution: 0,
+			mode: MODE_GRAPH,
+			alphaBars: ALPHABARS_OFF,
+			bandResolution: BANDS_FFT,
 			fillAlpha: .6,
 			lineWidth: 2,
 			maxFreq: 16000,
-			radial: false,
+			radial: RADIAL_OFF,
 			reflexAlpha: 1,
 			reflexBright: 1,
 			reflexRatio: .5,
-			showPeaks: false
+			showPeaks: PEAKS_OFF
 		},
 		theme: { name: 'rainbow', modifiers: { horizontal: true } }
 	},
 	{
 		name: 'Radial inverse',
 		options: {
-			mode: 'bars',
-			bandResolution: 6,
+			mode: MODE_BARS,
+			bandResolution: BANDS_OCTAVE_8TH,
 			barSpace: .25,
 			fillAlpha: .5,
-			ledBars: 'off',
+			ledBars: LEDS_OFF,
 			linearAmplitude: true,
 			linearBoost: 1.8,
 			lineWidth: 1.5,
 			maxDecibels: -30,
 			maxFreq: 16000,
-			radial: true,
-			radialInvert: true,
-			showPeaks: true,
+			radial: RADIAL_INWARD,
+			showPeaks: PEAKS_DROP,
 			spinSpeed: 2,
 			outlineBars: true,
-			weightingFilter: 'D'
+			weightingFilter: FILTER_D
 		},
 		theme: 'rainbow'
 	},
 	{
 		name: 'Reflex Bars',
 		options: {
-			mode: 'bars',
-			alphaBars: 'off',
-			bandResolution: 4,
+			mode: MODE_BARS,
+			alphaBars: ALPHABARS_OFF,
+			bandResolution: BANDS_OCTAVE_4TH,
 			barSpace: .25,
-			colorMode: 'bar-level',
-			ledBars: 'off',
+			colorMode: COLORMODE_LEVEL,
+			ledBars: LEDS_OFF,
 			maxFreq: 16000,
 			outlineBars: false,
-			radial: false,
+			radial: RADIAL_OFF,
 			reflexAlpha: .5,
 			reflexFit: true,
 			reflexRatio: .3,
-			showPeaks: true
+			showPeaks: PEAKS_DROP
 		},
 		theme: 'rainbow'
 	}

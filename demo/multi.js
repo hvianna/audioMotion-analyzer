@@ -4,7 +4,29 @@
  * https://github.com/hvianna/audioMotion-analyzer
  */
 
-import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
+import {
+	AudioMotionAnalyzer,
+	ALPHABARS_FULL,
+	BANDS_FFT,
+	BANDS_OCTAVE_FULL,
+	BANDS_OCTAVE_HALF,
+	BANDS_OCTAVE_3RD,
+	BANDS_OCTAVE_4TH,
+	BANDS_OCTAVE_6TH,
+	BANDS_OCTAVE_8TH,
+	BANDS_OCTAVE_12TH,
+	BANDS_OCTAVE_24TH,
+	FILTER_D,
+	FILTER_TILT3,
+	LABELS_X_OFF,
+	LABELS_Y_DB,
+	LEDS_MODERN,
+	LAYOUT_COMBINED,
+	MODE_BARS,
+	MODE_GRAPH,
+	PEAKS_DROP,
+	PEAKS_OFF
+} from '../src/audioMotion-analyzer.js';
 
 let audioMotion = [],
 	selectedAnalyzer = 0;
@@ -49,26 +71,25 @@ document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 // main analyzer
 audioMotion[0].setOptions({
-	mode: 'bars',
-	bandResolution: 3,
-	barSpace: .4,
-	frequencyScale: 'bark',
-	ledBars: 'modern',
+	mode: MODE_BARS,
+	bandResolution: BANDS_OCTAVE_3RD,
+	barSpace: .3,
+	ledBars: LEDS_MODERN,
 	linearAmplitude: true,
-	linearBoost: 1.6,
+	linearBoost: 1.8,
 	maxFreq: 20000,
 	minFreq: 30,
-	showScaleY: 'db',
-	weightingFilter: 'D'
+	showScaleY: LABELS_Y_DB,
+	weightingFilter: FILTER_TILT3
 });
 
 audioMotion[0].setLeds( 6, 5 ); // thinner leds look better in a small canvas :)
 
 // top right
 audioMotion[1].setOptions({
-	mode: 'graph',
-	bandResolution: 0,
-	channelLayout: 'dual-combined',
+	mode: MODE_GRAPH,
+	bandResolution: BANDS_FFT,
+	channelLayout: LAYOUT_COMBINED,
 	fillAlpha: .3,
 	linearAmplitude: true,
 	linearBoost: 1.2,
@@ -76,9 +97,9 @@ audioMotion[1].setOptions({
 	maxFreq: 16000,
 	minFreq: 30,
 	peakLine: true,
-	showScaleX: 'off',
-	showPeaks: true,
-	weightingFilter: 'D'
+	showScaleX: LABELS_X_OFF,
+	showPeaks: PEAKS_DROP,
+	weightingFilter: FILTER_D
 });
 
 audioMotion[1].setTheme( 'steelblue', 0 );
@@ -86,17 +107,17 @@ audioMotion[1].setTheme( 'orangered', 1 );
 
 // bottom right
 audioMotion[2].setOptions({
-	mode: 'bars',
-	alphaBars: 'full',
-	bandResolution: 7,
+	mode: MODE_BARS,
+	alphaBars: ALPHABARS_FULL,
+	bandResolution: BANDS_OCTAVE_12TH,
 	barSpace: .1,
 	minDecibels: -60,
 	maxDecibels: -30,
 	maxFreq: 16000,
 	minFreq: 30,
-	showPeaks: false,
-	showScaleX: 'off',
-	weightingFilter: 'D'
+	showPeaks: PEAKS_OFF,
+	showScaleX: LABELS_X_OFF,
+	weightingFilter: FILTER_D
 });
 
 audioMotion[2].setTheme('rainbow');
