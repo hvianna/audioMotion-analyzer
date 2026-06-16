@@ -381,6 +381,8 @@ declare class AudioMotionAnalyzer {
   public toggleThemeModifier( modifier: string, channel?: number ): void;
 
   public unregisterTheme(name: string): boolean;
+
+  public static weightingGain( freq: number, filter: WeightingFilter ): number;
 }
 
 export { AudioMotionAnalyzer };
