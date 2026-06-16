@@ -39,7 +39,7 @@ import {
 	RADIAL_OUTWARD,
 	SCALE_BARK,
 	SCALE_LOG
-} from '../src/audioMotion-analyzer.js';
+} from './audioMotion-analyzer.js';
 
 const audioEl             = document.getElementById('audio'),
 	  backgroundSelection = document.getElementById('bgColor'),
