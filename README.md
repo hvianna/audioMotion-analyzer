@@ -1945,6 +1945,30 @@ Parameter  | type     | description
 See also [`setThemeModifiers()`](#setthememodifiers) and [`setTheme()`](#settheme).
 
 
+## Static Methods
+
+### `weightingGain()`
+
+*Available since v5.0.0*
+
+Returns gain, in decibels, to correct the amplitude value at a given frequency, according to the specified weighting filter.
+
+**Syntax:**
+
+```js
+AudioMotionAnalyzer.weightingGain(frequency, filter)
+```
+
+*Since this is a static method, always call it as `AudioMotionAnalyzer.weightingGain()`, rather than as a method of an instanced object.*
+
+Parameter   | type     | description
+------------|----------|-----------------
+`frequency` | *number* | Frequency value, in Hz
+`filter`    | *string* | A valid [weighting filter](#weightingfilter)
+
+**Return value:** a *number*, representing the gain (in dB) to be added to the original amplitude value.
+
+
 ## Custom Errors
 
 *Available since v2.0.0*
