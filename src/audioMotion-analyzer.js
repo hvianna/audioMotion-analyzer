@@ -2711,13 +2711,20 @@ class AudioMotionAnalyzer {
 				if ( isGraphMode ) {
 					setBarColor(); // select channel gradient
 
-					if ( isRadial && ! isDualHorizontal ) {
-						if ( isMirror ) {
-							let p;
-							while ( p = points.pop() )
-								_ctx.lineTo( ...radialXY( ...p, -1 ) );
+					if ( _radial ) {
+						if ( isDualHorizontal ) {
+							// completes path up to the end of channel for dual-horizontal (needed when bandResolution > 0)
+							_ctx.lineTo( ...radialXY( analyzerWidth >> 1, 0 ) );
 						}
-						_ctx.closePath();
+						else {
+							if ( _mirror ) {
+								// mirrors graph (all channel layouts except dual-horizontal)
+								let p;
+								while ( p = points.pop() )
+									_ctx.lineTo( ...radialXY( ...p, -1 ) );
+							}
+							_ctx.closePath();
+						}
 					}
 
 					if ( _lineWidth > 0 )
