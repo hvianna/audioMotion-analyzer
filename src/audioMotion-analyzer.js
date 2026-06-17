@@ -2726,6 +2726,10 @@ class AudioMotionAnalyzer {
 							_ctx.closePath();
 						}
 					}
+					else if ( _bars[ _bars.length - 1 ].posX + _lineWidth < finalX ) {
+						// draw to the bottom right edge of canvas/channel, except if last data point is too close (avoid ugly vertical line)
+						_ctx.lineTo( finalX, analyzerBottom );
+					}
 
 					if ( _lineWidth > 0 )
 						_ctx.stroke();
@@ -2739,7 +2743,7 @@ class AudioMotionAnalyzer {
 							_ctx.arc( centerX, centerY, innerRadius, start, end, isDualHorizontal ? ! invertedChannel : true );
 						}
 						else {
-							// close the fill area
+							// close the fill area (but don't stroke it!)
 							_ctx.lineTo( finalX, analyzerBottom );
 							_ctx.lineTo( initialX, analyzerBottom );
 						}
