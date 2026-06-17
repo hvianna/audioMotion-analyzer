@@ -2674,7 +2674,7 @@ class AudioMotionAnalyzer {
 						// set opacity for peak
 						if ( _peaks == PEAKS_FADE )
 							_ctx.globalAlpha = peakAlpha;
-						else if ( isOutline && _lineWidth > 0 ) // when lineWidth == 0 ctx.globalAlpha remains set to `fillAlpha`
+						else if ( isOutline && ( _lineWidth > 0 || fillAlpha == 0 ) ) // when lineWidth == 0 and fillAlpha > 0, ctx.globalAlpha is already set to `fillAlpha`
 							_ctx.globalAlpha = 1;
 						else if ( isAlpha )						// isAlpha (alpha based on peak value) supersedes fillAlpha if lineWidth == 0
 							_ctx.globalAlpha = peakValue;
