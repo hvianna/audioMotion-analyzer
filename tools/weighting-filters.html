@@ -47,16 +47,25 @@
 	</div>
 
 
-<script src="weightingdB.js"></script>
+<script type="module">
+import {
+	AudioMotionAnalyzer,
+	FILTER_A,
+	FILTER_B,
+	FILTER_C,
+	FILTER_D,
+	FILTER_468,
+	FILTER_TILT3,
+	FILTER_TILT45
+} from '../src/audioMotion-analyzer.js';
 
-<script>
 const table   = document.getElementById('tableFilters').tBodies[0],
 	  canvas  = document.getElementById('canvas'),
 	  tooltip = document.getElementById('tooltip-canvas'),
 	  legend  = document.getElementById('legend'),
 	  ctx     = canvas.getContext('2d'),
 	  colors  = [ '#039aff', '#ffd800', '#ff3500', '#000000', '#00aa2e', '#4100ff', '#ff00d2' ],
-	  filters = [ 'a', 'b', 'c', 'd', '468', 'tilt3', 'tilt4.5' ];
+	  filters = [ FILTER_A, FILTER_B, FILTER_C, FILTER_D, FILTER_468, FILTER_TILT3, FILTER_TILT45 ];
 
 const GRAPH_BORDER = 50,
 	  GRAPH_HEIGHT = 400,
@@ -131,7 +140,7 @@ function buildGraph() {
 			ctx.setLineDash([]);
 			for ( let p = 1; p < 5; p += .05 ) {
 				const freq   = 10 ** p,
-					  gain   = weightingdB( freq, filter ),
+					  gain   = AudioMotionAnalyzer.weightingGain( freq, filter ),
 					  method = p == 1 || gain < -50 || gain > 20 ? 'moveTo' : 'lineTo';
 				ctx[ method ]( graphX( freq ), graphY( gain ) );
 				if ( p.toFixed(2) == 4.3 ) { // at ~20kHz change to dashed lines
@@ -152,7 +161,7 @@ function buildGraph() {
 for ( const freq of [ 16, 31.5, 63, 100, 125, 200, 250, 400, 500, 800, 1e3, 2e3, 3150, 4e3, 5e3, 6300, 7100, 8e3, 9e3, 10e3, 12500, 14e3, 16e3, 20e3, 31500 ] ) {
 	let html = `<tr${ freq == 1e3 ? ' class="onekhz"' : '' }><td>${ freq }`;
 	for ( let i = 0; i < filters.length; i++ ) {
-		let response = Number( weightingdB( freq, filters[ i ] ).toFixed(1) ).toFixed(1); // workaround to avoid '-0.0'
+		let response = Number( AudioMotionAnalyzer.weightingGain( freq, filters[ i ] ).toFixed(1) ).toFixed(1); // fix '-0.0' returned by toFixed() for small negative values
 		if ( response > 0 )
 			response = '+' + response;
 		html += `<td style="background: ${ colors[ i ] }22">${ response }`;
