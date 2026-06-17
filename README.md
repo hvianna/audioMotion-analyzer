@@ -1959,7 +1959,7 @@ Returns gain, in decibels, to correct the amplitude value at a given frequency, 
 AudioMotionAnalyzer.weightingGain(frequency, filter)
 ```
 
-*Since this is a static method, always call it as `AudioMotionAnalyzer.weightingGain()`, rather than as a method of an instanced object.*
+*Since this is a static method, always call it as `AudioMotionAnalyzer.weightingGain()`, rather than as a method of an instantiated object.*
 
 Parameter   | type     | description
 ------------|----------|-----------------
