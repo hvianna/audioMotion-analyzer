@@ -2136,7 +2136,7 @@ class AudioMotionAnalyzer {
 
 			for ( const bar of _bars ) {
 				const { binLo, binHi, ratioLo, ratioHi } = bar;
-				let barValue = Math.max( interpolate( binLo, ratioLo ), interpolate( binHi, ratioHi ) );
+				let barValue = this._bandRes == BANDS_FFT ? fftData[ binLo ] : Math.max( interpolate( binLo, ratioLo ), interpolate( binHi, ratioHi ) );
 
 				// check additional bins (if any) for this bar and keep the highest value
 				for ( let j = binLo + 1; j < binHi; j++ ) {
