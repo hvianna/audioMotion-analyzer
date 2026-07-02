@@ -55,7 +55,7 @@ try {
 				const instNo = instance.canvas.parentElement.id.slice(-1); // get instance number from container id
 				console.log( `[#${instNo}] ${reason}: ${instance.canvas.width} x ${instance.canvas.height}` );
 				if ( reason != 'create' )
-					updateUI();
+					updateUI( el => audioMotion[ el.dataset.setting == 'volume' ? 0 : selectedAnalyzer ] );
 			}
 		});
 	}
@@ -102,8 +102,7 @@ audioMotion[1].setOptions({
 	weightingFilter: FILTER_D
 });
 
-audioMotion[1].setTheme( 'steelblue', 0 );
-audioMotion[1].setTheme( 'orangered', 1 );
+audioMotion[1].setTheme( [ 'steelblue', 'orangered' ] );
 
 // bottom right
 audioMotion[2].setOptions({
@@ -122,54 +121,33 @@ audioMotion[2].setOptions({
 
 audioMotion[2].setTheme('rainbow');
 
+// Returns active instance - note: volume is always set/read from the first instance
+const getInstance = el => audioMotion[ el && el.dataset.setting == 'volume' ? 0 : selectedAnalyzer ];
+
 // Analyzer selector
+
+const highlightSelectedAnalyzer = () => document.querySelectorAll('canvas').forEach( el => el.classList.toggle( 'selected', el.parentElement.id.slice(-1) == selectedAnalyzer ) );
 
 document.querySelectorAll('[name="analyzer"]').forEach( el => {
 	el.addEventListener( 'click', () => {
 		selectedAnalyzer = document.querySelector('[name="analyzer"]:checked').value;
-		updateUI();
+		updateUI( getInstance );
+		highlightSelectedAnalyzer();
 	});
 });
 
-// user can also select an analyzer by clicking on it
 document.querySelectorAll('canvas').forEach( el => {
 	el.addEventListener( 'click', () => {
 		selectedAnalyzer = el.parentElement.id.slice(-1);
 		document.querySelector(`[name="analyzer"][value="${selectedAnalyzer}"`).checked = true;
-		updateUI();
+		updateUI( getInstance );
+		highlightSelectedAnalyzer();
 	});
 });
 
-// Event listeners for UI controls
-
-document.querySelectorAll('button[data-prop]').forEach( el => {
-	el.addEventListener( 'click', () => {
-		if ( el.dataset.func ) {
-			const [ funcName, args ] = parseDatasetFunction( el.dataset.func, el.value );
-			audioMotion[ selectedAnalyzer ][ funcName ]( ...args );
-		}
-		else
-			audioMotion[ selectedAnalyzer ][ el.dataset.prop ] = ! audioMotion[ selectedAnalyzer ][ el.dataset.prop ];
-		el.classList.toggle( 'active', audioMotion[ selectedAnalyzer ][ el.dataset.prop ] );
-	});
-});
-
-document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'input', () => {
-		if ( el.dataset.func ) {
-			const [ funcName, args ] = parseDatasetFunction( el.dataset.func, el.value );
-			audioMotion[ selectedAnalyzer ][ funcName ]( ...args );
-		}
-		else
-			audioMotion[ el.dataset.setting == 'volume' ? 0 : selectedAnalyzer ][ el.dataset.setting ] = el.value;
-		updateUI();
-	});
-});
-
+// set event listeners for UI controls
+addUIEventListeners( getInstance );
 populateThemeSelections( audioMotion[0] );
-
-// Display value of ranged input elements
-document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'input', () => updateRangeElement( el, audioMotion[ selectedAnalyzer ] ) ) );
 
 // File upload
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
@@ -183,40 +161,5 @@ document.getElementById('btn_getOptions').addEventListener( 'click', () => {
 });
 
 // Initialize UI elements
-updateUI();
-
-// Load song from user's computer
-function loadSong( el ) {
-	const fileBlob = el.files[0],
-		  audioEl  = document.getElementById('audio');
-
-	if ( fileBlob ) {
-		audioEl.src = URL.createObjectURL( fileBlob );
-		audioEl.play();
-	}
-}
-
-// Update UI elements to reflect the selected analyzer's current settings
-function updateUI() {
-	document.querySelectorAll('canvas').forEach( el => el.classList.toggle( 'selected', el.parentElement.id.slice(-1) == selectedAnalyzer ) );
-	document.querySelectorAll('[data-setting]').forEach( el => {
-		if ( el.dataset.setting.indexOf('(') >= 0 ) { // it's a function
-			const [ funcName, args ] = parseDatasetFunction( el.dataset.setting );
-			el.value = audioMotion[ selectedAnalyzer ][ funcName ]( ...args );
-		}
-		else
-			el.value = audioMotion[ el.dataset.setting == 'volume' ? 0 : selectedAnalyzer ][ el.dataset.setting ];
-	});
-	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el, audioMotion[ selectedAnalyzer ] ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => {
-		let ret;
-		if ( el.dataset.prop.indexOf('(') >= 0 ) { // it's a function
-			const [ funcName, args ] = parseDatasetFunction( el.dataset.prop );
-			ret = audioMotion[ selectedAnalyzer ][ funcName ]( ...args );
-		}
-		else
-			ret = audioMotion[ selectedAnalyzer ][ el.dataset.prop ];
-
-		el.classList.toggle( 'active', !! ret );
-	});
-}
+updateUI( getInstance );
+highlightSelectedAnalyzer();

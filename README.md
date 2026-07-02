@@ -1473,24 +1473,28 @@ getScaleY()
 
 *Available since v5.0.0*
 
-Returns the name of the active theme, and optionally the state of theme modifiers, for the given channel.
+Retrieves the active theme name and, optionally, the state of theme modifiers for one or both analyzer channels.
 
 **Syntax:**
 
 ```js
-getTheme()
-getTheme(channel, includeModifiers)
-getTheme(includeModifiers)
+getTheme()                          // returns theme names for both channels (array of strings)
+getTheme(includeModifiers)          // returns theme and modifiers for both channels (array of objects)
+getTheme(channel)                   // returns theme name for given channel (string)
+getTheme(channel, includeModifiers) // returns theme and modifiers for given channel (object)
 ```
 
 Parameter | type | description
 ----------|------|-----------------
-`channel` | *number* | *(optional)* channel to set (`0` = left, `1` = right) - if not specified, considers channel 0
-`includeModifiers` | *boolean* | *(optional)* `true` to also return the state of theme modifiers
+`channel` | *number* | Channel index (`0` = left, `1` = right). If omitted or invalid, returns data for both channels in an array.
+`includeModifiers` | *boolean* | If `true`, includes the state of theme modifiers (returns an object).
 
-**Return value:** a *string* representing the theme name, or an *object* with `name` and `modifiers` properties.
+**Return value:**
+- *string* → theme name (single channel, no modifiers)
+- *object* → `{ name, modifiers }` (single channel with modifiers)
+- *array* → of strings or objects (both channels)
 
-See also [`setTheme()`](#settheme).
+See also [`getThemeModifiers()`](#getthememodifiers) and [`setTheme()`](#settheme).
 
 ### `getThemeData()`
 
@@ -1549,23 +1553,15 @@ Returns the state of theme modifiers for the given channel.
 ```js
 getThemeModifiers()
 getThemeModifiers(channel)
-getThemeModifiers(modifier, channel)
 ```
 
 Parameter  | type     | description
 -----------|----------|-----------------
-`modifier` | *string* | *(optional)* desired modifier - if undefined, returns an object with all modifiers
-`channel`  | *number* | *(optional)* channel to set (`0` = left, `1` = right) - if not specified, considers channel 0
+`channel`  | *number* | Channel index (`0` = left, `1` = right) - **if omitted, considers channel 0**
 
-**Return value:** a *boolean* representing the state of the selected modifier, when `modifier` is specified;
-otherwise, an *object* with the structure below:
+**Return value:** an *object* - see [`setThemeModifiers()`](#setthememodifiers) for object structure.
 
-property     | type      | description
--------------|-----------|---------------
-`horizontal` | *boolean* | If `true`, the color gradient is rendered horizontally, instead of vertically
-`revert`     | *boolean* | If `true`, reverses the order in which theme colors are applied
-
-See also [`getTheme()`](#gettheme) and [`setThemeModifiers()`](#setthememodifiers).
+See also [`getTheme()`](#gettheme).
 
 ### `registerTheme()`
 
@@ -1644,7 +1640,7 @@ Theme | [`ledBars`](#ledbars) = `"off"` | [`ledBars`](#ledbars) = `"vintage"` | 
 **bluey-B**<br>(custom `pos` / custom `level`)   | ![bluey-b-gradient](img/levels-bluey-b-gradient.png) | ![bluey-b-trueleds](img/levels-bluey-b-trueleds.png) | ![bluey-b-barlevel](img/levels-bluey-b-barlevel.png)
 
 
-See also: [unregisterTheme()](#unregistertheme-name)
+See also: [unregisterTheme()](#unregistertheme)
 
 ?> Any color theme, including the built-in ones, may be modified at any time by simply re-registering the same theme name.
 
@@ -1745,7 +1741,7 @@ property           | type      | description | default
 -------------------|-----------|-------------|---------
 `backgroundColor`  | *string*  | Background color of the X-axis. Any valid CSS color format is acceptable. Use a blank string or `"transparent"` for fully transparent background | `"#0008"`
 `color`            | *string*  | Color of labels | `"#fff"`
-`fontSize`         | *number*  | Font size for labels. Values between `0.0` and `1.0` (recommended for responsivity) represent a fraction of one tenth of the smallest canvas dimension (width or height). A minimum of 10px is enforced for the computed size. Values greater than `1` are interpreted as fixed pixel sizes. | `0.15`
+`fontSize`         | *number*  | Font size for labels. For responsive behavior, values between `0.0` and `1.0` represent a fraction of one tenth of the canvas width or height (whichever is smaller). A minimum of 10px is enforced for the computed value. Values greater than `1` are interpreted as fixed pixel sizes. | `0.15`
 `highlightColor`   | *string*  | Color used to highlight *C* notes when [`showScaleX`](#showscalex) is set to `"notes"`, and for labels highlighted via `labels` property (see below) | `"#4f4"`
 `labels`           | *array*   | Custom labels displayed when [`showScaleX`](#showscalex) is set to `"custom"` or `"freqs-custom"`. Each element of the array must be either a number, representing the frequency in Hz, or an array of **[ &lt;frequency&gt; *(number)*, &lt;label&gt; *(string)*, &lt;highlight&gt; *(boolean, optional)* ]** (see example below) | octaves center frequencies
 `overlay`          | *boolean* | Whether the X-axis should overlay the bottom of the analyzer area | `false`
@@ -1765,7 +1761,7 @@ audioMotion.setScaleX({
 });
 ```
 
-See also [`showScaleX`](#showscalex).
+See also [`getScaleX()`](#getscalex) and [`showScaleX`](#showscalex).
 
 ### `setScaleY()`
 
@@ -1788,7 +1784,7 @@ property           | type      | description | default
 -------------------|-----------|-------------|---------
 `color`            | *string*  | Color of labels and lines | `"#888"`
 `dbInterval`       | *number*  | Interval between labels, in decibels. Applied when [`showScaleY`](#showscaley) is set to `"db"`. | `6`
-`fontSize`         | *number*  | Font size for labels. Values between `0.0` and `1.0` (recommended for responsivity) represent a fraction of one tenth of the smallest canvas dimension (width or height). A minimum of 10px is enforced for the computed size. Values greater than `1` are interpreted as fixed pixel sizes. | `0.15`
+`fontSize`         | *number*  | Font size for labels. For responsive behavior, values between `0.0` and `1.0` represent a fraction of one tenth of the canvas width or height (whichever is smaller). A minimum of 10px is enforced for the computed value. Values greater than `1` are interpreted as fixed pixel sizes. | `0.15`
 `lineDash`         | *array*   | Line style. See [format reference](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/setLineDash) | `[2,4]`
 `operation`        | *string*  | Compositing operation used to draw labels and lines. See [Reference](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation). **Note: some operations may hinder or prevent the proper visualization of analyzer graphs.** | `"destination-over"`
 `percentInterval`  | *number*  | Interval between labels, in percentage values. Applied when [`showScaleY`](#showscaley) is set to `"percent"` | `20`
@@ -1809,7 +1805,7 @@ audioMotion.setScaleY({
 });
 ```
 
-See also [`showScaleY`](#showscaley).
+See also [`getScaleY()`](#getscaley) and [`showScaleY`](#showscaley).
 
 ### `setTheme()`
 
@@ -1820,52 +1816,71 @@ Sets the color theme for one or both analyzer channels.
 **Syntax:**
 
 ```js
-setTheme(name, channel)
-setTheme(name, modifiers, channel)
-setTheme(themeObject, channel)
+// set same theme (and modifiers) on both channels
+setTheme() // reset themes and modifiers to defaults
+setTheme(name)
+setTheme(name, modifiers)
+setTheme(themeObject)
+
+// set different theme (and modifiers) on each channel
+setTheme([name, name])
+setTheme([themeObject, themeObject])
+
+// set theme (and modifiers) per channel
+setTheme(channel) // reset to defaults only on given channel
+setTheme(channel, name)
+setTheme(channel, name, modifiers)
+setTheme(channel, themeObject)
 ```
 
-Parameter     | type   | description
---------------|--------|------------------
-`name`        | *string* or *array* | theme name, or an array of theme names - must be a name as returned by [`getThemeList()`](#getthemelist)
-`modifiers`   | *object* | *(optional)* a modifiers object, as returned by [`getThemeModifiers()`](#getthememodifiers)
-`themeObject` | *object* or *array* | a theme object, as returned by [`getTheme()`](#gettheme) or an array of such objects
-`channel`     | *number* | *(optional)* channel to set (`0` = left, `1` = right)
+Parameter     | type     | description
+--------------|----------|------------------
+`channel`     | *number* | Channel index to set (`0` = left, `1` = right)
+`name`        | *string* | Valid theme name - see [`getThemeList()`](#getthemelist)
+`modifiers`   | *object* | Modifiers object - see [`setThemeModifiers()`](#setthememodifiers)
+`themeObject` | *object* | Theme object, as returned by [`getTheme()`](#gettheme) with the `includeModifiers` argument set to `true`
 
 When passing arrays for `name` or `themeObject` you can assign different themes to each channel at once.
-When using a single `name` or `themeObject`, if `channel` is not specified, the same theme will be applied to both channels.
+When using a single `name` or `themeObject`, if `channel` is not specified, the same settings will be applied to both channels.
 
-!> Note that when setting theme modifiers, properties not defined in the passed object will be reset to their default values. To selectively enable or disable modifiers while preserving others, use [`setThemeModifiers( name, state )`](#setthememodifiers).
+**When called without arguments, resets theme and modifiers to defaults on both channels. If only a channel is specified, resets on given channel only.**
 
 **Return value:** none (`undefined`).
 
-See also [`channelLayout`](#channellayout), [`registerTheme()`](#registertheme) and [`spreadGradient`](#spreadgradient).
+See also [`channelLayout`](#channellayout), [`registerTheme()`](#registertheme), [`setThemeModifiers()`](#setthememodifiers) and [`spreadGradient`](#spreadgradient).
 
 ### `setThemeModifiers()`
+
+*Available since v5.0.0*
+
+Sets theme modifiers for one or both analyzer channels.
 
 **Syntax:**
 
 ```js
-setThemeModifiers()
-setThemeModifiers(modifier, state, channel)
-setThemeModifiers(modifiersObject, channel)
+setThemeModifiers()                   // reset modifiers to defaults on both channels
+setThemeModifiers(channel)            // reset to defaults on given channel only
+setThemeModifiers(modifiers)          // set same modifiers on both channels
+setThemeModifiers(channel, modifiers) // set modifiers on given channel only
 ```
 
-Parameter     | type   | description
---------------|--------|------------------
-`modifier`    | *string* | modifier to set (see below)
-`state`       | *boolean* | desired state for selected modifier
-`modifiersObject` | *object* | modifiers object, as returned by [`getThemeModifiers()`](#getthememodifiers)
-`channel`         | *number* | *(optional)* channel to set (`0` = left, `1` = right)
+Parameter   | type     | description
+------------|----------|------------------
+`channel`   | *number* | Channel index to set (`0` = left, `1` = right)
+`modifiers` | *object* | Modifiers object (see below)
 
-Modifier | description
----------|----------------
-`"horizontal"` | Renders the color gradient horizontally across the screen, instead of vertically - has no effect in [`radial`](#radial) spectrum or when [`ledBars`](#ledbars) is set to `"vintage"`
-`"revert"`     | Reverts the order of the theme colors
+**When called without arguments, resets modifiers to defaults on both channels. If only a channel is specified, resets on given channel only.**
+
+Modifiers object structure:
+
+Property     | type      | description
+-------------|-----------|---------------
+`horizontal` | *boolean* | When `true`, the color gradient is rendered horizontally - has no effect in [`radial`](#radial) spectrum or when [`ledBars`](#ledbars) is set to `"vintage"`
+`reverse`    | *boolean* | When `true`, reverses the order in which theme colors are applied
 
 **Return value:** none (`undefined`).
 
-See also [`toggleThemeModifier()`](#togglethememodifier) and [`setTheme()`](#settheme).
+See also [`getThemeModifiers()`](#getthememodifiers) and [`setTheme()`](#settheme).
 
 ### `start()`
 
@@ -1923,26 +1938,25 @@ You can set the [`fsElement`](#fselement-htmlelement-object) constructor option 
 
 ?> Fullscreen requests must be triggered by user action, like a key press or mouse click, so you must call this method from within a user-generated event handler.
 
-### `toggleThemeModifier()`
+### `unregisterTheme()`
 
 *Available since v5.0.0*
 
-Toggles the state of a theme modifier for the given channel.
+Unregisters a color theme.
 
 **Syntax:**
 
 ```js
-toggleThemeModifier(modifier, channel)
+unregisterTheme(name)
 ```
 
-Parameter  | type     | description
------------|----------|-----------------
-`modifier` | *string* | desired modifier
-`channel`  | *number* | *(optional)* desired channel (`0` = left, `1` = right) - **if not specified, toggles modifier on both channels**
+parameter | type     | description
+----------|----------|---------------
+`name`    | *string* | Valid theme name. May include built-in themes. See [`getThemeList()`](#getthemelist).
 
-**Return value:** none (`undefined`).
+**Return value:** a *boolean* value. `true` on success, or `false` if theme is in use or not registered.
 
-See also [`setThemeModifiers()`](#setthememodifiers) and [`setTheme()`](#settheme).
+See also [`registerTheme()`](#registertheme).
 
 
 ## Static Methods

@@ -343,13 +343,14 @@ declare class AudioMotionAnalyzer {
   public getScaleX(): ScaleXProperties;
   public getScaleY(): ScaleYProperties;
 
-  public getTheme( channel?: number ): string;
-  public getTheme( channel?: number, includeModifiers: true ): ThemeNameAndModifiers;
+  public getTheme( includeModifiers: true ): ThemeNameAndModifiers[];
+  public getTheme( includeModifiers?: false ): string[];
+  public getTheme( channel: number, includeModifiers: true ): ThemeNameAndModifiers;
+  public getTheme( channel: number, includeModifiers?: false ): string;
 
   public getThemeData( name: string ): ThemeData | null;
 
   public getThemeModifiers( channel?: number ): ThemeModifiers;
-  public getThemeModifiers( modifier: string, channel?: number ): boolean;
 
   public getThemeList(): string[];
 
@@ -365,20 +366,20 @@ declare class AudioMotionAnalyzer {
 
   public setSensitivity(minDecibels: number, maxDecibels: number): void;
 
-  public setTheme( name: string, modifiers?: ThemeModifiers, channel?: number ): void;
-  public setTheme( options: ThemeNameAndModifiers, channel?: number ): void;
+  public setTheme( name: string, modifiers?: ThemeModifiers ): void;
+  public setTheme( nameAndModifiers?: ThemeNameAndModifiers ): void;
   public setTheme( options: string[] | ThemeNameAndModifiers[] ): void;
+  public setTheme( channel: number, name: string, modifiers?: ThemeModifiers ): void;
+  public setTheme( channel: number, nameAndModifiers?: ThemeNameAndModifiers ): void;
 
-  public setThemeModifiers( modifier: string, value: boolean, channel?: number ): void;
-  public setThemeModifiers( modifier: ThemeModifiers | null, channel?: number ): void;
   public setThemeModifiers( channel?: number ): void;
+  public setThemeModifiers( channel: number, modifiers?: ThemeModifiers ): void;
 
   public start(): void;
   public stop(): void;
 
   public toggleAnalyzer(force?: boolean): boolean;
   public toggleFullscreen(): void;
-  public toggleThemeModifier( modifier: string, channel?: number ): void;
 
   public unregisterTheme(name: string): boolean;
 

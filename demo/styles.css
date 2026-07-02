@@ -376,7 +376,7 @@ input.wide-range {
 }
 
 .selected {
-	outline: 3px solid #fff4;
+	outline: 3px ridge #fff4;
 }
 
 .stretch {

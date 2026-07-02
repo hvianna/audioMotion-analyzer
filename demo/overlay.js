@@ -39,8 +39,8 @@ const videoEl = document.getElementById('video'),
 const presets = [
 	{
 		name: 'Defaults',
-		options: undefined,
-		theme: { name: 'classic', modifiers: {} } // clear modifiers
+		options: null,
+		theme: null
 	},
 	{
 		name: 'Classic LEDs',
@@ -58,7 +58,7 @@ const presets = [
 			showPeaks: PEAKS_DROP,
 			weightingFilter: FILTER_TILT3
 		},
-		theme: { name: 'classic', modifiers: {} }
+		theme: 'classic'
 	},
 	{
 		name: 'Mirror wave',
@@ -134,77 +134,8 @@ catch( err ) {
 // Display package version at the footer
 document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
-// Event listeners for UI controls
-
-document.querySelectorAll('button[data-prop]').forEach( el => {
-	el.addEventListener( 'click', () => {
-		if ( el.dataset.func ) {
-			const [ funcName, args ] = parseDatasetFunction( el.dataset.func, el.value );
-			audioMotion[ funcName ]( ...args );
-		}
-		else
-			audioMotion[ el.dataset.prop ] = ! audioMotion[ el.dataset.prop ];
-		el.classList.toggle( 'active', audioMotion[ el.dataset.prop ] );
-	});
-});
-
-document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'input', () => {
-		if ( el.dataset.func ) {
-			const [ funcName, args ] = parseDatasetFunction( el.dataset.func, el.value );
-			audioMotion[ funcName ]( ...args );
-		}
-		else
-			audioMotion[ el.dataset.setting ] = el.value;
-		updateUI();
-	});
-});
-
-presetSelection.addEventListener( 'change', () => {
-	const { options, theme } = presets[ presetSelection.value ];
-	audioMotion.setOptions( options );
-	if ( theme )
-		audioMotion.setTheme( theme );
-	updateUI();
-});
-
-// Display value of ranged input elements
-document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'input', () => updateRangeElement( el, audioMotion ) ) );
-
-// Populate the UI presets select element
-presets.forEach( ( preset, index ) => {
-	const option = new Option( preset.name, index );
-	presetSelection.append( option );
-});
+// Set event listeners for UI controls
 
 populateThemeSelections( audioMotion );
-
-// Initialize settings with options from a preset
-presetSelection.value = 3;
-audioMotion.setOptions( presets[ presetSelection.value ].options );
-updateUI();
-
-// Update UI elements to reflect the analyzer's current settings
-function updateUI() {
-	document.querySelectorAll('[data-setting]').forEach( el => {
-		if ( el.dataset.setting.indexOf('(') >= 0 ) { // it's a function
-			const [ funcName, args ] = parseDatasetFunction( el.dataset.setting );
-			el.value = audioMotion[ funcName ]( ...args );
-		}
-		else
-			el.value = audioMotion[ el.dataset.setting ];
-	});
-
-	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el, audioMotion ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => {
-		let ret;
-		if ( el.dataset.prop.indexOf('(') >= 0 ) { // it's a function
-			const [ funcName, args ] = parseDatasetFunction( el.dataset.prop );
-			ret = audioMotion[ funcName ]( ...args );
-		}
-		else
-			ret = audioMotion[ el.dataset.prop ];
-
-		el.classList.toggle( 'active', !! ret );
-	});
-}
+addUIEventListeners( () => audioMotion );
+setPresets( presets, () => audioMotion, 3 ); // initialize with preset 3

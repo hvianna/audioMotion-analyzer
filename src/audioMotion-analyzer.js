@@ -247,7 +247,7 @@ const isEmpty = obj => {
 }
 
 // check if given value is numeric
-const isNumeric = val => ! isArray( val ) && val == +val; // note: +[] == []
+const isNumeric = val => ! isArray( val ) && typeof val != 'boolean' && val == +val; // note: +[] == [] and +false == false
 
 // check if given value is an object (not null or array, which are also considered objects)
 const isObject = val => typeof val == 'object' && !! val && ! isArray( val );
@@ -1118,23 +1118,33 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Returns the selected theme for the given channel
+	 * Returns the selected themes
 	 *
-	 * @param [{number}] channel - if undefined or invalid, considers channel 0
+	 * @param [{number}] channel - if undefined or invalid, returns data for both channels in an array
 	 * @param [{boolean}] `true` to include modifiers
-	 * @returns {string|object} theme name, or object with `name` and `modifiers`
+	 * @returns {string|object|array} theme name, object with `name` and `modifiers`, or an array
 	 */
 	getTheme( channel, includeModifiers ) {
-		if ( channel === true ) {
-			channel = 0;
-			includeModifiers = true;
+		if ( typeof channel == 'boolean' ) {
+			includeModifiers = channel;
+			channel = null;
 		}
-		else if ( ! isValidChannel( channel ) )
-			channel = 0;
 
-		const { name } = this._activeThemes[ channel ];
+		let channels = validateChannelArray( channel ),
+			isSingle = channels.length == 1,
+			ret      = isSingle ? null : [];
 
-		return includeModifiers ? { name, modifiers: this.getThemeModifiers( channel ) } : name;
+		for ( const ch of channels ) {
+			const { name } = this._activeThemes[ ch ],
+				  theme    = includeModifiers ? { name, modifiers: this.getThemeModifiers( ch ) } : name;
+
+			if ( isSingle )
+				ret = theme;
+			else
+				ret.push( theme );
+		}
+
+		return ret;
 	}
 
 	/**
@@ -1159,21 +1169,15 @@ class AudioMotionAnalyzer {
 	/**
 	 * Returns the current state of theme modifiers for the given channel
 	 *
-	 * @param [{string}] desired modifier - if undefined, returns all modifiers
 	 * @param [{number}] channel - if undefined or invalid, considers channel 0
-	 * @returns {boolean|object} value of requested modifier, or object with all modifiers
+	 * @returns {object} object with all modifiers
 	 */
-	getThemeModifiers( modifier, channel ) {
-		if ( isNumeric( modifier ) ) {
-			channel = modifier;
-			modifier = null;
-		}
-
+	getThemeModifiers( channel ) {
 		if ( ! isValidChannel( channel ) )
 			channel = 0;
 
 		const { modifiers } = this._activeThemes[ channel ];
-		return modifier ? modifiers[ modifier ] : { ...modifiers };
+		return { ...modifiers };
 	}
 
 	/**
@@ -1367,32 +1371,32 @@ class AudioMotionAnalyzer {
 	/**
 	 * Set color theme
 	 *
+	 * @param [{number}] desired channel (0 or 1) - if not passed or invalid, sets both channels
 	 * @param {string|object|array} theme name, theme object as returned by getTheme(), or array of such types
-	 * @param [{object}] theme modifiers, as returned by getThemeModifiers() (only when first argument is a string)
-	 * @param [{number}] desired channel (0 or 1) - if empty or invalid, sets both channels (ignored when first argument is an array)
+	 * @param [{object}] theme modifiers, as returned by getThemeModifiers() (only when previous argument is a string)
 	 */
 	setTheme( ...args ) {
 		// if first argument is an array, make recursive calls for each channel
 		if ( isArray( args[0] ) ) {
-			for ( let ch = 0; ch < Math.max( 2, args[0].length ); ch++ )
-				this.setTheme( args[0][ ch ], ch );
+			for ( let ch = 0; ch < Math.min( 2, args[0].length ); ch++ )
+				this.setTheme( ch, args[0][ ch ] );
 			return;
 		}
 
-		const { name, modifiers } = isObject( args[0] ) ? args[0] : { name: args[0], modifiers: isObject( args[1] ) ? args[1] : null },
-			  channel             = args[2] ?? args[1],
-			  themeNames          = this.getThemeList(),
-			  isNameValid         = themeNames.includes( name );
+		const channel             = isNumeric( args[0] ) ? args.shift() : undefined, // NOTE: removes first argument from array when channel detected
+		 	  { name, modifiers } = isObject( args[0] ) ? args[0] : { name: args[0], modifiers: isObject( args[1] ) ? args[1] : null },
+			  themeNames          = this.getThemeList();
 
 		for ( const ch of validateChannelArray( channel ) ) {
-			if ( ! this._activeThemes[ ch ] )
-				this._activeThemes[ ch ] = { modifiers: { ...DEFAULT_THEME_MODIFIERS } }; // creates new entry (during constructor initialization)
+			// creates new entry and resets modifiers during constructor initialization and when called without parameters
+			if ( ! this._activeThemes[ ch ] || args.length == 0 )
+				this._activeThemes[ ch ] = { modifiers: { ...DEFAULT_THEME_MODIFIERS } };
 
-			this._activeThemes[ ch ].name = isNameValid ? name : this._activeThemes[ ch ].name || themeNames[0];
+			this._activeThemes[ ch ].name = themeNames.includes( name ) ? name : themeNames[0]; // reset to default theme on invalid name
 		}
 
 		if ( modifiers )
-			this.setThemeModifiers( modifiers, channel );
+			this.setThemeModifiers( ...( channel == undefined ? [ modifiers ] : [ channel, modifiers ] ) );
 		else
 			this._makeGrad();
 	}
@@ -1400,44 +1404,34 @@ class AudioMotionAnalyzer {
 	/**
 	 * Set theme modifiers
 	 *
-	 * @param [{string|object}] modifier name or modifiers object; if null or undefined resets to defaults
-	 * @param [{boolean}] desired value when setting a single modifier
-	 * @param [{number}] channel (0 or 1) - if empty or invalid, sets modifiers on both channels
+	 * @param [{number}] channel (0 or 1) - if not passed or invalid, sets modifiers on both channels
+	 * @param [{object}] modifiers object; if undefined or not an object, resets all modifiers to defaults
 	 */
-	setThemeModifiers( modifier, value, channel ) {
-		const validKeys = Object.keys( DEFAULT_THEME_MODIFIERS );
+	setThemeModifiers( channel, modifiers ) {
+		if ( isObject( channel ) ) {
+			modifiers = channel;
+			channel = undefined;
+		}
 
-		if ( modifier === null || modifier === undefined ) {
-			modifier = {};   // will reset to defaults
-			channel = value; // optional
-		}
-		else if ( isNumeric( modifier ) ) {
-			channel = modifier; // only channel passed
-			modifier = {};      // will reset to defaults
-		}
-		else if ( isObject( modifier ) ) {
-			channel = value;
-			modifier = deepCloneObject( modifier ); // make a copy, so we don't change user's original object
+		if ( isObject( modifiers ) ) {
+			// make a copy, so we don't change user's original object
+			modifiers = deepCloneObject( modifiers );
 
 			// remove invalid modifiers and ensure all values are boolean
-			for ( const key of Object.keys( modifier ) ) {
+			const validKeys = Object.keys( DEFAULT_THEME_MODIFIERS );
+			for ( const key of Object.keys( modifiers ) ) {
 				if ( validKeys.includes( key ) )
-					modifier[ key ] = !! modifier[ key ];
+					modifiers[ key ] = !! modifiers[ key ]; // TO-DO: improve this if we ever add non-boolean modifiers
 				else
-					delete modifier[ key ];
+					delete modifiers[ key ];
 			}
 		}
-		else if ( ! validKeys.includes( modifier ) ) // validates single modifier
-			return;
+		else
+			modifiers = { ...DEFAULT_THEME_MODIFIERS };
 
 		for ( const ch of validateChannelArray( channel ) ) {
-			const activeThemeData = this._activeThemes[ ch ];
-			if ( isObject( modifier ) ) {
-				// when passed an object, any modifier not present will be reset to its default value!
-				activeThemeData.modifiers = { ...DEFAULT_THEME_MODIFIERS, ...modifier };
-			}
-			else
-				activeThemeData.modifiers[ modifier ] = !! value;
+			const current = this._activeThemes[ ch ];
+			current.modifiers = { ...current.modifiers, ...modifiers }; // preserve current values for properties not defined in the passed object
 		}
 
 		this._makeGrad();
@@ -1502,17 +1496,6 @@ class AudioMotionAnalyzer {
 			else if ( fsEl.webkitRequestFullscreen )
 				fsEl.webkitRequestFullscreen();
 		}
-	}
-
-	/**
-	 * Toggle a theme modifier
-	 *
-	 * @param {string} modifier name
-	 * @param [{number}] channel (0 or 1) - if empty or invalid, toggles modifier on both channels
-	 */
-	toggleThemeModifier( modifier, channel ) {
-		for ( const ch of validateChannelArray( channel ) )
-			this.setThemeModifiers( modifier, ! this.getThemeModifiers( modifier, channel ), channel );
 	}
 
 	/**
@@ -3075,13 +3058,10 @@ class AudioMotionAnalyzer {
 		// callback functions properties
 		const callbacks = [ 'onCanvasDraw', 'onCanvasResize' ];
 
-		// allow other properties not in the defaults
-		const extraProps = [ 'themeLeft', 'themeRight' ];
-
 		// build an array of valid properties
-		const validProps = Object.keys( DEFAULT_SETTINGS ).concat( callbacks, extraProps );
+		const validProps = Object.keys( DEFAULT_SETTINGS ).concat( callbacks );
 
-		if ( useDefaults || options === undefined )
+		if ( useDefaults || options == undefined )
 			options = { ...DEFAULT_SETTINGS, ...options }; // merge options with defaults
 
 		for ( const prop of Object.keys( options ) ) {

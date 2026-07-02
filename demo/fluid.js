@@ -44,7 +44,6 @@ import {
 const audioEl             = document.getElementById('audio'),
 	  backgroundSelection = document.getElementById('bgColor'),
 	  container           = document.getElementById('container'),
-	  presetSelection     = document.getElementById('presets'),
 	  customLeds          = document.getElementById('customLeds'),
 	  ledHeight           = document.getElementById('ledHeight'),
 	  gapHeight           = document.getElementById('gapHeight');
@@ -63,8 +62,8 @@ const bgOptions = [
 const presets = [
 	{
 		name: 'Reset to defaults',
-		options: undefined,
-		theme: { name: 'classic', modifiers: {} } // clear modifiers
+		options: null,
+		theme: null
 	},
 	{
 		name: 'Classic LED bars',
@@ -90,7 +89,7 @@ const presets = [
 			showPeaks: PEAKS_DROP,
 			weightingFilter: FILTER_TILT3
 		},
-		theme: { name: 'classic', modifiers: {} },
+		theme: 'classic',
 		ledParams: []
 	},
 	{
@@ -104,7 +103,7 @@ const presets = [
 			channelLayout: LAYOUT_SINGLE,
 			colorMode: COLORMODE_GRADIENT,
 			frequencyScale: SCALE_LOG,
-			ledBars: LEDS_VINTAGE,
+			ledBars: LEDS_MODERN,
 			linearAmplitude: false,
 			lumiBars: false,
 			maxFreq: 20000,
@@ -138,7 +137,7 @@ const presets = [
 			showPeaks: PEAKS_OFF,
 			showScaleX: LABELS_X_OFF
 		},
-		theme: 'rainbow'
+		theme: { name: 'rainbow', modifiers: { horizontal: true } }
 	},
 	{
 		name: 'Radial spectrum',
@@ -248,7 +247,7 @@ const presets = [
 			fillAlpha: .2,
 			peakLine: 0
 		},
-		theme: { name: 'rainbow', modifiers: {} }
+		theme: 'rainbow'
 	},
 	{
 		name: 'Testing config 2',
@@ -269,7 +268,7 @@ const presets = [
 			maxFreq: 16000,
 			minFreq: 20
 		},
-		theme: [ { name: 'steelblue', modifiers: {} }, { name: 'orangered', modifiers: {} } ],
+		theme: [ 'steelblue', 'orangered' ],
 		ledParams: []
 	},
 	{
@@ -309,7 +308,6 @@ const presets = [
 			barSpace: .25,
 			channelLayout: LAYOUT_HORIZONTAL,
 			colorMode: COLORMODE_GRADIENT,
-			flipColors: false,
 			frequencyScale: SCALE_LOG,
 			horizontalGradient: false,
 			ledBars: LEDS_VINTAGE,
@@ -326,7 +324,7 @@ const presets = [
 			showPeaks: PEAKS_DROP,
 			showScaleX: LABELS_X_FREQS,
 			showScaleY: LABELS_Y_DB,
-			splitGradient: false
+			spreadGradient: false
 		},
 		ledParams: []
 	}
@@ -355,7 +353,7 @@ try {
 			onCanvasResize: ( reason, instance ) => {
 				console.log( `onCanvasResize called. Reason: ${reason}\nCanvas size is: ${instance.canvas.width} x ${instance.canvas.height}` );
 				if ( reason != 'create' )
-					updateUI();
+					updateUI( () => instance );
 			}
 		}
 	);
@@ -391,18 +389,10 @@ audioMotion.connectInput( gainNode );
 
 // Event listeners for UI controls
 
-document.querySelectorAll('[data-prop]').forEach( el => {
-	el.addEventListener( 'click', () => {
-		if ( el.dataset.func ) {
-			const [ funcName, args ] = parseDatasetFunction( el.dataset.func, el.value );
-			audioMotion[ funcName ]( ...args );
-		}
-		else
-			audioMotion[ el.dataset.prop ] = ! audioMotion[ el.dataset.prop ];
-		updateUI();
-	});
-});
+setPresets( presets, () => audioMotion );
+addUIEventListeners( () => audioMotion );
 
+// handle selection of custom demo features
 document.querySelectorAll('[data-feature]').forEach( el => {
 	el.addEventListener( 'click', () => {
 		features[ el.dataset.feature ] = ! features[ el.dataset.feature ];
@@ -410,64 +400,12 @@ document.querySelectorAll('[data-feature]').forEach( el => {
 	});
 });
 
-document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'input', () => {
-		if ( el.dataset.func ) {
-			const [ funcName, args ] = parseDatasetFunction( el.dataset.func, el.value );
-			audioMotion[ funcName ]( ...args );
-		}
-		else
-			audioMotion[ el.dataset.setting ] = el.value;
-		updateUI();
-	});
-});
-
+// custom LEDs
 document.querySelectorAll('[data-custom]').forEach( el => {
 	el.addEventListener( 'input', () => {
 		audioMotion.setLeds( ...( customLeds.checked ? [ ledHeight.value, gapHeight.value ] : [] ) );
 	});
 });
-
-// Display value of ranged input elements
-document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'input', () => updateRangeElement( el, audioMotion ) ) );
-
-/*
-// Add custom themes
-audioMotion.registerTheme( 'classic-A', {
-    colorStops: [ 'red', 'yellow', 'lime' ] // automatic color distribution
-});
-
-audioMotion.registerTheme( 'classic-B', {
-    colorStops: [                       // custom levels, but auto gradient positions
-        { color: 'red' },               // top color is always assigned level: 1 (amplitude up to 100%)
-        { color: 'yellow', level: .9 }, // use this color for level ≤ 90% (but > 60%)
-        { color: 'lime', level: .6 }    // use this color for level ≤ 60%
-    ]
-});
-
-audioMotion.registerTheme( 'bluey-A', {
-    colorStops: [                       // only colors are defined, so automatic distribution is done
-        { color: 'red' },
-        { color: '#1ea1df' }
-    ]
-});
-
-audioMotion.registerTheme( 'bluey-B', {
-    colorStops: [                                // note that level and pos are inversely proportional
-        { color: 'red' },                        // this will be auto-assigned level: 1, pos: 0
-        { color: '#1ea1df', level: .9, pos: .15 } // sets level and gradient position, for similar look
-    ]
-});
-
-
-audioMotion.theme = 'classic-A';
-audioMotion.unregisterTheme('classic');
-
-
-audioMotion.registerTheme( 'prism-new', {
-	colorStops: [ '#a35', '#c66', '#e94', '#ed0', '#9d5', '#4d8', '#2cb', '#0bc', '#09c', '#36b', '#639', '#817' ]
-});
-*/
 
 audioMotion.setScaleX({
 //	backgroundColor: '#0008',
@@ -495,32 +433,6 @@ audioMotion.setScaleY({
 //	subLineDash     : [2,8]
 });
 
-
-//console.log( 'getScaleX', audioMotion.getScaleX() );
-//console.log( 'getScaleY', audioMotion.getScaleY() );
-
-// Populate UI select elements and add event listeners
-
-presets.forEach( ( preset, index ) => {
-	const option = new Option( preset.name, index );
-	presetSelection.append( option );
-});
-
-presetSelection.addEventListener( 'change', () => {
-	const { options, theme, ledParams } = presets[ presetSelection.value ];
-	audioMotion.setOptions( options );
-	if ( theme )
-		audioMotion.setTheme( theme );
-	if ( ledParams ) {
-		customLeds.checked = !! ledParams.length;
-		if ( ledParams.length ) {
-			ledHeight.value = ledParams[0];
-			gapHeight.value = ledParams[1];
-		}
-		audioMotion.setLeds( ...ledParams );
-	}
-	updateUI();
-});
 
 bgOptions.forEach( ( [ text, value ] ) => backgroundSelection.append( new Option( text, value ) ) );
 setBackground(); // initialize background
@@ -687,7 +599,8 @@ document.getElementById('btn_getThemeData').addEventListener( 'click', () => {
 });
 
 // Initialize UI elements
-updateUI();
+updateUI( () => audioMotion );
+document.querySelectorAll('button[data-feature]').forEach( el => el.classList.toggle( 'active', !! features[ el.dataset.feature ] ) );
 
 
 /** Functions **/
@@ -708,16 +621,6 @@ function playTone( freq ) {
 		gainNode.gain.linearRampToValueAtTime( 0, audioCtx.currentTime + .1 );
 }
 
-// Load song from user's computer
-function loadSong( el ) {
-	const fileBlob = el.files[0];
-
-	if ( fileBlob ) {
-		audioEl.src = URL.createObjectURL( fileBlob );
-		audioEl.play();
-	}
-}
-
 // Connect or disconnect output to speakers
 function toggleMute( status ) {
 	isMute = ( status === undefined ) ? ! isMute : !! status;
@@ -726,35 +629,6 @@ function toggleMute( status ) {
 	else
 		audioMotion.connectOutput();
 	muteButton.classList.toggle( 'active', isMute );
-}
-
-// Update UI elements to reflect the analyzer's current settings
-function updateUI() {
-	if ( audioMotion.isDestroyed )
-		container.innerHTML = '<div class="warn">audioMotion instance has been destroyed. Reload the page to start again.</div>';
-
-	document.querySelectorAll('[data-setting]').forEach( el => {
-		if ( el.dataset.setting.indexOf('(') >= 0 ) { // it's a function
-			const [ funcName, args ] = parseDatasetFunction( el.dataset.setting );
-			el.value = audioMotion[ funcName ]( ...args );
-		}
-		else
-			el.value = audioMotion[ el.dataset.setting ];
-	});
-	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el, audioMotion ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => {
-		let ret;
-		if ( el.dataset.prop.indexOf('(') >= 0 ) { // it's a function
-			const [ funcName, args ] = parseDatasetFunction( el.dataset.prop );
-			ret = audioMotion[ funcName ]( ...args );
-		}
-		else
-			ret = audioMotion[ el.dataset.prop ];
-
-		el.classList.toggle( 'active', !! ret );
-	});
-	document.querySelectorAll('button[data-feature]').forEach( el => el.classList.toggle( 'active', !! features[ el.dataset.feature ] ) );
-	document.querySelectorAll('[data-flag]').forEach( el => el.classList.toggle( 'active', !! audioMotion[ el.dataset.flag ] ) );
 }
 
 // Callback function used to add custom features for this demo

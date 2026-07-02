@@ -34,8 +34,8 @@
 		</div>
 		<div>
 			<button id="btn_getOptions" title="Copies current settings of the selected analyzer to the clipboard">getOptions()</button>
-			<button data-prop="isOn" data-func="toggleAnalyzer">toggleAnalyzer()</button>
-			<button data-prop="isFullscreen" data-func="toggleFullscreen">toggleFullscreen()</button>
+			<button data-prop="isOn" data-setter="toggleAnalyzer">toggleAnalyzer()</button>
+			<button data-prop="isFullscreen" data-setter="toggleFullscreen">toggleFullscreen()</button>
 		</div>
 	</div>
 
@@ -50,43 +50,43 @@
 			</fieldset>
 
 			<label class="label">mode
-				<select data-setting="mode">
+				<select data-prop="mode">
 					<option value="bars">bars</option>
 					<option value="graph">graph</option>
 				</select>
 			</label>
 
 			<label class="label">bandResolution
-				<input type="range" min="0" max="8" data-setting="bandResolution" style="width: 100px;">
+				<input type="range" min="0" max="8" data-prop="bandResolution" style="width: 100px;">
 				<div class="value"></div>
 			</label>
 
 			<label class="label">colorMode
-				<select data-setting="colorMode">
+				<select data-prop="colorMode">
 					<option value="gradient">gradient</option>
 					<option value="bar-index">bar-index</option>
 					<option value="bar-level">bar-level</option>
 				</select>
 			</label>
 
-			<label class="label"><a href="https://audiomotion.dev/#/?id=settheme-name-modifiers-channel" target="_blank">setTheme (channel 0)</a>
+			<label class="label"><a href="https://audiomotion.dev/#/?id=settheme" target="_blank">setTheme (channel 0)</a>
 				<div class="grid grid-2-cols">
-					<select data-func="setTheme(this,0)" data-setting="getTheme(0)" class="colspan-2"></select>
-					<button class="small-button" data-func="toggleThemeModifier(horizontal,0)" data-prop="getThemeModifiers(horizontal,0)">horizontal</button>
-					<button class="small-button" data-func="toggleThemeModifier(reverse,0)" data-prop="getThemeModifiers(reverse,0)">reverse</button>
+					<select data-setter="setTheme" data-getter="getTheme" data-channel="0" class="colspan-2"></select>
+					<button class="small-button" data-setter="setThemeModifiers" data-channel="0" data-prop="horizontal" data-getter="getThemeModifiers">horizontal</button>
+					<button class="small-button" data-setter="setThemeModifiers" data-channel="0" data-prop="reverse" data-getter="getThemeModifiers">reverse</button>
 				</div>
 			</label>
 
-			<label class="label"><a href="https://audiomotion.dev/#/?id=settheme-name-modifiers-channel" target="_blank">setTheme (channel 1)</a>
+			<label class="label"><a href="https://audiomotion.dev/#/?id=settheme" target="_blank">setTheme (channel 1)</a>
 				<div class="grid grid-2-cols">
-					<select data-func="setTheme(this,1)" data-setting="getTheme(1)" class="colspan-2"></select>
-					<button class="small-button" data-func="toggleThemeModifier(horizontal,1)" data-prop="getThemeModifiers(horizontal,1)">horizontal</button>
-					<button class="small-button" data-func="toggleThemeModifier(reverse,1)" data-prop="getThemeModifiers(reverse,1)">reverse</button>
+					<select data-setter="setTheme" data-getter="getTheme" data-channel="1" class="colspan-2"></select>
+					<button class="small-button" data-setter="setThemeModifiers" data-channel="1" data-prop="horizontal" data-getter="getThemeModifiers">horizontal</button>
+					<button class="small-button" data-setter="setThemeModifiers" data-channel="1" data-prop="reverse" data-getter="getThemeModifiers">reverse</button>
 				</div>
 			</label>
 
 			<label class="label">channelLayout
-				<select data-setting="channelLayout">
+				<select data-prop="channelLayout">
 					<option value="single">single</option>
 					<option value="dual-combined">dual-combined</option>
 					<option value="dual-horizontal">dual-horizontal</option>
@@ -95,7 +95,7 @@
 			</label>
 
 			<label class="label">volume
-				<input type="range" min="0" max="1" step=".1" data-setting="volume">
+				<input type="range" min="0" max="1" step=".1" data-prop="volume">
 				<div class="value"></div>
 			</label>
 		</div>
@@ -105,7 +105,7 @@
 				<legend>FFT</legend>
 
 				<label class="label">fftSize
-					<select data-setting="fftSize">
+					<select data-prop="fftSize">
 						<option>1024</option>
 						<option>2048</option>
 						<option>4096</option>
@@ -115,7 +115,7 @@
 					</select>
 				</label>
 				<label class="label">smoothing
-					<input type="range" min="0" max=".9" step=".1" data-setting="smoothing">
+					<input type="range" min="0" max=".9" step=".1" data-prop="smoothing">
 					<div class="value"></div>
 				</label>
 			</fieldset>
@@ -124,15 +124,15 @@
 				<legend>Frequency range & scaling</legend>
 
 				<label class="label">minFreq
-					<input type="number" min="1" max="24000" data-setting="minFreq">
+					<input type="number" min="1" max="24000" data-prop="minFreq">
 				</label>
 
 				<label class="label">maxFreq
-					<input type="number" min="1" max="24000" data-setting="maxFreq">
+					<input type="number" min="1" max="24000" data-prop="maxFreq">
 				</label>
 
 				<label class="label small"><span>frequencyScale</span>
-					<select data-setting="frequencyScale">
+					<select data-prop="frequencyScale">
 						<option>bark</option>
 						<option>linear</option>
 						<option>log</option>
@@ -145,15 +145,15 @@
 				<legend>Sensitivity</legend>
 
 				<label class="label">minDecibels
-					<input type="number" min="-200" max="0" data-setting="minDecibels">
+					<input type="number" min="-200" max="0" data-prop="minDecibels">
 				</label>
 
 				<label class="label">maxDecibels
-					<input type="number" min="-200" max="0" data-setting="maxDecibels">
+					<input type="number" min="-200" max="0" data-prop="maxDecibels">
 				</label>
 
 				<label class="label small"><span>weightingFilter</span>
-					<select data-setting="weightingFilter">
+					<select data-prop="weightingFilter">
 						<option>none</option>
 						<option>a</option>
 						<option>b</option>
@@ -171,7 +171,7 @@
 
 				<button data-prop="linearAmplitude">linearAmplitude</button>
 				<label class="label">linearBoost
-					<input type="range" min="1" max="4" step=".2" data-setting="linearBoost">
+					<input type="range" min="1" max="4" step=".2" data-prop="linearBoost">
 					<div class="value"></div>
 				</label>
 			</fieldset>
@@ -179,12 +179,12 @@
 			<fieldset>
 				<legend>graph mode / outlineBars</legend>
 				<label class="label">lineWidth
-					<input type="range" id="line_width" min="0" max="4" step=".5" data-setting="lineWidth">
+					<input type="range" id="line_width" min="0" max="4" step=".5" data-prop="lineWidth">
 					<div class="value"></div>
 				</label>
 
 				<label class="label">fillAlpha
-					<input type="range" id="fill_alpha" min="0" max="1" step=".1" data-setting="fillAlpha">
+					<input type="range" id="fill_alpha" min="0" max="1" step=".1" data-prop="fillAlpha">
 					<div class="value"></div>
 				</label>
 			</fieldset>
@@ -194,7 +194,7 @@
 			<fieldset>
 				<legend>bandRes > 0 only</legend>
 				<label class="label">barSpace
-					<input type="range" min="0" max="1" step=".05" data-setting="barSpace" style="width: 90px">
+					<input type="range" min="0" max="1" step=".05" data-prop="barSpace" style="width: 90px">
 					<div class="value"></div>
 				</label>
 			</fieldset>
@@ -202,17 +202,17 @@
 			<fieldset>
 				<legend>Radial spectrum</legend>
 				<label class="label">radial
-					<input type="range" min="-1" max="1" step="1" data-setting="radial">
+					<input type="range" min="-1" max="1" step="1" data-prop="radial">
 					<div class="value"></div>
 				</label>
 
 				<label class="label">radius
-					<input type="range" min="0" max="1" step=".05" data-setting="radius">
+					<input type="range" min="0" max="1" step=".05" data-prop="radius">
 					<div class="value"></div>
 				</label>
 
 				<label class="label">spinSpeed
-					<input type="range" min="-5" max="5" step="1" data-setting="spinSpeed">
+					<input type="range" min="-5" max="5" step="1" data-prop="spinSpeed">
 					<div class="value"></div>
 				</label>
 			</fieldset>
@@ -220,24 +220,24 @@
 			<fieldset>
 				<legend>Reflex & Mirror</legend>
 				<label class="label">reflexRatio
-					<input type="range" min="0" max=".7" step=".1" data-setting="reflexRatio">
+					<input type="range" min="0" max=".7" step=".1" data-prop="reflexRatio">
 					<div class="value"></div>
 				</label>
 
 				<label class="label">reflexAlpha
-					<input type="range" min="0" max="1" step=".05" data-setting="reflexAlpha">
+					<input type="range" min="0" max="1" step=".05" data-prop="reflexAlpha">
 					<div class="value"></div>
 				</label>
 
 				<label class="label">reflexBright
-					<input type="range" min="0" max="2" step=".1" data-setting="reflexBright">
+					<input type="range" min="0" max="2" step=".1" data-prop="reflexBright">
 					<div class="value"></div>
 				</label>
 
 				<button data-prop="reflexFit">reflexFit</button>
 
 				<label class="label">mirror
-					<input type="range" min="-1" max="1" step="1" data-setting="mirror">
+					<input type="range" min="-1" max="1" step="1" data-prop="mirror">
 					<div class="value"></div>
 				</label>
 			</fieldset>
@@ -245,7 +245,7 @@
 			<fieldset>
 				<legend>Peak behavior</legend>
 				<label class="label"><a href="https://audiomotion.dev/#/?id=showpeaks" target="_blank">showPeaks</a>
-					<select data-setting="showPeaks">
+					<select data-prop="showPeaks">
 						<option>off</option>
 						<option>drop</option>
 						<option>fade</option>
@@ -253,17 +253,17 @@
 				</label>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=peakline" target="_blank">peakLine</a>
-					<input type="range" min="0" max="5" step=".5" data-setting="peakLine">
+					<input type="range" min="0" max="5" step=".5" data-prop="peakLine">
 					<div class="value"></div>
 				</label>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=peakdecaytime" target="_blank">peakDecayTime</a>
-					<input type="range" min="0" max="2000" step="50" data-setting="peakDecayTime">
+					<input type="range" min="0" max="2000" step="50" data-prop="peakDecayTime">
 					<div class="value"></div>
 				</label>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=peakhold" target="_blank">peakHoldTime</a>
-					<input type="range" min="0" max="1000" step="50" data-setting="peakHoldTime">
+					<input type="range" min="0" max="1000" step="50" data-prop="peakHoldTime">
 					<div class="value"></div>
 				</label>
 			</fieldset>
@@ -273,14 +273,14 @@
 			<fieldset>
 				<legend>Bar effects</legend>
 				<label class="label">alphaBars
-					<select data-setting="alphaBars">
+					<select data-prop="alphaBars">
 						<option>off</option>
 						<option>on</option>
 						<option>full</option>
 					</select>
 				</label>
 				<label class="label">ledBars
-					<select data-setting="ledBars">
+					<select data-prop="ledBars">
 						<option>off</option>
 						<option>modern</option>
 						<option>vintage</option>
@@ -300,7 +300,7 @@
 				<button data-prop="spreadGradient">spreadGradient</button>
 
 				<label class="label"><a href="https://audiomotion.dev/#/?id=showscalex" target="_blank">showScaleX</a>
-					<select data-setting="showScaleX">
+					<select data-prop="showScaleX">
 						<option>off</option>
 						<option>custom</option>
 						<option>freqs</option>
@@ -309,7 +309,7 @@
 					</select>
 				</label>
 				<label class="label"><a href="https://audiomotion.dev/#/?id=showscaley" target="_blank">showScaleY</a>
-					<select data-setting="showScaleY">
+					<select data-prop="showScaleY">
 						<option>off</option>
 						<option>db</option>
 						<option>percent</option>
