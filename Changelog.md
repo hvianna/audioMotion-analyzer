@@ -1,34 +1,32 @@
 Changelog
 =========
 
-## version 5.0.0-alpha.2 (2026-06-06)
+## version NEXT
 
 > **WARNING:** code in **alpha** stage is subject to major, drastic changes! **DO NOT USE THIS VERSION IN PRODUCTION!**<br>
 > Source code is in the [`version5`](https://github.com/hvianna/audioMotion-analyzer/tree/version5) branch. **Demo is available at https://audiomotion.dev/demo/alpha/**
 
 **New/changed in this release:**
 
-+ [`connectInput()`](README.md#connectinput) and the constructor's [`source`](README.md#source) property now accept *MediaStream* objects ([#96](https://github.com/hvianna/audioMotion-analyzer/issues/96));
-+ [`disconnectInput()`](README.md#disconnectinput) now also accepts *HTMLMediaElement* and *MediaStream* objects.
-+ `noteLabels` property has been removed and its functionality has been consolidated into [`showScaleX`](README.md#showscalex);
-+ [`showScaleX`](README.md#showscalex) value type has changed to *string*;
-+ [`showScaleY`](README.md#showscaley) value type has changed to *string* and now allows choosing dB or percentage labels;
-+ `peaks` property name changed back to [`showPeaks`](README.md#showpeaks);
-+ `setXAxis()` renamed to [`setScaleX()`](README.md#setscalex) - removed `addLabels` and `height` properties, added `fontSize`;
-+ `setYAxis()` renamed to [`setScaleY()`](README.md#setscaley) - removed `linearInterval` and `width` properties, added `percentInterval` and `fontSize`, new default value of 6dB for `dbInterval`;
-+ Added [`getScaleX()`](README.md#getscalex) and [`getScaleY()`](README.md#getscaley) methods;
-+ Added 3dB/oct and 4.5db/oct tilt filters to [`weightingFilter`](README.md#weightingfilter) - props to [@will-hut](https://github.com/will-hut) ([#107](https://github.com/hvianna/audioMotion-analyzer/pull/107)).
-+ [`weightingFilter`](README.md#weightingfilter) values are now normalized to lowercase. The value for no-filter has changed from `""` (empty string) to `"none"`.
-+ Changed `RADIAL_INNER` and `RADIAL_OUTER` constant names to `RADIAL_INWARD` and `RADIAL_OUTWARD`.
++ Renamed `setLeds()` to [`setLedProps()`](README.md#setledprops) - it now allows to customize LED mask as well; added [`getLedProps()`](README.md#setledprops);
++ Minor tweak to default LED gap height (reduced from `8` to `5`);
++ Consolidated `setScaleX()` / `setScaleY()` and `getScaleX()` / `getScaleY()` into [`setScaleProps()`](README.md#setscaleprops) and [`getScaleProps()`](README.md#getscaleprops);
++ Made argument order more consistent among [`getTheme()`](README.md#gettheme), [`setTheme()`](README.md#settheme), [`getThemeModifiers()`](README.md#getthememodifiers) and [`setThemeModifiers()`](README.md#setthememodifiers) methods;
++ [`getTheme()`](README.md#gettheme) now returns data for both channels in an array, when `channel` argument is omitted or invalid;
++ New [`weightingGain()`](README.md#weightinggain) static method;
++ Decoupled audio data processing from the graphics rendering (code improvement for future integrations);
++ Fixed invisible peaks when [`outlineBars`](README.md#outlinebars) was enabled with both [`fillAlpha`](README.md#fillalpha) and [`lineWidth`](README.md#linewidth) set to `0`;
++ Removed `toggleThemeModifier()` method.
+
 
 **The full list of changes for v5 are provided below.**
 
 ### Version 5 overview: <!-- {docsify-ignore} -->
 
 + Expect LOTS of breaking changes 😅 - I'm taking this opportunity to consolidate related properties and make some long-overdue changes;
-+ Gradients are now called **Themes** - new `peakColor` property in [`registerTheme()`](README.md#registertheme) and [**on-the-fly horizontal and reverse gradient generation**](README.md#setthememodifiers);
-+ **LED bars look better and are easier to customize** - see [`showLedMask`](README.md#showledmask) and [`setLeds()`](README.md#setleds);
-+ X- and Y-axis scales are now customizable - [`setScaleX()`](README.md#setscalex) and [`setScaleY()`](README.md#setscaley);
++ Gradients are now called **Themes** - added new `peakColor` property in [`registerTheme()`](README.md#registertheme) and [**on-the-fly** horizontal and reverse gradient generation](README.md#setthememodifiers);
++ **LED bars look better and are easier to customize** - see [`setLedProps()`](README.md#setledprops) and [`showLedMask`](README.md#showledmask);
++ X- and Y-axis scales are now customizable via [`setScaleProps()`](README.md#setscaleprops);
 + The analyzer canvas is now always transparent, so **all background-related properties are gone,** including `bgColor` in the theme definition;
 + No more [errors thrown](README.md#custom-errors) for non-critical issues, like invalid option values;
 + The [`onCanvasDraw`](README.md#oncanvasdraw) callback is now passed all color information from the currently active themes (`fillStyle` and `strokeStyle` are no longer explicitly set).
@@ -52,9 +50,9 @@ Removed methods and properties | Use this instead
 ----------------------|-----------------------------------------------
 `bgAlpha`             | *set desired background color/opacity via CSS on [`canvas`](README.md#canvas-read-only) element*
 `fadePeaks`           | [`showPeaks`](README.md#showpeaks) = `"fade"`
-`gradient`            | [`setTheme(name)`](README.md#settheme) / [`getTheme()`](README.md#gettheme)
-`gradientLeft`        | [`setTheme(name, 0)`](README.md#settheme) / [`getTheme(0)`](README.md#gettheme)
-`gradientRight`       | [`setTheme(name, 1)`](README.md#settheme) / [`getTheme(1)`](README.md#gettheme)
+`gradient`            | [`setTheme(name)`](README.md#settheme) / [`getTheme(0)`](README.md#gettheme)
+`gradientLeft`        | [`setTheme(0, name)`](README.md#settheme) / [`getTheme(0)`](README.md#gettheme)
+`gradientRight`       | [`setTheme(1, name)`](README.md#settheme) / [`getTheme(1)`](README.md#gettheme)
 `gravity`             | [`peakDecayTime`](README.md#peakdecaytime) &mdash; *use the [peak drop analysis tool](/tools/peak-drop.html) to compare/migrate previous customizations*
 `isLumiBars`          | [`isAlphaBars`](README.md#isalphabars)
 `lumiBars`            | [`alphaBars`](README.md#alphabars) = `"full"`
@@ -62,7 +60,7 @@ Removed methods and properties | Use this instead
 `peakFadeTime`        | [`peakDecayTime`](README.md#peakdecaytime)
 `radialInvert`        | [`radial`](README.md#radial) = `-1`
 `registerGradient()`  | [`registerTheme()`](README.md#registertheme)
-`setLedParams()`      | [`setLeds()`](README.md#setleds)
+`setLedParams()`      | [`setLedProps()`](README.md#setledprops)
 `showBgColor`         | *set desired background color via CSS on container element*
 `splitGradient`       | [`spreadGradient`](README.md#spreadgradient)
 `stereo`              | [`channelLayout`](README.md#channellayout)
@@ -72,14 +70,15 @@ Removed methods and properties | Use this instead
 ### Added: <!-- {docsify-ignore} -->
 
 + [`bandResolution`](README.md#bandresolution) property;
++ [`getLedProps()`](README.md#getledprops) method;
 + [`getThemeData()`](README.md#getthemedata) and [`getThemeList()`](README.md#getthemelist) mehods;
 + `peakColor` property in theme definition - see [`registerTheme()`](README.md#registertheme);
-+ [`registerTheme()`](README.md#registertheme) and [`unregisterTheme()`](README.md#unregistertheme) methods;
 + [`setTheme()`](README.md#settheme) and [`getTheme()`](README.md#gettheme) methods;
 + [`setThemeModifiers()`](README.md#setthememodifiers) and [`getThemeModifiers()`](README.md#getthememodifiers) methods;
-+ [`toggleThemeModifier()`](README.md#togglethememodifier) method;
-+ [`setScaleX()`](README.md#setscalex) / [`setScaleY()`](README.md#setscaley) and [`getScaleX()`](README.md#getscalex) / [`getScaleY()`](README.md#getscaley) methods;
++ [`setScaleProps()`](README.md#setscaleprops) and [`getScaleProps()`](README.md#getscaleprops) methods;
 + [`showLedMask`](README.md#showledmask) property;
++ [`unregisterTheme()`](README.md#unregistertheme) method;
++ [`weightingGain()`](README.md#weightinggain) static method;
 + New 3dB/oct and 4.5db/oct tilt filters added to [`weightingFilter`](README.md#weightingfilter) - props to [@will-hut](https://github.com/will-hut) ([#107](https://github.com/hvianna/audioMotion-analyzer/pull/107));
 + [Exported constants](README.md#constants).
 
@@ -93,13 +92,15 @@ Property | New default value | Previous default value
 ---------|-------------------|------------------------
 [`fillAlpha`](README.md#fillalpha) | `0.5` | `1`
 [`lineWidth`](README.md#linewidth) | `1`   | `0`
-[`maxDecibels`](README.md#maxdecibels) | `-30` | `25`
+[`maxDecibels`](README.md#maxdecibels) | `-30` | `-25`
 [`minDecibels`](README.md#mindecibels) | `-90` | `-85`
 [`radius`](README.md#radius)           | `0.5` | `0.3`
 [`smoothing`](README.md#smoothing)     | `0.7` | `0.5`
 
 ### Improved: <!-- {docsify-ignore} -->
 
++ Decoupled audio data processing from the graphics rendering (code improvement for future integrations);
++ Fixed invisible peaks when [`outlineBars`](README.md#outlinebars) was enabled with both [`fillAlpha`](README.md#fillalpha) and [`lineWidth`](README.md#linewidth) set to `0`.
 + [`connectInput()`](README.md#connectinput) and the constructor's [`source`](README.md#source) property now accept *MediaStream* objects ([#96](https://github.com/hvianna/audioMotion-analyzer/issues/96));
 + [`disconnectInput()`](README.md#disconnectinput) now also accepts *HTMLMediaElement* and *MediaStream* objects;
 + Full-height [`alphaBars`](README.md#alphabars) (former lumiBars) have been extended to work with [`radial`](README.md#radial) and FFT [`bandResolution`](README.md#bandresolution) (former mode 0);

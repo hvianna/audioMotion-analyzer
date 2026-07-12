@@ -305,6 +305,8 @@ import {
 	FILTER_C,
 	FILTER_D,
 	FILTER_468,
+	FILTER_TILT3,
+	FILTER_TILT45,
 	LABELS_X_CUSTOM,
 	LABELS_X_FREQS,
 	LABELS_X_FREQS_CUSTOM,
@@ -320,6 +322,9 @@ import {
 	LEDS_MODERN,
 	LEDS_OFF,
 	LEDS_VINTAGE,
+	MIRROR_LEFT,
+	MIRROR_OFF,
+	MIRROR_RIGHT,
 	MODE_BARS,
 	MODE_GRAPH,
 	PEAKS_DROP,
@@ -351,7 +356,7 @@ import {
 
 Determines whether each bar's opacity is affected by its amplitude. Only effective in **Bars** [`mode`](#mode).
 
-value    | [Constant](#constants) | Description
+Value    | [Constant](#constants) | Description
 ---------|------------------------|--------------
 `"off"`  | `ALPHABARS_OFF`  | Disables effect
 `"on"`   | `ALPHABARS_ON`   | Bars with higher amplitude are rendered more opaque while those with lower amplitude are mode transparent
@@ -369,7 +374,7 @@ For effect priority when combined with other settings, see [`isAlphaBars`](#isal
 
 Whether to use the ANSI/IEC preferred frequencies, instead of the musical scale, to compute the center and edge frequencies of [octave bands](#bandresolution).
 
-value   | Reference | Octaves' center frequencies
+Value   | Reference | Octaves' center frequencies
 --------|-----------------|----------------------------
 `false` | [A 440 pitch standard](http://hyperphysics.phy-astr.gsu.edu/hbase/Music/et.html) (equal temperament scale) | ![scale-log-equal-temperament](img/scale-log-equal-temperament.png)
 `true`  | [ANSI S1.11-2004 standard](https://archive.org/details/gov.law.ansi.s1.11.2004) (base-10 scale) | ![scale-log-ansi](img/scale-log-ansi.png)
@@ -416,7 +421,7 @@ How much of an octave should each analyzer band represent, or how many bands sho
 When [`frequencyScale`](#frequencyscale-string) is set to `"log"`, this setting defines which fraction of an octave is included in each bar.
 Otherwise, the frequency spectrum is divided into a fixed amount of bars, with the bandwidth of each bar varying according to the selected frequency scale.
 
-value | [Constant](#constants) | Description
+Value | [Constant](#constants) | Description
 :----:|------------------------|-----------------
 `0`   | `BANDS_FFT`         | Discrete frequencies provided by the [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform) computation
 `1`   | `BANDS_OCTAVE_FULL` | Full octave bands or 10 bands
@@ -466,7 +471,7 @@ See also the [`canvas`](#canvas) constructor option.
 
 Defines the number and layout of analyzer channels.
 
-value               | [Constant](#constants) | Description
+Value               | [Constant](#constants) | Description
 --------------------|------------------------|-----------------
 `"single"`          | `LAYOUT_SINGLE`     | Single channel analyzer, representing the combined output of both left and right channels.
 `"dual-combined"`   | `LAYOUT_COMBINED`   | Dual channel analyzer, both channels overlaid. Works best with semi-transparent **Graph** [`mode`](#mode) or [`outlineBars`](#outlinebars).
@@ -486,7 +491,7 @@ See also [`setTheme()`](#settheme) and [`spreadGradient`](#spreadgradient).
 
 Selects the desired mode for coloring the analyzer bars. This property has no effect in **Graph** [`mode`](#mode).
 
-value         | [Constant](#constants) | Description | Preview ('prism' theme)
+Value         | [Constant](#constants) | Description | Preview ('prism' theme)
 --------------|------------------------|-------------|-------------------------
 `"gradient"`  | `COLORMODE_GRADIENT` | Analyzer bars are painted with a gradient of the selected [`theme`](#theme-string)'s colors. This is the default behavior. | ![prism](img/gradient-prism.png)
 `"bar-index"` | `COLORMODE_INDEX`    | Each analyzer bar is painted with a **single color** from the selected theme's colors, starting with the first color applied to the first bar, and so on, cycling through the available colors. | ![prism-bar-index](img/gradient-prism-bar-index.png)
@@ -548,7 +553,7 @@ Current frame rate.
 
 Scale used to represent frequencies in the horizontal axis.
 
-value      | [Constant](#constants) | Description | Scale preview (10Hz - 24kHz range)
+Value      | [Constant](#constants) | Description | Scale preview (10Hz - 24kHz range)
 -----------|------------------------|-------------|-------------------------------------
 `"bark"`   | `SCALE_BARK`   | Bark scale | ![scale-bark](img/scale-bark.png)
 `"linear"` | `SCALE_LINEAR` | Linear scale | ![scale-linear](img/scale-linear.png)
@@ -655,7 +660,7 @@ Returns `true` when round bars are effectively being displayed, i.e., [`roundBar
 
 Determines the appearance of the LED bars. Only effective in **Bars** [`mode`](#mode), when [`bandResolution`](#bandresolution) > `0` and [`radial`](#radial) set to `0`.
 
-value       | [Constant](#constants) | Description | Preview
+Value       | [Constant](#constants) | Description | Preview
 ------------|------------------------|-------------|----------
 `"off"`     | `LEDS_OFF`     | Disables effect | ![leds-off](img/leds_off.png)
 `"modern"`  | `LEDS_MODERN`  | Gradient-colored LEDs when [`colorMode`](#colormode) is set to `"gradient"` | ![leds-modern](img/leds_modern.png)
@@ -780,11 +785,11 @@ When [`channelLayout`](#channellayout-string) is **dual-horizontal**, this prope
 
 For other layouts, it horizontally mirrors the spectrum image to the left or right side.
 
-value  | Description
-:-----:|-------------
-`-1`   | Low frequencies meet at the center of the screen (mirror left)
-`0`    | No mirror effect or change to axis orientation (default)
-`1`    | High frequencies meet at the center of the screen (mirror right)
+Value  | [Constant](#constants) | Description
+:-----:|------------------------|---------------
+`-1`   | `MIRROR_LEFT`  | Low frequencies meet at the center of the screen
+`0`    | `MIRROR_OFF`   | No mirror effect or change to axis orientation (default)
+`1`    | `MIRROR_RIGHT` | High frequencies meet at the center of the screen
 
 **Note:** On [`radial`](#radial) spectrum with channel layouts other than *dual-horizontal*, both `1` and `-1` have the same effect.
 
@@ -794,7 +799,7 @@ value  | Description
 
 Determines the visualization mode.
 
-value     | [Constant](#constants) | Description
+Value     | [Constant](#constants) | Description
 ----------|------------------------|-----------------
 `"bars"`  | `MODE_BARS`  | displays bars for each frequency or frequency band
 `"graph"` | `MODE_GRAPH` | connects frequency/bands data points into continuous line with optional filled area graph
@@ -967,7 +972,7 @@ You can refer to this value to adjust any additional drawings done in the canvas
 
 Whether to render the spectrum analyzer as a circle with radial bars.
 
-value | [Constant](#constants) | Description
+Value | [Constant](#constants) | Description
 ------|------------------------|----------------
 `0`   | `RADIAL_OFF`     | Disables radial
 `1`   | `RADIAL_OUTWARD` | Bars grow towards the edges of the screen
@@ -1078,7 +1083,7 @@ Whether to display the "unlit" LED elements. Has no effect when [`ledBars`](#led
 
 Determines the display and behavior of amplitude peaks.
 
-value    | [Constant](#constants) | Description
+Value    | [Constant](#constants) | Description
 ---------|------------------------|--------------
 `"off"`  | `PEAKS_OFF`  | Disable display of amplitude peaks and [`peakLine`](#peakline)
 `"drop"` | `PEAKS_DROP` | Display peaks that fall down over time
@@ -1508,7 +1513,7 @@ getThemeData(name)
 
 **Return value:** an *object* (structure below) or `null` if theme name is invalid.
 
-property | type | description
+Property | type | description
 ---------|------|---------------
 `colorStops` | *array*  | all entries are normalized as objects with `color`, `level` and `pos` properties
 `peakColor`  | *string* | `undefined` if not originally defined in [theme registration](#registertheme)
@@ -1571,21 +1576,21 @@ Registers a custom color theme.
 registerTheme(name, options)
 ```
 
-parameter | type | description
+Parameter | type | description
 ----------|------|-------------
 `name`    | *string* | Names are **case sensitive** and will be used to select the theme via [`setTheme()`](#settheme) method.
 `options` | *object* | Contains the color information (see below).
 
 **`options` object structure:**
 
-property     | type   | description
+Property     | type   | description
 -------------|--------|-------------
 `colorStops` | *array*  | **At least one array element is required.** Each one must be either a *string* (color in CSS format), or an *object* (see below).
 `peakColor`  | *string* | Optional; if defined, **all peaks** will be painted this color, regardless of their levels.
 
 **`colorStops` entry object structure:**
 
-property | type   | description
+Property | type   | description
 ---------|--------|-------------
 `color`  | *string* | Any valid CSS color format, e.g. 'red', '#f00', 'rgb(…)', 'hsl(…)', etc.
 `level`  | *number* | Optional; sets the **upper level** threshold for applying this color to a bar (when [`colorMode`](#colormode-string) is set to `"bar-level"`) or LED segment (when [`ledBars`](#ledbars) is set to `"vintage"`). It must be a number between `0` and `1`, where `1` is the maximum amplitude (top of screen).
@@ -1679,11 +1684,11 @@ setLedProps(props)
 
 **If `props` is omitted or not an object, ALL properties are reset to their default values.**
 
-property    | type     | description     | default
+Property    | type     | description     | default
 ------------|----------|-----------------|----------:
 `ledHeight` | *number* | Height, in pixels, of each LED element. **A value of `0` will match the bar width (generates square LEDs).** | `8`
 `gapHeight` | *number* | Vertical gap, in pixels, between two consecutive LED elements. **A value of `0` will match the current [bar spacing](#barSpace).** | `5`
-`maskAlpha` | *number* | Opacity of the LED mask, between `0.0` (fully transparent) and `1.0` (fully opaque). | `0.2`
+`maskAlpha` | *number* | Transparency of the LED mask, between `0.0` (fully transparent) and `1.0` (fully opaque). | `0.2`
 `maskLightness`  | *number* | Color lightness for the LED mask, between `0` (pure black) and `100` (pure white), with `50` being the normal color intensity. **A value of `-1` will preserve the original lightness of theme colors.** | `-1`
 `maskSaturation` | *number* | Color saturation for the LED mask, between `0` (grayscale) and `100` (full saturation). **A value of `-1` will preserve the original saturation of theme colors.** | `20`
 
@@ -1739,14 +1744,14 @@ setScaleProps(props)
 
 `props` object:
 
-property | type     | description
+Property | type     | description
 ---------|----------|-------------
 `xAxis`  | *object* | X-axis scale properties (see below). A value of `null` will reset only the X-axis properties to their defaults.
 `yAxis`  | *object* | Y-axis scale properties (see below). A value of `null` will reset only the Y-axis properties to their defaults.
 
 `xAxis` object (all properties are optional):
 
-property           | type      | description | default
+Property           | type      | description | default
 -------------------|-----------|-------------|---------
 `backgroundColor`  | *string*  | Background color of the X-axis. Any valid CSS color format is acceptable. Use a blank string or `"transparent"` for fully transparent background | `"#0008"`
 `color`            | *string*  | Color of labels | `"#fff"`
@@ -1757,7 +1762,7 @@ property           | type      | description | default
 
 `yAxis` object (all properties are optional):
 
-property           | type      | description | default
+Property           | type      | description | default
 -------------------|-----------|-------------|---------
 `color`            | *string*  | Color of labels and lines | `"#888"`
 `dbInterval`       | *number*  | Interval between labels, in decibels. Applied when [`showScaleY`](#showscaley) is set to `"db"`. | `6`
@@ -1858,7 +1863,7 @@ Parameter   | type     | description
 
 **When called without arguments, resets modifiers to defaults on both channels. If only a channel is specified, resets on given channel only.**
 
-Modifiers object structure:
+`modifiers` object structure:
 
 Property     | type      | description
 -------------|-----------|---------------
@@ -1906,7 +1911,7 @@ toggleAnalyzer()
 toggleAnalyzer(force)
 ```
 
-parameter | type | description
+Parameter | type | description
 ----------|------|------------
 `force`   | *boolean* | forces the desired state - `true` to start or `false` to stop the analyzer
 
@@ -1937,7 +1942,7 @@ Unregisters a color theme.
 unregisterTheme(name)
 ```
 
-parameter | type     | description
+Parameter | type     | description
 ----------|----------|---------------
 `name`    | *string* | Valid theme name. May include built-in themes. See [`getThemeList()`](#getthemelist).
 
@@ -1978,11 +1983,11 @@ Parameter   | type     | description
 
 The `code` property is a *number*. [Constants](#constants) are available to simplify checking for error codes.
 
-code | Constant            | Error description
------|---------------------|--------------------
-`1`  | `ERR_AUDIO_CONTEXT_FAIL`    | Could not create audio context. The user agent may lack support for the Web Audio API.
-`2`  | `ERR_INVALID_AUDIO_CONTEXT` | [Audio context](#audioctx-read-only) provided by user is not valid.
-`3`  | `ERR_INVALID_AUDIO_SOURCE`  | Audio source provided in [`source`](#source) option or [`connectInput()`](#connectinput) method is not an instance of HTMLMediaElement or AudioNode.
+`code` | Constant            | Error description
+-------|---------------------|--------------------
+`1`    | `ERR_AUDIO_CONTEXT_FAIL`    | Could not create audio context. The user agent may lack support for the Web Audio API.
+`2`    | `ERR_INVALID_AUDIO_CONTEXT` | [Audio context](#audioctx-read-only) provided by user is not valid.
+`3`    | `ERR_INVALID_AUDIO_SOURCE`  | Audio source provided in [`source`](#source) option or [`connectInput()`](#connectinput) method is not an instance of *HTMLMediaElement*, *MediaStream* or *AudioNode*.
 
 
 ## Known Issues
