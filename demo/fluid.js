@@ -41,6 +41,15 @@ import {
 	SCALE_LOG
 } from '../src/audioMotion-analyzer.js';
 
+import {
+	addUIEventListeners,
+	loadSong,
+	populateControls,
+	populateThemeSelections,
+	setPresets,
+	updateUI
+} from './functions.js';
+
 const audioEl             = document.getElementById('audio'),
 	  backgroundSelection = document.getElementById('bgColor'),
 	  container           = document.getElementById('container'),
@@ -407,32 +416,32 @@ document.querySelectorAll('[data-custom]').forEach( el => {
 	});
 });
 
-audioMotion.setScaleX({
-//	backgroundColor: '#0008',
-//	color: '#fff',
-//	fontSize: .15,
-//	highlightColor: '#4f4',
-	labels: [
-		800,
-		[ 3000, '|', true ],
-		[ 440, 'A4', true ],
-	],
-//	overlay: false
+audioMotion.setScaleProps({
+	xAxis: {
+//		backgroundColor: '#0008',
+//		color: '#fff',
+//		fontSize: .15,
+//		highlightColor: 'orangered',
+		labels: [
+			800,
+			[ 3000, '|', true ],
+			[ 440, 'A4', true ],
+		],
+//		overlay: false
+	},
+	yAxis: {
+//		color           : '#888',
+//		dbInterval      : 6,
+//		fontSize        : .15,
+//		lineDash        : [2,4],
+//		operation       : 'destination-over',
+//		percentInterval : 20,
+//		showSubdivisions: true,
+//		showUnit        : true,
+//		subLineColor    : '#555',
+//		subLineDash     : [2,8]
+	}
 });
-
-audioMotion.setScaleY({
-//	color           : '#888',
-//	dbInterval      : 6,
-//	fontSize        : .15,
-//	lineDash        : [2,4],
-//	operation       : 'destination-over',
-//	percentInterval : 20,
-//	showSubdivisions: true,
-//	showUnit        : true,
-//	subLineColor    : '#555',
-//	subLineDash     : [2,8]
-});
-
 
 bgOptions.forEach( ( [ text, value ] ) => backgroundSelection.append( new Option( text, value ) ) );
 setBackground(); // initialize background
@@ -440,6 +449,7 @@ setBackground(); // initialize background
 backgroundSelection.addEventListener( 'change', () => setBackground() );
 
 populateThemeSelections( audioMotion );
+populateControls();
 
 audioMotion.canvas.addEventListener( 'mousemove', evt => {
 	mouseX = evt.offsetX;

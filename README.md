@@ -1097,12 +1097,12 @@ Whether to display scale labels on the X-axis.
 Value            | [Constant](#constants)  | Description
 -----------------|-------------------------|---------------
 `"off"`          | `LABELS_X_OFF`          | Do not display scale labels on the X-axis.
-`"custom"`       | `LABELS_X_CUSTOM`       | Display custom `labels` defined via [`setScaleX()`](#setscalex).
+`"custom"`       | `LABELS_X_CUSTOM`       | Display custom `labels` defined via [`setScaleProps()`](#setscaleprops).
 `"freqs"`        | `LABELS_X_FREQS`        | Display octaves center frequencies - see also [`ansiBands`](#ansibands).
-`"freqs-custom"` | `LABELS_X_FREQS_CUSTOM` | Display center frequencies and any additional custom labels.
+`"freqs+custom"` | `LABELS_X_FREQS_CUSTOM` | Display center frequencies and any additional custom labels.
 `"notes"`        | `LABELS_X_NOTES`        | Display musical note labels.
 
-Several display properties of the scale can be customized via [`setScaleX()`](#setscalex) method.
+Several display properties of the scale can be customized via [`setScaleProps()`](#setscaleprops) method.
 
 ?> For best results of `"notes"` setting in [octave bands modes](#bandresolution), make sure [`frequencyScale`](#frequencyscale) is set to `"log"` and [`ansiBands`](#ansibands) is set to `false`, so bands are tuned to the equal temperament musical scale.
 
@@ -1122,7 +1122,7 @@ Value       | [Constant](#constants) | Description
 
 This option has no effect when [`radial`](#radial) is active or [`alphaBars`](#alphabars) is set to `"full"`.
 
-Several display properties of the scale can be customized via [`setScaleY()`](#setscaley) method.
+Several display properties of the scale can be customized via [`setScaleProps()`](#setscaleprops) method.
 
 See also [`minDecibels`](#mindecibels) and [`maxDecibels`](#maxdecibels).
 
@@ -1451,33 +1451,19 @@ Callbacks and [constructor-specific properties](#constructor-specific-options) a
 
 See also [`setOptions()`](#setoptions).
 
-### `getScaleX()`
+### `getScaleProps()`
 
 *Available since v5.0.0*
 
-Returns the display properties of the X-axis scale.
+Retrieves the current scale display properties on both axes.
 
 **Syntax:**
 
 ```js
-getScaleX()
+getScaleProps()
 ```
 
-**Return value:** an *object* - see [`setScaleX()`](#setscalex) for object structure.
-
-### `getScaleY()`
-
-*Available since v5.0.0*
-
-Returns the display properties of the Y-axis scale.
-
-**Syntax:**
-
-```js
-getScaleY()
-```
-
-**Return value:** an *object* - see [`setScaleY()`](#setscaley) for object structure.
+**Return value:** an *object* - see [`setScaleProps()`](#setscaleprops) for object structure.
 
 ### `getTheme()`
 
@@ -1736,22 +1722,29 @@ setSensitivity(minDecibels, maxDecibels)
 
 **Return value:** none (`undefined`).
 
-### `setScaleX()`
+### `setScaleProps()`
 
 *Available since v5.0.0*
 
-Customize the appearance of the X-axis scale and labels.
+Customize the scale appearance on one or both axes.
 
 **Syntax:**
 
 ```js
-setScaleX()
-setScaleX(options)
+setScaleProps()
+setScaleProps(props)
 ```
 
-**If called with no argument, all properties will be reset to their default values.**
+**If `props` is omitted, ALL properties will be reset to their default values.**
 
-If `options` is defined, it should be an object with the structure below (all properties are optional).
+`props` object:
+
+property | type     | description
+---------|----------|-------------
+`xAxis`  | *object* | X-axis scale properties (see below). A value of `null` will reset only the X-axis properties to their defaults.
+`yAxis`  | *object* | Y-axis scale properties (see below). A value of `null` will reset only the Y-axis properties to their defaults.
+
+`xAxis` object (all properties are optional):
 
 property           | type      | description | default
 -------------------|-----------|-------------|---------
@@ -1759,42 +1752,10 @@ property           | type      | description | default
 `color`            | *string*  | Color of labels | `"#fff"`
 `fontSize`         | *number*  | Font size for labels. For responsive behavior, values between `0.0` and `1.0` represent a fraction of one tenth of the canvas width or height (whichever is smaller). A minimum of 10px is enforced for the computed value. Values greater than `1` are interpreted as fixed pixel sizes. | `0.15`
 `highlightColor`   | *string*  | Color used to highlight *C* notes when [`showScaleX`](#showscalex) is set to `"notes"`, and for labels highlighted via `labels` property (see below) | `"#4f4"`
-`labels`           | *array*   | Custom labels displayed when [`showScaleX`](#showscalex) is set to `"custom"` or `"freqs-custom"`. Each element of the array must be either a number, representing the frequency in Hz, or an array of **[ &lt;frequency&gt; *(number)*, &lt;label&gt; *(string)*, &lt;highlight&gt; *(boolean, optional)* ]** (see example below) | octaves center frequencies
+`labels`           | *array*   | Custom labels displayed when [`showScaleX`](#showscalex) is set to `"custom"` or `"freqs+custom"`. Each element of the array must be either a number, representing the frequency in Hz, or an array of **[ &lt;frequency&gt; *(number)*, &lt;label&gt; *(string)*, &lt;highlight&gt; *(boolean, optional)* ]** (see example below) | octaves center frequencies
 `overlay`          | *boolean* | Whether the X-axis should overlay the bottom of the analyzer area | `false`
 
-**Return value:** none (`undefined`).
-
-**Example usage:**
-
-```js
-audioMotion.setScaleX({
-    backgroundColor: '',   // transparent background on the axis bar
-    labels: [
-      [ 440, 'A4', true ], // highlight "A4" label at 440 Hz
-      800,                 // additional label at 800 Hz
-      [ 3000, '|' ],       // just a tick mark at 3 kHz
-    ],
-});
-```
-
-See also [`getScaleX()`](#getscalex) and [`showScaleX`](#showscalex).
-
-### `setScaleY()`
-
-*Available since v5.0.0*
-
-Customize the appearance of the Y-axis scale and labels.
-
-**Syntax:**
-
-```js
-setScaleY()
-setScaleY(options)
-```
-
- **If called with no argument, all properties will be reset to their default values.**
-
-If `options` is defined, it should be an object with the structure below (all properties are optional).
+`yAxis` object (all properties are optional):
 
 property           | type      | description | default
 -------------------|-----------|-------------|---------
@@ -1814,14 +1775,24 @@ property           | type      | description | default
 **Example usage:**
 
 ```js
-audioMotion.setScaleY({
-  percentInterval: 10,
-  operation: 'screen',
-  showSubdivisions: false,
+audioMotion.setScaleProps({
+    xAxis: {
+        backgroundColor: '',   // transparent background on the axis bar
+        labels: [
+          [ 440, 'A4', true ], // highlight "A4" label at 440 Hz
+          800,                 // additional label at 800 Hz
+          [ 3000, '|' ],       // just a tick mark at 3 kHz
+        ],
+    },
+    yAxis: {
+        percentInterval: 10,
+        operation: 'screen',
+        showSubdivisions: false,
+    }
 });
 ```
 
-See also [`getScaleY()`](#getscaley) and [`showScaleY`](#showscaley).
+See also [`getScaleProps()`](#getscaleprops), [`showScaleX`](#showscalex) and [`showScaleY`](#showscaley).
 
 ### `setTheme()`
 

@@ -129,7 +129,7 @@ export type LedBars = "off" | "modern" | "vintage";
 
 export type ShowPeaks = "off" | "drop" | "fade";
 
-export type ShowScaleX = "off" | "custom" | "freqs" | "freqs-custom" | "notes";
+export type ShowScaleX = "off" | "custom" | "freqs" | "freqs+custom" | "notes";
 
 export type ShowScaleY = "off" | "db" | "percent";
 
@@ -150,7 +150,7 @@ export interface LedProps {
   maskSaturation?: number
 }
 
-export interface ScaleXProperties {
+export interface ScaleXProps {
   backgroundColor?: string;
   color?: string;
   fontSize?: number;
@@ -159,7 +159,7 @@ export interface ScaleXProperties {
   overlay?: boolean;
 }
 
-export interface ScaleYProperties {
+export interface ScaleYProps {
   color?: string;
   dbInterval?: number;
   fontSize?: number;
@@ -169,6 +169,16 @@ export interface ScaleYProperties {
   showSubdivisions?: boolean;
   subLineColor?: string;
   subLineDash?: number[];
+}
+
+export interface ScalePropsCombined {
+  xAxis: ScaleXProps,
+  yAxis: ScaleYProps
+}
+
+export interface ScalePropsOptional {
+  xAxis?: ScaleXProps | null,
+  yAxis?: ScaleYProps | null
 }
 
 declare class AudioMotionAnalyzer {
@@ -350,8 +360,7 @@ declare class AudioMotionAnalyzer {
 
   public getOptions(ignore?: string | string[]): Options;
 
-  public getScaleX(): ScaleXProperties;
-  public getScaleY(): ScaleYProperties;
+  public getScaleProps(): ScalePropsCombined;
 
   public getTheme( includeModifiers: true ): ThemeNameAndModifiers[];
   public getTheme( includeModifiers?: false ): string[];
@@ -374,8 +383,7 @@ declare class AudioMotionAnalyzer {
 
   public setOptions(options?: Options): void;
 
-  public setScaleX( options?: ScaleXProperties ): void;
-  public setScaleY( options?: ScaleYProperties ): void;
+  public setScaleProps( options?: ScalePropsOptional ): void;
 
   public setSensitivity(minDecibels: number, maxDecibels: number): void;
 

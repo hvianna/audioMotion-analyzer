@@ -28,6 +28,15 @@ import {
 	PEAKS_OFF
 } from '../src/audioMotion-analyzer.js';
 
+import {
+	addUIEventListeners,
+	loadSong,
+	populateControls,
+	populateThemeSelections,
+	setPresets,
+	updateUI
+} from './functions.js';
+
 let audioMotion = [],
 	selectedAnalyzer = 0;
 
@@ -82,8 +91,6 @@ audioMotion[0].setOptions({
 	showScaleY: LABELS_Y_DB,
 	weightingFilter: FILTER_TILT3
 });
-
-audioMotion[0].setLeds( 6, 5 ); // thinner leds look better in a small canvas :)
 
 // top right
 audioMotion[1].setOptions({
@@ -148,6 +155,7 @@ document.querySelectorAll('canvas').forEach( el => {
 // set event listeners for UI controls
 addUIEventListeners( getInstance );
 populateThemeSelections( audioMotion[0] );
+populateControls();
 
 // File upload
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );

@@ -31,6 +31,15 @@ import {
 	RADIAL_OFF
 } from '../src/audioMotion-analyzer.js';
 
+import {
+	addUIEventListeners,
+	loadSong,
+	populateControls,
+	populateThemeSelections,
+	setPresets,
+	updateUI
+} from './functions.js';
+
 const videoEl = document.getElementById('video'),
 	  container = document.getElementById('container'),
 	  presetSelection = document.getElementById('presets');
@@ -137,5 +146,6 @@ document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 // Set event listeners for UI controls
 
 populateThemeSelections( audioMotion );
+populateControls();
 addUIEventListeners( () => audioMotion );
 setPresets( presets, () => audioMotion, 3 ); // initialize with preset 3

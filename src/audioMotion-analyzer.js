@@ -60,7 +60,7 @@ export const ALPHABARS_FULL            = 'full',
 			 FILTER_TILT45             = 'tilt4.5',
 			 LABELS_X_CUSTOM           = 'custom',
 			 LABELS_X_FREQS            = 'freqs',
-			 LABELS_X_FREQS_CUSTOM     = 'freqs-custom',
+			 LABELS_X_FREQS_CUSTOM     = 'freqs+custom',
 			 LABELS_X_NOTES            = 'notes',
 			 LABELS_X_OFF              = OPTION_OFF,
 			 LABELS_Y_DB               = 'db',
@@ -472,8 +472,7 @@ class AudioMotionAnalyzer {
 		// Initialize default properties
 		this.setLedProps();
 		this.setTheme();
-		this.setScaleX();
-		this.setScaleY();
+		this.setScaleProps();
 
 		// Set configuration options passed to the constructor and use defaults for any missing properties
 		this._setProps( options, true );
@@ -1105,21 +1104,12 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Returns the display properties of the X-Axis scale
+	 * Retrieves scale display properties on both axes
 	 *
-	 * @returns {object} options
+	 * @returns {object} props
 	 */
-	getScaleX() {
-		return { ...this._xScale };
-	}
-
-	/**
-	 * Returns the display properties of the Y-Axis scale
-	 *
-	 * @returns {object} options
-	 */
-	getScaleY() {
-		return { ...this._yScale };
+	getScaleProps() {
+		return { xAxis: deepCloneObject( this._xScale ), yAxis: deepCloneObject( this._yScale ) };
 	}
 
 	/**
@@ -1308,56 +1298,44 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Customize the X-Axis scale display
+	 * Customize scale display on one or both axes
 	 *
-	 * @param {object} options
+	 * @param {object} props
 	 */
-	setScaleX( options ) {
-		const defaultOptions = {
-			backgroundColor: '#0008',
-			color          : '#fff',
-			fontSize       : .15,
-			highlightColor : '#4f4',
-			labels         : [],
-			overlay        : false
-		};
+	setScaleProps( props ) {
+		const
+			defaultPropsX = {
+				backgroundColor: '#0008',
+				color          : '#fff',
+				fontSize       : .15,
+				highlightColor : '#4f4',
+				labels         : [],
+				overlay        : false
+			},
 
-		this._xScale = {
-			...defaultOptions,
-			// if `options` is valid, add its properties on top of current settings; otherwise keep just the defaults
-			...( isObject( options ) ? { ...this._xScale, ...options } : [] )
-		};
+			defaultPropsY = {
+				color           : '#888',
+				dbInterval      : 6,
+				fontSize        : .15,
+				lineDash        : [2,4],
+				operation       : 'destination-over',
+				percentInterval : 20,
+				showSubdivisions: true,
+				showUnit        : true,
+				subLineColor    : '#555',
+				subLineDash     : [2,8]
+			};
 
-		this._calcBars(); // note that changes to `fontSize` and `overlay` affect usable canvas height
+		const { xAxis, yAxis } = isObject( props ) ? deepCloneObject( props ) : {};
+
+		if ( xAxis !== undefined || props == undefined ) // `xAxis: null` may be passed to reset only X-axis props
+			this._xScale = { ...defaultPropsX, ...( isObject( xAxis ) ? { ...this._xScale, ...xAxis } : {} ) };
+
+		if ( yAxis !== undefined || props == undefined ) // `yAxis: null` may be passed to reset only Y-axis props
+			this._yScale = { ...defaultPropsY, ...( isObject( yAxis ) ? { ...this._yScale, ...yAxis } : {} ) };
+
+		this._calcBars(); // changes to `fontSize` and `overlay` affect usable canvas height; also needed to update yAxisWidth
 		this._makeGrad();
-	}
-
-	/**
-	 * Customize the Y-axis scale display
-	 *
-	 * @param {object} options
-	 */
-	setScaleY( options ) {
-		const defaultOptions = {
-			color           : '#888',
-			dbInterval      : 6,
-			fontSize        : .15,
-			lineDash        : [2,4],
-			operation       : 'destination-over',
-			percentInterval : 20,
-			showSubdivisions: true,
-			showUnit        : true,
-			subLineColor    : '#555',
-			subLineDash     : [2,8]
-		};
-
-		this._yScale = {
-			...defaultOptions,
-			// if `options` is valid, add its properties on top of current settings; otherwise keep just the defaults
-			...( isObject( options ) ? { ...this._yScale, ...options } : [] )
-		}
-
-		this._calcBars(); // only needed to compute yAxisWidth - TO-DO: improve this?
 	}
 
 	/**
