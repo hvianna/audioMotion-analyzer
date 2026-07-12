@@ -663,7 +663,7 @@ value       | [Constant](#constants) | Description | Preview
 
 Please note that `"modern"` and `"vintage"` will have the same look when [`colorMode`](#colormode) is set to `"bar-level"` or `"bar-index"`, as each bar will be a single color anyway.
 
-?> The height and spacing of LED elements can be customized via [`setLeds()`](#setleds) method.
+?> The appearance of the LED bars can be customized via [`setLedProps()`](#setledprops) method.
 
 For effect priority when combined with other settings, see [`isLedBars`](#isledbars-read-only).
 
@@ -1070,6 +1070,8 @@ Whether to display the "unlit" LED elements. Has no effect when [`ledBars`](#led
 :----------------------:|:-----------------------:
 ![ledmask-off](img/ledmask_off.png) | ![ledmask-on](img/ledmask_on.png)
 
+?> The appearance of the LED mask can be customized via [`setLedProps()`](#setledprops).
+
 ### `showPeaks`
 
 **Value:** a *string*. The default value is `"drop"`.
@@ -1418,6 +1420,14 @@ Use this method inside your callback function to create additional visual effect
 
 **Return value:** a *number* between `0.0` and `1.0`, or `null` if preset name is invalid.
 
+### `getLedProps()`
+
+*Available since v5.0.0*
+
+Retrieves the current properties used to create the [`ledBars`](#ledbars) effect.
+
+**Return value:** an *object*. Refer to [`setLedProps()`](#setledprops) for available properties.
+
 ### `getOptions()`
 
 *Available since v4.4.0*
@@ -1668,26 +1678,32 @@ setFreqRange(minFreq, maxFreq)
 
 **Return value:** none (`undefined`).
 
-### `setLeds()`
+### `setLedProps()`
 
 *Available since v5.0.0; formerly `setLedParams()` (since v3.2.0)*
 
-Customizes the appearance of LED elements used to create the [`ledBars`](#ledbars) effect.
+Customizes the appearance of the [`ledBars`](#ledbars) effect.
 
 **Syntax:**
 
 ```js
-setLeds(ledHeight, gapHeight)
+setLedProps()
+setLedProps(props)
 ```
 
-parameter   | type     | description     | default
+**If `props` is omitted or not an object, ALL properties are reset to their default values.**
+
+property    | type     | description     | default
 ------------|----------|-----------------|----------:
 `ledHeight` | *number* | Height, in pixels, of each LED element. **A value of `0` will match the bar width (generates square LEDs).** | `8`
-`gapHeight` | *number* | Vertical gap, in pixels, between two consecutive LED elements. **A value of `0` will match the current [bar spacing](#barSpace).** | `8`
-
-**If called with no argument, or if ANY of the values is invalid, BOTH parameters are reset to their default values.**
+`gapHeight` | *number* | Vertical gap, in pixels, between two consecutive LED elements. **A value of `0` will match the current [bar spacing](#barSpace).** | `5`
+`maskAlpha` | *number* | Opacity of the LED mask, between `0.0` (fully transparent) and `1.0` (fully opaque). | `0.2`
+`maskLightness`  | *number* | Color lightness for the LED mask, between `0` (pure black) and `100` (pure white), with `50` being the normal color intensity. **A value of `-1` will preserve the original lightness of theme colors.** | `-1`
+`maskSaturation` | *number* | Color saturation for the LED mask, between `0` (grayscale) and `100` (full saturation). **A value of `-1` will preserve the original saturation of theme colors.** | `20`
 
 **Return value:** none (`undefined`).
+
+See also [`getLedProps()`](#getledprops) and [`showLedMask`](#showledmask).
 
 ?> You can experiment with different values in the [fluid demo](https://audiomotion.dev/demo/fluid.html).
 

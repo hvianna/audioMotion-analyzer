@@ -171,9 +171,6 @@ const DEFAULT_SETTINGS = {
 	width          : undefined
 };
 
-const DEFAULT_LED_PARAMETERS = [ 8, 8 ],      // ledHeight, gapHeight
-	  DEFAULT_LEDMASK_PARAMS = [ .2, -1, 20 ]; // alpha, lightness, saturation
-
 const DEFAULT_THEME_MODIFIERS = {
 	horizontal: false,
 	reverse: false
@@ -290,20 +287,20 @@ class AudioMotionAnalyzer {
  */
 	constructor( container, options = {} ) {
 
-		this._ready = false;
-
 		// Initialize internal objects
 		this._aux = {};				// auxiliary variables
-		this._activeThemes = [];	// currently active themes for channels 0 and 1 (refer to _makeGrad() for object structure)
+		this._activeThemes = [];	// currently active themes for channels 0 and 1 - populated by _makeGrad()
 		this._bars = [];
 		this._destroyed = false;
 		this._energy = { val: 0, peak: 0, hold: 0 };
 		this._flg = {};				// flags
 		this._fps = 0;
 		this._last = 0;				// timestamp of last rendered frame
-		this._leds = [];			// currently effective led attributes (ledCount, ledHeight, ledGap)
+		this._ledProps = {};
+		this._leds = [];			// currently effective LED attributes (ledCount, ledHeight, gapHeight)
 		this._outNodes = [];		// output nodes
 		this._ownContext = false;
+		this._ready = false;
 		this._sources = [];			// input nodes
 		this._themes = {}; 			// registered color themes
 		this._xScale = {};			// X-axis scale display properties
@@ -473,6 +470,7 @@ class AudioMotionAnalyzer {
 		}, { signal } );
 
 		// Initialize default properties
+		this.setLedProps();
 		this.setTheme();
 		this.setScaleX();
 		this.setScaleY();
@@ -1083,6 +1081,13 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Returns LED bars properties
+	 */
+	getLedProps() {
+		return { ...this._ledProps };
+	}
+
+	/**
 	 * Returns current analyzer settings in object format
 	 *
 	 * @param [{string|array}] a property name or an array of property names to not include in the returned object
@@ -1154,7 +1159,7 @@ class AudioMotionAnalyzer {
 	 * @returns {object|null} theme object or null if name is invalid
 	 */
 	getThemeData( name ) {
-		return this.getThemeList().includes( name ) ? Object.fromEntries( Object.entries( this._themes[ name ] ).filter( ([key]) => key != 'mask' ) ) : null;
+		return this.getThemeList().includes( name ) ? deepCloneObject( this._themes[ name ] ) : null;
 	}
 
 	/**
@@ -1223,25 +1228,7 @@ class AudioMotionAnalyzer {
 		colorStops.sort( ( a, b ) => b.level - a.level );
 		colorStops[0].level = 1;
 
-		// generate the colorstops for the led mask
-
-		const maskColorStops = deepCloneObject( colorStops ),
-			  [ maskAlpha, maskLightness, maskSaturation ] = DEFAULT_LEDMASK_PARAMS; // TO-DO: make these customizable
-
-		for ( let i = 0; i < count; i++ ) {
-			const cs = maskColorStops[ i ],
-				  [ h, s, l ] = cssColorToHSL( cs.color );
-
-			cs.color = `hsla( ${h}, ${ maskSaturation == -1 ? s : maskSaturation }%, ${ maskLightness == -1 ? l : maskSaturation }%, ${ maskAlpha } )`;
-		}
-
-		this._themes[ name ] = {
-			colorStops,
-			mask: {
-				colorStops: maskColorStops
-			},
-			peakColor
-		};
+		this._themes[ name ] = { colorStops, peakColor };
 
 		// if the registered theme is one of the currently selected ones, regenerate the gradients
 		if ( this._activeThemes.some( theme => theme.name == name ) )
@@ -1278,18 +1265,36 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
-	 * Set custom parameters for ledBars effect
-	 * If called with no arguments or if any value is invalid, resets both parameters to the defaults
+	 * Set properties for LED bars
+	 * If called with no arguments, resets all properties to the defaults
 	 *
-	 * @param {number} height of each led element (in pixels)
-	 * @param {number} vertical gap between led elements (in pixels)
+	 * @param {object} props
 	 */
-	setLeds( ledHeight, gapHeight ) {
-		// coerce parameters to Number; `NaN` results are rejected in the condition below
-		ledHeight = +ledHeight;
-		gapHeight = +gapHeight;
+	setLedProps( props ) {
+		const defaultProps = {
+			ledHeight     : 8,
+			gapHeight     : 5,
+			maskAlpha     : .2,
+			maskLightness : -1,
+			maskSaturation: 20
+	  	};
 
-		this._ledParams = ledHeight >= 0 && gapHeight >= 0 ? [ ledHeight, gapHeight ] : undefined;
+	  	if ( isObject( props ) ) {
+	  		props = { ...props }; // prevent changing passed object
+	  		for ( const key in props ) {
+	  			if ( key in defaultProps && isNumeric( props[ key ] ) )
+	  				props[ key ] = +props[ key ]; // coerce to number
+	  			else
+	  				delete props[ key ]; // delete invalid property
+	  		}
+	  	}
+
+	  	this._ledProps = { ...defaultProps, ...( isObject( props ) ? { ...this._ledProps, ...props } : {} ) };
+
+	  	// if reset to defaults or changed any mask property, call _makeGrad() to regenerate mask colors and gradient
+	  	if ( ! isObject( props ) || Object.keys( props ).some( k => k.startsWith('mask') ) )
+	  		this._makeGrad();
+
 		this._calcBars();
 	}
 
@@ -1854,35 +1859,38 @@ class AudioMotionAnalyzer {
 			// adjustment for high pixel-ratio values reported on low-resolution screens (Android TV)
 			const dPR = _pixelRatio / ( window.devicePixelRatio > 1 && window.screen.height <= 540 ? 2 : 1 );
 
-			let [ ledHeight, ledGap ] = ( this._ledParams || DEFAULT_LED_PARAMETERS ).map( v => v * dPR ),
-				isSquareLeds          = ledHeight == 0;
+			let { ledHeight, gapHeight } = this._ledProps,
+				isSquareLeds             = ledHeight == 0;
+
+			ledHeight *= dPR;
+			gapHeight *= dPR;
 
 			if ( isSquareLeds )
 				ledHeight = barWidth;
 
-			if ( ledGap == 0 )
-				ledGap = barSpacePx;  // matches gapHeight to bar spacing
+			if ( gapHeight == 0 )
+				gapHeight = barSpacePx;  // matches gapHeight to bar spacing
 
-			let maxHeight  = analyzerHeight + ( noLedGap ? ledGap : 0 ), // if noLedGap is true, add one extra gap height so the last gap is off-screen
-				elemHeight = ledHeight + ledGap,                         // height of one LED element + gap (defined by user)
-				ledCount   = maxHeight / elemHeight | 0,                 // how many LED elements fit in the available canvas height
-				unitHeight = maxHeight / ledCount;                       // height of one LED element + gap (adjusted to fit canvas height)
+			let maxHeight  = analyzerHeight + ( noLedGap ? gapHeight : 0 ), // if noLedGap is true, add one extra gap height so the last gap is off-screen
+				elemHeight = ledHeight + gapHeight,                         // height of one LED element + gap (defined by user)
+				ledCount   = maxHeight / elemHeight | 0,                    // how many LED elements fit in the available canvas height
+				unitHeight = maxHeight / ledCount;                          // height of one LED element + gap (adjusted to fit canvas height)
 
-			if ( isSquareLeds || ledGap > ledHeight ) {               // for square LEDs, or when ledGap is higher than ledHeight
-				ledGap = unitHeight * ( 1 - ledHeight / unitHeight ); // adjust ledGap, preserve user-defined ledHeight (only needs minor adjustment when noLedGap is true)
+			if ( isSquareLeds || gapHeight > ledHeight ) {               // for square LEDs, or when gapHeight is higher than ledHeight
+				gapHeight = unitHeight * ( 1 - ledHeight / unitHeight ); // adjust gapHeight, preserve user-defined ledHeight (only needs minor adjustment when noLedGap is true)
 				if ( noLedGap ) {
-					// when ledGap changes, more adjustments are necessary for noLedGap
-					const ledBarHeight = ( ledHeight + ledGap ) * ledCount, // height of full LED bar
-						  newMaxHeight = analyzerHeight + ledGap;           // height it needs to be
-					ledGap += ( newMaxHeight - ledBarHeight ) / ledCount;   // distribute the difference across all gaps
-					unitHeight = ( analyzerHeight + ledGap ) / ledCount;    // update unitHeight with new ledGap, for ledHeight adjustment below
+					// when gapHeight changes, more adjustments are necessary for noLedGap
+					const ledBarHeight = ( ledHeight + gapHeight ) * ledCount, // height of full LED bar
+						  newMaxHeight = analyzerHeight + gapHeight;           // height it needs to be
+					gapHeight += ( newMaxHeight - ledBarHeight ) / ledCount;   // distribute the difference across all gaps
+					unitHeight = ( analyzerHeight + gapHeight ) / ledCount;    // update unitHeight with new gapHeight, for ledHeight adjustment below
 				}
 			}
 
-			// adjust ledHeight (user-defined ledGap is preserved when less than or equal to ledHeight)
-			ledHeight = unitHeight * ( 1 - ledGap / unitHeight );
+			// adjust ledHeight (user-defined gapHeight is preserved when less than or equal to ledHeight)
+			ledHeight = unitHeight * ( 1 - gapHeight / unitHeight );
 
-			this._leds = [ ledCount, ledHeight, ledGap ];
+			this._leds = [ ledCount, ledHeight, gapHeight ];
 		}
 
 		// COMPUTE ADDITIONAL BAR POSITIONING, ACCORDING TO THE CURRENT SETTINGS
@@ -1916,13 +1924,13 @@ class AudioMotionAnalyzer {
 
 		// COMPUTE CHANNEL COORDINATES
 
-		const channelCoords = [],
-			  [,, ledGap ]  = this._leds;
+		const channelCoords   = [],
+			  [,, gapHeight ] = this._leds;
 
 		for ( const channel of [0,1] ) {
 			const channelTop     = _chLayout == LAYOUT_VERTICAL ? ( channelHeight + channelGap ) * channel : 0,
 				  channelBottom  = channelTop + channelHeight,
-				  analyzerBottom = channelTop + analyzerHeight - ( ! isLeds || noLedGap ? 0 : ledGap );
+				  analyzerBottom = channelTop + analyzerHeight - ( ! isLeds || noLedGap ? 0 : gapHeight );
 
 			channelCoords.push( { channelTop, channelBottom, analyzerBottom } );
 		}
@@ -2241,7 +2249,7 @@ class AudioMotionAnalyzer {
 			    _yScale,
 			    _yShow }     = this,
 
-			  [ ledCount, ledHeight, ledGap ] = this._leds,
+			  [ ledCount, ledHeight, gapHeight ] = this._leds,
 			  canvasX          = this._ctxX.canvas,
 			  canvasR          = this._ctxR.canvas,
 			  isDualCombined   = _chLayout == LAYOUT_COMBINED,
@@ -2260,7 +2268,7 @@ class AudioMotionAnalyzer {
 			  showPeakLine     = showPeaks && _peakLine > 0 && isGraphMode,
 			  maxBarHeight     = isRadial ? outerRadius - innerRadius : analyzerHeight,
 			  dbRange 		   = maxDecibels - minDecibels,
-			  ledUnitHeight    = ledHeight + ledGap;
+			  ledUnitHeight    = ledHeight + gapHeight;
 
 		if ( _energy.val > 0 && _fps > 0 )
 			this._spinAngle += this._spinSpeed * TAU / 60 / _fps; // spinSpeed * angle increment per frame for 1 RPM
@@ -2409,7 +2417,7 @@ class AudioMotionAnalyzer {
 			const ledUnits = value => Math.round( clamp( value, 0, 1 ) * ledCount );
 
 			// converts an amplitude value (0-1) to a height that, when subtracted from `analyzerBottom`, matches the top position of a LED element
-			const ledPosY = value => Math.max( 0, ledUnits( value ) * ledUnitHeight - ledGap );
+			const ledPosY = value => Math.max( 0, ledUnits( value ) * ledUnitHeight - gapHeight );
 
 			// FRAME START
 			_ctx.clearRect( 0, 0, canvas.width, canvas.height );
@@ -2417,7 +2425,7 @@ class AudioMotionAnalyzer {
 			for ( const channel of isSingle ? [0] : [0,1] ) {
 
 				const theme            = _activeThemes[ channel ],
-					  { colorStops, gradient, mask } = theme,
+					  { colorStops, gradient, ledMask } = theme,
 					  { channelTop, channelBottom, analyzerBottom } = channelCoords[ channel ],
 					  colorCount       = colorStops.length,
 					  radialDirection  = isDualVertical && isRadial && channel ? -1 : 1, // 1 = outwards, -1 = inwards
@@ -2477,7 +2485,7 @@ class AudioMotionAnalyzer {
 					_ctx.fill();
 				}
 
-				// render a bar of LEDs where each element has a single color (uses: analyzerBottom, isLumi, ledGap)
+				// render a bar of LEDs where each element has a single color (uses: analyzerBottom, isLumi, gapHeight)
 				const renderVintageLeds = ( colorStops, barCenter, barHeight, barValue ) => {
 					const colorIndex       = isLumi ? 0 : colorStops.findLastIndex( item => ledUnits( barValue ) <= ledUnits( item.level ) ),
 						  savedStrokeStyle = _ctx.strokeStyle;
@@ -2495,7 +2503,7 @@ class AudioMotionAnalyzer {
 						_ctx.strokeStyle = colorStops[ i ].color;
 						strokeBar( barCenter, lastBottom, topY );
 
-						last = [ topY - ledGap, ledTop ]; // update last used values
+						last = [ topY - gapHeight, ledTop ]; // update last used values
 					}
 
 					_ctx.strokeStyle = savedStrokeStyle;
@@ -2526,7 +2534,7 @@ class AudioMotionAnalyzer {
 
 				// set line width and dash for LEDs effect
 				if ( isLeds ) {
-					_ctx.setLineDash( [ ledHeight, ledGap ] );
+					_ctx.setLineDash( [ ledHeight, gapHeight ] );
 					_ctx.lineWidth = _bars[0].width;
 				}
 				else // for outline effect ensure linewidth is not greater than half the bar width
@@ -2602,18 +2610,18 @@ class AudioMotionAnalyzer {
 					}
 					else {
 						if ( isLeds ) {
-							// draw led mask - avoid drawing it twice on 'dual-combined' channel layout
+							// draw LED mask - avoid drawing it twice on 'dual-combined' channel layout
 							if ( showLedMask && ( ! isDualCombined || channel == 0 ) ) {
 								const savedAlpha = _ctx.globalAlpha;
 								_ctx.globalAlpha = 1; // TO-DO: maybe set the led mask alpha here, instead of doing it in each color?
 								if ( isVintageLeds )
-									renderVintageLeds( mask.colorStops, barCenter, maxBarHeight, 1 );
+									renderVintageLeds( ledMask.colorStops, barCenter, maxBarHeight, 1 );
 								else {
 									const savedColor = _ctx.fillStyle;
 									if ( _colorMode == COLORMODE_GRADIENT )
-										_ctx.strokeStyle = mask.gradient;
+										_ctx.strokeStyle = ledMask.gradient;
 									else
-										setBarColor( mask.colorStops, 0, barIndex );
+										setBarColor( ledMask.colorStops, 0, barIndex );
 									strokeBar( barCenter, channelTop, analyzerBottom );
 									_ctx.fillStyle = _ctx.strokeStyle = savedColor;
 								}
@@ -2674,7 +2682,7 @@ class AudioMotionAnalyzer {
 						// render peak according to current mode / effect
 						if ( isLeds ) {
 							const ledPeak = ledPosY( peakValue );
-							if ( ledPeak >= ledGap ) // avoid peak below first led
+							if ( ledPeak >= gapHeight ) // avoid peak below first led
 								_ctx.fillRect( posX, analyzerBottom - ledPeak, width, ledHeight );
 						}
 						else if ( ! isRadial )
@@ -2861,9 +2869,9 @@ class AudioMotionAnalyzer {
 	 *			colorStops: <array>,
 	 *			peakColor: <string>,
 	 *
-	 *			// gradient and mask.gradient are generated here
+	 *			// gradient and ledMask are generated here
 	 *			gradient: <CanvasGradient>,
-	 *			mask: {
+	 *			ledMask: {
 	 *				colorStops: <array>,
 	 *				gradient: <CanvasGradient>
 	 *			}
@@ -2882,13 +2890,13 @@ class AudioMotionAnalyzer {
 			  isDualHorizontal  = _chLayout == LAYOUT_HORIZONTAL;
 
 		for ( const channel of [0,1] ) {
-			const { name, modifiers }  = this._activeThemes[ channel ],
-				  isRadial             = this._radial != RADIAL_OFF,
-				  analyzerRatio        = isRadial || modifiers.horizontal ? 1 : analyzerHeight / channelHeight,
-				  sourceTheme          = deepCloneObject( this._themes[ name ] ),
-				  { colorStops, mask } = sourceTheme,
-				  maskColorStops       = mask.colorStops,
-				  maxIndex             = colorStops.length - 1;
+			const { name, modifiers } = this._activeThemes[ channel ],
+				  isRadial            = this._radial != RADIAL_OFF,
+				  analyzerRatio       = isRadial || modifiers.horizontal ? 1 : analyzerHeight / channelHeight,
+				  sourceTheme         = deepCloneObject( this._themes[ name ] ),
+				  { colorStops }      = sourceTheme,
+				  maxIndex            = colorStops.length - 1,
+				  { maskAlpha, maskLightness, maskSaturation } = this._ledProps;
 
 			// compute start and end coordinates for the gradient on each channel
 
@@ -2934,9 +2942,17 @@ class AudioMotionAnalyzer {
 				// reverse colors only (preserve offsets and level thresholds of each colorstop)
 				for ( let i = 0; i <= maxIndex >> 1; i++ ) {
 					[ colorStops[ i ].color, colorStops[ maxIndex - i ].color ] = [ colorStops[ maxIndex - i ].color, colorStops[ i ].color ];
-					[ maskColorStops[ i ].color, maskColorStops[ maxIndex - i ].color ] = [ maskColorStops[ maxIndex - i ].color, maskColorStops[ i ].color ]
 				}
 			}
+
+			// Generate LED mask colorStops
+			const maskColorStops = deepCloneObject( colorStops );
+			for ( const cs of maskColorStops ) {
+				const [ h, s, l ] = cssColorToHSL( cs.color );
+				cs.color = `hsla( ${h}, ${ maskSaturation == -1 ? s : maskSaturation }%, ${ maskLightness == -1 ? l : maskSaturation }%, ${ maskAlpha } )`;
+			}
+
+			// Generate gradients
 
 			let gradient     = isRadial ? _ctx.createRadialGradient( centerX, centerY, outer, centerX, centerY, inner ) : createNewGradient(),
 				maskGradient = isRadial ? null : createNewGradient(); // no LEDs in radial
@@ -2967,10 +2983,9 @@ class AudioMotionAnalyzer {
 				...sourceTheme, // preserves properties from the source theme, not changed here, like `peakColor`
 				colorStops,		// from the source theme, but modified by this method if `flipGrad` is on
 				gradient,		// generated by this method
-				mask: {
-					...sourceTheme.mask,        // preserves any original properties (future-proof!)
-					colorStops: maskColorStops, // from the source theme, but modified by this method if `flipGrad` is on
-					gradient: maskGradient      // generated by this method
+				ledMask: {		// generated by this method
+					colorStops: maskColorStops,
+					gradient: maskGradient
 				}
 			};
 

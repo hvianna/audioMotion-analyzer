@@ -142,6 +142,14 @@ export interface GradientOptions {
   peakColor?: string;
 }
 
+export interface LedProps {
+  ledHeight?: number,
+  gapHeight?: number,
+  maskAlpha?: number,
+  maskLightness?: number,
+  maskSaturation?: number
+}
+
 export interface ScaleXProperties {
   backgroundColor?: string;
   color?: string;
@@ -338,6 +346,8 @@ declare class AudioMotionAnalyzer {
   public getEnergy(preset?: EnergyPreset): number;
   public getEnergy(startFreq: number, endFreq?: number): number;
 
+  public getLedProps(): LedProps;
+
   public getOptions(ignore?: string | string[]): Options;
 
   public getScaleX(): ScaleXProperties;
@@ -357,8 +367,11 @@ declare class AudioMotionAnalyzer {
   public registerTheme(name: string, options: GradientOptions): boolean;
 
   public setCanvasSize(width: number, height: number): void;
+
   public setFreqRange(minFreq: number, maxFreq: number): void;
-  public setLeds(ledHeight: number, gapHeight: number): void;
+
+  public setLedProps( props?: LedProps ): void;
+
   public setOptions(options?: Options): void;
 
   public setScaleX( options?: ScaleXProperties ): void;

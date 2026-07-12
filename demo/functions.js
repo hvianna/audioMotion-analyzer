@@ -4,19 +4,19 @@ function setPresets( presets, getInstance, initLoad ) {
 		  presetSelection = document.getElementById('presets');
 
 	const loadPreset = index => {
-		const { options, theme, ledParams } = presets[ index ];
+		const { options, theme, ledProps } = presets[ index ];
 		audioMotion.setOptions( options );
 		if ( theme !== undefined ) { // `null` also satisfies this condition, and will reset themes to default
 			audioMotion.setThemeModifiers(); // reset modifiers to defaults first
 			audioMotion.setTheme( theme );
 		}
-		if ( ledParams ) {
-			document.getElementById('customLeds').checked = !! ledParams.length;
-			if ( ledParams.length ) {
-				ledHeight.value = ledParams[0];
-				gapHeight.value = ledParams[1];
+		if ( ledProps !== undefined ) {
+			document.getElementById('customLeds').checked = ledProps !== null;
+			if ( ledProps !== null ) {
+				ledHeight.value = ledProps.ledHeight;
+				gapHeight.value = ledProps.gapHeight;
 			}
-			audioMotion.setLeds( ...ledParams );
+			audioMotion.setLedProps( ledProps );
 		}
 		updateUI( getInstance );
 	}

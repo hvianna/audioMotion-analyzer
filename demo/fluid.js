@@ -90,7 +90,7 @@ const presets = [
 			weightingFilter: FILTER_TILT3
 		},
 		theme: 'classic',
-		ledParams: []
+		ledProps: null
 	},
 	{
 		name: 'Square LEDs',
@@ -116,7 +116,7 @@ const presets = [
 			weightingFilter: FILTER_TILT3
 		},
 		theme: 'rainbow',
-		ledParams: [0,0]
+		ledProps: { ledHeight: 0, gapHeight: 0 }
 	},
 	{
 		name: 'Mirror wave',
@@ -269,7 +269,7 @@ const presets = [
 			minFreq: 20
 		},
 		theme: [ 'steelblue', 'orangered' ],
-		ledParams: []
+		ledProps: null
 	},
 	{
 		// gradient sample images for docs are created with a 27.5 Hz square wave (volume: 1) in the oscillator
@@ -326,7 +326,7 @@ const presets = [
 			showScaleY: LABELS_Y_DB,
 			spreadGradient: false
 		},
-		ledParams: []
+		ledProps: null
 	}
 ];
 
@@ -403,7 +403,7 @@ document.querySelectorAll('[data-feature]').forEach( el => {
 // custom LEDs
 document.querySelectorAll('[data-custom]').forEach( el => {
 	el.addEventListener( 'input', () => {
-		audioMotion.setLeds( ...( customLeds.checked ? [ ledHeight.value, gapHeight.value ] : [] ) );
+		audioMotion.setLedProps( customLeds.checked ? { ledHeight: ledHeight.value, gapHeight: gapHeight.value } : null );
 	});
 });
 
