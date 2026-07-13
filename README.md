@@ -1869,8 +1869,8 @@ Parameter   | type     | description
 
 Property     | type      | description
 -------------|-----------|---------------
-`horizontal` | *boolean* | When `true`, the color gradient is rendered horizontally - has no effect in [`radial`](#radial) spectrum or when [`ledBars`](#ledbars) is set to `"vintage"`
-`reverse`    | *boolean* | When `true`, reverses the order in which theme colors are applied
+`horizontal` | *boolean* | `true` to create a horizontal color gradient - has no effect in [`radial`](#radial) spectrum or when [`ledBars`](#ledbars) is set to `"vintage"`
+`reverse`    | *boolean* | `true` to reverse the order in which theme colors are applied
 
 **Return value:** none (`undefined`).
 

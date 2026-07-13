@@ -140,6 +140,8 @@ catch( err ) {
 	container.innerHTML = `<p>audioMotion-analyzer failed with error: ${ err.code ? '<strong>' + err.code + '</strong>' : '' } <em>${ err.code ? err.message : err }</em></p>`;
 }
 
+audioMotion.setScaleProps({ xAxis: { overlay: true } });
+
 // Display package version at the footer
 document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 

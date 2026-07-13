@@ -8,9 +8,10 @@ Changelog
 
 **New/changed in this release:**
 
-+ Renamed `setLeds()` to [`setLedProps()`](README.md#setledprops) - it now allows to customize LED mask as well; added [`getLedProps()`](README.md#setledprops);
++ Renamed `setLeds()` to [`setLedProps()`](README.md#setledprops) and added [`getLedProps()`](README.md#setledprops) &ndash; LED mask properties are now customizable as well;
 + Minor tweak to default LED gap height (reduced from `8` to `5`);
 + Consolidated `setScaleX()` / `setScaleY()` and `getScaleX()` / `getScaleY()` into [`setScaleProps()`](README.md#setscaleprops) and [`getScaleProps()`](README.md#getscaleprops);
++ `operation` property renamed to `compositing` in [`setScaleProps()`](README.md#setscaleprops);
 + Made argument order more consistent among [`getTheme()`](README.md#gettheme), [`setTheme()`](README.md#settheme), [`getThemeModifiers()`](README.md#getthememodifiers) and [`setThemeModifiers()`](README.md#setthememodifiers) methods;
 + [`getTheme()`](README.md#gettheme) now returns data for both channels in an array, when `channel` argument is omitted or invalid;
 + New [`weightingGain()`](README.md#weightinggain) static method;
@@ -23,9 +24,9 @@ Changelog
 
 ### Version 5 overview: <!-- {docsify-ignore} -->
 
-+ Expect LOTS of breaking changes 😅 - I'm taking this opportunity to consolidate related properties and make some long-overdue changes;
-+ Gradients are now called **Themes** - added new `peakColor` property in [`registerTheme()`](README.md#registertheme) and [**on-the-fly** horizontal and reverse gradient generation](README.md#setthememodifiers);
-+ **LED bars look better and are easier to customize** - see [`setLedProps()`](README.md#setledprops) and [`showLedMask`](README.md#showledmask);
++ Expect LOTS of breaking changes 😅 &ndash; I'm taking this opportunity to consolidate related properties and make some long-overdue changes;
++ Gradients are now called **Themes** &ndash; added new `peakColor` property in [`registerTheme()`](README.md#registertheme) and [**on-the-fly horizontal and reverse modifiers**](README.md#setthememodifiers);
++ **LED bars look better and are easier to customize** &ndash; see [`setLedProps()`](README.md#setledprops) and [`showLedMask`](README.md#showledmask);
 + X- and Y-axis scales are now customizable via [`setScaleProps()`](README.md#setscaleprops);
 + The analyzer canvas is now always transparent, so **all background-related properties are gone,** including `bgColor` in the theme definition;
 + No more [errors thrown](README.md#custom-errors) for non-critical issues, like invalid option values;
@@ -84,6 +85,8 @@ Removed methods and properties | Use this instead
 
 ### Changed: <!-- {docsify-ignore} -->
 
++ **By default, the X-axis scale no longer overlaps the analyzer area.** When [`showScaleX`](README.md#showscalex) is enabled, analyzer graphs now start directly **above** the scale. To restore the previous behavior, set `xAxis.overlay` to `true` in [`setScaleProps()`](README.md#setscaleprops);
++ In *dual-vertical* channel layout the X-axis scale is now displayed on both channels, when [`showScaleX`](README.md#showscalex) is on;
 + Minor color offset adjustments in the `"classic"` theme - the old values can be found in [this Discussions post](https://github.com/hvianna/audioMotion-analyzer/discussions/44);
 + The `"fschange"` value for `reason` in the [`onCanvasResize`](README.md#oncanvasresize) callback has been changed to `"fullscreenchange"`. You can use the new [constants](README.md#constants) exported by the module for future-proof checks.
 + New default values:

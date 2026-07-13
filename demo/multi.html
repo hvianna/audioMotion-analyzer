@@ -62,7 +62,7 @@
 				<select data-prop="colorMode"></select>
 			</label>
 
-			<label class="label"><a href="https://audiomotion.dev/#/?id=settheme" target="_blank">setTheme (channel 0)</a>
+			<label class="label"><a href="https://audiomotion.dev/#/?id=settheme" target="_blank">setTheme(0)</a>
 				<div class="grid grid-2-cols">
 					<select data-setter="setTheme" data-getter="getTheme" data-channel="0" class="colspan-2"></select>
 					<button class="small-button" data-setter="setThemeModifiers" data-channel="0" data-prop="horizontal" data-getter="getThemeModifiers">horizontal</button>
@@ -70,7 +70,7 @@
 				</div>
 			</label>
 
-			<label class="label"><a href="https://audiomotion.dev/#/?id=settheme" target="_blank">setTheme (channel 1)</a>
+			<label class="label"><a href="https://audiomotion.dev/#/?id=settheme" target="_blank">setTheme(1)</a>
 				<div class="grid grid-2-cols">
 					<select data-setter="setTheme" data-getter="getTheme" data-channel="1" class="colspan-2"></select>
 					<button class="small-button" data-setter="setThemeModifiers" data-channel="1" data-prop="horizontal" data-getter="getThemeModifiers">horizontal</button>
@@ -85,6 +85,17 @@
 			<label class="label">volume
 				<input type="range" min="0" max="1" step=".1" data-prop="volume">
 				<div class="value"></div>
+			</label>
+
+			<label class="label"><a href="https://audiomotion.dev/#/?id=maxfps" target="_blank">maxFPS</a>
+				<select data-prop="maxFPS">
+					<option>0</option>
+					<option>10</option>
+					<option>20</option>
+					<option>30</option>
+					<option>60</option>
+					<option>120</option>
+				</select>
 			</label>
 		</div>
 
@@ -227,12 +238,12 @@
 					<div class="value"></div>
 				</label>
 
-				<label class="label"><a href="https://audiomotion.dev/#/?id=peakdecaytime" target="_blank">peakDecayTime</a>
+				<label class="label small"><a href="https://audiomotion.dev/#/?id=peakdecaytime" target="_blank">peakDecayTime</a>
 					<input type="range" min="0" max="2000" step="50" data-prop="peakDecayTime">
 					<div class="value"></div>
 				</label>
 
-				<label class="label"><a href="https://audiomotion.dev/#/?id=peakhold" target="_blank">peakHoldTime</a>
+				<label class="label small"><a href="https://audiomotion.dev/#/?id=peakhold" target="_blank">peakHoldTime</a>
 					<input type="range" min="0" max="1000" step="50" data-prop="peakHoldTime">
 					<div class="value"></div>
 				</label>
