@@ -1319,10 +1319,10 @@ class AudioMotionAnalyzer {
 
 			defaultPropsY = {
 				color           : '#888',
+				compositing     : 'destination-over',
 				dbInterval      : 6,
 				fontSize        : .15,
 				lineDash        : [2,4],
-				operation       : 'destination-over',
 				percentInterval : 20,
 				showSubdivisions: true,
 				showUnit        : true,
@@ -2313,7 +2313,7 @@ class AudioMotionAnalyzer {
 				if ( ! showScaleY || isLumi || isRadial )
 					return;
 
-				const { color, dbInterval, percentInterval, lineDash, operation, showSubdivisions, showUnit, subLineColor, subLineDash } = _yScale,
+				const { color, compositing, dbInterval, percentInterval, lineDash, showSubdivisions, showUnit, subLineColor, subLineDash } = _yScale,
 					  fontSize   = yAxisWidth >> 1,
 					  isDbLabels = _yShow == LABELS_Y_DB,
 					  increment  = ( isDbLabels ? dbInterval : percentInterval ) / ( showSubdivisions ? 2 : 1 ),
@@ -2325,7 +2325,7 @@ class AudioMotionAnalyzer {
 					  unitHeight = analyzerHeight / ( max - min );
 
 				_ctx.save();
-				_ctx.globalCompositeOperation = operation;
+				_ctx.globalCompositeOperation = compositing;
 				_ctx.fillStyle = color;
 				_ctx.font = `${fontSize}px ${FONT_FAMILY}`;
 				_ctx.textAlign = 'right';

@@ -411,14 +411,14 @@ audioMotion.setScaleProps({
 			[ 3000, '|', true ],
 			[ 440, 'A4', true ],
 		],
-//		overlay: false
+//		overlay: true
 	},
 	yAxis: {
 //		color           : '#888',
+//		compositing     : 'screen',
 //		dbInterval      : 6,
 //		fontSize        : .15,
 //		lineDash        : [2,4],
-//		operation       : 'destination-over',
 //		percentInterval : 20,
 //		showSubdivisions: true,
 //		showUnit        : true,

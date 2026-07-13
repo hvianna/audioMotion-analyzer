@@ -1767,10 +1767,10 @@ Property           | type      | description | default
 Property           | type      | description | default
 -------------------|-----------|-------------|---------
 `color`            | *string*  | Color of labels and lines | `"#888"`
+`compositing`      | *string*  | Compositing operation used to draw labels and lines. See [Reference](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation). **Note: some compositing operations may hinder or prevent the proper visualization of analyzer graphs.** | `"destination-over"`
 `dbInterval`       | *number*  | Interval between labels, in decibels. Applied when [`showScaleY`](#showscaley) is set to `"db"`. | `6`
 `fontSize`         | *number*  | Font size for labels. For responsive behavior, values between `0.0` and `1.0` represent a fraction of one tenth of the canvas width or height (whichever is smaller). A minimum of 10px is enforced for the computed value. Values greater than `1` are interpreted as fixed pixel sizes. | `0.15`
 `lineDash`         | *array*   | Line style. See [format reference](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/setLineDash) | `[2,4]`
-`operation`        | *string*  | Compositing operation used to draw labels and lines. See [Reference](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation). **Note: some operations may hinder or prevent the proper visualization of analyzer graphs.** | `"destination-over"`
 `percentInterval`  | *number*  | Interval between labels, in percentage values. Applied when [`showScaleY`](#showscaley) is set to `"percent"` | `20`
 `showSubdivisions` | *boolean* | Whether to show subdivision lines between two labels | `true`
 `showUnit`         | *boolean* | Whether to display the scale unit ("dB" or "%") at the top of the axis | `true`
@@ -1792,8 +1792,8 @@ audioMotion.setScaleProps({
         ],
     },
     yAxis: {
+        compositing: 'screen',
         percentInterval: 10,
-        operation: 'screen',
         showSubdivisions: false,
     }
 });
