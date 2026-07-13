@@ -2927,7 +2927,7 @@ class AudioMotionAnalyzer {
 			const maskColorStops = deepCloneObject( colorStops );
 			for ( const cs of maskColorStops ) {
 				const [ h, s, l ] = cssColorToHSL( cs.color );
-				cs.color = `hsla( ${h}, ${ maskSaturation == -1 ? s : maskSaturation }%, ${ maskLightness == -1 ? l : maskSaturation }%, ${ maskAlpha } )`;
+				cs.color = `hsla( ${h}, ${ maskSaturation == -1 ? s : maskSaturation }%, ${ maskLightness == -1 ? l : maskLightness }%, ${ maskAlpha } )`;
 			}
 
 			// Generate gradients
