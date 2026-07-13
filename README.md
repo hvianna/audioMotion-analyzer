@@ -1684,6 +1684,8 @@ setLedProps(props)
 
 **If `props` is omitted or not an object, ALL properties are reset to their default values.**
 
+To reset a specific property to its default, set it to `null` in the passed object.
+
 Property    | type     | description     | default
 ------------|----------|-----------------|----------:
 `ledHeight` | *number* | Height, in pixels, of each LED element. **A value of `0` will match the bar width (generates square LEDs).** | `8`

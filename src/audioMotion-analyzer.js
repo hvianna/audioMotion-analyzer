@@ -1272,8 +1272,12 @@ class AudioMotionAnalyzer {
 	  	if ( isObject( props ) ) {
 	  		props = { ...props }; // prevent changing passed object
 	  		for ( const key in props ) {
-	  			if ( key in defaultProps && isNumeric( props[ key ] ) )
-	  				props[ key ] = +props[ key ]; // coerce to number
+	  			if ( key in defaultProps ) {
+	  				if ( isNumeric( props[ key ] ) )
+	  					props[ key ] = +props[ key ]; // coerce to number
+	  				else
+	  					props[ key ] = defaultProps[ key ]; // not a number? reset to default
+	  			}
 	  			else
 	  				delete props[ key ]; // delete invalid property
 	  		}

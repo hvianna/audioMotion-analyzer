@@ -356,6 +356,9 @@ input.wide-range {
 .grid-6-cols {
 	grid-template-columns: repeat(6, 1fr);
 }
+.grid-7-cols {
+	grid-template-columns: repeat(7, 1fr);
+}
 
 .multi-block {
 	display: grid;

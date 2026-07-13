@@ -52,11 +52,7 @@ import {
 
 const audioEl             = document.getElementById('audio'),
 	  backgroundSelection = document.getElementById('bgColor'),
-	  container           = document.getElementById('container'),
-	  customLeds          = document.getElementById('customLeds'),
-	  ledHeight           = document.getElementById('ledHeight'),
-	  gapHeight           = document.getElementById('gapHeight');
-
+	  container           = document.getElementById('container');
 
 // container background options
 const bgOptions = [
@@ -72,7 +68,8 @@ const presets = [
 	{
 		name: 'Reset to defaults',
 		options: null,
-		theme: null
+		theme: null,
+		ledProps: null
 	},
 	{
 		name: 'Classic LED bars',
@@ -99,7 +96,7 @@ const presets = [
 			weightingFilter: FILTER_TILT3
 		},
 		theme: 'classic',
-		ledProps: null
+		ledProps: { ledHeight: null, gapHeight: null } // reset LED format, but keep any customized mask values
 	},
 	{
 		name: 'Square LEDs',
@@ -125,7 +122,7 @@ const presets = [
 			weightingFilter: FILTER_TILT3
 		},
 		theme: 'rainbow',
-		ledProps: { ledHeight: 0, gapHeight: 0 }
+		ledProps: { ledHeight: 0, gapHeight: 0 } // make square LEDs, but keep any customized mask values
 	},
 	{
 		name: 'Mirror wave',
@@ -397,25 +394,12 @@ else
 audioMotion.connectInput( gainNode );
 
 // Event listeners for UI controls
-
 setPresets( presets, () => audioMotion );
 addUIEventListeners( () => audioMotion );
+populateThemeSelections( audioMotion );
+populateControls();
 
-// handle selection of custom demo features
-document.querySelectorAll('[data-feature]').forEach( el => {
-	el.addEventListener( 'click', () => {
-		features[ el.dataset.feature ] = ! features[ el.dataset.feature ];
-		el.classList.toggle( 'active' );
-	});
-});
-
-// custom LEDs
-document.querySelectorAll('[data-custom]').forEach( el => {
-	el.addEventListener( 'input', () => {
-		audioMotion.setLedProps( customLeds.checked ? { ledHeight: ledHeight.value, gapHeight: gapHeight.value } : null );
-	});
-});
-
+// add custom scale labels
 audioMotion.setScaleProps({
 	xAxis: {
 //		backgroundColor: '#0008',
@@ -443,13 +427,17 @@ audioMotion.setScaleProps({
 	}
 });
 
+// handle selection of custom demo features
+document.querySelectorAll('[data-feature]').forEach( el => {
+	el.addEventListener( 'click', () => {
+		features[ el.dataset.feature ] = ! features[ el.dataset.feature ];
+		el.classList.toggle( 'active' );
+	});
+});
+
 bgOptions.forEach( ( [ text, value ] ) => backgroundSelection.append( new Option( text, value ) ) );
-setBackground(); // initialize background
-
 backgroundSelection.addEventListener( 'change', () => setBackground() );
-
-populateThemeSelections( audioMotion );
-populateControls();
+setBackground(); // initialize background
 
 audioMotion.canvas.addEventListener( 'mousemove', evt => {
 	mouseX = evt.offsetX;

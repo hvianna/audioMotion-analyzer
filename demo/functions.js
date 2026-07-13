@@ -129,11 +129,6 @@ export function setPresets( presets, getInstance, initLoad ) {
 			audioMotion.setTheme( theme );
 		}
 		if ( ledProps !== undefined ) {
-			document.getElementById('customLeds').checked = ledProps !== null;
-			if ( ledProps !== null ) {
-				ledHeight.value = ledProps.ledHeight;
-				gapHeight.value = ledProps.gapHeight;
-			}
 			audioMotion.setLedProps( ledProps );
 		}
 		updateUI( getInstance );

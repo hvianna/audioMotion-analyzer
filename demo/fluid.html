@@ -87,6 +87,17 @@
 				<input type="range" min="0" max="1" step=".1" data-prop="volume">
 				<div class="value"></div>
 			</label>
+
+			<label class="label"><a href="https://audiomotion.dev/#/?id=maxfps" target="_blank">maxFPS</a>
+				<select data-prop="maxFPS">
+					<option>0</option>
+					<option>10</option>
+					<option>20</option>
+					<option>30</option>
+					<option>60</option>
+					<option>120</option>
+				</select>
+			</label>
 		</div>
 
 		<div class="box center flex">
@@ -240,15 +251,21 @@
 			</fieldset>
 
 			<fieldset>
-				<legend>Custom LED parameters</legend>
-				<label class="label">Enable
-					<input id="customLeds" type="checkbox" data-custom="ledProps">
+				<legend>Custom LEDs - setLedProps()</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=setledprops" target="_blank">ledHeight</a>
+					<input data-getter="getLedProps" data-prop="ledHeight" data-setter="setLedProps" type="number" min="0" max="50">
 				</label>
-				<label class="label"><a href="https://audiomotion.dev/#/?id=setleds" target="_blank">ledHeight</a>
-					<input id="ledHeight" type="number" min="0" max="50" value="3" data-custom="ledProps">
+				<label class="label"><a href="https://audiomotion.dev/#/?id=setledprops" target="_blank">ledGap</a>
+					<input data-getter="getLedProps" data-prop="gapHeight" data-setter="setLedProps" type="number" min="0" max="50">
 				</label>
-				<label class="label"><a href="https://audiomotion.dev/#/?id=setleds" target="_blank">ledGap</a>
-					<input id="gapHeight" type="number" min="0" max="50" value="15" data-custom="ledProps">
+				<label class="label"><a href="https://audiomotion.dev/#/?id=setledprops" target="_blank">maskAlpha</a>
+					<input data-getter="getLedProps" data-prop="maskAlpha" data-setter="setLedProps" type="number" min="0" max="1" step=".05">
+				</label>
+				<label class="label small"><a href="https://audiomotion.dev/#/?id=setledprops" target="_blank">maskLightness</a>
+					<input data-getter="getLedProps" data-prop="maskLightness" data-setter="setLedProps" type="number" min="-1" max="100">
+				</label>
+				<label class="label small"><a href="https://audiomotion.dev/#/?id=setledprops" target="_blank">maskSaturation</a>
+					<input data-getter="getLedProps" data-prop="maskSaturation" data-setter="setLedProps" type="number" min="-1" max="100">
 				</label>
 			</fieldset>
 
@@ -273,31 +290,17 @@
 					<div class="value"></div>
 				</label>
 			</fieldset>
-
-			<fieldset>
-				<legend>Frame rate</legend>
-				<button data-prop="showFPS">showFPS</button>
-				<label class="label"><a href="https://audiomotion.dev/#/?id=maxfps" target="_blank">maxFPS</a>
-					<select data-prop="maxFPS">
-						<option>0</option>
-						<option>10</option>
-						<option>20</option>
-						<option>30</option>
-						<option>60</option>
-						<option>120</option>
-					</select>
-				</label>
-			</fieldset>
 		</div>
 
 		<div class="box center flex stretch">
 			<fieldset>
 				<legend>Switches & read-only flags</legend>
-				<div class="grid grid-6-cols button-grid">
+				<div class="grid grid-7-cols button-grid">
 					<button data-prop="ansiBands">ansiBands</button>
 					<button data-prop="loRes">loRes</button>
 					<button data-prop="outlineBars">outlineBars</button>
 					<button data-prop="roundBars">roundBars</button>
+					<button data-prop="showFPS">showFPS</button>
 					<button data-prop="showLedMask">showLedMask</button>
 					<button data-prop="spreadGradient">spreadGradient</button>
 				</div>

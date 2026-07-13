@@ -143,11 +143,19 @@ export interface GradientOptions {
 }
 
 export interface LedProps {
-  ledHeight?: number,
-  gapHeight?: number,
-  maskAlpha?: number,
-  maskLightness?: number,
-  maskSaturation?: number
+  ledHeight: number,
+  gapHeight: number,
+  maskAlpha: number,
+  maskLightness: number,
+  maskSaturation: number
+}
+
+export interface LedPropsOptional {
+  ledHeight?: number | null,
+  gapHeight?: number | null,
+  maskAlpha?: number | null,
+  maskLightness?: number | null,
+  maskSaturation?: number | null
 }
 
 export interface ScaleXProps {
@@ -379,7 +387,7 @@ declare class AudioMotionAnalyzer {
 
   public setFreqRange(minFreq: number, maxFreq: number): void;
 
-  public setLedProps( props?: LedProps ): void;
+  public setLedProps( props?: LedPropsOptional ): void;
 
   public setOptions(options?: Options): void;
 
