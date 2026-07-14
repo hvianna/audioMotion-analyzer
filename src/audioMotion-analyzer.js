@@ -2541,7 +2541,7 @@ class AudioMotionAnalyzer {
 				for ( let barIndex = 0; barIndex < _bars.length; barIndex++ ) {
 
 					const bar = _bars[ barIndex ],
-						  { posX, barCenter, width, binLo, value } = bar, // TO-DO: resolve the need for binLo here (see also nexBarAvg below)
+						  { posX, barCenter, width, value } = bar,
 						  barValue = value[ channel ];
 
 					// set opacity for bar effects
@@ -2556,16 +2556,11 @@ class AudioMotionAnalyzer {
 					// Draw current bar or line segment
 
 					if ( isGraphMode ) {
-						// compute the average between the initial bar (barIndex==0) and the next one
-						// used to smooth the curve when the initial posX is off the screen, in mirror and radial modes
-						const fftData    = this._fftData[ channel ], // TO-DO: get rid of this!
-							  nextBarAvg = barIndex ? 0 : ( this._normalizedB( fftData[ _bars[1].binLo ] ) * maxBarHeight + barHeight ) / 2;
-
 						if ( isRadial ) {
 							if ( barIndex == 0 ) {
 								if ( isDualHorizontal )
 									_ctx.moveTo( ...radialXY( 0, 0 ) );
-								_ctx.lineTo( ...radialXY( 0, ( posX < 0 ? nextBarAvg : barHeight ) ) );
+								_ctx.lineTo( ...radialXY( 0, barHeight ) );
 							}
 							// draw line to the current point, avoiding overlapping wrap-around frequencies
 							if ( posX >= 0 ) {
@@ -2575,15 +2570,10 @@ class AudioMotionAnalyzer {
 							}
 						}
 						else { // Linear
-							if ( barIndex == 0 ) {
-								// start the line off-screen using the previous FFT bin value as the initial amplitude
-								if ( _mirror == MIRROR_LEFT && ! isDualHorizontal )
-									_ctx.moveTo( initialX, analyzerBottom - ( posX < initialX ? nextBarAvg : barHeight ) );
-								else {
-									const prevFFTData = binLo ? this._normalizedB( fftData[ binLo - 1 ] ) * maxBarHeight : barHeight; // use previous FFT bin value, when available
-									_ctx.moveTo( initialX - _lineWidth, analyzerBottom - prevFFTData );
-								}
-							}
+							// start the line at the edge of the canvas/channel
+							if ( barIndex == 0 )
+								_ctx.moveTo( initialX - ( _mirror == MIRROR_LEFT && ! isDualHorizontal ? 0 : _lineWidth ), analyzerBottom - barHeight );
+
 							// draw line to the current point
 							// avoid X values lower than the origin when mirroring left, otherwise draw them for best graph accuracy
 							if ( isDualHorizontal || _mirror != MIRROR_LEFT || posX >= initialX )
