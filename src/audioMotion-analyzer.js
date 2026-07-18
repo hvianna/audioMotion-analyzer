@@ -461,14 +461,6 @@ class AudioMotionAnalyzer {
 		}
 		window.addEventListener( EVENT_CLICK, unlockContext );
 
-		// reset FPS-related variables when window becomes visible (avoid FPS drop due to frames not rendered while hidden)
-		document.addEventListener( 'visibilitychange', () => {
-			if ( document.visibilityState != 'hidden' ) {
-				this._frames = 0;
-				this._time = performance.now();
-			}
-		}, { signal } );
-
 		// Initialize default properties
 		this.setLedProps();
 		this.setTheme();
@@ -1457,7 +1449,7 @@ class AudioMotionAnalyzer {
 		else if ( ! hasStarted && force && ! this._destroyed ) {
 			// Start the analyzer if it was stopped and must be enabled
 			this._frames = 0;
-			this._time = performance.now();
+			this._time = document.timeline.currentTime;
 			this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) ); // arrow function preserves the scope of *this*
 		}
 
@@ -2173,7 +2165,7 @@ class AudioMotionAnalyzer {
 		// frame rate control
 		const elapsed        = timestamp - this._time, // time since last FPS computation
 			  frameTime      = timestamp - this._last, // time since last rendered frame
-			  targetInterval = this._maxFPS ? 975 / this._maxFPS : 0; // small tolerance for best results
+			  targetInterval = this._maxFPS ? 1e3 / this._maxFPS : 0;
 
 		if ( frameTime < targetInterval )
 			return;
