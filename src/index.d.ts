@@ -383,6 +383,8 @@ declare class AudioMotionAnalyzer {
 
   public registerTheme(name: string, options: GradientOptions): boolean;
 
+  public renderFrame( customBarData: number[] | number[][] ): void;
+
   public setCanvasSize(width: number, height: number): void;
 
   public setFreqRange(minFreq: number, maxFreq: number): void;

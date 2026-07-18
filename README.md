@@ -1645,6 +1645,24 @@ See also: [unregisterTheme()](#unregistertheme)
 
 ?> Any color theme, including the built-in ones, may be modified at any time by simply re-registering the same theme name.
 
+### `renderFrame()`
+
+*Available since v5.0.0*
+
+Stops normal analyzer animation and renders a single frame, using custom data.
+
+**Syntax:**
+
+```js
+renderFrame(barData)
+```
+
+Parameter | type    | description
+----------|---------|-------------
+`barData` | *array* | An array of numbers between `0.0` and `1.0`, each corresponding to one analyzer bar. Each array element can also be an array of two numbers, for dual-channel layouts.
+
+**Return value:** none (`undefined`).
+
 ### `setCanvasSize()`
 
 Shortand hand method for setting both [`height`](#height) and [`width`](#width) properties at once.

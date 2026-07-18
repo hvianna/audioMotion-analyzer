@@ -1220,6 +1220,17 @@ class AudioMotionAnalyzer {
 	}
 
 	/**
+	 * Stops normal analyzer animation and renders a single frame, using custom bar data
+	 *
+	 * @param {array} array of numbers between 0.0 and 1.0 (one element for each analyzer bar)
+	 *        each array element can also be an array of two numbers, for dual-channel layouts
+	 */
+	renderFrame( customBarData ) {
+		this.stop();
+		this._draw( document.timeline.currentTime, customBarData );
+	}
+
+	/**
 	 * Set dimensions of analyzer's canvas
 	 *
 	 * @param {number} w width in pixels
@@ -2075,71 +2086,86 @@ class AudioMotionAnalyzer {
 	/**
 	 * Processes FFT audio data and updates _bars and _energy internal objects
 	 */
-	_computeBarData() {
+	_computeBarData( customBarData ) {
 		const { _bars, _energy, _fps } = this,
 			  { isAlpha, isOutline } = this._flg,
   			  decayRate  = 2 / this._peakDecayTime ** 2 / _fps ** 2,
 			  holdFrames = _fps * this._peakHoldTime,
 			  isDual     = this._chLayout != LAYOUT_SINGLE;
 
-		let currentEnergy = 0;
-
-		for ( const channel of isDual ? [0,1] : [0] ) {
-			// get a new array of data from the FFT
-			let fftData = this._fftData[ channel ];
-			this._analyzer[ channel ].getFloatFrequencyData( fftData );
-
-			// FFT bin data interpolation (uses fftData)
-			const interpolate = ( bin, ratio ) => {
-				const value = fftData[ bin ] + ( bin < fftData.length - 1 ? ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio : 0 );
-				return isNaN( value ) ? -Infinity : value;
+		const updatePeaks = ( bar, channel ) => {
+			if ( bar.peak[ channel ] > 0 && bar.alpha[ channel ] > 0 ) {
+				bar.hold[ channel ]--;
+				// if hold is negative, start peak drop or fade out
+				if ( bar.hold[ channel ] < 0 ) {
+					const acceleration = bar.hold[ channel ] * decayRate;
+					if ( this._peaks == PEAKS_FADE && ( this._peakLine == 0 || this._mode == MODE_BARS ) )
+						bar.alpha[ channel ] += acceleration;
+					else
+						bar.peak[ channel ] += acceleration;
+					// make sure the peak value is reset when peaks fade out
+					if ( bar.alpha[ channel ] <= 0 )
+						bar.peak[ channel ] = 0;
+				}
 			}
 
-			// apply weighting
-			if ( this._weightingFilter != FILTER_NONE )
-				fftData = fftData.map( ( val, idx ) => val + this.constructor.weightingGain( this._binToFreq( idx ), this._weightingFilter ) );
+			// check if it's a new peak for this bar
+			const barValue = bar.value[ channel ];
+			if ( barValue >= bar.peak[ channel ] ) {
+				bar.peak[ channel ] = barValue;
+				bar.hold[ channel ] = holdFrames;
+				// check whether isAlpha or isOutline are active to start the peak alpha with the proper value
+				bar.alpha[ channel ] = ! isAlpha || ( isOutline && this._lineWidth > 0 ) ? 1 : isAlpha ? barValue : this.fillAlpha;
+			}
+		}
 
-			for ( const bar of _bars ) {
-				const { binLo, binHi, ratioLo, ratioHi } = bar;
-				let barValue = this._bandRes == BANDS_FFT ? fftData[ binLo ] : Math.max( interpolate( binLo, ratioLo ), interpolate( binHi, ratioHi ) );
+		let currentEnergy = 0;
 
-				// check additional bins (if any) for this bar and keep the highest value
-				for ( let j = binLo + 1; j < binHi; j++ ) {
-					if ( fftData[ j ] > barValue )
-						barValue = fftData[ j ];
+		if ( customBarData ) {
+			for ( let i = 0; i < _bars.length; i++ ) {
+				const val = customBarData[ i ] || 0,
+					  bar = _bars[ i ];
+				bar.value = isArray( val ) ? val : [ val, val ];
+				updatePeaks( bar, 0 );
+				updatePeaks( bar, 1 );
+			}
+		}
+		else {
+			for ( const channel of isDual ? [0,1] : [0] ) {
+				// get a new array of data from the FFT
+				let fftData = this._fftData[ channel ];
+				this._analyzer[ channel ].getFloatFrequencyData( fftData );
+
+				// FFT bin data interpolation (uses fftData)
+				const interpolate = ( bin, ratio ) => {
+					const value = fftData[ bin ] + ( bin < fftData.length - 1 ? ( fftData[ bin + 1 ] - fftData[ bin ] ) * ratio : 0 );
+					return isNaN( value ) ? -Infinity : value;
 				}
 
-				// normalize bar amplitude in [0;1] range
-				barValue = this._normalizedB( barValue );
+				// apply weighting
+				if ( this._weightingFilter != FILTER_NONE )
+					fftData = fftData.map( ( val, idx ) => val + this.constructor.weightingGain( this._binToFreq( idx ), this._weightingFilter ) );
 
-				bar.value[ channel ] = barValue;
-				currentEnergy += barValue;
+				for ( const bar of _bars ) {
+					const { binLo, binHi, ratioLo, ratioHi } = bar;
+					let barValue = this._bandRes == BANDS_FFT ? fftData[ binLo ] : Math.max( interpolate( binLo, ratioLo ), interpolate( binHi, ratioHi ) );
 
-				// update bar peak
-				if ( bar.peak[ channel ] > 0 && bar.alpha[ channel ] > 0 ) {
-					bar.hold[ channel ]--;
-					// if hold is negative, start peak drop or fade out
-					if ( bar.hold[ channel ] < 0 ) {
-						const acceleration = bar.hold[ channel ] * decayRate;
-						if ( this._peaks == PEAKS_FADE && ( this._peakLine == 0 || this._mode == MODE_BARS ) )
-							bar.alpha[ channel ] += acceleration;
-						else
-							bar.peak[ channel ] += acceleration;
-						// make sure the peak value is reset when peaks fade out
-						if ( bar.alpha[ channel ] <= 0 )
-							bar.peak[ channel ] = 0;
+					// check additional bins (if any) for this bar and keep the highest value
+					for ( let j = binLo + 1; j < binHi; j++ ) {
+						if ( fftData[ j ] > barValue )
+							barValue = fftData[ j ];
 					}
-				}
 
-				// check if it's a new peak for this bar
-				if ( barValue >= bar.peak[ channel ] ) {
-					bar.peak[ channel ] = barValue;
-					bar.hold[ channel ] = holdFrames;
-					// check whether isAlpha or isOutline are active to start the peak alpha with the proper value
-					bar.alpha[ channel ] = ! isAlpha || ( isOutline && this._lineWidth > 0 ) ? 1 : isAlpha ? barValue : this.fillAlpha;
-				}
-			} // bar loop
-		} // channel loop
+					// normalize bar amplitude in [0;1] range
+					barValue = this._normalizedB( barValue );
+
+					bar.value[ channel ] = barValue;
+					currentEnergy += barValue;
+
+					updatePeaks( bar, channel );
+				} // bar loop
+			} // channel loop
+		}
 
 		// update energy information
 		_energy.val = currentEnergy / ( _bars.length << isDual );
@@ -2158,9 +2184,10 @@ class AudioMotionAnalyzer {
 	 * Redraw the canvas
 	 * this is called 60 times per second by requestAnimationFrame()
 	 */
-	_draw( timestamp ) {
-		// schedule next canvas update
-		this._runId = requestAnimationFrame( timestamp => this._draw( timestamp ) );
+	_draw( timestamp, customBarData ) {
+		// schedule next canvas update, if analyzer is on
+		if ( this.isOn )
+			this._runId = requestAnimationFrame( ts => this._draw( ts ) );
 
 		// frame rate control
 		const elapsed        = timestamp - this._time, // time since last FPS computation
@@ -2249,7 +2276,7 @@ class AudioMotionAnalyzer {
 
 		/* MAIN FUNCTION */
 
-		this._computeBarData(); // updates this._bars and this._energy
+		this._computeBarData( customBarData ); // updates this._bars and this._energy
 
 		if ( useCanvas ) {
 			// create Reflex effect
