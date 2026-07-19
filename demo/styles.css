@@ -243,6 +243,10 @@ input.wide-range {
 	margin: 10px 0;
 	text-align: center;
 }
+.version-preview .credits strong,
+.version-preview #version {
+	color: #f00;
+}
 
 .header-nav {
 	position: absolute;

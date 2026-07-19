@@ -1,6 +1,6 @@
 ## About
 
-> **WARNING:** code in **alpha** stage is subject to major, drastic changes! **DO NOT USE THIS VERSION IN PRODUCTION!**
+> **VERSION 5 IS IN BETA PHASE!** Features can still change or be removed without warning. **DO NOT USE THIS VERSION IN PRODUCTION!**<br>
 
 **audioMotion-analyzer** is a high-resolution real-time audio spectrum analyzer built upon **Web Audio** and **Canvas** JavaScript APIs.
 
@@ -38,11 +38,13 @@ What users are saying:
 + Fullscreen support, ready for retina / HiDPI displays
 + Zero-dependency native ES6+ module (ESM), \~30kB minified
 
+?> Minimum browser requirements: Chrome 84, Firefox 75, Opera 70 or Safari 13.1.
+
 ## Online demos
 
-[![demo-animation](img/demo.webp)](https://audiomotion.dev/demo/alpha/)
+[![demo-animation](img/demo.webp)](https://audiomotion.dev/demo/beta/)
 
-?> https://audiomotion.dev/demo/alpha/
+?> https://audiomotion.dev/demo/beta/
 
 ## Live code examples
 
@@ -63,7 +65,7 @@ What users are saying:
 Install via npm:
 
 ```console
-npm i audiomotion-analyzer@alpha
+npm i audiomotion-analyzer@beta
 ```
 
 Use ES6 import:
@@ -84,7 +86,7 @@ Load from jsDelivr CDN:
 
 ```html
 <script type="module">
-  import AudioMotionAnalyzer from 'https://cdn.jsdelivr.net/npm/audiomotion-analyzer@alpha/+esm';
+  import AudioMotionAnalyzer from 'https://cdn.jsdelivr.net/npm/audiomotion-analyzer@beta/+esm';
   // your code here
 </script>
 ```
@@ -96,7 +98,7 @@ Or download the [latest version](https://github.com/hvianna/audioMotion-analyzer
 Load from jsDelivr CDN:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/audiomotion-analyzer@alpha"></script>
+<script src="https://cdn.jsdelivr.net/npm/audiomotion-analyzer@beta"></script>
 <script>
   // available as AudioMotionAnalyzer global
 </script>
@@ -666,7 +668,7 @@ Value       | [Constant](#constants) | Description | Preview
 `"modern"`  | `LEDS_MODERN`  | Gradient-colored LEDs when [`colorMode`](#colormode) is set to `"gradient"` | ![leds-modern](img/leds_modern.png)
 `"vintage"` | `LEDS_VINTAGE` | Single color LEDs, determined by the `level` property of each color - see [registerTheme()](#registertheme) | ![leds-vintage](img/leds_vintage.png)
 
-Please note that `"modern"` and `"vintage"` will have the same look when [`colorMode`](#colormode) is set to `"bar-level"` or `"bar-index"`, as each bar will be a single color anyway.
+Please note that `"modern"` and `"vintage"` will have the same look when [`colorMode`](#colormode) is set to `"bar-level"` or `"bar-index"`, as each bar will be assigned a single color in both cases.
 
 ?> The appearance of the LED bars can be customized via [`setLedProps()`](#setledprops) method.
 
@@ -742,9 +744,9 @@ See also [`minDecibels`](#mindecibels) and [`setSensitivity()`](#setsensitivity)
 Determines the maximum desired frame rate for the analyzer animation, in frames per second.
 
 A value of `0` means the animation will run at the highest frame rate possible, limited by the refresh rate of your display.
-For example, if you have a 144Hz monitor, the frame rate may reach up to 144 fps.
+For example, if you have a 144Hz monitor, the frame rate may reach up to 144 FPS.
 
-Usually, 60 fps is enough for a smooth animation, so setting `maxFPS` to `60` may help reducing CPU usage on high refresh rate monitors.
+Usually, 60 FPS is enough for a smooth animation, so setting `maxFPS` to `60` may help reducing CPU usage on monitors with higher refresh rates.
 
 ### `maxFreq`
 
@@ -1992,7 +1994,7 @@ Parameter   | type     | description
 `frequency` | *number* | Frequency value, in Hz
 `filter`    | *string* | A valid [weighting filter](#weightingfilter)
 
-**Return value:** a *number*, representing the gain (in dB) to be added to the original amplitude value.
+**Return value:** a *number*, representing the gain or attenuation (in dB) to be applied to the original amplitude value.
 
 
 ## Custom Errors
@@ -2036,7 +2038,7 @@ The `import` statement must be inside a `script` which has the `type="module"` p
 
 ```html
   <script type="module">
-    import AudioMotionAnalyzer from 'https://cdn.jsdelivr.net/npm/audiomotion-analyzer@alpha/+esm';
+    import AudioMotionAnalyzer from 'https://cdn.jsdelivr.net/npm/audiomotion-analyzer@beta/+esm';
 
     // your code here
   </script>

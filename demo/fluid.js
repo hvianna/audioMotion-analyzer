@@ -181,7 +181,7 @@ const presets = [
 			reflexRatio: .25,
 			showPeaks: PEAKS_DROP,
 			showScaleX: LABELS_X_FREQS,
-			weightingFilter: FILTER_D
+			weightingFilter: FILTER_TILT3
 		},
 		theme: { name: 'rainbow', modifiers: { horizontal: true } }
 	},
@@ -203,7 +203,7 @@ const presets = [
 			radial: RADIAL_OFF,
 			reflexRatio: 0,
 			showPeaks: PEAKS_DROP,
-			weightingFilter: FILTER_D
+			weightingFilter: FILTER_TILT3
 		},
 		theme: [ 'steelblue', 'orangered' ]
 	},
@@ -232,7 +232,7 @@ const presets = [
 			showPeaks: PEAKS_OFF,
 			showScaleX: LABELS_X_OFF,
 			smoothing: .7,
-			weightingFilter: FILTER_D
+			weightingFilter: FILTER_TILT3
 		},
 		theme: 'rainbow'
 	},
