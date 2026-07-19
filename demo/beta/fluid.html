@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>audioMotion-analyzer fluid layout demo</title>
+	<link href="https://fonts.googleapis.com/css?family=Orbitron:900" rel="stylesheet">
+	<link href="styles.css" rel="stylesheet">
+</head>
+
+<body class="version-preview">
+	<header>
+		<h1><a href="https://audiomotion.dev" class="logo">audioMotion-analyzer</a> | fluid layout demo</h1>
+		<ul class="header-nav">
+			<li><a href="index.html">Demos</a></li>
+            <li><a href="https://audiomotion.dev">Home</a></li>
+			<li><a href="https://github.com/hvianna/audioMotion-analyzer/tree/develop">View on GitHub</a></li>
+		</ul>
+	</header>
+
+	<div class="sticky">
+		<div id="container" class="fluid"></div>
+	</div>
+	<audio id="audio" controls crossorigin="anonymous"></audio>
+
+	<div class="topbar flex">
+		<div>
+			Load audio file:
+			<input type="file" id="uploadFile" accept="audio/*">
+		</div>
+		<div class="flex stretch">
+			<button id="btn_mic" title="Microphone ON/OFF">🎙️</button>
+			<button id="btn_mute" title="Disconnect analyzer output from the speakers&#13;&#10;(prevent feedback loop when microphone is on)">disconnectOutput()</button>
+			<button data-prop="isDestroyed" data-setter="destroy">destroy()</button>
+			<button id="btn_getBars" title="check browser console for data">getBars()</button>
+			<button id="btn_getOptions" title="copies current settings to clipboard">getOptions()</button>
+			<button id="btn_getThemeData" title="check browser console for data">getThemeData()</button>
+			<button data-prop="isOn" data-setter="toggleAnalyzer">toggleAnalyzer()</button>
+			<button data-prop="isFullscreen" data-setter="toggleFullscreen">toggleFullscreen()</button>
+		</div>
+	</div>
+
+	<div class="analyzer-configuration">
+		<div class="box center">
+			<label class="label">Load a configuration preset
+				<select id="presets"></select>
+			</label>
+
+			<label class="label">Background
+				<select id="bgColor"></select>
+			</label>
+
+			<label class="label"><a href="https://audiomotion.dev/#/?id=mode" target="_blank">mode</a>
+				<select data-prop="mode"></select>
+			</label>
+
+			<label class="label"><a href="https://audiomotion.dev/#/?id=bandresolution" target="_blank">bandResolution</a>
+				<input type="range" min="0" max="8" data-prop="bandResolution" class="wide-range">
+				<div class="value"></div>
+			</label>
+
+			<label class="label"><a href="https://audiomotion.dev/#/?id=colormode" target="_blank">colorMode</a>
+				<select data-prop="colorMode"></select>
+			</label>
+
+			<label class="label"><a href="https://audiomotion.dev/#/?id=settheme" target="_blank">setTheme(0)</a>
+				<div class="grid grid-2-cols">
+					<select data-setter="setTheme" data-getter="getTheme" data-channel="0" class="colspan-2"></select>
+					<button class="small-button" data-setter="setThemeModifiers" data-channel="0" data-prop="horizontal" data-getter="getThemeModifiers">horizontal</button>
+					<button class="small-button" data-setter="setThemeModifiers" data-channel="0" data-prop="reverse" data-getter="getThemeModifiers">reverse</button>
+				</div>
+			</label>
+
+			<label class="label"><a href="https://audiomotion.dev/#/?id=settheme" target="_blank">setTheme(1)</a>
+				<div class="grid grid-2-cols">
+					<select data-setter="setTheme" data-getter="getTheme" data-channel="1" class="colspan-2"></select>
+					<button class="small-button" data-setter="setThemeModifiers" data-channel="1" data-prop="horizontal" data-getter="getThemeModifiers">horizontal</button>
+					<button class="small-button" data-setter="setThemeModifiers" data-channel="1" data-prop="reverse" data-getter="getThemeModifiers">reverse</button>
+				</div>
+			</label>
+
+			<label class="label"><a href="https://audiomotion.dev/#/?id=channellayout" target="_blank">channelLayout</a>
+				<select data-prop="channelLayout"></select>
+			</label>
+
+			<label class="label"><a href="https://audiomotion.dev/#/?id=volume" target="_blank">volume</a>
+				<input type="range" min="0" max="1" step=".1" data-prop="volume">
+				<div class="value"></div>
+			</label>
+
+			<label class="label"><a href="https://audiomotion.dev/#/?id=maxfps" target="_blank">maxFPS</a>
+				<select data-prop="maxFPS">
+					<option>0</option>
+					<option>10</option>
+					<option>20</option>
+					<option>30</option>
+					<option>60</option>
+					<option>120</option>
+				</select>
+			</label>
+		</div>
+
+		<div class="box center flex">
+			<fieldset>
+				<legend>FFT</legend>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=fftsize" target="_blank">fftSize</a>
+					<select data-prop="fftSize">
+						<option>1024</option>
+						<option>2048</option>
+						<option>4096</option>
+						<option>8192</option>
+						<option>16384</option>
+						<option>32768</option>
+					</select>
+				</label>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=smoothing" target="_blank">smoothing</a>
+					<input type="range" min="0" max=".9" step=".1" data-prop="smoothing">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Frequency range & scaling</legend>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=minfreq" target="_blank">minFreq</a>
+					<input type="number" min="1" max="24000" data-prop="minFreq">
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=maxfreq" target="_blank">maxFreq</a>
+					<input type="number" min="1" max="24000" data-prop="maxFreq">
+				</label>
+
+				<label class="label small"><a href="https://audiomotion.dev/#/?id=frequencyscale" target="_blank">frequencyScale</a>
+					<select data-prop="frequencyScale"></select>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Sensitivity</legend>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=mindecibels" target="_blank">minDecibels</a>
+					<input type="number" min="-200" max="0" data-prop="minDecibels">
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=maxdecibels" target="_blank">maxDecibels</a>
+					<input type="number" min="-200" max="0" data-prop="maxDecibels">
+				</label>
+
+				<label class="label small"><a href="https://audiomotion.dev/#/?id=weightingfilter" target="_blank">weightingFilter</a>
+					<select data-prop="weightingFilter"></select>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Linear amplitude</legend>
+
+				<button data-prop="linearAmplitude">linearAmplitude</button>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=linearboost" target="_blank">linearBoost</a>
+					<input type="range" min="1" max="4" step=".2" data-prop="linearBoost">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Scale labels</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=showscalex" target="_blank">showScaleX</a>
+					<select data-prop="showScaleX"></select>
+				</label>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=showscaley" target="_blank">showScaleY</a>
+					<select data-prop="showScaleY"></select>
+				</label>
+			</fieldset>
+		</div>
+
+		<div class="box center flex">
+			<fieldset>
+				<legend>bandRes > 0 only</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=barspace" target="_blank">barSpace</a>
+					<input type="range" min="0" max="1" step=".05" data-prop="barSpace" class="wide-range">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>graph mode / outlineBars</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=linewidth" target="_blank">lineWidth</a>
+					<input type="range" min="0" max="4" step=".5" data-prop="lineWidth">
+					<div class="value"></div>
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=fillalpha" target="_blank">fillAlpha</a>
+					<input type="range" min="0" max="1" step=".1" data-prop="fillAlpha">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Radial spectrum</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=radial" target="_blank">radial</a>
+					<input type="range" min="-1" max="1" step="1" data-prop="radial">
+					<div class="value"></div>
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=radius" target="_blank">radius</a>
+					<input type="range" min="0" max="1" step=".05" data-prop="radius">
+					<div class="value"></div>
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=spinspeed" target="_blank">spinSpeed</a>
+					<input type="range" min="-5" max="5" step="1" data-prop="spinSpeed">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Reflex & Mirror</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=reflexratio" target="_blank">reflexRatio</a>
+					<input type="range" min="0" max=".9" step=".05" data-prop="reflexRatio">
+					<div class="value"></div>
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=reflexalpha" target="_blank">reflexAlpha</a>
+					<input type="range" min="0" max="1" step=".05" data-prop="reflexAlpha">
+					<div class="value"></div>
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=reflexbright" target="_blank">reflexBright</a>
+					<input type="range" min="0" max="2" step=".1" data-prop="reflexBright">
+					<div class="value"></div>
+				</label>
+
+				<button data-prop="reflexFit">reflexFit</button>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=mirror" target="_blank">mirror</a>
+					<input type="range" min="-1" max="1" step="1" data-prop="mirror">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+		</div>
+
+		<div class="box center flex">
+			<fieldset>
+				<legend>Bar effects</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=alphabars" target="_blank">alphaBars</a>
+					<select data-prop="alphaBars"></select>
+				</label>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=ledbars" target="_blank">ledBars</a>
+					<select data-prop="ledBars"></select>
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Custom LEDs - setLedProps()</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=setledprops" target="_blank">ledHeight</a>
+					<input data-getter="getLedProps" data-prop="ledHeight" data-setter="setLedProps" type="number" min="0" max="50">
+				</label>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=setledprops" target="_blank">ledGap</a>
+					<input data-getter="getLedProps" data-prop="gapHeight" data-setter="setLedProps" type="number" min="0" max="50">
+				</label>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=setledprops" target="_blank">maskAlpha</a>
+					<input data-getter="getLedProps" data-prop="maskAlpha" data-setter="setLedProps" type="number" min="0" max="1" step=".05">
+				</label>
+				<label class="label small"><a href="https://audiomotion.dev/#/?id=setledprops" target="_blank">maskLightness</a>
+					<input data-getter="getLedProps" data-prop="maskLightness" data-setter="setLedProps" type="number" min="-1" max="100">
+				</label>
+				<label class="label small"><a href="https://audiomotion.dev/#/?id=setledprops" target="_blank">maskSaturation</a>
+					<input data-getter="getLedProps" data-prop="maskSaturation" data-setter="setLedProps" type="number" min="-1" max="100">
+				</label>
+			</fieldset>
+
+			<fieldset>
+				<legend>Peak behavior</legend>
+				<label class="label"><a href="https://audiomotion.dev/#/?id=showpeaks" target="_blank">showPeaks</a>
+					<select data-prop="showPeaks"></select>
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peakline" target="_blank">peakLine</a>
+					<input type="range" min="0" max="5" step=".5" data-prop="peakLine">
+					<div class="value"></div>
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peakdecaytime" target="_blank">peakDecayTime</a>
+					<input type="range" min="0" max="5000" step="50" data-prop="peakDecayTime" class="wide-range">
+					<div class="value"></div>
+				</label>
+
+				<label class="label"><a href="https://audiomotion.dev/#/?id=peakhold" target="_blank">peakHoldTime</a>
+					<input type="range" min="0" max="5000" step="50" data-prop="peakHoldTime" class="wide-range">
+					<div class="value"></div>
+				</label>
+			</fieldset>
+		</div>
+
+		<div class="box center flex stretch">
+			<fieldset>
+				<legend>Switches & read-only flags</legend>
+				<div class="grid grid-7-cols button-grid">
+					<button data-prop="ansiBands">ansiBands</button>
+					<button data-prop="loRes">loRes</button>
+					<button data-prop="outlineBars">outlineBars</button>
+					<button data-prop="roundBars">roundBars</button>
+					<button data-prop="showFPS">showFPS</button>
+					<button data-prop="showLedMask">showLedMask</button>
+					<button data-prop="spreadGradient">spreadGradient</button>
+				</div>
+				<hr>
+				<span class="flag" data-flag="isAlphaBars">isAlphaBars</span>
+				<span class="flag" data-flag="isBandsMode">isBandsMode</span>
+				<span class="flag" data-flag="isDestroyed">isDestroyed</span>
+				<span class="flag" data-flag="isLedBars">isLedBars</span>
+				<span class="flag" data-flag="isOctaveBands">isOctaveBands</span>
+				<span class="flag" data-flag="isOutlineBars">isOutlineBars</span>
+				<span class="flag" data-flag="isRoundBars">isRoundBars</span>
+				<span class="flag" data-flag="isOn">isOn</span>
+			</fieldset>
+
+			<fieldset>
+				<legend>Demo features added via callback</legend>
+				<div class="grid grid-2-cols button-grid">
+					<button data-feature="canvasHover">Band data on hover</button>
+					<button data-feature="energyMeter">Energy meters</button>
+					<button data-feature="showLogo">Pulsating Logo</button>
+					<button data-feature="songProgress">Song progress bar</button>
+				</div>
+			</fieldset>
+		</div>
+
+		<div class="box center">
+			<fieldset>
+				<legend>Test tones</legend>
+				<label class="label">Waveform
+					<select id="wave">
+						<option>sawtooth</option>
+						<option selected>sine</option>
+						<option>square</option>
+						<option>triangle</option>
+					</select>
+				</label>
+
+				<label class="label">Note
+					<select id="note">
+						<option value="">Use custom</option>
+						<option value="16.35">C0 - 16.35 Hz</option>
+						<option value="32.70">C1 - 32.70 Hz</option>
+						<option value="65.41">C2 - 65.41 Hz</option>
+						<option value="130.81">C3 - 130.81 Hz</option>
+						<option value="261.63">C4 - 261.63 Hz</option>
+						<option value="440" selected>A4 - 440 Hz</option>
+						<option value="523.25">C5 - 523.25 Hz</option>
+						<option value="1046.5">C6 - 1046.5 Hz</option>
+						<option value="2093">C7 - 2093 Hz</option>
+						<option value="4186.01">C8 - 4186.01 Hz</option>
+						<option value="8372.02">C9 - 8372.02 Hz</option>
+						<option value="16744.04">C10 - 16744.04 Hz</option>
+					</select>
+				</label>
+
+				<label class="label">Custom frequency (Hz)
+					<input id="frequency" type="text">
+				</label>
+
+				<label class="label">L - Pan - R
+					<input id="pan" type="range" min="-1" max="1" step=".2">
+					<div class="value"></div>
+				</label>
+
+				<label class="label">Volume
+					<input id="volume" type="range" min="0" max="1" step=".01">
+					<div class="value"></div>
+				</label>
+
+				<button id="btn_play">Play</button>
+				<button id="btn_soundoff">STOP</button>
+
+				<div id="piano"></div>
+			</fieldset>
+	</div>
+
+		</div>
+
+	</div>
+
+	<div class="credits">
+		<strong>audioMotion-analyzer v<span id="version"></span></strong> Copyright &copy; 2018-2026 Henrique Avila Vianna. Source code available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
+	</div>
+
+	<script src="fluid.js" type="module"></script>
+
+	<script>
+		if ( location.href.startsWith('file://') )
+			alert("This demo won't work when loaded via file:// protocol.\nSee the README file inside the demo folder for more information.");
+	</script>
+
+</body>
+</html>

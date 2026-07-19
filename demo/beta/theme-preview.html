@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link href="tools-styles.css" rel="stylesheet">
+	<title>Theme previewer | audioMotion-analyzer</title>
+</head>
+
+<body>
+<div class="container">
+	<div class="settings">
+		<h1>audioMotion-analyzer</h1>
+		<h2>theme previewer</h2>
+		<div class="flex">
+			<label>theme</label>
+			<select id="theme"></select>
+		</div>
+
+		<div class="flex">
+			<label for="horizontal">horizontal modifier</label>
+			<input id="horizontal" type="checkbox">
+		</div>
+
+		<div class="flex">
+			<label for="reverse">reverse modifier</label>
+			<input id="reverse" type="checkbox">
+		</div>
+
+		<div class="flex">
+			<label for="scale">showScaleY</label>
+			<input id="scale" type="checkbox" checked>
+		</div>
+
+		<div class="credits">
+			<strong>audioMotion-analyzer</strong> Copyright &copy; 2018-2026 Henrique Avila Vianna.<br>
+			Licensed under AGPL-3.0 or later. Source code is available on <a href="https://github.com/hvianna/audioMotion-analyzer">GitHub</a>.
+		</div>
+	</div>
+
+	<div id="theme-previews">
+		<code>colorMode: "gradient"</code>
+		<div id="preview-gradient" class="theme-preview"></div>
+		<code>colorMode: "bar-index"</code>
+		<div id="preview-index" class="theme-preview"></div>
+		<code>colorMode: "bar-level"</code>
+		<div id="preview-level" class="theme-preview"></div>
+		<code>ledBars: "vintage"</code>
+		<div id="preview-leds" class="theme-preview"></div>
+	</div>
+</div>
+
+<script type="module">
+import { AudioMotionAnalyzer } from './audioMotion-analyzer.js';
+
+function updatePreviews() {
+	const barData = [ .08, .55, .75, .9, 1, .8, .6, .4, .3, .1, .25, .45, .05 ];
+
+	for ( const instance of [ gradientPreview, indexPreview, levelPreview, ledsPreview ] ) {
+		instance.setTheme( themeEl.value, { horizontal: horizontalEl.checked, reverse: reverseEl.checked } );
+		instance.showScaleY = scaleEl.checked ? 'percent' : 'off';
+		instance.renderFrame( barData );
+	}
+}
+
+const $ = document.querySelector.bind( document ),
+	  themeEl = $('#theme'),
+	  horizontalEl = $('#horizontal'),
+	  reverseEl = $('#reverse'),
+	  scaleEl = $('#scale'),
+	  previewOptions = {
+		bandResolution: 2,
+		barSpace: .4,
+		height: 160,
+		maxFreq: 2000,
+		showScaleX: 'off',
+		start: false,
+		width: 600,
+	  };
+
+const gradientPreview = new AudioMotionAnalyzer( $('#preview-gradient'), {
+	...previewOptions
+});
+
+const indexPreview = new AudioMotionAnalyzer( $('#preview-index'), {
+	...previewOptions,
+	colorMode: 'bar-index'
+});
+
+const levelPreview = new AudioMotionAnalyzer( $('#preview-level'), {
+	...previewOptions,
+	colorMode: 'bar-level'
+});
+
+const ledsPreview = new AudioMotionAnalyzer( $('#preview-leds'), {
+	...previewOptions,
+	ledBars: 'vintage'
+});
+
+for ( const name of gradientPreview.getThemeList() ) {
+	themeEl.append( new Option( name ) );
+}
+
+themeEl.addEventListener( 'change', () => updatePreviews() );
+horizontalEl.addEventListener( 'change', () => updatePreviews() );
+reverseEl.addEventListener( 'change', () => updatePreviews() );
+scaleEl.addEventListener( 'change', () => updatePreviews() );
+
+updatePreviews();
+
+</script>
+
+</body>
+</html>
