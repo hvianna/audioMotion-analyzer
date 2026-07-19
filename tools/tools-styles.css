@@ -48,6 +48,19 @@ table td {
 	text-align: right;
 }
 
+#theme-previews {
+	align-items: center;
+	display: grid;
+	gap: 20px;
+	grid-template-columns: 200px 1fr;
+	justify-items: end;
+}
+.theme-preview {
+	background: #000;
+	color: #eee;
+	padding: 5px 5px 1px;
+}
+
 #tableBands {
 	display: block;
 	height: calc( 100vh - 40px );

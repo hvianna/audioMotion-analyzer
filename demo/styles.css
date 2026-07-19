@@ -61,6 +61,10 @@ code {
 	padding: 1px 4px;
 }
 
+dd {
+	margin-left: 25px;
+}
+
 fieldset {
 	border: 1px dotted #666;
 	display: inline-block;
@@ -83,6 +87,9 @@ h1 {
 }
 h2 {
 	margin: 1.5em 0 .5em;
+}
+h2 a {
+	text-decoration: none;
 }
 
 hr {

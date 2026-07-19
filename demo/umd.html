@@ -27,7 +27,7 @@
 			<p>
 				The module is included with<br>
 				<code>&lt;script src="https://cdn.jsdelivr.net/npm/audiomotion-analyzer@alpha"&gt;&lt;/script&gt;</code>
-				<br>and the class is available via <code>AudioMotionAnalyzer</code> global.
+				<br>and the constructor is available via <code>AudioMotionAnalyzer</code> global.
 			</p>
 
 			<button id="btn_start">Start audioMotion</button>
@@ -56,8 +56,6 @@
 		document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 		let audioEl, audioMotion; // global variables for the audio element and analyzer object
-
-		console.log( 'AudioMotionAnalyzer global:\n\n', AudioMotionAnalyzer );
 
 		function initialize() {
 			// create new <audio> element
