@@ -1,12 +1,12 @@
 Changelog
 =========
 
-## version NEXT
+## version 5.0.0-beta.0
 
-> **WARNING:** code in **alpha** stage is subject to major, drastic changes! **DO NOT USE THIS VERSION IN PRODUCTION!**<br>
-> Source code is in the [`version5`](https://github.com/hvianna/audioMotion-analyzer/tree/version5) branch. **Demo is available at https://audiomotion.dev/demo/alpha/**
+> **VERSION 5 IS NOW IN BETA PHASE!** Code should be more stable now, but features can still change. **DO NOT USE THIS VERSION IN PRODUCTION!**<br>
+> Refer to the [`develop`](https://github.com/hvianna/audioMotion-analyzer/tree/develop) branch for updated documentation and source code. **Demo is available at https://audiomotion.dev/demo/beta/**
 
-**New/changed in this release:**
+**New/changed in this release, since v5.0.0-alpha.2:**
 
 + Renamed `setLeds()` to [`setLedProps()`](README.md#setledprops) and added [`getLedProps()`](README.md#setledprops) &ndash; LED mask properties are now customizable as well;
 + Minor tweak to default LED gap height (reduced from `8` to `5`);
@@ -14,7 +14,9 @@ Changelog
 + `operation` property renamed to `compositing` in [`setScaleProps()`](README.md#setscaleprops);
 + Made argument order more consistent among [`getTheme()`](README.md#gettheme), [`setTheme()`](README.md#settheme), [`getThemeModifiers()`](README.md#getthememodifiers) and [`setThemeModifiers()`](README.md#setthememodifiers) methods;
 + [`getTheme()`](README.md#gettheme) now returns data for both channels in an array, when `channel` argument is omitted or invalid;
++ New [`renderFrame()`](README.md#renderframe) method;
 + New [`weightingGain()`](README.md#weightinggain) static method;
++ Steadier frame-rate throttling via [`maxFPS`](README.md#maxfps);
 + Decoupled audio data processing from the graphics rendering (code improvement for future integrations);
 + Fixed invisible peaks when [`outlineBars`](README.md#outlinebars) was enabled with both [`fillAlpha`](README.md#fillalpha) and [`lineWidth`](README.md#linewidth) set to `0`;
 + Removed `toggleThemeModifier()` method.
@@ -102,12 +104,13 @@ Property | New default value | Previous default value
 
 ### Improved: <!-- {docsify-ignore} -->
 
-+ Decoupled audio data processing from the graphics rendering (code improvement for future integrations);
 + Fixed invisible peaks when [`outlineBars`](README.md#outlinebars) was enabled with both [`fillAlpha`](README.md#fillalpha) and [`lineWidth`](README.md#linewidth) set to `0`.
 + [`connectInput()`](README.md#connectinput) and the constructor's [`source`](README.md#source) property now accept *MediaStream* objects ([#96](https://github.com/hvianna/audioMotion-analyzer/issues/96));
 + [`disconnectInput()`](README.md#disconnectinput) now also accepts *HTMLMediaElement* and *MediaStream* objects;
 + Full-height [`alphaBars`](README.md#alphabars) (former lumiBars) have been extended to work with [`radial`](README.md#radial) and FFT [`bandResolution`](README.md#bandresolution) (former mode 0);
-+ Y-axis labels are no longer mirrored when [`mirror`](README.md#mirror-number) is active.
++ Y-axis labels are no longer mirrored when [`mirror`](README.md#mirror-number) is active;
++ Steadier frame-rate throttling via [`maxFPS`](README.md#maxfps);
++ Decoupled audio data processing from rendering to enable future integrations.
 
 
 ## version 4.5.4 (2026-01-09)
