@@ -74,7 +74,7 @@ function generateBands( options ) {
 
 	// ANSI standard octave bands use the base-10 frequency ratio, as preferred by [ANSI S1.11-2004, p.2]
 	// The equal-tempered scale uses the base-2 ratio
-	const bands = [0,24,12,8,6,4,3,2,1][ mode ],
+	const bands = [0,1,2,3,4,6,8,12,24][ mode ],
 		  bandWidth = ansiBands ? 10 ** ( 3 / ( bands * 10 ) ) : 2 ** ( 1 / bands ), // 10^(3/10N) or 2^(1/N)
 		  halfBand  = bandWidth ** .5;
 

@@ -19,6 +19,8 @@
 	<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@800&display=swap" rel="stylesheet">
 	<style>
 		:root {
+			--blockquote-em-font-style: oblique;
+			--blockquote-em-font-weight: inherit;
 			--cover-background-color: hsl(var(--theme-hue), 25%, 10%);
 			--cover-background-image: radial-gradient(ellipse at center 115%, rgba(255, 255, 255, 0.2), transparent);
 			--cover-blockquote-color: #f0f0f0;
@@ -68,6 +70,16 @@
 
 		.cover ul {
 			margin: 2em 0;
+		}
+
+		.markdown-section h1 code,
+		.markdown-section h2 code,
+		.markdown-section h3 code,
+		.markdown-section h4 code,
+		.markdown-section h5 code,
+		.markdown-section h6 code {
+			font-size: 1em;
+			font-weight: 600;
 		}
 
 		.markdown-section h3 ~ h3 {

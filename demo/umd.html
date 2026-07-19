@@ -26,8 +26,8 @@
 
 			<p>
 				The module is included with<br>
-				<code>&lt;script src="https://cdn.jsdelivr.net/npm/audiomotion-analyzer@4"&gt;&lt;/script&gt;</code>
-				<br>and the class is available via <code>AudioMotionAnalyzer</code> global.
+				<code>&lt;script src="https://cdn.jsdelivr.net/npm/audiomotion-analyzer@beta"&gt;&lt;/script&gt;</code>
+				<br>and the constructor is available via <code>AudioMotionAnalyzer</code> global.
 			</p>
 
 			<button id="btn_start">Start audioMotion</button>
@@ -41,7 +41,7 @@
 		Live stream: <a href="https://costadelmar-radio.com" target="_blank">Costa del Mar Radio - Zen channel</a>.
 	</div>
 
-	<script src="https://cdn.jsdelivr.net/npm/audiomotion-analyzer@4"></script>
+	<script src="https://cdn.jsdelivr.net/npm/audiomotion-analyzer@beta"></script>
 	<script>
 		const container      = document.getElementById('container'),
 			  audioContainer = document.getElementById('audio-container'),
@@ -56,8 +56,6 @@
 		document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 		let audioEl, audioMotion; // global variables for the audio element and analyzer object
-
-		console.log( 'AudioMotionAnalyzer global:\n\n', AudioMotionAnalyzer );
 
 		function initialize() {
 			// create new <audio> element

@@ -4,7 +4,38 @@
  * https://github.com/hvianna/audioMotion-analyzer
  */
 
-import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
+import {
+	AudioMotionAnalyzer,
+	ALPHABARS_FULL,
+	BANDS_FFT,
+	BANDS_OCTAVE_FULL,
+	BANDS_OCTAVE_HALF,
+	BANDS_OCTAVE_3RD,
+	BANDS_OCTAVE_4TH,
+	BANDS_OCTAVE_6TH,
+	BANDS_OCTAVE_8TH,
+	BANDS_OCTAVE_12TH,
+	BANDS_OCTAVE_24TH,
+	FILTER_D,
+	FILTER_TILT3,
+	LABELS_X_OFF,
+	LABELS_Y_DB,
+	LEDS_MODERN,
+	LAYOUT_COMBINED,
+	MODE_BARS,
+	MODE_GRAPH,
+	PEAKS_DROP,
+	PEAKS_OFF
+} from '../src/audioMotion-analyzer.js';
+
+import {
+	addUIEventListeners,
+	loadSong,
+	populateControls,
+	populateThemeSelections,
+	setPresets,
+	updateUI
+} from './functions.js';
 
 let audioMotion = [],
 	selectedAnalyzer = 0;
@@ -33,7 +64,7 @@ try {
 				const instNo = instance.canvas.parentElement.id.slice(-1); // get instance number from container id
 				console.log( `[#${instNo}] ${reason}: ${instance.canvas.width} x ${instance.canvas.height}` );
 				if ( reason != 'create' )
-					updateUI();
+					updateUI( el => audioMotion[ el.dataset.setting == 'volume' ? 0 : selectedAnalyzer ] );
 			}
 		});
 	}
@@ -49,89 +80,82 @@ document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
 // main analyzer
 audioMotion[0].setOptions({
-	mode: 6,
-	barSpace: .4,
-	frequencyScale: 'bark',
-	ledBars: true,
+	mode: MODE_BARS,
+	bandResolution: BANDS_OCTAVE_3RD,
+	barSpace: .3,
+	ledBars: LEDS_MODERN,
 	linearAmplitude: true,
-	linearBoost: 1.6,
+	linearBoost: 1.8,
 	maxFreq: 20000,
 	minFreq: 30,
-	reflexRatio: .1,
-	reflexAlpha: .25,
-	weightingFilter: 'D'
+	showScaleY: LABELS_Y_DB,
+	weightingFilter: FILTER_TILT3
 });
 
 // top right
 audioMotion[1].setOptions({
-	mode: 10,
-	channelLayout: 'dual-combined',
+	mode: MODE_GRAPH,
+	bandResolution: BANDS_FFT,
+	channelLayout: LAYOUT_COMBINED,
 	fillAlpha: .3,
-	gradientLeft: 'steelblue',
-	gradientRight: 'orangered',
 	linearAmplitude: true,
 	linearBoost: 1.2,
 	lineWidth: 0,
 	maxFreq: 16000,
 	minFreq: 30,
 	peakLine: true,
-	showScaleX: false,
-	showPeaks: true,
-	weightingFilter: 'D'
+	showScaleX: LABELS_X_OFF,
+	showPeaks: PEAKS_DROP,
+	weightingFilter: FILTER_D
 });
+
+audioMotion[1].setTheme( [ 'steelblue', 'orangered' ] );
 
 // bottom right
 audioMotion[2].setOptions({
-	mode: 2,
+	mode: MODE_BARS,
+	alphaBars: ALPHABARS_FULL,
+	bandResolution: BANDS_OCTAVE_12TH,
 	barSpace: .1,
-	gradient: 'prism',
-	lumiBars: true,
 	minDecibels: -60,
 	maxDecibels: -30,
 	maxFreq: 16000,
 	minFreq: 30,
-	showBgColor: false,
-	showPeaks: false,
-	showScaleX: false,
-	weightingFilter: 'D'
+	showPeaks: PEAKS_OFF,
+	showScaleX: LABELS_X_OFF,
+	weightingFilter: FILTER_D
 });
 
+audioMotion[2].setTheme('rainbow');
+
+// Returns active instance - note: volume is always set/read from the first instance
+const getInstance = el => audioMotion[ el && el.dataset.setting == 'volume' ? 0 : selectedAnalyzer ];
+
 // Analyzer selector
+
+const highlightSelectedAnalyzer = () => document.querySelectorAll('canvas').forEach( el => el.classList.toggle( 'selected', el.parentElement.id.slice(-1) == selectedAnalyzer ) );
 
 document.querySelectorAll('[name="analyzer"]').forEach( el => {
 	el.addEventListener( 'click', () => {
 		selectedAnalyzer = document.querySelector('[name="analyzer"]:checked').value;
-		updateUI();
+		updateUI( getInstance );
+		highlightSelectedAnalyzer();
 	});
 });
 
-// user can also select an analyzer by clicking on it
 document.querySelectorAll('canvas').forEach( el => {
 	el.addEventListener( 'click', () => {
 		selectedAnalyzer = el.parentElement.id.slice(-1);
 		document.querySelector(`[name="analyzer"][value="${selectedAnalyzer}"`).checked = true;
-		updateUI();
+		updateUI( getInstance );
+		highlightSelectedAnalyzer();
 	});
 });
 
-// Event listeners for UI controls
-
-document.querySelectorAll('button[data-prop]').forEach( el => {
-	el.addEventListener( 'click', () => {
-		if ( el.dataset.func )
-			audioMotion[ selectedAnalyzer ][ el.dataset.func ]();
-		else
-			audioMotion[ selectedAnalyzer ][ el.dataset.prop ] = ! audioMotion[ selectedAnalyzer ][ el.dataset.prop ];
-		el.classList.toggle( 'active', audioMotion[ selectedAnalyzer ][ el.dataset.prop ] );
-	});
-});
-
-document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'change', () => audioMotion[ selectedAnalyzer ][ el.dataset.setting ] = el.value );
-});
-
-// Display value of ranged input elements
-document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
+// set event listeners for UI controls
+addUIEventListeners( getInstance );
+populateThemeSelections( audioMotion[0] );
+populateControls();
 
 // File upload
 document.getElementById('uploadFile').addEventListener( 'change', e => loadSong( e.target ) );
@@ -145,31 +169,5 @@ document.getElementById('btn_getOptions').addEventListener( 'click', () => {
 });
 
 // Initialize UI elements
-updateUI();
-
-// Load song from user's computer
-function loadSong( el ) {
-	const fileBlob = el.files[0],
-		  audioEl  = document.getElementById('audio');
-
-	if ( fileBlob ) {
-		audioEl.src = URL.createObjectURL( fileBlob );
-		audioEl.play();
-	}
-}
-
-// Update value div of range input elements
-function updateRangeElement( el ) {
-	const s = el.nextElementSibling;
-	if ( s && s.className == 'value' )
-		s.innerText = el.value;
-}
-
-// Update UI elements to reflect the selected analyzer's current settings
-function updateUI() {
-	document.querySelectorAll('canvas').forEach( el => el.classList.toggle( 'selected', el.parentElement.id.slice(-1) == selectedAnalyzer ) );
-	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ selectedAnalyzer ][ el.dataset.setting ] );
-	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', audioMotion[ selectedAnalyzer ][ el.dataset.prop ] ) );
-	document.querySelector('[data-setting="volume"').disabled = selectedAnalyzer != 0;
-}
+updateUI( getInstance );
+highlightSelectedAnalyzer();

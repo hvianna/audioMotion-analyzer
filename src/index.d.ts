@@ -5,7 +5,31 @@ export type OnCanvasDrawFunction = (
 
 export type CanvasDrawInfo = {
   timestamp: DOMHighResTimeStamp,
-  canvasGradients: CanvasGradient[]
+  themes: ActiveTheme[]
+}
+
+export interface ThemeData {
+  colorStops: GradientColorStop[];
+  peakColor: string;
+}
+
+export interface ActiveTheme extends ThemeData {
+  name: string;
+  gradient: CanvasGradient;
+  mask: {
+    colorStops: GradientColorStop[];
+    gradient: CanvasGradient;
+  };
+}
+
+export type ThemeModifiers = {
+  horizontal?: boolean,
+  reverse?: boolean
+}
+
+export type ThemeNameAndModifiers = {
+  name: string,
+  modifiers: ThemeModifiers
 }
 
 export type OnCanvasResizeFunction = (
@@ -16,61 +40,50 @@ export type OnCanvasResizeFunction = (
 export type CanvasResizeReason = "create" | "fschange" | "lores" | "resize" | "user";
 
 export interface Options {
-  alphaBars?: boolean;
+  alphaBars?: AlphaBars;
   ansiBands?: boolean;
+  bandResolution?: number;
   barSpace?: number;
-  bgAlpha?: number;
   channelLayout?: ChannelLayout;
   colorMode?: ColorMode;
-  fadePeaks?: boolean;
   fftSize?: number;
   fillAlpha?: number;
   frequencyScale?: FrequencyScale;
-  gradient?: string;
-  gradientLeft?: string;
-  gradientRight?: string;
-  gravity?: number;
   height?: number;
-  ledBars?: boolean;
+  ledBars?: LedBars;
   linearAmplitude?: boolean;
   linearBoost?: number;
   lineWidth?: number;
   loRes?: boolean;
-  lumiBars?: boolean;
   maxDecibels?: number;
   maxFPS?: number;
   maxFreq?: number;
   minDecibels?: number;
   minFreq?: number;
   mirror?: number;
-  mode?: number;
+  mode?: VisualizationMode;
   noteLabels?: boolean;
   onCanvasDraw?: OnCanvasDrawFunction;
   onCanvasResize?: OnCanvasResizeFunction;
   outlineBars?: boolean;
-  overlay?: boolean;
-  peakFadeTime?: number;
+  peakDecayTime?: number;
   peakHoldTime?: number;
-  peakLine?: boolean;
-  radial?: boolean;
-  radialInvert?: boolean;
+  peakLine?: number;
+  radial?: number;
   radius?: number;
   reflexAlpha?: number;
   reflexBright?: number;
   reflexFit?: boolean;
   reflexRatio?: number;
   roundBars?: boolean;
-  showBgColor?: boolean;
   showFPS?: boolean;
-  showPeaks?: boolean;
-  showScaleX?: boolean;
-  showScaleY?: boolean;
+  showLedMask?: boolean;
+  showPeaks?: ShowPeaks;
+  showScaleX?: ShowScaleX;
+  showScaleY?: ShowScaleY;
   smoothing?: number;
   spinSpeed?: number;
-  splitGradient?: boolean;
-  start?: boolean;
-  stereo?: boolean;
-  trueLeds?: boolean;
+  spreadGradient?: boolean;
   useCanvas?: boolean;
   volume?: number;
   weightingFilter?: WeightingFilter;
@@ -92,8 +105,13 @@ export interface ConstructorOptions extends Options {
   canvas?: HTMLCanvasElement;
   connectSpeakers?: boolean;
   fsElement?: HTMLElement;
-  source?: HTMLMediaElement | AudioNode;
+  source?: AudioSource;
+  start?: boolean;
 }
+
+export type AlphaBars = "off" | "on" | "full";
+
+export type AudioSource = AudioNode | HTMLMediaElement | MediaStream;
 
 export type ChannelLayout = "single" | "dual-horizontal" | "dual-vertical" | "dual-combined";
 
@@ -103,28 +121,80 @@ export type EnergyPreset = "peak" | "bass" | "lowMid" | "mid" | "highMid" | "tre
 
 export type FrequencyScale = "bark" | "linear" | "log" | "mel";
 
+export type FrequencyLabel = number | [ frequency: number; label: string; highlight?: boolean ];
+
 export type GradientColorStop = string | { pos?: number; color: string; level?: number };
 
-export type WeightingFilter = "" | "A" | "B" | "C" | "D" | "468";
+export type LedBars = "off" | "modern" | "vintage";
+
+export type ShowPeaks = "off" | "drop" | "fade";
+
+export type ShowScaleX = "off" | "custom" | "freqs" | "freqs+custom" | "notes";
+
+export type ShowScaleY = "off" | "db" | "percent";
+
+export type VisualizationMode = "bars" | "graph";
+
+export type WeightingFilter = "none" | "a" | "b" | "c" | "d" | "468" | "tilt3" | "tilt4.5";
 
 export interface GradientOptions {
-  bgColor?: string;
-  dir?: "h";
   colorStops: GradientColorStop[];
+  peakColor?: string;
 }
 
-export interface LedParameters {
-  maxLeds: number;
-  spaceV: number;
-  spaceH: number;
+export interface LedProps {
+  ledHeight: number,
+  gapHeight: number,
+  maskAlpha: number,
+  maskLightness: number,
+  maskSaturation: number
+}
+
+export interface LedPropsOptional {
+  ledHeight?: number | null,
+  gapHeight?: number | null,
+  maskAlpha?: number | null,
+  maskLightness?: number | null,
+  maskSaturation?: number | null
+}
+
+export interface ScaleXProps {
+  backgroundColor?: string;
+  color?: string;
+  fontSize?: number;
+  highlightColor?: string;
+  labels?: FrequencyLabel[];
+  overlay?: boolean;
+}
+
+export interface ScaleYProps {
+  color?: string;
+  dbInterval?: number;
+  fontSize?: number;
+  lineDash?: number[];
+  operation?: string;
+  percentInterval?: number;
+  showSubdivisions?: boolean;
+  subLineColor?: string;
+  subLineDash?: number[];
+}
+
+export interface ScalePropsCombined {
+  xAxis: ScaleXProps,
+  yAxis: ScaleYProps
+}
+
+export interface ScalePropsOptional {
+  xAxis?: ScaleXProps | null,
+  yAxis?: ScaleYProps | null
 }
 
 declare class AudioMotionAnalyzer {
   constructor(container?: HTMLElement, options?: ConstructorOptions);
   constructor(options?: ConstructorOptions);
 
-  get alphaBars(): boolean;
-  set alphaBars(value: boolean);
+  get alphaBars(): AlphaBars;
+  set alphaBars(value: AlphaBars);
 
   get ansiBands(): boolean;
   set ansiBands(value: boolean);
@@ -133,10 +203,11 @@ declare class AudioMotionAnalyzer {
   get canvas(): HTMLCanvasElement;
   get canvasCtx(): CanvasRenderingContext2D;
 
+  get bandResolution(): number;
+  set bandResolution(value: number);
+
   get barSpace(): number;
   set barSpace(value: number);
-
-  public bgAlpha: number;
 
   get channelLayout(): ChannelLayout;
   set channelLayout(value: ChannelLayout);
@@ -146,9 +217,6 @@ declare class AudioMotionAnalyzer {
 
   get connectedSources(): AudioNode[];
   get connectedTo(): AudioNode[];
-
-  get fadePeaks(): boolean;
-  set fadePeaks(value: boolean);
 
   get fftSize(): number;
   set fftSize(value: number);
@@ -163,29 +231,13 @@ declare class AudioMotionAnalyzer {
   get frequencyScale(): FrequencyScale;
   set frequencyScale(value: FrequencyScale);
 
-  get gradient(): string;
-  set gradient(value: string);
-
-  get gradientLeft(): string;
-  set gradientLeft(value: string);
-
-  get gradientRight(): string;
-  set gradientRight(value: string);
-
-  get gravity(): number;
-  set gravity(value: number);
-
   get height(): number;
   set height(h: number);
-
-  get width(): number;
-  set width(w: number);
 
   get isAlphaBars(): boolean;
   get isBandsMode(): boolean;
   get isFullscreen(): boolean;
   get isLedBars(): boolean;
-  get isLumiBars(): boolean;
   get isOctaveBands(): boolean;
   get isOutlineBars(): boolean;
   get isRoundBars(): boolean;
@@ -193,8 +245,8 @@ declare class AudioMotionAnalyzer {
   get isDestroyed(): boolean;
   get isOn(): boolean;
 
-  get ledBars(): boolean;
-  set ledBars(value: boolean);
+  get ledBars(): LedBars;
+  set ledBars(value: LedBars);
 
   get linearAmplitude(): boolean;
   set linearAmplitude(value: boolean);
@@ -207,9 +259,6 @@ declare class AudioMotionAnalyzer {
 
   get loRes(): boolean;
   set loRes(value: boolean);
-
-  get lumiBars(): boolean;
-  set lumiBars(value: boolean);
 
   get maxDecibels(): number;
   set maxDecibels(value: number);
@@ -229,8 +278,8 @@ declare class AudioMotionAnalyzer {
   get mirror(): number;
   set mirror(value: number);
 
-  get mode(): number;
-  set mode(value: number);
+  get mode(): VisualizationMode;
+  set mode(value: VisualizationMode);
 
   get noteLabels(): boolean;
   set noteLabels(value: boolean);
@@ -238,24 +287,19 @@ declare class AudioMotionAnalyzer {
   get outlineBars(): boolean;
   set outlineBars(value: boolean);
 
-  public overlay: boolean;
-
-  get peakFadeTime(): number;
-  set peakFadeTime(value: number);
+  get peakDecayTime(): number;
+  set peakDecayTime(value: number);
 
   get peakHoldTime(): number;
   set peakHoldTime(value: number);
 
-  get peakLine(): boolean;
-  set peakLine(value: boolean);
+  get peakLine(): number;
+  set peakLine(value: number);
 
   get pixelRatio(): number;
 
-  get radial(): boolean;
-  set radial(value: boolean);
-
-  get radialInvert(): boolean;
-  set radialInvert(value: boolean);
+  get radial(): number;
+  set radial(value: number);
 
   get radius(): number;
   set radius(value: number);
@@ -270,11 +314,17 @@ declare class AudioMotionAnalyzer {
   get roundBars(): boolean;
   set roundBars(value: boolean);
 
-  public showBgColor: boolean;
   public showFPS: boolean;
-  public showPeaks: boolean;
-  public showScaleX: boolean;
-  public showScaleY: boolean;
+  public showLedMask: boolean;
+
+  get showPeaks(): ShowPeaks;
+  set showPeaks(value: ShowPeaks);
+
+  get showScaleX(): ShowScaleX;
+  set showScaleX(value: ShowScaleX);
+
+  get showScaleY(): ShowScaleY;
+  set showScaleY(value: ShowScaleY);
 
   get smoothing(): number;
   set smoothing(value: number);
@@ -282,14 +332,8 @@ declare class AudioMotionAnalyzer {
   get spinSpeed(): number;
   set spinSpeed(value: number);
 
-  get splitGradient(): boolean;
-  set splitGradient(value: boolean);
-
-  get stereo(): boolean;
-  set stereo(value: boolean);
-
-  get trueLeds(): boolean;
-  set trueLeds(value: boolean);
+  get spreadGradient(): boolean;
+  set spreadGradient(value: boolean);
 
   public useCanvas: boolean;
 
@@ -299,18 +343,20 @@ declare class AudioMotionAnalyzer {
   get weightingFilter(): WeightingFilter;
   set weightingFilter(value: WeightingFilter);
 
+  get width(): number;
+  set width(w: number);
+
   static get version(): string;
 
   public onCanvasDraw: OnCanvasDrawFunction | undefined;
   public onCanvasResize: OnCanvasResizeFunction | undefined;
 
-  public connectInput(source: HTMLMediaElement): MediaElementAudioSourceNode;
-  public connectInput(source: AudioNode): AudioNode;
+  public connectInput(source: AudioSource): AudioNode;
   public connectOutput(node?: AudioNode): void;
 
   public destroy(): void;
 
-  public disconnectInput(node?: AudioNode | AudioNode[] | null, stopTracks?: boolean): void;
+  public disconnectInput(sources?: AudioSource | AudioSource[] | null, stopTracks?: boolean): void;
   public disconnectOutput(node?: AudioNode): void;
 
   public getBars(): AnalyzerBarData[];
@@ -318,21 +364,57 @@ declare class AudioMotionAnalyzer {
   public getEnergy(preset?: EnergyPreset): number;
   public getEnergy(startFreq: number, endFreq?: number): number;
 
+  public getLedProps(): LedProps;
+
   public getOptions(ignore?: string | string[]): Options;
 
-  public registerGradient(name: string, options: GradientOptions): void;
+  public getScaleProps(): ScalePropsCombined;
+
+  public getTheme( includeModifiers: true ): ThemeNameAndModifiers[];
+  public getTheme( includeModifiers?: false ): string[];
+  public getTheme( channel: number, includeModifiers: true ): ThemeNameAndModifiers;
+  public getTheme( channel: number, includeModifiers?: false ): string;
+
+  public getThemeData( name: string ): ThemeData | null;
+
+  public getThemeModifiers( channel?: number ): ThemeModifiers;
+
+  public getThemeList(): string[];
+
+  public registerTheme(name: string, options: GradientOptions): boolean;
+
+  public renderFrame( customBarData: number[] | number[][] ): void;
 
   public setCanvasSize(width: number, height: number): void;
+
   public setFreqRange(minFreq: number, maxFreq: number): void;
-  public setLedParams(params?: LedParameters): void;
+
+  public setLedProps( props?: LedPropsOptional ): void;
+
   public setOptions(options?: Options): void;
+
+  public setScaleProps( options?: ScalePropsOptional ): void;
+
   public setSensitivity(minDecibels: number, maxDecibels: number): void;
+
+  public setTheme( name: string, modifiers?: ThemeModifiers ): void;
+  public setTheme( nameAndModifiers?: ThemeNameAndModifiers ): void;
+  public setTheme( options: string[] | ThemeNameAndModifiers[] ): void;
+  public setTheme( channel: number, name: string, modifiers?: ThemeModifiers ): void;
+  public setTheme( channel: number, nameAndModifiers?: ThemeNameAndModifiers ): void;
+
+  public setThemeModifiers( channel?: number ): void;
+  public setThemeModifiers( channel: number, modifiers?: ThemeModifiers ): void;
 
   public start(): void;
   public stop(): void;
 
   public toggleAnalyzer(force?: boolean): boolean;
   public toggleFullscreen(): void;
+
+  public unregisterTheme(name: string): boolean;
+
+  public static weightingGain( freq: number, filter: WeightingFilter ): number;
 }
 
 export { AudioMotionAnalyzer };

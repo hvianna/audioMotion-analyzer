@@ -41,6 +41,14 @@ button.active {
 button.full-width {
 	width: 100%;
 }
+button.small-button {
+	font-size: .9em;
+	margin: 0;
+	padding: 2px;
+}
+button.small-button.active {
+	padding: 4px;
+}
 
 canvas {
 	display: block;
@@ -51,6 +59,10 @@ code {
 	background: #fff2;
 	border-radius: 4px;
 	padding: 1px 4px;
+}
+
+dd {
+	margin-left: 25px;
 }
 
 fieldset {
@@ -76,6 +88,9 @@ h1 {
 h2 {
 	margin: 1.5em 0 .5em;
 }
+h2 a {
+	text-decoration: none;
+}
 
 hr {
 	border-color: #8888;
@@ -86,7 +101,9 @@ img {
 	max-width: 100%;
 }
 
-input[type="number"],
+input[type="number"] {
+	width: 60px;
+}
 input[type="range"] {
 	width: 70px;
 }
@@ -97,6 +114,10 @@ input[type="text"],
 select {
 	margin-top: 6px;
 	padding: 6px;
+}
+
+select {
+	min-width: 70px;
 }
 
 ul {
@@ -116,6 +137,18 @@ ul {
 	margin-right: 1em;
 }
 
+.button-grid {
+/*	display: grid;
+	grid-auto-flow: column;
+	grid-template-rows: 1fr 1fr; */
+	gap: 8px;
+	margin: 5px 0;
+}
+.button-grid button,
+.button-grid .label {
+	margin: 0;
+}
+
 .topbar {
 	margin: 10px 0;
 }
@@ -131,10 +164,16 @@ ul {
 .label select {
 	display: block;
 }
+.label.small > *:first-child {
+	font-size: .9em;
+}
 fieldset .label,
 fieldset button {
 	margin-left: 2px;
 	margin-right: 2px;
+}
+fieldset > button:not(.full-width) {
+	margin-bottom: 0;
 }
 
 .slim {
@@ -165,6 +204,21 @@ fieldset button {
 	-webkit-mask-size: 200%;
 }
 
+.warn {
+	color: #f77;
+	font-size: 1.25rem;
+	left: 50%;
+	position: absolute;
+	text-align: center;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	width: 100%;
+}
+
+input.wide-range {
+	width: 100px;
+}
+
 @keyframes shine {
 	0% { -webkit-mask-position: 110%; }
 	100% { -webkit-mask-position: -10%; }
@@ -188,6 +242,10 @@ fieldset button {
 	font-size: 12px;
 	margin: 10px 0;
 	text-align: center;
+}
+.version-preview .credits strong,
+.version-preview #version {
+	color: #f00;
 }
 
 .header-nav {
@@ -241,6 +299,11 @@ fieldset button {
 	display: none;
 }
 
+/* multi-instance demo */
+.container {
+	background: #111;
+}
+
 /* fluid full-width analyzer (single instance demo) */
 #container.fluid {
 	height: 45vh;
@@ -251,16 +314,10 @@ fieldset button {
 	background: linear-gradient(to top, transparent 0%, #222 28px);
 	margin-bottom: -10px !important;
 	padding-bottom: 30px;
-	pointer-events: none;
+/*	pointer-events: none; */
 	position: sticky;
 	top: 0;
 	z-index: 1;
-}
-
-/* background animation for overlay test on fluid demo */
-.fluid canvas {
-	background-image: url(media/sealoop.gif);
-	background-size: cover;
 }
 
 .center {
@@ -292,6 +349,28 @@ fieldset button {
 	justify-content: space-evenly;
 }
 
+.grid {
+	display: grid;
+}
+.grid-2-cols {
+	grid-template-columns: 1fr 1fr;
+}
+.grid-3-cols {
+	grid-template-columns: repeat(3, 1fr);
+}
+.grid-4-cols {
+	grid-template-columns: repeat(4, 1fr);
+}
+.grid-5-cols {
+	grid-template-columns: repeat(5, 1fr);
+}
+.grid-6-cols {
+	grid-template-columns: repeat(6, 1fr);
+}
+.grid-7-cols {
+	grid-template-columns: repeat(7, 1fr);
+}
+
 .multi-block {
 	display: grid;
 	grid-gap: 20px;
@@ -303,12 +382,15 @@ fieldset button {
 .colspan-2 {
 	grid-column: span 2;
 }
+.colspan-3 {
+	grid-column: span 3;
+}
 .rowspan-2 {
 	grid-row: span 2;
 }
 
 .selected {
-	outline: 3px solid #fff4;
+	outline: 3px ridge #fff4;
 }
 
 .stretch {

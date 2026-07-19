@@ -1,10 +1,44 @@
 /**
- * audioMotion-analyzer Overlay demo
+ * audioMotion-analyzer Video overlay demo
  *
  * https://github.com/hvianna/audioMotion-analyzer
  */
 
-import AudioMotionAnalyzer from '../src/audioMotion-analyzer.js';
+import {
+	AudioMotionAnalyzer,
+	ALPHABARS_FULL,
+	ALPHABARS_OFF,
+	BANDS_FFT,
+	BANDS_OCTAVE_FULL,
+	BANDS_OCTAVE_HALF,
+	BANDS_OCTAVE_3RD,
+	BANDS_OCTAVE_4TH,
+	BANDS_OCTAVE_6TH,
+	BANDS_OCTAVE_8TH,
+	BANDS_OCTAVE_12TH,
+	BANDS_OCTAVE_24TH,
+	COLORMODE_GRADIENT,
+	COLORMODE_LEVEL,
+	FILTER_D,
+	FILTER_TILT3,
+	LEDS_MODERN,
+	LEDS_OFF,
+	MODE_BARS,
+	MODE_GRAPH,
+	PEAKS_DROP,
+	PEAKS_OFF,
+	RADIAL_INWARD,
+	RADIAL_OFF
+} from '../src/audioMotion-analyzer.js';
+
+import {
+	addUIEventListeners,
+	loadSong,
+	populateControls,
+	populateThemeSelections,
+	setPresets,
+	updateUI
+} from './functions.js';
 
 const videoEl = document.getElementById('video'),
 	  container = document.getElementById('container'),
@@ -14,89 +48,83 @@ const videoEl = document.getElementById('video'),
 const presets = [
 	{
 		name: 'Defaults',
-		options: undefined
+		options: null,
+		theme: null
 	},
 	{
 		name: 'Classic LEDs',
 		options: {
-			mode: 3,
-			barSpace: .5,
-			bgAlpha: .7,
-			colorMode: 'gradient',
-			gradient: 'classic',
-			ledBars: true,
-			lumiBars: false,
+			mode: MODE_BARS,
+			alphaBars: ALPHABARS_OFF,
+			bandResolution: BANDS_OCTAVE_3RD,
+			barSpace: .25,
+			colorMode: COLORMODE_GRADIENT,
+			ledBars: LEDS_MODERN,
 			maxFreq: 16000,
-			radial: false,
+			radial: RADIAL_OFF,
 			reflexRatio: 0,
-			showBgColor: true,
-			showPeaks: true,
-			overlay: true
-		}
+			showLedMask: true,
+			showPeaks: PEAKS_DROP,
+			weightingFilter: FILTER_TILT3
+		},
+		theme: 'classic'
 	},
 	{
 		name: 'Mirror wave',
 		options: {
-			mode: 10,
-			bgAlpha: .7,
+			mode: MODE_GRAPH,
+			alphaBars: ALPHABARS_OFF,
+			bandResolution: BANDS_FFT,
 			fillAlpha: .6,
-			gradient: 'rainbow',
 			lineWidth: 2,
-			lumiBars: false,
 			maxFreq: 16000,
-			radial: false,
+			radial: RADIAL_OFF,
 			reflexAlpha: 1,
 			reflexBright: 1,
 			reflexRatio: .5,
-			showBgColor: false,
-			showPeaks: false,
-			overlay: true
-		}
+			showPeaks: PEAKS_OFF
+		},
+		theme: { name: 'rainbow', modifiers: { horizontal: true } }
 	},
 	{
 		name: 'Radial inverse',
 		options: {
-			mode: 3,
+			mode: MODE_BARS,
+			bandResolution: BANDS_OCTAVE_8TH,
 			barSpace: .25,
-			bgAlpha: .5,
 			fillAlpha: .5,
-			gradient: 'prism',
-			ledBars: false,
+			ledBars: LEDS_OFF,
 			linearAmplitude: true,
 			linearBoost: 1.8,
 			lineWidth: 1.5,
 			maxDecibels: -30,
 			maxFreq: 16000,
-			radial: true,
-			radialInvert: true,
-			showBgColor: true,
-			showPeaks: true,
+			radial: RADIAL_INWARD,
+			showPeaks: PEAKS_DROP,
 			spinSpeed: 2,
 			outlineBars: true,
-			overlay: true,
-			weightingFilter: 'D'
-		}
+			weightingFilter: FILTER_D
+		},
+		theme: 'rainbow'
 	},
 	{
 		name: 'Reflex Bars',
 		options: {
-			mode: 5,
+			mode: MODE_BARS,
+			alphaBars: ALPHABARS_OFF,
+			bandResolution: BANDS_OCTAVE_4TH,
 			barSpace: .25,
-			bgAlpha: .5,
-			colorMode: 'bar-level',
-			gradient: 'prism',
-			ledBars: false,
-			lumiBars: false,
+			colorMode: COLORMODE_LEVEL,
+			ledBars: LEDS_OFF,
 			maxFreq: 16000,
-			radial: false,
+			outlineBars: false,
+			radial: RADIAL_OFF,
 			reflexAlpha: .5,
 			reflexFit: true,
 			reflexRatio: .3,
-			showBgColor: false,
-			showPeaks: true,
-			overlay: true,
-			outlineBars: false
-		}
+			showPeaks: PEAKS_DROP
+		},
+		theme: 'rainbow'
 	}
 ];
 
@@ -112,55 +140,14 @@ catch( err ) {
 	container.innerHTML = `<p>audioMotion-analyzer failed with error: ${ err.code ? '<strong>' + err.code + '</strong>' : '' } <em>${ err.code ? err.message : err }</em></p>`;
 }
 
+audioMotion.setScaleProps({ xAxis: { overlay: true } });
+
 // Display package version at the footer
 document.getElementById('version').innerText = AudioMotionAnalyzer.version;
 
-// Event listeners for UI controls
+// Set event listeners for UI controls
 
-document.querySelectorAll('button[data-prop]').forEach( el => {
-	el.addEventListener( 'click', () => {
-		if ( el.dataset.func )
-			audioMotion[ el.dataset.func ]();
-		else
-			audioMotion[ el.dataset.prop ] = ! audioMotion[ el.dataset.prop ];
-		el.classList.toggle( 'active', audioMotion[ el.dataset.prop ] );
-	});
-});
-
-document.querySelectorAll('[data-setting]').forEach( el => {
-	el.addEventListener( 'change', () => audioMotion[ el.dataset.setting ] = el.value );
-});
-
-presetSelection.addEventListener( 'change', () => {
-	audioMotion.setOptions( presets[ presetSelection.value ].options );
-	updateUI();
-});
-
-// Display value of ranged input elements
-document.querySelectorAll('input[type="range"]').forEach( el => el.addEventListener( 'change', () => updateRangeElement( el ) ) );
-
-// Populate the UI presets select element
-presets.forEach( ( preset, index ) => {
-	const option = new Option( preset.name, index );
-	presetSelection.append( option );
-});
-
-// Initialize settings with options from a preset
-presetSelection.value = 3;
-audioMotion.setOptions( presets[ presetSelection.value ].options );
-updateUI();
-
-// Update value div of range input elements
-function updateRangeElement( el ) {
-	const s = el.nextElementSibling;
-	if ( s && s.className == 'value' )
-		s.innerText = el.value;
-}
-
-// Update UI elements to reflect the analyzer's current settings
-function updateUI() {
-	document.querySelectorAll('[data-setting]').forEach( el => el.value = audioMotion[ el.dataset.setting ] );
-
-	document.querySelectorAll('input[type="range"]').forEach( el => updateRangeElement( el ) );
-	document.querySelectorAll('button[data-prop]').forEach( el => el.classList.toggle( 'active', audioMotion[ el.dataset.prop ] ) );
-}
+populateThemeSelections( audioMotion );
+populateControls();
+addUIEventListeners( () => audioMotion );
+setPresets( presets, () => audioMotion, 3 ); // initialize with preset 3

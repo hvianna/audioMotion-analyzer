@@ -1,6 +1,115 @@
 Changelog
 =========
 
+## version NEXT
+
+> **WARNING:** code in **alpha** stage is subject to major, drastic changes! **DO NOT USE THIS VERSION IN PRODUCTION!**<br>
+> Source code is in the [`version5`](https://github.com/hvianna/audioMotion-analyzer/tree/version5) branch. **Demo is available at https://audiomotion.dev/demo/alpha/**
+
+**New/changed in this release:**
+
++ Renamed `setLeds()` to [`setLedProps()`](README.md#setledprops) and added [`getLedProps()`](README.md#setledprops) &ndash; LED mask properties are now customizable as well;
++ Minor tweak to default LED gap height (reduced from `8` to `5`);
++ Consolidated `setScaleX()` / `setScaleY()` and `getScaleX()` / `getScaleY()` into [`setScaleProps()`](README.md#setscaleprops) and [`getScaleProps()`](README.md#getscaleprops);
++ `operation` property renamed to `compositing` in [`setScaleProps()`](README.md#setscaleprops);
++ Made argument order more consistent among [`getTheme()`](README.md#gettheme), [`setTheme()`](README.md#settheme), [`getThemeModifiers()`](README.md#getthememodifiers) and [`setThemeModifiers()`](README.md#setthememodifiers) methods;
++ [`getTheme()`](README.md#gettheme) now returns data for both channels in an array, when `channel` argument is omitted or invalid;
++ New [`weightingGain()`](README.md#weightinggain) static method;
++ Decoupled audio data processing from the graphics rendering (code improvement for future integrations);
++ Fixed invisible peaks when [`outlineBars`](README.md#outlinebars) was enabled with both [`fillAlpha`](README.md#fillalpha) and [`lineWidth`](README.md#linewidth) set to `0`;
++ Removed `toggleThemeModifier()` method.
+
+
+**The full list of changes for v5 are provided below.**
+
+### Version 5 overview: <!-- {docsify-ignore} -->
+
++ Expect LOTS of breaking changes 😅 &ndash; I'm taking this opportunity to consolidate related properties and make some long-overdue changes;
++ Gradients are now called **Themes** &ndash; added new `peakColor` property in [`registerTheme()`](README.md#registertheme) and [**on-the-fly horizontal and reverse modifiers**](README.md#setthememodifiers);
++ **LED bars look better and are easier to customize** &ndash; see [`setLedProps()`](README.md#setledprops) and [`showLedMask`](README.md#showledmask);
++ X- and Y-axis scales are now customizable via [`setScaleProps()`](README.md#setscaleprops);
++ The analyzer canvas is now always transparent, so **all background-related properties are gone,** including `bgColor` in the theme definition;
++ No more [errors thrown](README.md#custom-errors) for non-critical issues, like invalid option values;
++ The [`onCanvasDraw`](README.md#oncanvasdraw) callback is now passed all color information from the currently active themes (`fillStyle` and `strokeStyle` are no longer explicitly set).
+
+### 🚨 BREAKING CHANGES: <!-- {docsify-ignore} -->
+
+Modified properties                | Changes made
+-----------------------------------|-------------------
+[`alphaBars`](README.md#alphabars) | type changed from *boolean* to **_string_**
+[`ledBars`](README.md#ledbars)     | type changed from *boolean* to **_string_**
+[`mode`](README.md#mode)           | type changed from *number* to **_string_**
+[`peakLine`](README.md#peakline)   | type changed from *boolean* to **_number_**
+[`radial`](README.md#radial)       | type changed from *boolean* to **_number_**
+[`showPeaks`](README.md#showpeaks) | type changed from *boolean* to **_string_**
+[`showScaleX`](README.md#showscalex) | type changed from *boolean* to **_string_**
+[`showScaleY`](README.md#showscaley) | type changed from *boolean* to **_string_**
+[`weightingFilter`](README.md#weightingfilter) | values are now normalized to lowercase. The value for no-filter has changed from `""` (empty string) to `"none"`.
+
+
+Removed methods and properties | Use this instead
+----------------------|-----------------------------------------------
+`bgAlpha`             | *set desired background color/opacity via CSS on [`canvas`](README.md#canvas-read-only) element*
+`fadePeaks`           | [`showPeaks`](README.md#showpeaks) = `"fade"`
+`gradient`            | [`setTheme(name)`](README.md#settheme) / [`getTheme(0)`](README.md#gettheme)
+`gradientLeft`        | [`setTheme(0, name)`](README.md#settheme) / [`getTheme(0)`](README.md#gettheme)
+`gradientRight`       | [`setTheme(1, name)`](README.md#settheme) / [`getTheme(1)`](README.md#gettheme)
+`gravity`             | [`peakDecayTime`](README.md#peakdecaytime) &mdash; *use the [peak drop analysis tool](/tools/peak-drop.html) to compare/migrate previous customizations*
+`isLumiBars`          | [`isAlphaBars`](README.md#isalphabars)
+`lumiBars`            | [`alphaBars`](README.md#alphabars) = `"full"`
+`noteLabels`          | [`showScaleX`](README.md#showscalex) = `"notes"`
+`peakFadeTime`        | [`peakDecayTime`](README.md#peakdecaytime)
+`radialInvert`        | [`radial`](README.md#radial) = `-1`
+`registerGradient()`  | [`registerTheme()`](README.md#registertheme)
+`setLedParams()`      | [`setLedProps()`](README.md#setledprops)
+`showBgColor`         | *set desired background color via CSS on container element*
+`splitGradient`       | [`spreadGradient`](README.md#spreadgradient)
+`stereo`              | [`channelLayout`](README.md#channellayout)
+`trueLeds`            | [`ledBars`](README.md#ledbars) = `"vintage"`
+`overlay`             | *always transparent now (equivalent to `overlay: true`) &mdash; if desired, set an opaque background color via CSS*
+
+### Added: <!-- {docsify-ignore} -->
+
++ [`bandResolution`](README.md#bandresolution) property;
++ [`getLedProps()`](README.md#getledprops) method;
++ [`getThemeData()`](README.md#getthemedata) and [`getThemeList()`](README.md#getthemelist) mehods;
++ `peakColor` property in theme definition - see [`registerTheme()`](README.md#registertheme);
++ [`setTheme()`](README.md#settheme) and [`getTheme()`](README.md#gettheme) methods;
++ [`setThemeModifiers()`](README.md#setthememodifiers) and [`getThemeModifiers()`](README.md#getthememodifiers) methods;
++ [`setScaleProps()`](README.md#setscaleprops) and [`getScaleProps()`](README.md#getscaleprops) methods;
++ [`showLedMask`](README.md#showledmask) property;
++ [`unregisterTheme()`](README.md#unregistertheme) method;
++ [`weightingGain()`](README.md#weightinggain) static method;
++ New 3dB/oct and 4.5db/oct tilt filters added to [`weightingFilter`](README.md#weightingfilter) - props to [@will-hut](https://github.com/will-hut) ([#107](https://github.com/hvianna/audioMotion-analyzer/pull/107));
++ [Exported constants](README.md#constants).
+
+### Changed: <!-- {docsify-ignore} -->
+
++ **By default, the X-axis scale no longer overlaps the analyzer area.** When [`showScaleX`](README.md#showscalex) is enabled, analyzer graphs now start directly **above** the scale. To restore the previous behavior, set `xAxis.overlay` to `true` in [`setScaleProps()`](README.md#setscaleprops);
++ In *dual-vertical* channel layout the X-axis scale is now displayed on both channels, when [`showScaleX`](README.md#showscalex) is on;
++ Minor color offset adjustments in the `"classic"` theme - the old values can be found in [this Discussions post](https://github.com/hvianna/audioMotion-analyzer/discussions/44);
++ The `"fschange"` value for `reason` in the [`onCanvasResize`](README.md#oncanvasresize) callback has been changed to `"fullscreenchange"`. You can use the new [constants](README.md#constants) exported by the module for future-proof checks.
++ New default values:
+
+Property | New default value | Previous default value
+---------|-------------------|------------------------
+[`fillAlpha`](README.md#fillalpha) | `0.5` | `1`
+[`lineWidth`](README.md#linewidth) | `1`   | `0`
+[`maxDecibels`](README.md#maxdecibels) | `-30` | `-25`
+[`minDecibels`](README.md#mindecibels) | `-90` | `-85`
+[`radius`](README.md#radius)           | `0.5` | `0.3`
+[`smoothing`](README.md#smoothing)     | `0.7` | `0.5`
+
+### Improved: <!-- {docsify-ignore} -->
+
++ Decoupled audio data processing from the graphics rendering (code improvement for future integrations);
++ Fixed invisible peaks when [`outlineBars`](README.md#outlinebars) was enabled with both [`fillAlpha`](README.md#fillalpha) and [`lineWidth`](README.md#linewidth) set to `0`.
++ [`connectInput()`](README.md#connectinput) and the constructor's [`source`](README.md#source) property now accept *MediaStream* objects ([#96](https://github.com/hvianna/audioMotion-analyzer/issues/96));
++ [`disconnectInput()`](README.md#disconnectinput) now also accepts *HTMLMediaElement* and *MediaStream* objects;
++ Full-height [`alphaBars`](README.md#alphabars) (former lumiBars) have been extended to work with [`radial`](README.md#radial) and FFT [`bandResolution`](README.md#bandresolution) (former mode 0);
++ Y-axis labels are no longer mirrored when [`mirror`](README.md#mirror-number) is active.
+
+
 ## version 4.5.4 (2026-01-09)
 
 ### Minor bugfix release <!-- {docsify-ignore} -->
