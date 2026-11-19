@@ -1580,7 +1580,7 @@ See the [minimal demo](/demo/minimal.html) code for an example.
 * [Web Audio API specification](https://webaudio.github.io/web-audio-api/)
 * [Web Audio API documentation @MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 * [What does the FFT data in the Web Audio API correspond to?](https://stackoverflow.com/a/14789992/2370385)
-* [Equations for equal-tempered scale frequencies](http://pages.mtu.edu/~suits/NoteFreqCalcs.html)
+* [Equations for equal-tempered scale frequencies](https://plastic.audio/note-frequencies/#formula)
 * [Making Audio Reactive Visuals](https://www.airtightinteractive.com/2013/10/making-audio-reactive-visuals/)
 * The font used in audioMotion's logo is [Orbitron](https://fonts.google.com/specimen/Orbitron) by Matt McInerney
 * The _prism_ and _rainbow_ gradients use the [12-bit rainbow palette](https://iamkate.com/data/12-bit-rainbow/) by Kate Morley
